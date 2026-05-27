@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v180 · Supabase URL corrected tbnh';
+      content:'v181 · pharmacy stays open';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5514,6 +5514,18 @@
       text-align:right;
     }
     
+
+    /* v181 — keep pharmacy open on token load errors */
+    body.scl-pharmacy .shell{
+      display:block!important;
+      visibility:visible!important;
+      opacity:1!important;
+    }
+    body.scl-pharmacy #sclLanding,
+    body.scl-pharmacy #sclHqShell{
+      display:none!important;
+    }
+
 </style>
 
 <style id="exportPrintStyle">
@@ -15068,15 +15080,22 @@ async function sclLoadPharmacyMode(){
     p_year:year
   });
   if(error){
-    sclCloudStatus(error.message,'err');
+    document.body.classList.remove('scl-locked','scl-hq');
+    document.body.classList.add('scl-pharmacy');
+    SCL_ROUTING.ready=false;
+    SCL_ROUTING.suppressSave=true;
+    sclCloudStatus(`Σφάλμα φόρτωσης pharmacy token: ${error.message}`,'err');
+    alert('Σφάλμα φόρτωσης pharmacy token: ' + error.message);
     return;
   }
   const row=Array.isArray(data)?data[0]:data;
   if(!row || !row.pharmacy_id){
-    sclCloudStatus('Δεν βρέθηκε φαρμακείο για αυτό το token.','err');
-    document.body.classList.remove('scl-pharmacy');
-    document.body.classList.add('scl-locked');
-    document.getElementById('sclLanding').style.display='block';
+    SCL_ROUTING.ready=false;
+    SCL_ROUTING.suppressSave=true;
+    document.body.classList.remove('scl-locked','scl-hq');
+    document.body.classList.add('scl-pharmacy');
+    sclCloudStatus(`Δεν βρέθηκε φαρμακείο για αυτό το token: ${SCL_ROUTING.pharmacyToken}`,'err');
+    alert('Δεν βρέθηκε φαρμακείο για αυτό το token. Το εργαλείο θα μείνει ανοιχτό για έλεγχο. Έλεγξε ότι το link δεν έχει κοπεί και δεν γράφει ...');
     return;
   }
   SCL_ROUTING.pharmacy={id:row.pharmacy_id,name:row.pharmacy_name};
@@ -15305,6 +15324,23 @@ if(document.readyState==='loading'){
 }else{
   sclBindV177();
 }
+
+
+/* v181 — pharmacy mode must not fall back to landing */
+function sclShowPharmacyTokenDebug(){
+  if(sclMode()!=='pharmacy')return;
+  if(document.getElementById('sclTokenDebugPill'))return;
+  const tabs=document.querySelector('.tabs');
+  if(!tabs)return;
+  const token=SCL_ROUTING.pharmacyToken||'no token';
+  const pill=document.createElement('span');
+  pill.id='sclTokenDebugPill';
+  pill.className='scl-cloud-pill';
+  pill.textContent=`token ${token.slice(0,8)}...${token.slice(-6)}`;
+  tabs.appendChild(pill);
+}
+setTimeout(sclShowPharmacyTokenDebug,300);
+setTimeout(sclShowPharmacyTokenDebug,1200);
 
 </script>
 
