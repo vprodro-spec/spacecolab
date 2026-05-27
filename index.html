@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v182 · visible cloud save';
+      content:'v184 · HQ links + state';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5527,43 +5527,103 @@
     }
 
 
-    /* v182 — persistent cloud save monitor */
-    .scl-savebar{
-      position:fixed;
-      right:16px;
-      bottom:16px;
-      z-index:7000;
-      width:min(440px,calc(100vw - 32px));
-      background:#fff;
-      border:1px solid var(--line,#d9e1ea);
-      border-radius:14px;
-      box-shadow:0 14px 36px rgba(20,33,61,.18);
-      padding:10px 12px;
-      display:none;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      font-size:11px;
-    }
-    body.scl-pharmacy .scl-savebar{display:flex}
-    .scl-savebar-main{display:grid;gap:2px}
-    .scl-savebar-title{font-weight:950;color:var(--text,#14213d)}
-    .scl-savebar-meta{color:var(--muted,#637083);font-weight:750}
-    .scl-savebar-status{font-weight:950}
-    .scl-savebar-status.ok{color:var(--green,#0e8f51)}
-    .scl-savebar-status.saving{color:#174dc2}
-    .scl-savebar-status.err{color:#b42318}
-    .scl-savebar button{
-      border:1px solid #c9dafd;
-      background:var(--blueSoft,#edf4ff);
-      color:#174dc2;
-      border-radius:10px;
-      padding:8px 10px;
-      font-size:10px;
-      font-weight:950;
-      cursor:pointer;
-      white-space:nowrap;
-    }
+/* v183 — hard visible cloud save controls */
+.scl-cloud-topbar{
+  position:fixed;right:16px;top:16px;z-index:9000;
+  display:none;gap:8px;align-items:center;background:#fff;
+  border:1px solid var(--line,#d9e1ea);border-radius:14px;
+  box-shadow:0 12px 30px rgba(20,33,61,.16);
+  padding:8px 10px;font-size:11px;max-width:min(520px,calc(100vw - 32px));
+}
+body.scl-pharmacy .scl-cloud-topbar{display:flex!important}
+.scl-cloud-topbar .label{font-weight:950;color:var(--text,#14213d);white-space:nowrap}
+.scl-cloud-topbar .state{font-weight:850;color:var(--muted,#637083);white-space:nowrap}
+.scl-cloud-topbar .state.ok{color:var(--green,#0e8f51)}
+.scl-cloud-topbar .state.err{color:#b42318}
+.scl-cloud-topbar button,#sclSavebar button{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  visibility:visible!important;opacity:1!important;
+  border:1px solid #c9dafd!important;background:var(--blueSoft,#edf4ff)!important;
+  color:#174dc2!important;border-radius:10px!important;padding:8px 10px!important;
+  font-size:10px!important;font-weight:950!important;cursor:pointer!important;
+  white-space:nowrap!important;min-height:34px!important;pointer-events:auto!important;
+}
+body.scl-pharmacy #sclSavebar{display:flex!important}
+body:not(.scl-pharmacy) #sclSavebar,body:not(.scl-pharmacy) .scl-cloud-topbar{display:none!important}
+
+
+/* v184 — HQ pharmacy links + state status */
+.scl-hq-toolbar{
+  margin-top:14px;
+  background:#fff;
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  padding:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.scl-hq-toolbar-title{
+  font-size:12px;
+  font-weight:950;
+  color:var(--text,#14213d);
+}
+.scl-hq-toolbar-sub{
+  margin-top:3px;
+  font-size:11px;
+  color:var(--muted,#637083);
+  font-weight:750;
+}
+.scl-hq-toolbar button{
+  border:1px solid #c9dafd;
+  background:var(--blueSoft,#edf4ff);
+  color:#174dc2;
+  border-radius:10px;
+  min-height:36px;
+  padding:0 12px;
+  font-size:11px;
+  font-weight:950;
+  cursor:pointer;
+}
+.scl-state-pill{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:4px 8px;
+  font-size:10px;
+  font-weight:950;
+  margin:2px 4px 2px 0;
+  border:1px solid var(--line,#d9e1ea);
+  background:#f7f9fc;
+  color:var(--muted,#637083);
+}
+.scl-state-pill.saved{
+  border-color:#bde5ce;
+  background:#eaf8f0;
+  color:#0e6f40;
+}
+.scl-state-pill.none{
+  border-color:#e5e7eb;
+  background:#f4f5f7;
+  color:#637083;
+}
+.scl-copy-btn.copied{
+  background:#eaf8f0!important;
+  border-color:#bde5ce!important;
+  color:#0e6f40!important;
+}
+.scl-hq-url.missing{
+  color:#b42318;
+  white-space:normal;
+}
+.scl-hq-row{
+  grid-template-columns:1.1fr 1.1fr 2fr auto!important;
+}
+@media(max-width:900px){
+  .scl-hq-row{grid-template-columns:1fr!important}
+}
 
 </style>
 
@@ -8123,6 +8183,15 @@
       </div>
       <div id="sclCreatedLinkBox" class="scl-hq-link-box"></div>
     </div>
+    
+    <div class="scl-hq-toolbar" id="sclHqToolbar">
+      <div>
+        <div class="scl-hq-toolbar-title">Φαρμακεία & προσωπικά links</div>
+        <div class="scl-hq-toolbar-sub">Το HQ δημιουργεί και αντιγράφει τα links. Το φαρμακείο μπαίνει μόνο από το δικό του link.</div>
+      </div>
+      <button id="sclRefreshHqBtn" type="button">Ανανέωση HQ</button>
+    </div>
+
     <div class="scl-hq-list">
       <div class="scl-hq-list-head">Φαρμακεία & links</div>
       <div id="sclHqPharmacyList">
@@ -14972,17 +15041,12 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
   </style>
 
 </head><body>${sheet.outerHTML}
-  <!-- v182 — persistent cloud save monitor -->
-  <div id="sclSavebar" class="scl-savebar">
-    <div class="scl-savebar-main">
-      <div class="scl-savebar-title">Cloud save · <span id="sclSavebarPharmacy">—</span></div>
-      <div class="scl-savebar-meta">
-        <span id="sclSavebarStatus" class="scl-savebar-status">Σύνδεση...</span>
-        <span id="sclSavebarTime">Δεν έχει γίνει αποθήκευση ακόμη</span>
-      </div>
-    </div>
-    <button id="sclManualCloudSaveBtn" type="button">Save cloud now</button>
-  </div>
+<!-- v183 — hard visible cloud save controls -->
+<div id="sclCloudTopbar" class="scl-cloud-topbar">
+  <span class="label">Cloud</span>
+  <span id="sclCloudTopbarState" class="state">αναμονή</span>
+  <button id="sclCloudTopbarSaveBtn" type="button">Save cloud now</button>
+</div>
 
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
@@ -15393,6 +15457,174 @@ function sclShowPharmacyTokenDebug(){
 }
 setTimeout(sclShowPharmacyTokenDebug,300);
 setTimeout(sclShowPharmacyTokenDebug,1200);
+
+
+/* v183 — direct cloud save verification */
+function sclSetTopbarState(text,type=''){
+  const el=document.getElementById('sclCloudTopbarState');
+  if(!el)return;
+  el.className='state '+type;
+  el.textContent=text;
+}
+function sclGetDebugState(){
+  return {
+    mode: typeof sclMode==='function' ? sclMode() : 'unknown',
+    token: SCL_ROUTING?.pharmacyToken || null,
+    ready: !!SCL_ROUTING?.ready,
+    pharmacy: SCL_ROUTING?.pharmacy || null,
+    year: typeof sclCurrentYear==='function' ? sclCurrentYear() : state.programYear,
+    turnover: state.turnover,
+    totalCounters: state.totalCounters
+  };
+}
+async function sclDirectCloudSaveV183(){
+  const dbg=sclGetDebugState();
+  console.log('SpaceCoLab direct cloud save debug', dbg);
+  if(!window.supabase || !sb){alert('Supabase SDK δεν έχει φορτώσει');sclSetTopbarState('SDK error','err');return;}
+  if(dbg.mode!=='pharmacy'){alert('Δεν είσαι σε pharmacy mode');sclSetTopbarState('not pharmacy','err');return;}
+  if(!dbg.token){alert('Δεν υπάρχει pharmacy token στο URL');sclSetTopbarState('no token','err');return;}
+  sclSetTopbarState('αποθήκευση...','');
+  try{
+    const payload = typeof sclStatePayload==='function' ? sclStatePayload() : {
+      turnover:state.turnover,totalCounters:state.totalCounters,setupLocked:state.setupLocked,
+      cards:clone(state.cards||[]),selectedCardId:state.selectedCardId||'base-1',savedAt:new Date().toISOString()
+    };
+    payload._debug_saved_from='v183_direct_button';
+    payload._debug_saved_at=new Date().toISOString();
+    payload._debug_turnover=state.turnover;
+    payload._debug_totalCounters=state.totalCounters;
+    const {data,error}=await sb.rpc('upsert_pharmacy_state_by_token',{
+      p_token:dbg.token,p_year:dbg.year,p_state_json:payload
+    });
+    if(error){console.error('Cloud save error',error);alert('Σφάλμα Supabase save: '+error.message);sclSetTopbarState('σφάλμα save','err');return;}
+    console.log('Cloud save success',data);
+    const time=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    sclSetTopbarState('saved '+time,'ok');
+    if(typeof sclCloudStatus==='function')sclCloudStatus('Αποθηκεύτηκε στο cloud · '+dbg.year,'ok');
+  }catch(err){
+    console.error('Cloud save exception',err);
+    alert('Exception στο save: '+(err?.message||String(err)));
+    sclSetTopbarState('exception','err');
+  }
+}
+function sclBindV183CloudSave(){
+  const btn1=document.getElementById('sclCloudTopbarSaveBtn');
+  if(btn1 && !btn1.dataset.bound){
+    btn1.dataset.bound='1';
+    btn1.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();sclDirectCloudSaveV183();},true);
+  }
+  const btn2=document.getElementById('sclManualCloudSaveBtn');
+  if(btn2 && !btn2.dataset.boundV183){
+    btn2.dataset.boundV183='1';
+    btn2.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();sclDirectCloudSaveV183();},true);
+  }
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    const dbg=sclGetDebugState();
+    sclSetTopbarState(dbg.ready ? ('connected · '+(dbg.pharmacy?.name||'pharmacy')) : 'φόρτωση cloud', dbg.ready?'ok':'');
+  }
+}
+setTimeout(sclBindV183CloudSave,300);
+setTimeout(sclBindV183CloudSave,1200);
+setInterval(sclBindV183CloudSave,4000);
+
+
+/* v184 — HQ pharmacy links + state status */
+function sclBuildStateMapV184(states){
+  const map={};
+  (states||[]).forEach(s=>{
+    const id=s.pharmacy_id;
+    if(!map[id])map[id]=[];
+    map[id].push(s);
+  });
+  Object.keys(map).forEach(id=>{
+    map[id].sort((a,b)=>Number(b.year||0)-Number(a.year||0));
+  });
+  return map;
+}
+function sclStatePillsV184(states){
+  if(!states || !states.length){
+    return '<span class="scl-state-pill none">no state yet</span>';
+  }
+  return states.map(s=>{
+    const date=s.updated_at ? new Date(s.updated_at).toLocaleDateString('el-GR') : '';
+    return `<span class="scl-state-pill saved">${esc(String(s.year||'—'))} saved${date?' · '+esc(date):''}</span>`;
+  }).join('');
+}
+function sclCopyTextV184(text,btn){
+  if(!text)return;
+  navigator.clipboard.writeText(text).then(()=>{
+    if(btn){
+      const old=btn.textContent;
+      btn.textContent='Copied';
+      btn.classList.add('copied');
+      setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');},1300);
+    }
+  }).catch(()=>{
+    prompt('Copy link:', text);
+  });
+}
+function sclRenderHqPharmacyListV184(data){
+  const el=document.getElementById('sclHqPharmacyList');
+  if(!el)return;
+  const pharmacies=(data?.pharmacies||[]);
+  const statesByPharmacy=sclBuildStateMapV184(data?.pharmacy_state||[]);
+  if(!pharmacies.length){
+    el.innerHTML='<div class="scl-hq-row"><strong>Δεν υπάρχουν φαρμακεία ακόμη</strong><span>Δημιούργησε το πρώτο από πάνω.</span><span></span><span></span></div>';
+    return;
+  }
+  el.innerHTML=pharmacies.map(p=>{
+    const token=p.token||'';
+    const link=token?sclBuildPharmacyLink(token):'';
+    const states=statesByPharmacy[p.id]||[];
+    const linkCell=token
+      ? `<span class="scl-hq-url">${esc(link)}</span>`
+      : `<span class="scl-hq-url missing">Δεν επιστρέφεται token από Supabase. Τρέξε το SQL update του v184.</span>`;
+    const btn=token
+      ? `<button class="scl-copy-btn" type="button" data-copy-link="${esc(link)}">Copy link</button>`
+      : `<button class="scl-copy-btn" type="button" disabled>no token</button>`;
+    return `<div class="scl-hq-row">
+      <strong>${esc(p.name||'Φαρμακείο')}</strong>
+      <span>${sclStatePillsV184(states)}</span>
+      ${linkCell}
+      ${btn}
+    </div>`;
+  }).join('');
+  document.querySelectorAll('[data-copy-link]').forEach(btn=>{
+    if(btn.dataset.bound)return;
+    btn.dataset.bound='1';
+    btn.addEventListener('click',()=>sclCopyTextV184(btn.dataset.copyLink,btn));
+  });
+}
+const __oldSclLoadHqShellV184 = typeof sclLoadHqShell==='function' ? sclLoadHqShell : null;
+if(__oldSclLoadHqShellV184){
+  sclLoadHqShell = async function(){
+    if(!sb){
+      sclCloudStatus('Δεν φορτώθηκε το Supabase SDK.','err');
+      return;
+    }
+    sclCloudStatus('Φόρτωση HQ στοιχείων…');
+    const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+    if(error){
+      sclCloudStatus(error.message,'err');
+      return;
+    }
+    const d=data||{};
+    document.getElementById('sclHqPharmacyCount').textContent=(d.pharmacies||[]).length;
+    document.getElementById('sclHqStateCount').textContent=(d.pharmacy_state||[]).length;
+    document.getElementById('sclHqProgramCount').textContent=(d.hq_programs||[]).length;
+    sclRenderHqPharmacyListV184(d);
+    sclCloudStatus('HQ shell φορτώθηκε.','ok');
+  }
+}
+function sclBindV184(){
+  const refresh=document.getElementById('sclRefreshHqBtn');
+  if(refresh && !refresh.dataset.bound){
+    refresh.dataset.bound='1';
+    refresh.addEventListener('click',()=>sclLoadHqShell());
+  }
+}
+setTimeout(sclBindV184,300);
+setTimeout(sclBindV184,1200);
 
 </script>
 
