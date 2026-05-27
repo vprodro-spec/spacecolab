@@ -5502,6 +5502,18 @@
       text-align:right;
     }
     
+
+    /* v180 — corrected Supabase URL tbnh */
+    #sclLanding::before{
+      content:'v180 · Supabase URL corrected tbnh';
+      display:block;
+      margin-bottom:8px;
+      font-size:10px;
+      font-weight:900;
+      color:#0e8f51;
+      text-align:right;
+    }
+    
 </style>
 
 <style id="exportPrintStyle">
@@ -14967,7 +14979,7 @@ function bindTop(){const isLocked=()=>!!state.setupLocked;document.querySelector
 buildCards();initYearStore();if(!state.cards||!state.cards.length)buildCards();bindTop();refresh(false);
 
 /* v175 — Correct Supabase routing JS additions only */
-const SUPABASE_URL = 'https://kdbehgxivkyowlovtbhh.supabase.co';
+const SUPABASE_URL = 'https://kdbehgxivkyowlovtbnh.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_LFbXSrdILd-NwWHaaUnBTQ_tFfB3hyE';
 const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
