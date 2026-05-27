@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v181 · pharmacy stays open';
+      content:'v182 · visible cloud save';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5524,6 +5524,45 @@
     body.scl-pharmacy #sclLanding,
     body.scl-pharmacy #sclHqShell{
       display:none!important;
+    }
+
+
+    /* v182 — persistent cloud save monitor */
+    .scl-savebar{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      z-index:7000;
+      width:min(440px,calc(100vw - 32px));
+      background:#fff;
+      border:1px solid var(--line,#d9e1ea);
+      border-radius:14px;
+      box-shadow:0 14px 36px rgba(20,33,61,.18);
+      padding:10px 12px;
+      display:none;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      font-size:11px;
+    }
+    body.scl-pharmacy .scl-savebar{display:flex}
+    .scl-savebar-main{display:grid;gap:2px}
+    .scl-savebar-title{font-weight:950;color:var(--text,#14213d)}
+    .scl-savebar-meta{color:var(--muted,#637083);font-weight:750}
+    .scl-savebar-status{font-weight:950}
+    .scl-savebar-status.ok{color:var(--green,#0e8f51)}
+    .scl-savebar-status.saving{color:#174dc2}
+    .scl-savebar-status.err{color:#b42318}
+    .scl-savebar button{
+      border:1px solid #c9dafd;
+      background:var(--blueSoft,#edf4ff);
+      color:#174dc2;
+      border-radius:10px;
+      padding:8px 10px;
+      font-size:10px;
+      font-weight:950;
+      cursor:pointer;
+      white-space:nowrap;
     }
 
 </style>
@@ -14932,7 +14971,20 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
 
   </style>
 
-</head><body>${sheet.outerHTML}</body></html>`);
+</head><body>${sheet.outerHTML}
+  <!-- v182 — persistent cloud save monitor -->
+  <div id="sclSavebar" class="scl-savebar">
+    <div class="scl-savebar-main">
+      <div class="scl-savebar-title">Cloud save · <span id="sclSavebarPharmacy">—</span></div>
+      <div class="scl-savebar-meta">
+        <span id="sclSavebarStatus" class="scl-savebar-status">Σύνδεση...</span>
+        <span id="sclSavebarTime">Δεν έχει γίνει αποθήκευση ακόμη</span>
+      </div>
+    </div>
+    <button id="sclManualCloudSaveBtn" type="button">Save cloud now</button>
+  </div>
+
+</body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
 });document.querySelectorAll('[data-clear-timeline-focus]').forEach(b=>b.onclick=()=>{state.timelineFocus=null;refresh();});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('open')});document.querySelectorAll('[data-modal-card]').forEach(x=>x.onclick=e=>e.stopPropagation());
   document.querySelectorAll('[data-lock-initial-network]').forEach(b=>b.onclick=()=>{const c=state.cards.find(x=>x.id===b.dataset.cardId);if(!c)return;const program=b.dataset.lockInitialNetwork;if(lockInitialPlan(c,'network',program,schedule(program))){closeModal('programModal');refresh();}});
