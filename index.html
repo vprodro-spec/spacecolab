@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v185 · HQ changes todo';
+      content:'v186 · HQ dashboard';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5762,6 +5762,356 @@ body:not(.scl-pharmacy) #sclSavebar,body:not(.scl-pharmacy) .scl-cloud-topbar{di
     grid-column:2;
   }
   .scl-hq-mini-stats{grid-template-columns:1fr 1fr}
+}
+
+
+/* v186 — SpaceCoLab HQ dashboard redesign */
+body.scl-hq{
+  background:var(--bg,#eef2f7)!important;
+}
+body.scl-hq #sclHqShell{
+  max-width:none!important;
+  width:100%!important;
+  margin:0!important;
+  background:var(--soft,#f7f9fc)!important;
+  border:1px solid var(--line,#d9e1ea)!important;
+  border-radius:18px!important;
+  padding:14px!important;
+}
+.scl-hq-hero{
+  background:linear-gradient(90deg,var(--blue,#1f66ff),var(--blue2,#143fbd));
+  border-radius:14px;
+  min-height:92px;
+  padding:18px 22px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  color:#fff;
+  flex-wrap:wrap;
+}
+.scl-hq-logo-main{
+  font-weight:950;
+  font-size:42px;
+  letter-spacing:-.06em;
+  line-height:.95;
+}
+.scl-hq-logo-main .thin{font-weight:300;letter-spacing:-.07em}
+.scl-hq-logo-sub{
+  font-size:12px;
+  letter-spacing:.14em;
+  margin-top:6px;
+  opacity:.9;
+  font-weight:850;
+}
+.scl-hq-hero-copy{
+  max-width:520px;
+  text-align:right;
+}
+.scl-hq-hero-kicker{
+  display:inline-flex;
+  border-radius:999px;
+  background:rgba(255,255,255,.14);
+  border:1px solid rgba(255,255,255,.22);
+  padding:5px 10px;
+  font-size:10px;
+  font-weight:950;
+  margin-bottom:8px;
+}
+.scl-hq-hero-title{
+  font-size:18px;
+  font-weight:950;
+  letter-spacing:-.02em;
+}
+.scl-hq-hero-sub{
+  margin-top:4px;
+  font-size:12px;
+  line-height:1.35;
+  opacity:.9;
+  font-weight:750;
+}
+.scl-hq-tabs{
+  display:flex;
+  gap:8px;
+  margin:12px 0;
+  overflow-x:auto;
+  padding-bottom:2px;
+}
+.scl-hq-tab{
+  border:1px solid var(--line,#d9e1ea);
+  background:#fff;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:950;
+  color:#40506a;
+  cursor:pointer;
+  white-space:nowrap;
+  font-size:12px;
+}
+.scl-hq-tab.active{
+  background:#111;
+  color:#fff;
+  border-color:#111;
+}
+.scl-hq-panel{display:none}
+.scl-hq-panel.active{display:block}
+.scl-hq-section{
+  background:#fff;
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:14px;
+}
+.scl-hq-section-head{
+  font-size:10px;
+  color:var(--muted,#637083);
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  border-bottom:1px solid var(--line,#d9e1ea);
+  padding:2px 4px 10px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.scl-hq-overview-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;
+}
+.scl-hq-metric{
+  background:#fff;
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  overflow:hidden;
+}
+.scl-hq-metric-head{
+  background:#111;
+  color:#fff;
+  padding:8px 10px;
+  font-size:10px;
+  font-weight:950;
+  text-transform:uppercase;
+}
+.scl-hq-metric-body{
+  padding:10px;
+  background:#fbfcff;
+}
+.scl-hq-metric-value{
+  font-size:24px;
+  font-weight:950;
+  letter-spacing:-.03em;
+}
+.scl-hq-metric-sub{
+  font-size:10px;
+  color:var(--muted,#637083);
+  margin-top:4px;
+  font-weight:750;
+}
+.scl-hq-two-col{
+  display:grid;
+  grid-template-columns:1.1fr .9fr;
+  gap:14px;
+  align-items:start;
+}
+.scl-hq-card-list{
+  display:grid;
+  gap:10px;
+}
+.scl-hq-pharmacy-card{
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  background:#fff;
+  padding:12px;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+}
+.scl-hq-pharmacy-title{
+  font-size:14px;
+  font-weight:950;
+  color:var(--text,#14213d);
+}
+.scl-hq-pharmacy-meta{
+  margin-top:5px;
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+}
+.scl-hq-link-mini{
+  margin-top:8px;
+  font-size:10px;
+  color:#174dc2;
+  font-weight:850;
+  word-break:break-all;
+}
+.scl-hq-actions{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.scl-hq-btn{
+  border:1px solid #c9dafd;
+  background:var(--blueSoft,#edf4ff);
+  color:#174dc2;
+  border-radius:10px;
+  min-height:34px;
+  padding:0 11px;
+  font-size:10px;
+  font-weight:950;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.scl-hq-btn.dark{
+  background:#111;
+  border-color:#111;
+  color:#fff;
+}
+.scl-hq-btn.green{
+  border-color:#bde5ce;
+  background:#eaf8f0;
+  color:#0e6f40;
+}
+.scl-hq-create-modern{
+  background:#fbfcff;
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  padding:12px;
+}
+.scl-hq-create-modern .title{
+  font-size:14px;
+  font-weight:950;
+  color:var(--text,#14213d);
+}
+.scl-hq-create-modern .sub{
+  margin-top:3px;
+  font-size:11px;
+  color:var(--muted,#637083);
+  font-weight:750;
+}
+.scl-hq-create-form{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.scl-hq-create-form input,
+.scl-hq-program-table input,
+.scl-hq-program-table textarea,
+.scl-hq-program-table select{
+  min-height:38px;
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:10px;
+  padding:0 10px;
+  font-weight:850;
+  color:var(--text,#14213d);
+  background:#fff;
+}
+.scl-hq-create-form input{flex:1;min-width:240px}
+.scl-hq-created-modern{
+  display:none;
+  margin-top:10px;
+  border:1px solid #bde5ce;
+  background:#eaf8f0;
+  color:#0e6f40;
+  border-radius:12px;
+  padding:10px;
+  font-size:11px;
+  font-weight:850;
+  word-break:break-all;
+}
+.scl-hq-change-groups{
+  display:grid;
+  gap:12px;
+}
+.scl-hq-month-group{
+  border:1px solid var(--line,#d9e1ea);
+  border-radius:14px;
+  overflow:hidden;
+  background:#fff;
+}
+.scl-hq-month-title{
+  background:#fbfcff;
+  border-bottom:1px solid var(--line,#d9e1ea);
+  padding:10px 12px;
+  font-size:12px;
+  font-weight:950;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+}
+.scl-hq-month-count{
+  color:var(--muted,#637083);
+  font-size:10px;
+}
+.scl-hq-change-card{
+  padding:10px 12px;
+  border-bottom:1px solid var(--line,#d9e1ea);
+  display:grid;
+  grid-template-columns:26px 1fr auto;
+  gap:10px;
+  align-items:start;
+}
+.scl-hq-change-card:last-child{border-bottom:none}
+.scl-hq-change-card.done{opacity:.56}
+.scl-hq-change-title{
+  font-weight:950;
+  color:var(--text,#14213d);
+}
+.scl-hq-change-details{
+  margin-top:4px;
+  display:flex;
+  gap:5px;
+  flex-wrap:wrap;
+  font-size:10px;
+  color:var(--muted,#637083);
+  font-weight:850;
+}
+.scl-hq-program-table{
+  display:grid;
+  gap:8px;
+}
+.scl-hq-program-row{
+  display:grid;
+  grid-template-columns:70px 1fr 1fr 1fr auto;
+  gap:8px;
+  align-items:start;
+}
+.scl-hq-program-row.header{
+  font-size:10px;
+  color:var(--muted,#637083);
+  font-weight:950;
+  text-transform:uppercase;
+}
+.scl-hq-program-row textarea{
+  min-height:38px;
+  padding-top:8px;
+  resize:vertical;
+}
+.scl-hq-placeholder{
+  border:1px dashed #c9dafd;
+  border-radius:14px;
+  background:#fbfcff;
+  padding:16px;
+  color:var(--muted,#637083);
+  font-weight:850;
+  line-height:1.4;
+}
+@media(max-width:1100px){
+  .scl-hq-overview-grid{grid-template-columns:repeat(2,1fr)}
+  .scl-hq-two-col{grid-template-columns:1fr}
+  .scl-hq-hero-copy{text-align:left}
+  .scl-hq-program-row{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .scl-hq-overview-grid{grid-template-columns:1fr}
+  .scl-hq-pharmacy-card{grid-template-columns:1fr}
+  .scl-hq-actions{justify-content:flex-start}
 }
 
 </style>
@@ -8297,78 +8647,120 @@ body:not(.scl-pharmacy) #sclSavebar,body:not(.scl-pharmacy) .scl-cloud-topbar{di
     </div>
 
   <div id="sclHqShell" class="scl-access-card">
-    <div class="scl-access-hero">
+    <div class="scl-hq-hero">
       <div>
-        <div class="scl-access-title">SpaceCoLab HQ</div>
-        <div class="scl-access-sub">Κεντρική διαχείριση φαρμακείων, Pharmaplus προγράμματος και αλλαγών.</div>
+        <div class="scl-hq-logo-main">SPACE<span class="thin">COLL</span>AB HQ</div>
+        <div class="scl-hq-logo-sub">CENTRAL RETAIL SPACE MANAGEMENT</div>
       </div>
-      <span class="scl-access-pill">HQ mode</span>
-    </div>
-    <div class="scl-hq-grid">
-      <div class="scl-hq-card"><div class="scl-hq-k">Φαρμακεία</div><div class="scl-hq-v" id="sclHqPharmacyCount">—</div></div>
-      <div class="scl-hq-card"><div class="scl-hq-k">States</div><div class="scl-hq-v" id="sclHqStateCount">—</div></div>
-      <div class="scl-hq-card"><div class="scl-hq-k">HQ Programs</div><div class="scl-hq-v" id="sclHqProgramCount">—</div></div>
-    </div>
-
-    <div id="sclHqMiniStats" class="scl-hq-mini-stats">
-      <div class="scl-hq-mini-card"><div class="scl-hq-mini-k">Σύνολο αλλαγών</div><div class="scl-hq-mini-v" id="sclHqTotalChanges">—</div></div>
-      <div class="scl-hq-mini-card"><div class="scl-hq-mini-k">Εκκρεμούν</div><div class="scl-hq-mini-v" id="sclHqPendingChanges">—</div></div>
-      <div class="scl-hq-mini-card"><div class="scl-hq-mini-k">Συμφωνίες</div><div class="scl-hq-mini-v" id="sclHqDealChanges">—</div></div>
-      <div class="scl-hq-mini-card"><div class="scl-hq-mini-k">Χορηγούμενα</div><div class="scl-hq-mini-v" id="sclHqSponsoredChanges">—</div></div>
+      <div class="scl-hq-hero-copy">
+        <div class="scl-hq-hero-kicker">HQ mode</div>
+        <div class="scl-hq-hero-title">Κεντρική εικόνα φαρμακείων, ενεργειών και Pharmaplus προγράμματος.</div>
+        <div class="scl-hq-hero-sub">Δημιουργία links, παρακολούθηση αλλαγών, πρόγραμμα κεντρικής θέσης και μελλοντικά reporting / billing.</div>
+      </div>
     </div>
 
-    <div class="scl-hq-changes" id="sclHqChangesBox">
-      <div class="scl-hq-changes-head">
+    <div class="scl-hq-tabs" id="sclHqTabs">
+      <button class="scl-hq-tab active" data-hq-tab="overview">Επισκόπηση</button>
+      <button class="scl-hq-tab" data-hq-tab="pharmacies">Φαρμακεία</button>
+      <button class="scl-hq-tab" data-hq-tab="changes">Αλλαγές</button>
+      <button class="scl-hq-tab" data-hq-tab="program">Pharmaplus πρόγραμμα</button>
+      <button class="scl-hq-tab" data-hq-tab="reporting">Reporting</button>
+      <button class="scl-hq-tab" data-hq-tab="billing">Billing</button>
+    </div>
+
+    <div class="scl-hq-panel active" data-hq-panel="overview">
+      <div class="scl-hq-overview-grid">
+        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Φαρμακεία</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqPharmacyCount">—</div><div class="scl-hq-metric-sub">με ενεργό link</div></div></div>
+        <div class="scl-hq-metric"><div class="scl-hq-metric-head">States</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqStateCount">—</div><div class="scl-hq-metric-sub">αποθηκευμένα προγράμματα</div></div></div>
+        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Προγράμματα</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqProgramCount">—</div><div class="scl-hq-metric-sub">Pharmaplus ανά έτος</div></div></div>
+        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Εκκρεμούν</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqPendingChanges">—</div><div class="scl-hq-metric-sub">αλλαγές προς HQ</div></div></div>
+        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Μήνας</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqCurrentMonth">—</div><div class="scl-hq-metric-sub">τρέχουσα εικόνα</div></div></div>
+      </div>
+
+      <div class="scl-hq-two-col" style="margin-top:14px">
+        <div class="scl-hq-section">
+          <div class="scl-hq-section-head"><span>Άμεσες εκκρεμότητες</span><button class="scl-hq-btn" data-hq-tab-jump="changes">Όλες οι αλλαγές</button></div>
+          <div id="sclHqOverviewChanges" class="scl-hq-change-groups"></div>
+        </div>
+        <div class="scl-hq-section">
+          <div class="scl-hq-section-head"><span>Τελευταία φαρμακεία</span><button class="scl-hq-btn" data-hq-tab-jump="pharmacies">Όλα τα φαρμακεία</button></div>
+          <div id="sclHqOverviewPharmacies" class="scl-hq-card-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scl-hq-panel" data-hq-panel="pharmacies">
+      <div class="scl-hq-two-col">
         <div>
-          <div class="scl-hq-changes-title">Αλλαγές / To-do από φαρμακεία</div>
-          <div class="scl-hq-changes-sub">Προκύπτουν από τα αποθηκευμένα pharmacy states ανά έτος και μήνα.</div>
+          <div class="scl-hq-create-modern">
+            <div class="title">+ Νέο φαρμακείο</div>
+            <div class="sub">Το HQ δημιουργεί το φαρμακείο και παίρνει έτοιμο προσωπικό link για αποστολή.</div>
+            <div class="scl-hq-create-form">
+              <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
+              <button id="sclCreatePharmacyHqBtn" class="scl-hq-btn dark" type="button">Δημιουργία token / link</button>
+            </div>
+            <div id="sclCreatedLinkBox" class="scl-hq-created-modern"></div>
+          </div>
+          <div class="scl-hq-section" style="margin-top:14px">
+            <div class="scl-hq-section-head"><span>Φαρμακεία & προσωπικά links</span><button id="sclRefreshHqBtn" class="scl-hq-btn" type="button">Ανανέωση HQ</button></div>
+            <div id="sclHqPharmacyList" class="scl-hq-card-list"></div>
+          </div>
         </div>
-        <div class="scl-hq-filter">
-          <select id="sclHqChangeYearFilter"></select>
-          <select id="sclHqChangeMonthFilter"></select>
-          <select id="sclHqChangeTypeFilter">
-            <option value="">Όλα τα είδη</option>
-            <option value="basic">Βασικό</option>
-            <option value="custom">Εξατομικ.</option>
-            <option value="deal">Συμφων.</option>
-            <option value="sponsored">Χορηγ.</option>
-            <option value="hq">Pharmaplus</option>
-          </select>
+        <div class="scl-hq-section">
+          <div class="scl-hq-section-head"><span>Οδηγία χρήσης</span></div>
+          <div class="scl-hq-placeholder">Το φαρμακείο δεν δημιουργεί λογαριασμό. Το HQ δημιουργεί το link και το στέλνει. Κάθε link περιέχει token και ανοίγει μόνο το αντίστοιχο pharmacy state.</div>
         </div>
       </div>
-      <div id="sclHqChangesList"></div>
     </div>
 
-    <div class="scl-access-section">
-      <h3>HQ shell ενεργό</h3>
-      <p>Το επόμενο βήμα είναι να προστεθεί εδώ το κουμπί <strong>Νέο φαρμακείο</strong>, η δημιουργία token και το copy link.</p>
-    </div>
-
-    <div class="scl-hq-create">
-      <div class="scl-hq-create-title">+ Νέο φαρμακείο</div>
-      <div class="scl-hq-create-row">
-        <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
-        <button id="sclCreatePharmacyHqBtn" class="scl-hq-action" type="button">Δημιουργία token / link</button>
-      </div>
-      <div id="sclCreatedLinkBox" class="scl-hq-link-box"></div>
-    </div>
-    
-    <div class="scl-hq-toolbar" id="sclHqToolbar">
-      <div>
-        <div class="scl-hq-toolbar-title">Φαρμακεία & προσωπικά links</div>
-        <div class="scl-hq-toolbar-sub">Το HQ δημιουργεί και αντιγράφει τα links. Το φαρμακείο μπαίνει μόνο από το δικό του link.</div>
-      </div>
-      <button id="sclRefreshHqBtn" type="button">Ανανέωση HQ</button>
-    </div>
-
-    <div class="scl-hq-list">
-      <div class="scl-hq-list-head">Φαρμακεία & links</div>
-      <div id="sclHqPharmacyList">
-        <div class="scl-hq-row"><strong>Φόρτωση...</strong><span></span><span></span></div>
+    <div class="scl-hq-panel" data-hq-panel="changes">
+      <div class="scl-hq-section">
+        <div class="scl-hq-section-head">
+          <span>Αλλαγές / To-do από φαρμακεία</span>
+          <div class="scl-hq-filter">
+            <select id="sclHqChangeYearFilter"></select>
+            <select id="sclHqChangeMonthFilter"></select>
+            <select id="sclHqChangeTypeFilter">
+              <option value="">Όλα τα είδη</option>
+              <option value="basic">Βασικό</option>
+              <option value="custom">Εξατομικ.</option>
+              <option value="deal">Συμφων.</option>
+              <option value="sponsored">Χορηγ.</option>
+              <option value="hq">Pharmaplus</option>
+            </select>
+          </div>
+        </div>
+        <div id="sclHqChangesList"></div>
       </div>
     </div>
 
-  </div>
+    <div class="scl-hq-panel" data-hq-panel="program">
+      <div class="scl-hq-section">
+        <div class="scl-hq-section-head">
+          <span>Pharmaplus πρόγραμμα κεντρικής θέσης</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="sclHqProgramYear"></select>
+            <button id="sclHqSaveProgramBtn" class="scl-hq-btn dark" type="button">Αποθήκευση προγράμματος</button>
+          </div>
+        </div>
+        <div id="sclHqProgramEditor" class="scl-hq-program-table"></div>
+      </div>
+    </div>
+
+    <div class="scl-hq-panel" data-hq-panel="reporting">
+      <div class="scl-hq-section">
+        <div class="scl-hq-section-head"><span>Reporting</span></div>
+        <div class="scl-hq-placeholder">Επόμενο στάδιο: upload reports ανά φαρμακείο, σύνδεση με συμφωνία / brand / μήνα και αποθήκευση metadata στο Supabase.</div>
+      </div>
+    </div>
+
+    <div class="scl-hq-panel" data-hq-panel="billing">
+      <div class="scl-hq-section">
+        <div class="scl-hq-section-head"><span>Billing</span></div>
+        <div class="scl-hq-placeholder">Επόμενο στάδιο: χρεώσεις Basic, Εξατομίκευση, Συμφωνίες, Χορηγούμενα, reports και συνολικό billing ανά φαρμακείο / έτος.</div>
+      </div>
+    </div>
+</div>
 
   <div id="sclCloudStatus" class="scl-cloud-status" aria-live="polite"></div>
 
@@ -15974,6 +16366,203 @@ function sclBindV185(){
 }
 setTimeout(sclBindV185,300);
 setTimeout(sclBindV185,1200);
+
+
+/* v186 — SpaceCoLab HQ dashboard renderers */
+let SCL_HQ_DATA_V186 = null;
+
+function sclHqSetTabV186(tab){
+  document.querySelectorAll('.scl-hq-tab').forEach(b=>b.classList.toggle('active',b.dataset.hqTab===tab));
+  document.querySelectorAll('.scl-hq-panel').forEach(p=>p.classList.toggle('active',p.dataset.hqPanel===tab));
+}
+function sclHqBindTabsV186(){
+  document.querySelectorAll('[data-hq-tab]').forEach(b=>{
+    if(b.dataset.boundV186)return;
+    b.dataset.boundV186='1';
+    b.addEventListener('click',()=>sclHqSetTabV186(b.dataset.hqTab));
+  });
+  document.querySelectorAll('[data-hq-tab-jump]').forEach(b=>{
+    if(b.dataset.boundV186)return;
+    b.dataset.boundV186='1';
+    b.addEventListener('click',()=>sclHqSetTabV186(b.dataset.hqTabJump));
+  });
+}
+function sclCopyTextV186(text,btn){
+  if(!text)return;
+  navigator.clipboard.writeText(text).then(()=>{
+    if(btn){const old=btn.textContent;btn.textContent='Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');},1200);}
+  }).catch(()=>prompt('Copy link:',text));
+}
+function sclBuildStateMapV186(states){
+  const map={};
+  (states||[]).forEach(s=>{if(!map[s.pharmacy_id])map[s.pharmacy_id]=[];map[s.pharmacy_id].push(s);});
+  Object.values(map).forEach(arr=>arr.sort((a,b)=>Number(b.year||0)-Number(a.year||0)));
+  return map;
+}
+function sclStatePillsV186(states){
+  if(!states||!states.length)return '<span class="scl-state-pill none">no state yet</span>';
+  return states.map(s=>{
+    const dt=s.updated_at?new Date(s.updated_at).toLocaleDateString('el-GR'):'';
+    return `<span class="scl-state-pill saved">${esc(String(s.year||'—'))} saved${dt?' · '+esc(dt):''}</span>`;
+  }).join('');
+}
+function sclRenderHqPharmacyCardsV186(data){
+  const target=document.getElementById('sclHqPharmacyList');
+  const overview=document.getElementById('sclHqOverviewPharmacies');
+  const statesBy=sclBuildStateMapV186(data?.pharmacy_state||[]);
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  const renderCard=p=>{
+    const token=p.token||'';
+    const link=token?sclBuildPharmacyLink(token):'';
+    const states=statesBy[p.id]||[];
+    return `<div class="scl-hq-pharmacy-card">
+      <div>
+        <div class="scl-hq-pharmacy-title">${esc(p.name||'Φαρμακείο')}</div>
+        <div class="scl-hq-pharmacy-meta">${sclStatePillsV186(states)}</div>
+        <div class="scl-hq-link-mini">${token?esc(link):'Δεν επιστρέφεται token από Supabase'}</div>
+      </div>
+      <div class="scl-hq-actions">
+        ${token?`<button class="scl-hq-btn" data-copy-link="${esc(link)}">Copy link</button><button class="scl-hq-btn green" onclick="window.open('${link.replace(/'/g,"\\'")}','_blank')">Open</button>`:'<button class="scl-hq-btn" disabled>no token</button>'}
+      </div>
+    </div>`;
+  };
+  if(target)target.innerHTML=pharmacies.length?pharmacies.map(renderCard).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+  if(overview)overview.innerHTML=pharmacies.length?pharmacies.slice(0,4).map(renderCard).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+  document.querySelectorAll('[data-copy-link]').forEach(btn=>{
+    if(btn.dataset.boundV186)return;
+    btn.dataset.boundV186='1';
+    btn.addEventListener('click',()=>sclCopyTextV186(btn.dataset.copyLink,btn));
+  });
+}
+function sclRenderHqChangesCardsV186(data){
+  let changes=[];
+  if(typeof sclBuildChangesV185==='function')changes=sclBuildChangesV185(data);
+  const all=changes;
+  // populate filters if available
+  if(typeof sclPopulateChangeFiltersV185==='function')sclPopulateChangeFiltersV185(all);
+  const yf=document.getElementById('sclHqChangeYearFilter');
+  const mf=document.getElementById('sclHqChangeMonthFilter');
+  const tf=document.getElementById('sclHqChangeTypeFilter');
+  const yearVal=yf?.value||'';
+  const monthVal=mf?.value||'';
+  const typeVal=tf?.value||'';
+  const filtered=all.filter(c=>(!yearVal||String(c.year)===yearVal)&&(!monthVal||String(c.monthIdx)===monthVal)&&(!typeVal||c.type===typeVal));
+  document.getElementById('sclHqPendingChanges').textContent=String(all.filter(c=>!c.done).length);
+  const currentMonthEl=document.getElementById('sclHqCurrentMonth');
+  if(currentMonthEl)currentMonthEl.textContent=(typeof SCL_MONTHS_V185!=='undefined'?SCL_MONTHS_V185[new Date().getMonth()]:'—');
+  const target=document.getElementById('sclHqChangesList');
+  const overview=document.getElementById('sclHqOverviewChanges');
+  const renderList=(arr,limit=null)=>{
+    const rows=limit?arr.filter(c=>!c.done).slice(0,limit):arr;
+    if(!rows.length)return '<div class="scl-hq-placeholder">Δεν υπάρχουν αλλαγές με τα τρέχοντα φίλτρα.</div>';
+    const groups={};
+    rows.forEach(c=>{
+      const k=`${c.month} ${c.year}`;
+      if(!groups[k])groups[k]=[];
+      groups[k].push(c);
+    });
+    return Object.keys(groups).map(k=>`<div class="scl-hq-month-group">
+      <div class="scl-hq-month-title"><span>${esc(k)}</span><span class="scl-hq-month-count">${groups[k].length} αλλαγές</span></div>
+      ${groups[k].map(c=>`<div class="scl-hq-change-card ${c.done?'done':''}">
+        <div><input class="scl-hq-check" type="checkbox" ${c.done?'checked':''} data-change-key="${esc(c.key)}"></div>
+        <div>
+          <div class="scl-hq-change-title">${esc(c.pharmacy)} · ${esc(c.position)}</div>
+          <div class="scl-hq-change-details">
+            <span>${esc(c.label)}</span>
+            ${c.mechanism?`<span>· ${esc(c.mechanism)}</span>`:''}
+          </div>
+        </div>
+        <div><span class="scl-hq-type-pill ${c.type}">${esc(typeof sclTypeLabelV185==='function'?sclTypeLabelV185(c.type):c.type)}</span></div>
+      </div>`).join('')}
+    </div>`).join('');
+  };
+  if(target)target.innerHTML=renderList(filtered);
+  if(overview)overview.innerHTML=renderList(all,5);
+  document.querySelectorAll('[data-change-key]').forEach(chk=>{
+    if(chk.dataset.boundV186)return;
+    chk.dataset.boundV186='1';
+    chk.addEventListener('change',()=>typeof sclSetChangeDoneV185==='function'?sclSetChangeDoneV185(chk.dataset.changeKey,chk.checked):null);
+  });
+}
+function sclRenderProgramEditorV186(data){
+  const yearSel=document.getElementById('sclHqProgramYear');
+  const editor=document.getElementById('sclHqProgramEditor');
+  if(!yearSel||!editor)return;
+  const current=new Date().getFullYear();
+  const years=[...new Set([current,current+1,...(data?.hq_programs||[]).map(p=>Number(p.year)).filter(Boolean)])].sort((a,b)=>a-b);
+  if(!yearSel.dataset.ready){
+    yearSel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
+    yearSel.value=String(current);
+    yearSel.dataset.ready='1';
+  }
+  const y=Number(yearSel.value);
+  const program=(data?.hq_programs||[]).find(p=>Number(p.year)===y)?.program_json||{};
+  const months=program.months||[];
+  const messages=program.messages||[];
+  const instructions=program.instructions||[];
+  editor.innerHTML='<div class="scl-hq-program-row header"><div>Μήνας</div><div>Θέμα</div><div>Μήνυμα</div><div>Οδηγίες</div><div>Status</div></div>'+
+    (typeof SCL_MONTHS_V185!=='undefined'?SCL_MONTHS_V185:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']).map((m,i)=>`
+      <div class="scl-hq-program-row" data-program-month="${i}">
+        <div><strong>${m}</strong></div>
+        <input data-program-field="theme" value="${esc(months[i]||'')}">
+        <textarea data-program-field="message">${esc(messages[i]||'')}</textarea>
+        <textarea data-program-field="instructions">${esc(instructions[i]||'')}</textarea>
+        <select data-program-field="status">
+          <option value="draft">Draft</option>
+          <option value="ready" ${(program.statuses||[])[i]==='ready'?'selected':''}>Ready</option>
+          <option value="live" ${(program.statuses||[])[i]==='live'?'selected':''}>Live</option>
+        </select>
+      </div>`).join('');
+}
+async function sclSaveProgramV186(){
+  if(!sb||sclMode()!=='hq')return;
+  const year=Number(document.getElementById('sclHqProgramYear')?.value||new Date().getFullYear());
+  const months=[],messages=[],instructions=[],statuses=[];
+  document.querySelectorAll('[data-program-month]').forEach(row=>{
+    const i=Number(row.dataset.programMonth);
+    months[i]=row.querySelector('[data-program-field="theme"]')?.value||'';
+    messages[i]=row.querySelector('[data-program-field="message"]')?.value||'';
+    instructions[i]=row.querySelector('[data-program-field="instructions"]')?.value||'';
+    statuses[i]=row.querySelector('[data-program-field="status"]')?.value||'draft';
+  });
+  const {error}=await sb.rpc('hq_upsert_program',{p_hq_key:SCL_ROUTING.hqKey,p_year:year,p_program_json:{months,messages,instructions,statuses}});
+  if(error){sclCloudStatus(error.message,'err');return;}
+  sclCloudStatus('Το Pharmaplus πρόγραμμα αποθηκεύτηκε.','ok');
+  await sclLoadHqShell();
+}
+const __oldSclLoadHqShellV186 = typeof sclLoadHqShell==='function' ? sclLoadHqShell : null;
+if(__oldSclLoadHqShellV186){
+  sclLoadHqShell = async function(){
+    if(!sb){sclCloudStatus('Δεν φορτώθηκε το Supabase SDK.','err');return;}
+    sclCloudStatus('Φόρτωση HQ dashboard…');
+    const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+    if(error){sclCloudStatus(error.message,'err');return;}
+    const d=data||{};
+    SCL_HQ_DATA_V186=d;
+    document.getElementById('sclHqPharmacyCount').textContent=(d.pharmacies||[]).length;
+    document.getElementById('sclHqStateCount').textContent=(d.pharmacy_state||[]).length;
+    document.getElementById('sclHqProgramCount').textContent=(d.hq_programs||[]).length;
+    sclRenderHqPharmacyCardsV186(d);
+    sclRenderHqChangesCardsV186(d);
+    sclRenderProgramEditorV186(d);
+    sclHqBindTabsV186();
+    sclCloudStatus('HQ dashboard φορτώθηκε.','ok');
+  }
+}
+function sclBindV186(){
+  sclHqBindTabsV186();
+  document.getElementById('sclHqSaveProgramBtn')?.addEventListener('click',sclSaveProgramV186);
+  document.getElementById('sclHqProgramYear')?.addEventListener('change',()=>SCL_HQ_DATA_V186?sclRenderProgramEditorV186(SCL_HQ_DATA_V186):null);
+  ['sclHqChangeYearFilter','sclHqChangeMonthFilter','sclHqChangeTypeFilter'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el.dataset.boundV186){
+      el.dataset.boundV186='1';
+      el.addEventListener('change',()=>SCL_HQ_DATA_V186?sclRenderHqChangesCardsV186(SCL_HQ_DATA_V186):null);
+    }
+  });
+}
+setTimeout(sclBindV186,300);
+setTimeout(sclBindV186,1200);
 
 </script>
 
