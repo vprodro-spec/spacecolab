@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v212 · approved HQ dashboard · HQ reference layout';
+      content:'v213 · HQ cleanup create sort refresh · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -6230,6 +6230,29 @@ body.scl-hq #sclHqOperationsPanel{display:none!important}
 .scl212-upload-zone{border:1.5px dashed #ccc;border-radius:12px;padding:2rem;text-align:center;color:#666;font-size:13px;cursor:pointer;margin-bottom:1rem}.scl212-report-list{display:flex;flex-direction:column;gap:8px}.scl212-report-item{background:#f5f5f3;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px}.scl212-report-item .ri-name{font-weight:500;flex:1}.scl212-report-item .ri-meta{font-size:12px;color:#666}.scl212-report-item .ri-pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#EAF3DE;color:#3B6D11;font-weight:500}
 .scl212-note{background:#f5f5f3;border-radius:8px;padding:10px 14px;color:#666;font-size:13px;margin-bottom:1rem}.scl212-debug{margin-top:1rem;background:#f5f5f3;border-radius:8px;padding:10px 14px;font-size:12px;color:#666}
 @media(max-width:600px){.scl212-two-col{grid-template-columns:1fr}.scl212-export-actions{margin-left:0}}
+
+
+/* v213 — HQ cleanup, create pharmacy card, persistent tasks, sorting, refresh */
+body.scl-hq #sclHqShell > *:not(#scl212Dashboard){display:none!important}
+body.scl-hq .hq-shell,
+body.scl-hq .hq-dashboard,
+body.scl-hq .hq-panel,
+body.scl-hq .dashboard,
+body.scl-hq #hqDashboard,
+body.scl-hq #hqMode,
+body.scl-hq #sclHqMain,
+body.scl-hq #sclHqDashboard{display:none!important}
+.scl213-create-card{background:#f5f5f3;border-radius:8px;padding:1rem;margin-bottom:1rem}
+.scl213-create-head{font-size:13px;font-weight:500;margin-bottom:8px}
+.scl213-create-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.scl213-create-row input{flex:1;min-width:220px;font-size:13px;padding:6px 10px;border:0.5px solid #ccc;border-radius:6px}
+.scl213-link-box{margin-top:8px;font-size:12px;color:#666;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.scl213-link-box code{background:#fff;border:0.5px solid #e0e0e0;border-radius:6px;padding:5px 8px;color:#1a1a1a;max-width:100%;overflow:auto}
+.scl212-table th.scl213-sortable{cursor:pointer;user-select:none}
+.scl212-table th.scl213-sortable .scl213-si{margin-left:3px;opacity:.4;font-size:10px}
+.scl212-table th.scl213-sorted .scl213-si{opacity:1}
+.scl213-refresh-status{font-size:12px;color:#666;margin-left:4px}
+.scl213-auto-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#EAF3DE;color:#3B6D11}
 
 </style>
 
@@ -8787,7 +8810,7 @@ body.scl-hq #sclHqOperationsPanel{display:none!important}
         <option value="manual_monthly">Χειροκίνητες μηνιαίες αλλαγές</option>
         <option value="preprogrammed_basic">Προγραμματισμένο basic έτος</option>
       </select>
-      <button id="scl212Refresh" type="button">Ανανέωση</button>
+      <button id="scl212Refresh" type="button">Ανανέωση από cloud</button><span id="scl213RefreshStatus" class="scl213-refresh-status"></span><span class="scl213-auto-badge">auto 30s</span>
       <span class="scl212-hq-badge">HQ</span>
     </div>
   </div>
@@ -8805,7 +8828,18 @@ body.scl-hq #sclHqOperationsPanel{display:none!important}
   </div>
 
   <div id="scl212Page-overview" class="scl212-page active">
-    <div class="scl212-todo-section">
+    
+<div id="scl213CreatePharmacyCard" class="scl213-create-card">
+  <div class="scl213-create-head">Δημιουργία φαρμακείου</div>
+  <div class="scl213-create-row">
+    <input id="scl213PharmacyName" placeholder="Όνομα φαρμακείου">
+    <button id="scl213CreatePharmacyBtn" type="button">Δημιουργία</button>
+    <span id="scl213CreateStatus" class="scl213-refresh-status"></span>
+  </div>
+  <div id="scl213CreatedLink" class="scl213-link-box" style="display:none"></div>
+</div>
+
+<div class="scl212-todo-section">
       <div class="scl212-th">To-do — εκκρεμότητες</div>
       <div id="scl212Todo"></div>
     </div>
@@ -8834,7 +8868,7 @@ body.scl-hq #sclHqOperationsPanel{display:none!important}
       </div>
     </div>
     <table class="scl212-table">
-      <thead><tr><th style="width:36px"></th><th>Μήνας</th><th>Φαρμακείο</th><th>Θέση</th><th>Είδος</th><th>Περιεχόμενο</th><th style="text-align:right">Χρέωση</th></tr></thead>
+      <thead><tr><th style="width:36px"></th><th class="scl213-sortable" data-sort="month">Μήνας <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="pharmacy">Φαρμακείο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="position">Θέση <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="type">Είδος <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="content">Περιεχόμενο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="billing" style="text-align:right">Χρέωση <span class="scl213-si">↕</span></th></tr></thead>
       <tbody id="scl212Changes"></tbody>
     </table>
   </div>
@@ -21056,6 +21090,183 @@ function scl212Render(){
 }
 function scl212Boot(){scl212Bind();if(typeof sclMode==='function'&&sclMode()==='hq'&&!window.__scl212Loaded){window.__scl212Loaded=true;scl212Load()}}
 setTimeout(scl212Boot,600);setTimeout(scl212Boot,1800);setInterval(scl212Boot,5000);
+
+
+/* v213 — HQ cleanup/create/sort/persist/refresh */
+let SCL213_SORT = {col:'month', dir:1};
+let SCL213_AUTO_TIMER = null;
+
+function scl213LoadDone(){
+  try{
+    const key='scl_hq_done_'+(SCL_ROUTING?.hqKey||'default');
+    const raw=localStorage.getItem(key);
+    if(raw && window.SCL212) SCL212.done=JSON.parse(raw)||{};
+  }catch(e){}
+}
+function scl213SaveDone(){
+  try{
+    const key='scl_hq_done_'+(SCL_ROUTING?.hqKey||'default');
+    localStorage.setItem(key, JSON.stringify(SCL212?.done||{}));
+  }catch(e){}
+}
+function scl213Status(txt){
+  const el=document.getElementById('scl213RefreshStatus');
+  if(el)el.textContent=txt||'';
+}
+function scl213Now(){
+  const d=new Date();
+  return d.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit'});
+}
+const __oldScl212LoadV213 = typeof scl212Load==='function' ? scl212Load : null;
+if(__oldScl212LoadV213){
+  scl212Load = async function(){
+    scl213Status('φόρτωση...');
+    scl213LoadDone();
+    await __oldScl212LoadV213.apply(this,arguments);
+    scl213Status('τελευταία ενημέρωση '+scl213Now());
+  };
+}
+const __oldScl212RenderV213 = typeof scl212Render==='function' ? scl212Render : null;
+if(__oldScl212RenderV213){
+  scl212Render = function(){
+    const r=__oldScl212RenderV213.apply(this,arguments);
+    scl213BindExtra();
+    return r;
+  };
+}
+function scl213BindExtra(){
+  // Persist checkbox changes, because v212 only kept them in memory.
+  document.querySelectorAll('#scl212Dashboard input[type="checkbox"][data-task]').forEach(cb=>{
+    if(!cb.dataset.bound213){
+      cb.dataset.bound213='1';
+      cb.addEventListener('change',()=>setTimeout(scl213SaveDone,50));
+    }
+  });
+  document.querySelectorAll('#scl212Page-changes th.scl213-sortable').forEach(th=>{
+    if(!th.dataset.bound213){
+      th.dataset.bound213='1';
+      th.addEventListener('click',()=>{
+        const col=th.dataset.sort;
+        if(SCL213_SORT.col===col)SCL213_SORT.dir*=-1;
+        else {SCL213_SORT.col=col;SCL213_SORT.dir=1;}
+        if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+      });
+    }
+  });
+  const createBtn=document.getElementById('scl213CreatePharmacyBtn');
+  if(createBtn && !createBtn.dataset.bound213){
+    createBtn.dataset.bound213='1';
+    createBtn.addEventListener('click',scl213CreatePharmacy);
+  }
+  const input=document.getElementById('scl213PharmacyName');
+  if(input && !input.dataset.bound213){
+    input.dataset.bound213='1';
+    input.addEventListener('keydown',e=>{if(e.key==='Enter')scl213CreatePharmacy();});
+  }
+}
+function scl213SortValue(r,col){
+  if(col==='month')return Number(r.month||0);
+  if(col==='pharmacy')return String(r.pharmacy_name||'');
+  if(col==='position')return String(r.position_name||'');
+  if(col==='type')return String(r.final_type||'');
+  if(col==='content')return String(r.final_title||'');
+  if(col==='billing')return r.billing_change_applies?1:0;
+  return '';
+}
+function scl213ApplySort(rows){
+  const col=SCL213_SORT.col, dir=SCL213_SORT.dir;
+  return rows.sort((a,b)=>{
+    const va=scl213SortValue(a,col), vb=scl213SortValue(b,col);
+    let c=0;
+    if(typeof va==='number' && typeof vb==='number')c=va-vb;
+    else c=String(va).localeCompare(String(vb),'el');
+    return c*dir;
+  });
+}
+function scl213MarkSortHeader(){
+  document.querySelectorAll('#scl212Page-changes th.scl213-sortable').forEach(th=>{
+    const active=th.dataset.sort===SCL213_SORT.col;
+    th.classList.toggle('scl213-sorted',active);
+    const si=th.querySelector('.scl213-si');
+    if(si)si.textContent=active?(SCL213_SORT.dir===1?'↑':'↓'):'↕';
+  });
+}
+const __oldScl212RenderChangesV213 = typeof scl212RenderChanges==='function' ? scl212RenderChanges : null;
+if(__oldScl212RenderChangesV213){
+  scl212RenderChanges = function(){
+    const fm=document.getElementById('scl212FilterMonth')?.value??'', ft=document.getElementById('scl212FilterType')?.value??'';
+    let rows=scl212VisibleChanges().filter(r=>(fm===''||String(r.month)===String(fm))&&(!ft||r.final_type===ft||(ft==='sponsored'&&r.sponsored_active)));
+    rows=scl213ApplySort(rows);
+    document.getElementById('scl212Count').textContent=`${rows.length} αλλαγές`;
+    const tbody=document.getElementById('scl212Changes');
+    tbody.innerHTML=rows.map(r=>{
+      const id=scl212TaskId(['change',r.pharmacy_id,r.position_id,r.month]), done=!!SCL212.done[id], mat=scl212NeedsMaterial(r);
+      return `<tr class="${done?'scl212-done-row':''}${mat&&!done?' scl212-need-material':''}"><td><input type="checkbox"${done?' checked':''} data-task="${scl212Esc(id)}"></td><td style="color:#666">${scl212Esc(r.month_label)}</td><td><strong>${scl212Esc(r.pharmacy_name)}</strong></td><td style="color:#666">${scl212Esc(r.position_name)}</td><td>${scl212Pill(r.final_type,r.final_type)}</td><td><div style="font-weight:500">${scl212Esc(r.final_title||'—')}</div><div class="scl212-sub">${scl212Esc(r.content_change_reason||'')}</div>${mat&&!done?`<div style="font-size:11px;color:#854F0B;margin-top:2px">Χρειάζεται έλεγχος υλικού / supplier</div>`:''}</td><td style="text-align:right">${r.billing_change_applies?'event':'—'}</td></tr>`;
+    }).join('');
+    tbody.querySelectorAll('input[data-task]').forEach(cb=>cb.addEventListener('change',()=>{SCL212.done[cb.dataset.task]=cb.checked;scl213SaveDone();scl212Render();}));
+    scl213MarkSortHeader();
+    scl213BindExtra();
+  };
+}
+function scl213PharmacyUrl(token){
+  const base=location.href.split('?')[0].split('#')[0];
+  return base+'?pharmacy='+encodeURIComponent(token);
+}
+async function scl213CreatePharmacy(){
+  const nameEl=document.getElementById('scl213PharmacyName');
+  const status=document.getElementById('scl213CreateStatus');
+  const out=document.getElementById('scl213CreatedLink');
+  const name=(nameEl?.value||'').trim();
+  if(!name){ if(status)status.textContent='Γράψε όνομα φαρμακείου'; return; }
+  if(!sb || !SCL_ROUTING?.hqKey){ if(status)status.textContent='Δεν υπάρχει HQ cloud σύνδεση'; return; }
+  if(status)status.textContent='δημιουργία...';
+
+  // Try likely RPC names from previous versions without breaking if one doesn't exist.
+  let data=null, error=null;
+  const attempts=[
+    ['hq_create_pharmacy',{p_hq_key:SCL_ROUTING.hqKey,p_name:name}],
+    ['create_pharmacy_from_hq',{p_hq_key:SCL_ROUTING.hqKey,p_name:name}],
+    ['hq_create_pharmacy_with_key',{p_hq_key:SCL_ROUTING.hqKey,p_name:name}]
+  ];
+  for(const [fn,args] of attempts){
+    const res=await sb.rpc(fn,args);
+    if(!res.error){data=res.data; error=null; break;}
+    error=res.error;
+  }
+  if(error){
+    if(status)status.textContent='Δεν βρέθηκε function δημιουργίας. Χρησιμοποίησε προσωρινά το παλιό creation section/debug.';
+    console.error('create pharmacy error',error);
+    return;
+  }
+  const row=Array.isArray(data)?data[0]:data;
+  const token=row?.token || row?.pharmacy_token || row?.p_token || row?.new_token || '';
+  const link=token?scl213PharmacyUrl(token):'';
+  if(status)status.textContent='δημιουργήθηκε';
+  if(out){
+    out.style.display='flex';
+    out.innerHTML=link?`<span>Link:</span><code>${scl212Esc(link)}</code><button type="button" id="scl213CopyLink">Copy</button><button type="button" id="scl213OpenLink">Open</button>`:`<span>Δημιουργήθηκε, αλλά δεν επέστρεψε token.</span>`;
+    document.getElementById('scl213CopyLink')?.addEventListener('click',()=>navigator.clipboard.writeText(link));
+    document.getElementById('scl213OpenLink')?.addEventListener('click',()=>window.open(link,'_blank'));
+  }
+  if(nameEl)nameEl.value='';
+  setTimeout(()=>scl212Load(),500);
+}
+function scl213StartAutoRefresh(){
+  if(SCL213_AUTO_TIMER)return;
+  SCL213_AUTO_TIMER=setInterval(()=>{
+    if(typeof sclMode==='function' && sclMode()==='hq' && !document.hidden && typeof scl212Load==='function'){
+      scl212Load();
+    }
+  },30000);
+}
+function scl213Boot(){
+  scl213LoadDone();
+  scl213BindExtra();
+  scl213StartAutoRefresh();
+}
+setTimeout(scl213Boot,800);
+setTimeout(scl213Boot,2000);
+setInterval(scl213BindExtra,5000);
 
 </script>
 
