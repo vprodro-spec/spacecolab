@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v202 · reliable HQ live panel · HQ reference layout';
+      content:'v203 · broad HQ extraction · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -18081,6 +18081,220 @@ setTimeout(sclHqLiveBindV202,1500);
 setInterval(()=>{
   if(typeof sclMode==='function' && sclMode()==='hq')sclHqLiveBindV202();
 },5000);
+
+
+/* v203 — broader HQ extraction + sync main HQ dashboard */
+function scl203Str(v){ return String(v ?? '').trim(); }
+function scl203Low(v){ return scl203Str(v).toLowerCase(); }
+function scl203Months(){ return typeof MONTHS_SHORT!=='undefined' ? MONTHS_SHORT : ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']; }
+function scl203Esc(v){
+  try{ if(typeof esc==='function')return esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function scl203Class(t){
+  return {basic:'basic',custom:'custom',deal:'deal',sponsored:'sponsored',pharmaplus:'pharmaplus'}[t]||'basic';
+}
+function scl203Label(t){
+  return {basic:'Βασικό',custom:'Εξατομ.',deal:'Συμφων.',sponsored:'Χορηγ.',pharmaplus:'Pharmaplus'}[t]||t;
+}
+function scl203TypeFromAny(obj, fallback='basic'){
+  const s=scl203Low(JSON.stringify(obj||{}));
+  if(s.includes('pharmaplus'))return 'pharmaplus';
+  if(s.includes('χορηγ') || s.includes('sponsor'))return 'sponsored';
+  if(s.includes('συμφ') || s.includes('deal') || s.includes('negotiation') || s.includes('διαπραγ'))return 'deal';
+  if(s.includes('εξατομ') || s.includes('custom'))return 'custom';
+  if(s.includes('basic') || s.includes('βασ'))return 'basic';
+  return fallback;
+}
+function scl203PositionName(card, idx){
+  return card?.title || card?.name || card?.label || card?.positionName || `Θέση Φαρμακείου ${idx+1}`;
+}
+function scl203ActionFromItem(item, card, monthIdx, pos, fallbackType='basic'){
+  if(!item || typeof item!=='object')return null;
+  const label = scl203Str(item.label || item.theme || item.title || item.name || item.program || item.brand || item.supplier || item.message || item.content);
+  const owner = scl203Str(item.owner || item.type || item.kind || item.mode || item.status);
+  const mech = scl203Str(item.mechanism || item.offer || item.series || item.subseries || item.format || item.note || item.message || item.instructions);
+  const type = scl203TypeFromAny({...item, owner}, fallbackType);
+  if(!label && !mech)return null;
+  if(label==='—' || scl203Low(owner)==='pending')return null;
+  return {
+    month:scl203Months()[monthIdx] || String(monthIdx+1),
+    monthIdx,
+    position:pos,
+    label:label || scl203Label(type),
+    mechanism:mech,
+    type
+  };
+}
+function scl203CollectArrayRows(card, key, pos, fallbackType){
+  const arr=card?.[key];
+  if(!Array.isArray(arr))return [];
+  return arr.map((x,idx)=>{
+    if(!x || typeof x!=='object')return null;
+    const m=Number(x.month ?? x.startMonth ?? x.monthIdx ?? x.fromMonth ?? 0);
+    const label=scl203Str(x.label || x.theme || x.title || x.name || x.brand || x.supplier || x.series || x.subseries || x.content);
+    const mech=scl203Str(x.mechanism || x.offer || x.message || x.format || x.shelves || x.rows || x.price || x.instructions);
+    const type=scl203TypeFromAny({...x, _key:key}, fallbackType);
+    if(!label && !mech)return null;
+    return {
+      month:scl203Months()[m] || String(m+1),
+      monthIdx:m,
+      position:pos,
+      label:label || scl203Label(type),
+      mechanism: key.toLowerCase().includes('sponsor') && mech ? `${mech} ράφια` : mech,
+      type
+    };
+  }).filter(Boolean);
+}
+function scl203RecursiveFindActions(obj, pos, path='', out=[], depth=0){
+  if(!obj || typeof obj !== 'object' || depth>5)return out;
+  if(Array.isArray(obj)){
+    const pathLow=path.toLowerCase();
+    const likely = ['schedule','program','custom','deal','agreement','negotiation','sponsor','action','activation'].some(k=>pathLow.includes(k));
+    obj.forEach((item,idx)=>{
+      if(item && typeof item==='object'){
+        if(likely){
+          const m=Number(item.month ?? item.startMonth ?? item.monthIdx ?? idx);
+          const a=scl203ActionFromItem(item, {}, isNaN(m)?0:m, pos, scl203TypeFromAny({_path:path}, 'basic'));
+          if(a)out.push(a);
+        }
+        scl203RecursiveFindActions(item,pos,path+'[]',out,depth+1);
+      }
+    });
+    return out;
+  }
+  Object.keys(obj).forEach(k=>{
+    const v=obj[k];
+    const low=k.toLowerCase();
+    if(Array.isArray(v)){
+      if(['schedule','program','custom','deal','agreement','negotiation','sponsor','action','activation'].some(x=>low.includes(x))){
+        v.forEach((item,idx)=>{
+          if(item && typeof item==='object'){
+            const m=Number(item.month ?? item.startMonth ?? item.monthIdx ?? idx);
+            const a=scl203ActionFromItem(item, obj, isNaN(m)?0:m, pos, scl203TypeFromAny({_key:k}, 'basic'));
+            if(a)out.push(a);
+          }
+        });
+      }
+    }
+    if(v && typeof v==='object')scl203RecursiveFindActions(v,pos,path+'.'+k,out,depth+1);
+  });
+  return out;
+}
+function scl203Dedupe(actions){
+  const seen=new Set();
+  return actions.filter(a=>{
+    const k=[a.monthIdx,a.position,a.label,a.mechanism,a.type].join('|');
+    if(seen.has(k))return false;
+    seen.add(k);
+    return true;
+  });
+}
+function scl203ExtractActions(ps){
+  if(!ps?.state_json || !Array.isArray(ps.state_json.cards))return [];
+  let out=[];
+  ps.state_json.cards.forEach((card,ci)=>{
+    const pos=scl203PositionName(card,ci);
+    const schedules=[card.simpleSchedule,card.basicSchedule,card.pendingSimpleSchedule,card.schedule,card.program,card.months].filter(Array.isArray);
+    schedules.forEach(schedule=>{
+      schedule.forEach((item,m)=>{
+        const a=scl203ActionFromItem(item,card,m,pos,'basic');
+        if(a)out.push(a);
+      });
+    });
+
+    [
+      ['sponsoredShelves','sponsored'],
+      ['sponsoredRows','sponsored'],
+      ['sponsoredSchedule','sponsored'],
+      ['deals','deal'],
+      ['dealRows','deal'],
+      ['dealSchedule','deal'],
+      ['agreements','deal'],
+      ['agreementRows','deal'],
+      ['negotiations','deal'],
+      ['negotiationRows','deal'],
+      ['customizations','custom'],
+      ['customRows','custom'],
+      ['actions','basic'],
+      ['activations','basic']
+    ].forEach(([key,type])=>{
+      out=out.concat(scl203CollectArrayRows(card,key,pos,type));
+    });
+
+    out=out.concat(scl203RecursiveFindActions(card,pos));
+  });
+  return scl203Dedupe(out);
+}
+
+// Override v202 extractor so the Live panel sees basic/custom/deal too.
+if(typeof sclHqLiveExtractActionsV202==='function'){
+  sclHqLiveExtractActionsV202 = scl203ExtractActions;
+}
+
+function scl203RenderMainOverview(data){
+  const tbody=document.getElementById('overviewTbody');
+  if(!tbody)return;
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>scl203Str(a.name).localeCompare(scl203Str(b.name),'el'));
+  const states=data?.pharmacy_state||[];
+  tbody.innerHTML=pharmacies.map(p=>{
+    const ps=states.filter(s=>s.pharmacy_id===p.id).sort((a,b)=>Number(b.year||0)-Number(a.year||0))[0];
+    const actions=scl203ExtractActions(ps);
+    const currentMonth=new Date().getMonth();
+    const current=actions.filter(a=>a.monthIdx===currentMonth);
+    const currentHtml=current.length
+      ? [...new Set(current.map(a=>a.type))].map(t=>`<span class="pill ${scl203Class(t)}">${scl203Label(t)}</span>`).join(' ')
+      : (ps?'<span class="pill pending">χωρίς τρέχουσες</span>':'<span class="pill pending">no state</span>');
+    const next=actions.find(a=>a.monthIdx>=currentMonth)?.month || '—';
+    const token=p.token||'';
+    const link=token?(location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token)):'';
+    return `<tr>
+      <td><strong>${scl203Esc(p.name||'Φαρμακείο')}</strong><div class="sub-info">${token?`<button data-203-open="${scl203Esc(link)}">Open</button> <button data-203-copy="${scl203Esc(link)}">Copy</button>`:''}</div></td>
+      <td>${ps?.state_json?.cards?.length || 0}</td>
+      <td>${currentHtml}</td>
+      <td style="color:#666">${scl203Esc(next)}</td>
+      <td>${ps?`<span class="pill basic">${scl203Esc(ps.year)} saved</span><div class="sub-info">${scl203Esc((ps.updated_at||'').slice(0,19).replace('T',' '))}</div>`:'<span class="pill pending">κενό</span>'}</td>
+    </tr>`;
+  }).join('');
+  tbody.querySelectorAll('[data-203-open]').forEach(b=>b.addEventListener('click',()=>window.open(b.dataset['203Open'],'_blank')));
+  tbody.querySelectorAll('[data-203-copy]').forEach(b=>b.addEventListener('click',()=>navigator.clipboard.writeText(b.dataset['203Copy'])));
+}
+function scl203UpdateMainStats(data){
+  const stats=document.querySelectorAll('.stats-grid .stat');
+  const states=data?.pharmacy_state||[];
+  const actions=states.flatMap(scl203ExtractActions);
+  const pharmacies=data?.pharmacies||[];
+  const saved=new Set(states.map(s=>s.pharmacy_id)).size;
+  const deals=actions.filter(a=>a.type==='deal').length;
+  const sponsored=actions.filter(a=>a.type==='sponsored').length;
+  if(stats[0]){stats[0].querySelector('.v').textContent=pharmacies.length;stats[0].querySelector('.sub').textContent=`${saved} με αποθηκευμένο state`;}
+  if(stats[1]){stats[1].querySelector('.v').textContent=deals;stats[1].querySelector('.sub').textContent='συμφωνίες / διαπραγμ.';}
+  if(stats[2]){stats[2].querySelector('.v').textContent=actions.length;stats[2].querySelector('.sub').textContent='ενέργειες από states';}
+  if(stats[3]){stats[3].querySelector('.v').textContent=sponsored;stats[3].querySelector('.sub').textContent='χορηγούμενα';}
+}
+async function scl203LoadAndRenderHQ(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  if(!sb || !SCL_ROUTING?.hqKey)return;
+  const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+  if(error){if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');return;}
+  window.SCL_HQ_DATA_V203=data||{};
+  scl203RenderMainOverview(window.SCL_HQ_DATA_V203);
+  scl203UpdateMainStats(window.SCL_HQ_DATA_V203);
+  if(typeof sclHqLiveRenderV202==='function')sclHqLiveRenderV202(window.SCL_HQ_DATA_V203);
+}
+const __oldSclHqLiveLoadV202V203 = typeof sclHqLiveLoadV202==='function' ? sclHqLiveLoadV202 : null;
+if(__oldSclHqLiveLoadV202V203){
+  sclHqLiveLoadV202 = async function(){
+    await __oldSclHqLiveLoadV202V203();
+    await scl203LoadAndRenderHQ();
+  };
+}
+function sclBindV203(){
+  if(typeof sclMode==='function' && sclMode()==='hq')scl203LoadAndRenderHQ();
+}
+setTimeout(sclBindV203,800);
+setTimeout(sclBindV203,2000);
+setInterval(sclBindV203,6000);
 
 </script>
 
