@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v201 · isolated pharmacy storage + autosave · HQ reference layout';
+      content:'v202 · reliable HQ live panel · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v200 · true blank new pharmacy — HQ exact reference layout, full-width */
+/* v202 · reliable HQ live panel — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -8543,6 +8543,22 @@ body.scl-pharmacy .scl-autosave-strip{display:block}
 
 
   <div id="sclHqShell" class="scl-access-card">
+
+<!-- v202 — reliable HQ live data panel -->
+<div id="sclHqLivePanel" class="scl-hq-live-panel">
+  <div class="scl-hq-live-head">
+    <div>
+      <div class="scl-hq-live-title">Live εικόνα φαρμακείων</div>
+      <div class="scl-hq-live-sub">Πραγματικά δεδομένα από Supabase: φαρμακεία, saved states και ενέργειες.</div>
+    </div>
+    <button id="sclHqLiveRefreshBtn" type="button">Ανανέωση live εικόνας</button>
+  </div>
+  <div id="sclHqLiveStats" class="scl-hq-live-stats"></div>
+  <div id="sclHqLiveList" class="scl-hq-live-list">
+    <div class="scl-hq-live-empty">Φόρτωση...</div>
+  </div>
+</div>
+
     <div class="wrap hq-ref-wrap">
       <div class="hq-ref-top-bar">
         <div>
@@ -17887,6 +17903,184 @@ function sclBindV201(){
 setTimeout(sclBindV201,400);
 setTimeout(sclBindV201,1400);
 setInterval(sclBindV201,6000);
+
+
+/* v202 — reliable HQ live Supabase panel */
+function sclHqLiveEscV202(v){
+  try{ if(typeof esc==='function')return esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function sclHqLiveBuildLinkV202(token){
+  return location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token);
+}
+function sclHqLiveLatestStateV202(pharmacyId,states){
+  return (states||[]).filter(s=>s.pharmacy_id===pharmacyId).sort((a,b)=>Number(b.year||0)-Number(a.year||0))[0]||null;
+}
+function sclHqLiveTypeV202(owner,label,card){
+  const o=String(owner||'').toLowerCase();
+  const l=String(label||'').toLowerCase();
+  const ct=String(card?.type||'').toLowerCase();
+  const title=String(card?.title||'').toLowerCase();
+  if(ct==='hq' || title.includes('pharmaplus') || o.includes('hq') || l.includes('pharmaplus'))return 'pharmaplus';
+  if(o.includes('deal')||o.includes('negotiation')||l.includes('συμφ')||l.includes('deal'))return 'deal';
+  if(o.includes('sponsor')||l.includes('χορηγ'))return 'sponsored';
+  if(o.includes('custom')||l.includes('εξατομ'))return 'custom';
+  if(o.includes('basic')||l.includes('βασ'))return 'basic';
+  return '';
+}
+function sclHqLiveTypeLabelV202(t){
+  return {basic:'Βασικό',custom:'Εξατομ.',deal:'Συμφων.',sponsored:'Χορηγ.',pharmaplus:'Pharmaplus'}[t]||t;
+}
+function sclHqLiveExtractActionsV202(ps){
+  if(!ps?.state_json || !Array.isArray(ps.state_json.cards))return [];
+  const months = typeof MONTHS_SHORT!=='undefined' ? MONTHS_SHORT : ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  const out=[];
+  ps.state_json.cards.forEach((card,ci)=>{
+    const pos=card.title||card.name||card.label||`Θέση ${ci+1}`;
+    const schedules=[card.simpleSchedule,card.basicSchedule,card.pendingSimpleSchedule].filter(Array.isArray);
+    const schedule=schedules[0]||[];
+    schedule.forEach((item,m)=>{
+      const label=String(item?.label||'').trim();
+      const owner=String(item?.owner||'').trim();
+      const type=sclHqLiveTypeV202(owner,label,card);
+      if(label && label!=='—' && type){
+        out.push({
+          month:months[m]||String(m+1),
+          position:pos,
+          label,
+          mechanism:item?.mechanism||'',
+          type
+        });
+      }
+    });
+    (card.sponsoredShelves||[]).forEach((s,idx)=>{
+      out.push({
+        month:months[Number(s.month ?? s.startMonth ?? 0)]||'—',
+        position:pos,
+        label:s.brand||s.supplier||s.series||'Χορηγούμενα ράφια',
+        mechanism:`${s.shelves||''} ράφια`,
+        type:'sponsored'
+      });
+    });
+    (card.deals||card.agreements||card.negotiations||[]).forEach((d,idx)=>{
+      if(d && typeof d==='object'){
+        out.push({
+          month:months[Number(d.month ?? d.startMonth ?? 0)]||'—',
+          position:pos,
+          label:d.brand||d.supplier||d.name||d.title||'Συμφωνία',
+          mechanism:d.series||d.mechanism||d.offer||'',
+          type:'deal'
+        });
+      }
+    });
+  });
+  return out;
+}
+function sclHqLiveRenderV202(data){
+  const statsEl=document.getElementById('sclHqLiveStats');
+  const listEl=document.getElementById('sclHqLiveList');
+  if(!statsEl || !listEl)return;
+
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'el'));
+  const states=data?.pharmacy_state||[];
+  const savedIds=new Set(states.map(s=>s.pharmacy_id));
+  const allActions=states.flatMap(sclHqLiveExtractActionsV202);
+  const dealCount=allActions.filter(a=>a.type==='deal').length;
+  const sponsoredCount=allActions.filter(a=>a.type==='sponsored').length;
+
+  statsEl.innerHTML=`
+    <div class="scl-hq-live-stat"><div class="k">Φαρμακεία</div><div class="v">${pharmacies.length}</div></div>
+    <div class="scl-hq-live-stat"><div class="k">Με state</div><div class="v">${savedIds.size}</div></div>
+    <div class="scl-hq-live-stat"><div class="k">Ενέργειες</div><div class="v">${allActions.length}</div></div>
+    <div class="scl-hq-live-stat"><div class="k">Συμφωνίες</div><div class="v">${dealCount}</div></div>
+    <div class="scl-hq-live-stat"><div class="k">Χορηγ.</div><div class="v">${sponsoredCount}</div></div>
+  `;
+
+  if(!pharmacies.length){
+    listEl.innerHTML='<div class="scl-hq-live-empty">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+    return;
+  }
+
+  listEl.innerHTML=pharmacies.map(p=>{
+    const ps=sclHqLiveLatestStateV202(p.id,states);
+    const actions=sclHqLiveExtractActionsV202(ps);
+    const token=p.token||'';
+    const link=token?sclHqLiveBuildLinkV202(token):'';
+    const status=ps
+      ? `<span class="scl-hq-live-pill saved">${sclHqLiveEscV202(ps.year)} saved</span><div class="scl-hq-live-meta">${sclHqLiveEscV202((ps.updated_at||'').slice(0,19).replace('T',' '))}</div>`
+      : '<span class="scl-hq-live-pill empty">no state yet</span>';
+
+    const rows=actions.length ? actions.map(a=>`
+      <div class="scl-hq-live-action-row">
+        <div>${sclHqLiveEscV202(a.month)}</div>
+        <div><strong>${sclHqLiveEscV202(a.position)}</strong></div>
+        <div>${sclHqLiveEscV202(a.label)}${a.mechanism?`<div class="scl-hq-live-meta">${sclHqLiveEscV202(a.mechanism)}</div>`:''}</div>
+        <div><span class="scl-hq-live-pill ${a.type}">${sclHqLiveEscV202(sclHqLiveTypeLabelV202(a.type))}</span></div>
+      </div>
+    `).join('') : '<div class="scl-hq-live-empty">Δεν υπάρχουν καταγεγραμμένες ενέργειες για αυτό το φαρμακείο.</div>';
+
+    return `<div class="scl-hq-live-card">
+      <div class="scl-hq-live-card-head">
+        <div>
+          <div class="scl-hq-live-name">${sclHqLiveEscV202(p.name||'Φαρμακείο')}</div>
+          <div class="scl-hq-live-meta">${token?sclHqLiveEscV202(token.slice(0,8)+'…'):'χωρίς token'}</div>
+        </div>
+        <div>${status}</div>
+        <div><strong>${actions.length}</strong><div class="scl-hq-live-meta">ενέργειες</div></div>
+        <div class="scl-hq-live-actions">
+          ${token?`<button type="button" data-live-copy="${sclHqLiveEscV202(link)}">Copy</button><button type="button" class="open" data-live-open="${sclHqLiveEscV202(link)}">Open</button>`:''}
+          <button type="button" class="delete" data-live-delete="${sclHqLiveEscV202(p.id)}" data-live-name="${sclHqLiveEscV202(p.name||'Φαρμακείο')}">Διαγραφή</button>
+        </div>
+      </div>
+      <div class="scl-hq-live-body">${rows}</div>
+    </div>`;
+  }).join('');
+
+  listEl.querySelectorAll('[data-live-copy]').forEach(b=>{
+    b.addEventListener('click',()=>navigator.clipboard.writeText(b.dataset.liveCopy));
+  });
+  listEl.querySelectorAll('[data-live-open]').forEach(b=>{
+    b.addEventListener('click',()=>window.open(b.dataset.liveOpen,'_blank'));
+  });
+  listEl.querySelectorAll('[data-live-delete]').forEach(b=>{
+    b.addEventListener('click',async()=>{
+      if(typeof sclDeletePharmacyV191==='function')sclDeletePharmacyV191(b.dataset.liveDelete,b.dataset.liveName);
+      else alert('Η διαγραφή δεν έχει φορτώσει.');
+    });
+  });
+}
+async function sclHqLiveLoadV202(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  const listEl=document.getElementById('sclHqLiveList');
+  if(listEl)listEl.innerHTML='<div class="scl-hq-live-empty">Φόρτωση από Supabase...</div>';
+  if(!sb || !SCL_ROUTING?.hqKey){
+    if(listEl)listEl.innerHTML='<div class="scl-hq-live-empty">Δεν υπάρχει Supabase ή HQ key.</div>';
+    return;
+  }
+  const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+  if(error){
+    if(listEl)listEl.innerHTML='<div class="scl-hq-live-empty">Σφάλμα: '+sclHqLiveEscV202(error.message)+'</div>';
+    return;
+  }
+  window.SCL_HQ_LIVE_DATA_V202=data||{};
+  sclHqLiveRenderV202(window.SCL_HQ_LIVE_DATA_V202);
+}
+function sclHqLiveBindV202(){
+  const btn=document.getElementById('sclHqLiveRefreshBtn');
+  if(btn && !btn.dataset.boundV202){
+    btn.dataset.boundV202='1';
+    btn.addEventListener('click',sclHqLiveLoadV202);
+  }
+  if(typeof sclMode==='function' && sclMode()==='hq' && !window.__sclHqLiveLoadedV202){
+    window.__sclHqLiveLoadedV202=true;
+    sclHqLiveLoadV202();
+  }
+}
+setTimeout(sclHqLiveBindV202,400);
+setTimeout(sclHqLiveBindV202,1500);
+setInterval(()=>{
+  if(typeof sclMode==='function' && sclMode()==='hq')sclHqLiveBindV202();
+},5000);
 
 </script>
 
