@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v203 · broad HQ extraction · HQ reference layout';
+      content:'v204 · setup summary contract · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v202 · reliable HQ live panel — HQ exact reference layout, full-width */
+/* v204 · setup summary contract — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -5999,6 +5999,97 @@ body.scl-pharmacy .scl-autosave-strip{display:block}
 .scl-autosave-strip.err{
   border-color:#F4B4B4;
   color:#A32D2D;
+}
+
+
+/* v204 — setup summary contract panel */
+.scl-hq-setup-panel{
+  display:none;
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:8px;
+  padding:14px;
+  margin:0 0 16px;
+}
+body.scl-hq .scl-hq-setup-panel{display:block}
+.scl-hq-setup-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+.scl-hq-setup-title{
+  font-size:15px;
+  font-weight:500;
+  color:#1a1a1a;
+}
+.scl-hq-setup-sub{
+  font-size:12px;
+  color:#666;
+  margin-top:3px;
+}
+#sclHqSetupRefreshBtn{
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:8px;
+  border:0.5px solid #ccc;
+  background:#fff;
+  cursor:pointer;
+}
+.scl-hq-setup-table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+.scl-hq-setup-table th{
+  text-align:left;
+  color:#666;
+  font-weight:400;
+  font-size:12px;
+  border-bottom:0.5px solid #e0e0e0;
+  padding:8px 10px;
+}
+.scl-hq-setup-table td{
+  padding:8px 10px;
+  border-bottom:0.5px solid #e0e0e0;
+  vertical-align:top;
+}
+.scl-hq-setup-pill{
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  padding:2px 8px;
+  font-size:11px;
+  font-weight:500;
+  white-space:nowrap;
+}
+.scl-hq-setup-pill.ok{background:#EAF3DE;color:#3B6D11}
+.scl-hq-setup-pill.no{background:#F1EFE8;color:#5F5E5A}
+.scl-hq-setup-pill.warn{background:#FFF8E8;color:#854F0B}
+.scl-hq-setup-pos{
+  display:inline-flex;
+  margin:2px 4px 2px 0;
+  padding:2px 7px;
+  border-radius:999px;
+  background:#E6F1FB;
+  color:#185FA5;
+  font-size:11px;
+  font-weight:500;
+}
+.scl-hq-setup-empty{
+  background:#f5f5f3;
+  border-radius:8px;
+  padding:12px;
+  color:#666;
+  font-size:13px;
+}
+@media(max-width:800px){
+  .scl-hq-setup-table,.scl-hq-setup-table thead,.scl-hq-setup-table tbody,.scl-hq-setup-table tr,.scl-hq-setup-table th,.scl-hq-setup-table td{display:block}
+  .scl-hq-setup-table thead{display:none}
+  .scl-hq-setup-table tr{border:0.5px solid #e0e0e0;border-radius:8px;margin-bottom:8px;padding:8px}
+  .scl-hq-setup-table td{border-bottom:none;padding:4px 0}
 }
 
 </style>
@@ -8543,6 +8634,21 @@ body.scl-pharmacy .scl-autosave-strip{display:block}
 
 
   <div id="sclHqShell" class="scl-access-card">
+
+<!-- v204 — HQ setup summary test panel -->
+<div id="sclHqSetupSummaryPanel" class="scl-hq-setup-panel">
+  <div class="scl-hq-setup-head">
+    <div>
+      <div class="scl-hq-setup-title">Setup φαρμακείων</div>
+      <div class="scl-hq-setup-sub">Πρώτο καθαρό layer από Supabase: setup κλειδωμένο, θέσεις, extra, Pharmaplus.</div>
+    </div>
+    <button id="sclHqSetupRefreshBtn" type="button">Ανανέωση setup</button>
+  </div>
+  <div id="sclHqSetupSummaryList" class="scl-hq-setup-list">
+    <div class="scl-hq-setup-empty">Φόρτωση setup summary...</div>
+  </div>
+</div>
+
 
 <!-- v202 — reliable HQ live data panel -->
 <div id="sclHqLivePanel" class="scl-hq-live-panel">
@@ -18295,6 +18401,194 @@ function sclBindV203(){
 setTimeout(sclBindV203,800);
 setTimeout(sclBindV203,2000);
 setInterval(sclBindV203,6000);
+
+
+/* v204 — pharmacy_setup_summary contract */
+function scl204Esc(v){
+  try{ if(typeof esc==='function')return esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function scl204CurrentYear(){
+  try{ if(typeof sclCurrentYear==='function')return Number(sclCurrentYear()) || 2026; }catch(e){}
+  return Number(state?.programYear)||2026;
+}
+function scl204IsPharmaplusCard(card){
+  const s=JSON.stringify({
+    type:card?.type,
+    title:card?.title,
+    name:card?.name,
+    id:card?.id
+  }).toLowerCase();
+  return s.includes('pharmaplus') || s.includes('pp') || card?.type==='hq';
+}
+function scl204IsExtraCard(card, idx){
+  const s=JSON.stringify({
+    type:card?.type,
+    title:card?.title,
+    name:card?.name,
+    id:card?.id
+  }).toLowerCase();
+  return s.includes('extra') || s.includes('έξτρα') || s.includes('εξτρα');
+}
+function scl204CardName(card, idx){
+  return card?.title || card?.name || card?.label || (scl204IsPharmaplusCard(card) ? 'Pharmaplus Θέση' : `Θέση Φαρμακείου ${idx+1}`);
+}
+function scl204CardId(card, idx){
+  return String(card?.id || card?.key || (scl204IsPharmaplusCard(card) ? 'pharmaplus' : `position_${idx+1}`));
+}
+function scl204CardLocked(card){
+  // This is intentionally permissive because the existing calculator uses several terms.
+  if(card?.locked === true)return true;
+  if(card?.isLocked === true)return true;
+  if(card?.setupLocked === true)return true;
+  if(card?.initialPlanLocked === true)return true;
+  if(card?.planLocked === true)return true;
+  if(card?.status === 'locked')return true;
+  return false;
+}
+function scl204BuildSetupSummaryPayload(){
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  const positions=[];
+  let pharmacyCount=0, extraCount=0, hasPP=false, anyLocked=false;
+
+  cards.forEach((card,idx)=>{
+    const isPP=scl204IsPharmaplusCard(card);
+    const isExtra=scl204IsExtraCard(card,idx);
+    const type=isPP?'pharmaplus':(isExtra?'extra':'pharmacy');
+    if(type==='pharmacy')pharmacyCount++;
+    if(type==='extra')extraCount++;
+    if(type==='pharmaplus')hasPP=true;
+    const locked=scl204CardLocked(card);
+    if(locked)anyLocked=true;
+    positions.push({
+      position_id:scl204CardId(card,idx),
+      position_name:scl204CardName(card,idx),
+      position_type:type,
+      locked
+    });
+  });
+
+  const setupLocked = !!(state?.setupLocked || state?.setupComplete || state?.locked || anyLocked);
+
+  return {
+    year:scl204CurrentYear(),
+    setup_locked:setupLocked,
+    total_positions:positions.length,
+    pharmacy_positions:pharmacyCount,
+    extra_positions:extraCount,
+    has_pharmaplus_position:hasPP,
+    positions_json:positions
+  };
+}
+async function scl204UpsertSetupSummary(){
+  if(typeof sclMode==='function' && sclMode()!=='pharmacy')return;
+  if(!sb || !SCL_ROUTING?.pharmacyToken || !SCL_ROUTING?.ready)return;
+  const payload=scl204BuildSetupSummaryPayload();
+  const {error}=await sb.rpc('upsert_pharmacy_setup_summary_by_token',{
+    p_token:SCL_ROUTING.pharmacyToken,
+    p_year:payload.year,
+    p_setup_locked:payload.setup_locked,
+    p_total_positions:payload.total_positions,
+    p_pharmacy_positions:payload.pharmacy_positions,
+    p_extra_positions:payload.extra_positions,
+    p_has_pharmaplus_position:payload.has_pharmaplus_position,
+    p_positions_json:payload.positions_json
+  });
+  if(error){
+    console.error('setup summary save error',error);
+    if(typeof sclCloudStatus==='function')sclCloudStatus('Setup summary error: '+error.message,'err');
+    return;
+  }
+  console.log('setup summary saved',payload);
+}
+let scl204SetupTimer=null;
+function scl204QueueSetupSummarySave(){
+  if(typeof sclMode==='function' && sclMode()!=='pharmacy')return;
+  clearTimeout(scl204SetupTimer);
+  scl204SetupTimer=setTimeout(()=>scl204UpsertSetupSummary(),900);
+}
+// Hook after normal autosave queue
+const __oldSclQueueSaveV204 = typeof sclQueueSave==='function' ? sclQueueSave : null;
+if(__oldSclQueueSaveV204){
+  sclQueueSave=function(){
+    const r=__oldSclQueueSaveV204.apply(this,arguments);
+    scl204QueueSetupSummarySave();
+    return r;
+  };
+}
+// Also hook direct save
+const __oldSclSaveNowV204 = typeof sclSaveNow==='function' ? sclSaveNow : null;
+if(__oldSclSaveNowV204){
+  sclSaveNow=async function(){
+    const r=await __oldSclSaveNowV204.apply(this,arguments);
+    await scl204UpsertSetupSummary();
+    return r;
+  };
+}
+// Save setup once after pharmacy load if it is ready and user interacts later
+function scl204BindPharmacySetupWatcher(){
+  if(typeof sclMode==='function' && sclMode()!=='pharmacy')return;
+  const shell=document.querySelector('.shell') || document.body;
+  if(shell && !shell.dataset.boundSetup204){
+    shell.dataset.boundSetup204='1';
+    ['click','change','input'].forEach(evt=>{
+      shell.addEventListener(evt,()=>scl204QueueSetupSummarySave(),true);
+    });
+  }
+}
+
+function scl204RenderSetupSummary(rows){
+  const el=document.getElementById('sclHqSetupSummaryList');
+  if(!el)return;
+  if(!rows || !rows.length){
+    el.innerHTML='<div class="scl-hq-setup-empty">Δεν υπάρχουν setup summaries ακόμη. Άνοιξε ένα φαρμακείο, κλείδωσε/άλλαξε setup και περίμενε auto-save.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-setup-table">
+    <thead><tr><th>Φαρμακείο</th><th>Έτος</th><th>Setup</th><th>Θέσεις</th><th>Αναλυτικά</th><th>Updated</th></tr></thead>
+    <tbody>${rows.map(r=>{
+      const pos=Array.isArray(r.positions_json)?r.positions_json:[];
+      const posHtml=pos.length?pos.map(p=>`<span class="scl-hq-setup-pos">${scl204Esc(p.position_name)} · ${scl204Esc(p.position_type)}${p.locked?' · locked':''}</span>`).join(' '):'—';
+      return `<tr>
+        <td><strong>${scl204Esc(r.pharmacy_name || 'Φαρμακείο')}</strong></td>
+        <td>${scl204Esc(r.year)}</td>
+        <td>${r.setup_locked?'<span class="scl-hq-setup-pill ok">Κλειδωμένο</span>':'<span class="scl-hq-setup-pill no">Όχι κλειδωμένο</span>'}</td>
+        <td>${scl204Esc(r.pharmacy_positions||0)} + ${scl204Esc(r.extra_positions||0)} extra ${r.has_pharmaplus_position?'<span class="scl-hq-setup-pill ok">PP</span>':''}</td>
+        <td>${posHtml}</td>
+        <td>${scl204Esc((r.updated_at||'').slice(0,19).replace('T',' '))}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+async function scl204LoadSetupSummary(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  const el=document.getElementById('sclHqSetupSummaryList');
+  if(el)el.innerHTML='<div class="scl-hq-setup-empty">Φόρτωση setup summary...</div>';
+  if(!sb || !SCL_ROUTING?.hqKey){
+    if(el)el.innerHTML='<div class="scl-hq-setup-empty">Δεν υπάρχει Supabase / HQ key.</div>';
+    return;
+  }
+  const {data,error}=await sb.rpc('hq_get_setup_summaries',{p_hq_key:SCL_ROUTING.hqKey});
+  if(error){
+    if(el)el.innerHTML='<div class="scl-hq-setup-empty">Σφάλμα: '+scl204Esc(error.message)+'</div>';
+    return;
+  }
+  scl204RenderSetupSummary(data||[]);
+}
+function scl204BindHQSetupPanel(){
+  const btn=document.getElementById('sclHqSetupRefreshBtn');
+  if(btn && !btn.dataset.bound204){
+    btn.dataset.bound204='1';
+    btn.addEventListener('click',scl204LoadSetupSummary);
+  }
+  if(typeof sclMode==='function' && sclMode()==='hq' && !window.__sclSetupLoaded204){
+    window.__sclSetupLoaded204=true;
+    scl204LoadSetupSummary();
+  }
+}
+setTimeout(()=>{scl204BindPharmacySetupWatcher();scl204BindHQSetupPanel();},500);
+setTimeout(()=>{scl204BindPharmacySetupWatcher();scl204BindHQSetupPanel();},1600);
+setInterval(()=>{scl204BindPharmacySetupWatcher();scl204BindHQSetupPanel();},5000);
 
 </script>
 
