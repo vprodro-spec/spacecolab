@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v197 · supabase source of truth · HQ reference layout';
+      content:'v198 · no demo agreements · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v196 · real HQ overview stats — HQ exact reference layout, full-width */
+/* v198 · no demo agreements — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -17253,6 +17253,144 @@ function sclBindV197(){
 setTimeout(sclBindV197,700);
 setTimeout(sclBindV197,1800);
 setInterval(sclBindV197,6000);
+
+
+/* v198 — deep clean demo agreements/deals from new pharmacy */
+function sclV198DeepCleanObject(obj, depth=0){
+  if(!obj || typeof obj!=='object' || depth>10)return obj;
+
+  const bannedKeyFragments=[
+    'deal','agreement','negotiation','sponsor','sponsored','supplier',
+    'report','upload','billing','charge','branddeal','promoDeal'
+  ];
+
+  if(Array.isArray(obj)){
+    // Do not keep demo arrays that look like deal/sponsor rows.
+    return obj.map(x=>sclV198DeepCleanObject(x,depth+1)).filter(x=>{
+      if(!x || typeof x!=='object')return true;
+      const s=JSON.stringify(x).toLowerCase();
+      if(s.includes('naos') || s.includes('bioderma') || s.includes('cerave') || s.includes('l’oréal') || s.includes("l'oréal"))return false;
+      return true;
+    });
+  }
+
+  Object.keys(obj).forEach(k=>{
+    const low=k.toLowerCase();
+    if(bannedKeyFragments.some(f=>low.includes(f))){
+      if(Array.isArray(obj[k])) obj[k]=[];
+      else if(obj[k] && typeof obj[k]==='object') obj[k]={};
+      else obj[k]='';
+      return;
+    }
+
+    if(obj[k] && typeof obj[k]==='object'){
+      obj[k]=sclV198DeepCleanObject(obj[k],depth+1);
+    }
+
+    // Remove demo strings even in generic fields.
+    if(typeof obj[k]==='string'){
+      const s=obj[k].toLowerCase();
+      if(s.includes('naos') || s.includes('bioderma') || s.includes('cerave') || s.includes('l’oréal') || s.includes("l'oréal")){
+        obj[k]='';
+      }
+    }
+  });
+
+  return obj;
+}
+
+function sclV198ForceNoDemoAgreements(){
+  try{
+    if(!state || !Array.isArray(state.cards))return;
+    state.cards.forEach(card=>{
+      // Clear known structures first
+      [
+        'deals','dealRows','dealSchedule','dealMonths','agreements','agreementRows','agreementSchedule',
+        'negotiations','negotiationRows','supplierDeals','supplierAgreements','sponsoredShelves',
+        'sponsoredRows','sponsoredSchedule','brandDeals','reports','billingRows'
+      ].forEach(k=>{
+        if(k in card){
+          if(Array.isArray(card[k]))card[k]=[];
+          else if(card[k] && typeof card[k]==='object')card[k]={};
+          else card[k]='';
+        }
+      });
+
+      // Then deep clean any nested remaining demo data
+      sclV198DeepCleanObject(card);
+
+      // Make every month that is "basic" stay basic only, no mechanism/deal info
+      ['basicSchedule','simpleSchedule','pendingSimpleSchedule'].forEach(k=>{
+        if(Array.isArray(card[k])){
+          card[k]=card[k].map(item=>{
+            if(!item || typeof item!=='object')return item;
+            const owner=String(item.owner||'').toLowerCase();
+            if(owner.includes('deal') || owner.includes('negotiation') || owner.includes('sponsor')){
+              return {label:'',owner:'pending',mechanism:''};
+            }
+            return {
+              ...item,
+              mechanism: owner==='basic' || owner.includes('basic') ? '' : (item.mechanism||'')
+            };
+          });
+        }
+      });
+    });
+  }catch(e){
+    console.warn('v198 clean failed',e);
+  }
+}
+
+const __oldSclV197HardBlankPharmacyStateV198 = typeof sclV197HardBlankPharmacyState==='function' ? sclV197HardBlankPharmacyState : null;
+if(__oldSclV197HardBlankPharmacyStateV198){
+  sclV197HardBlankPharmacyState = function(){
+    __oldSclV197HardBlankPharmacyStateV198();
+    sclV198ForceNoDemoAgreements();
+  };
+}
+
+const __oldSclCleanNewPharmacyStateV198 = typeof sclCleanNewPharmacyStateV195==='function' ? sclCleanNewPharmacyStateV195 : null;
+if(__oldSclCleanNewPharmacyStateV198){
+  sclCleanNewPharmacyStateV195 = function(){
+    __oldSclCleanNewPharmacyStateV198();
+    sclV198ForceNoDemoAgreements();
+  };
+}
+
+// Clean before every save too, so demo agreements never get persisted accidentally.
+const __oldSclStatePayloadV198 = typeof sclStatePayload==='function' ? sclStatePayload : null;
+if(__oldSclStatePayloadV198){
+  sclStatePayload = function(){
+    sclV198ForceNoDemoAgreements();
+    const payload=__oldSclStatePayloadV198();
+    return sclV198DeepCleanObject(payload);
+  };
+}
+
+// Also clean after refresh cycles in pharmacy mode, because some existing UI functions rehydrate defaults on interactions.
+const __oldRefreshV198 = typeof refresh==='function' ? refresh : null;
+if(__oldRefreshV198 && !window.__sclRefreshPatchedV198){
+  window.__sclRefreshPatchedV198=true;
+  refresh=function(...args){
+    if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+      sclV198ForceNoDemoAgreements();
+    }
+    const result=__oldRefreshV198.apply(this,args);
+    if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+      setTimeout(()=>sclV198ForceNoDemoAgreements(),20);
+    }
+    return result;
+  };
+}
+
+function sclBindV198(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    sclV198ForceNoDemoAgreements();
+  }
+}
+setTimeout(sclBindV198,300);
+setTimeout(sclBindV198,1200);
+setInterval(sclBindV198,3000);
 
 </script>
 
