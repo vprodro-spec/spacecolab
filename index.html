@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v209 · content operations billing flags · HQ reference layout';
+      content:'v210 · HQ operations dashboard · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v208 · real state mapping — HQ exact reference layout, full-width */
+/* v210 · HQ operations dashboard — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -8731,6 +8731,41 @@ body.scl-hq .scl-hq-plan-panel{display:block}
       <div class="scl-hq-setup-title">Setup φαρμακείων</div>
 
 <!-- v206 — HQ position months + deals test panels -->
+
+<!-- v210 — HQ Operations Dashboard panels -->
+<div id="sclHqOperationsPanel" class="scl-hq-ops-panel">
+  <div class="scl-hq-ops-head">
+    <div>
+      <div class="scl-hq-ops-title">HQ Operations Dashboard</div>
+      <div class="scl-hq-ops-sub">Επόμενες αλλαγές περιεχομένου, billing preview και reporting tasks από τα καθαρά Supabase layers.</div>
+    </div>
+    <button id="sclHqOpsRefreshBtn" type="button">Ανανέωση operations</button>
+  </div>
+
+  <div class="scl-hq-ops-grid" id="sclHqOpsStats"></div>
+
+  <div class="scl-hq-ops-section">
+    <div class="scl-hq-ops-section-title">Επόμενες αλλαγές περιεχομένου</div>
+    <div id="sclHqContentChangesList" class="scl-hq-ops-list">
+      <div class="scl-hq-ops-empty">Φόρτωση αλλαγών...</div>
+    </div>
+  </div>
+
+  <div class="scl-hq-ops-section">
+    <div class="scl-hq-ops-section-title">Billing preview</div>
+    <div id="sclHqBillingPreviewList" class="scl-hq-ops-list">
+      <div class="scl-hq-ops-empty">Φόρτωση billing preview...</div>
+    </div>
+  </div>
+
+  <div class="scl-hq-ops-section">
+    <div class="scl-hq-ops-section-title">Reporting tasks</div>
+    <div id="sclHqReportingTasksList" class="scl-hq-ops-list">
+      <div class="scl-hq-ops-empty">Φόρτωση reporting tasks...</div>
+    </div>
+  </div>
+</div>
+
 <div id="sclHqPlanContractPanel" class="scl-hq-plan-panel">
   <div class="scl-hq-plan-head">
     <div>
@@ -20064,6 +20099,233 @@ function scl209Bind(){
 setTimeout(scl209Bind,500);
 setTimeout(scl209Bind,1600);
 setInterval(scl209Bind,5000);
+
+
+/* v210JS — HQ Operations Dashboard + reporting frequency */
+function scl210Text(v){ return String(v ?? '').trim(); }
+function scl210Low(v){ return scl210Text(v).toLowerCase(); }
+function scl210Esc(v){
+  try{ if(typeof esc==='function')return esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function scl210ReportFrequency(deal){
+  const mode=scl210Low(deal?.reportMode || '');
+  if(!(deal?.reportEnabled === true || (mode && mode !== 'none')))return 'none';
+  if(mode.includes('month') || mode.includes('μην'))return 'monthly';
+  if(mode.includes('total') || mode.includes('once') || mode.includes('final') || mode.includes('συνολ'))return 'once_total';
+  return 'once_total';
+}
+function scl210ReportsCount(start,end,frequency){
+  const duration=Math.max(1,Number(end||0)-Number(start||0)+1);
+  if(frequency==='monthly')return duration;
+  if(frequency==='once_total')return 1;
+  return 0;
+}
+function scl210BuildDealsPayload(){
+  const deals=[];
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  const year = (typeof scl209Year==='function') ? scl209Year() : (typeof sclCurrentYear==='function'?sclCurrentYear():2026);
+  cards.forEach((card,idx)=>{
+    const arr=Array.isArray(card.confirmedDeals)?card.confirmedDeals:[];
+    arr.forEach((d,i)=>{
+      if(!d || d.confirmed !== true)return;
+      const start=Number(d.startMonth ?? 0);
+      const duration=Math.max(1,Number(d.duration ?? 1));
+      const end=start+duration-1;
+      const schedule=Array.isArray(d.schedule)?d.schedule:[];
+      const anySchedule=schedule.filter(x=>scl210Text(x));
+      const supplier=scl210Text(d.supplier);
+      const brand=scl210Text(d.brand);
+      const subline=scl210Text(d.subline);
+      const products=scl210Text(d.products);
+      if(!supplier && !brand && !subline && !products && !anySchedule.length)return;
+      const freq=scl210ReportFrequency(d);
+      const reports=scl210ReportsCount(start,end,freq);
+      const positionId=(typeof scl209CardId==='function')?scl209CardId(card,idx):(card.id||`position_${idx+1}`);
+      const positionName=(typeof scl209CardName==='function')?scl209CardName(card,idx):(card.title||`Θέση ${idx+1}`);
+      const positionType=(typeof scl209PositionType==='function')?scl209PositionType(card):(card.type||'pharmacy');
+      const codes=(typeof scl209ProductCodes==='function')?scl209ProductCodes(d):[];
+      const notes=(typeof scl209DealNotes==='function')?scl209DealNotes(d):(d.notes||'');
+      deals.push({
+        deal_uid:String(d.id || `${positionId}_${i}_${start}_${end}`),
+        year,
+        position_id:positionId,
+        position_name:positionName,
+        position_type:positionType,
+        start_month:start,
+        end_month:end,
+        supplier,
+        brand,
+        deal_theme:subline || anySchedule[0] || products || brand || 'Συμφωνία',
+        deal_content_mode:d.monthlyContentChanges===true ? 'changes_monthly' : 'same_all_months',
+        reporting_requested:freq!=='none',
+        reporting_frequency:freq,
+        reporting_total_reports:reports,
+        product_codes:codes,
+        notes,
+        sold_monthly_price:Number(d.soldMonthlyPrice || 0),
+        suggested_monthly_price:Number(d.suggestedMonthlyPrice || 0),
+        raw_json:d
+      });
+    });
+  });
+  return deals;
+}
+if(typeof scl206BuildDealsPayload==='function')scl206BuildDealsPayload=scl210BuildDealsPayload;
+if(typeof scl209BuildDealsPayload==='function')scl209BuildDealsPayload=scl210BuildDealsPayload;
+
+function scl210Pill(label,cls='basic'){
+  return `<span class="scl-hq-ops-pill ${cls}">${scl210Esc(label)}</span>`;
+}
+function scl210MonthSort(a,b){
+  return (Number(a.year||0)-Number(b.year||0)) || (Number(a.month||a.start_month||0)-Number(b.month||b.start_month||0));
+}
+function scl210RenderOpsStats(months,deals){
+  const el=document.getElementById('sclHqOpsStats');
+  if(!el)return;
+  const changes=months.filter(r=>r.content_change_required);
+  const billable=months.filter(r=>r.billing_change_applies);
+  const sponsored=months.filter(r=>r.sponsored_active);
+  const reports=deals.reduce((s,d)=>s+Number(d.reporting_total_reports||0),0);
+  el.innerHTML=`
+    <div class="scl-hq-ops-stat"><div class="k">Content changes</div><div class="v">${changes.length}</div></div>
+    <div class="scl-hq-ops-stat"><div class="k">Billable changes</div><div class="v">${billable.length}</div></div>
+    <div class="scl-hq-ops-stat"><div class="k">Sponsored active</div><div class="v">${sponsored.length}</div></div>
+    <div class="scl-hq-ops-stat"><div class="k">Reports needed</div><div class="v">${reports}</div></div>
+  `;
+}
+function scl210RenderContentChanges(rows){
+  const el=document.getElementById('sclHqContentChangesList');
+  if(!el)return;
+  const changes=rows.filter(r=>r.content_change_required).sort(scl210MonthSort);
+  if(!changes.length){
+    el.innerHTML='<div class="scl-hq-ops-empty">Δεν υπάρχουν επόμενες αλλαγές περιεχομένου.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-ops-table">
+    <thead><tr><th>Μήνας</th><th>Φαρμακείο</th><th>Θέση</th><th>Από</th><th>Σε</th><th>Λόγος</th><th>Χρέωση</th></tr></thead>
+    <tbody>${changes.map(r=>`<tr>
+      <td>${scl210Esc(r.month_label||r.month)}</td>
+      <td><strong>${scl210Esc(r.pharmacy_name)}</strong></td>
+      <td>${scl210Esc(r.position_name)}<div class="scl-hq-ops-note">${scl210Esc(r.position_orientation||'')}</div></td>
+      <td>${scl210Esc(r.basic_theme||'—')}</td>
+      <td>${scl210Pill(r.final_type||'basic',r.final_type||'basic')}<div class="scl-hq-ops-note">${scl210Esc(r.final_title||'—')}</div></td>
+      <td>${scl210Esc(r.content_change_reason||'none')}</td>
+      <td>${r.billing_change_applies?scl210Pill('Ναι','report'):'—'}<div class="scl-hq-ops-note">${scl210Esc(r.billing_reason||'')}</div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function scl210RenderBillingPreview(months,deals){
+  const el=document.getElementById('sclHqBillingPreviewList');
+  if(!el)return;
+  const by={};
+  months.forEach(r=>{
+    const k=r.pharmacy_name||'Φαρμακείο';
+    by[k]=by[k]||{custom:0,deal:0,sponsored:0,billing:0,reports:0,total:0};
+    if(r.billing_change_applies){
+      by[k].billing++;
+      if(String(r.billing_reason||'').includes('custom'))by[k].custom++;
+      if(String(r.billing_reason||'').includes('deal'))by[k].deal++;
+    }
+    if(r.sponsored_active)by[k].sponsored++;
+  });
+  deals.forEach(d=>{
+    const k=d.pharmacy_name||'Φαρμακείο';
+    by[k]=by[k]||{custom:0,deal:0,sponsored:0,billing:0,reports:0,total:0};
+    by[k].reports += Number(d.reporting_total_reports||0);
+  });
+  const names=Object.keys(by).sort((a,b)=>a.localeCompare(b,'el'));
+  if(!names.length){
+    el.innerHTML='<div class="scl-hq-ops-empty">Δεν υπάρχουν billing preview δεδομένα.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-ops-table">
+    <thead><tr><th>Φαρμακείο</th><th>Custom charges</th><th>Deal charges</th><th>Sponsored months</th><th>Reports</th><th>Total events</th></tr></thead>
+    <tbody>${names.map(n=>{
+      const x=by[n]; const total=x.custom+x.deal+x.sponsored+x.reports;
+      return `<tr><td><strong>${scl210Esc(n)}</strong></td><td>${x.custom}</td><td>${x.deal}</td><td>${x.sponsored}</td><td>${x.reports}</td><td><strong>${total}</strong></td></tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+function scl210RenderReportingTasks(deals){
+  const el=document.getElementById('sclHqReportingTasksList');
+  if(!el)return;
+  const rows=deals.filter(d=>Number(d.reporting_total_reports||0)>0);
+  if(!rows.length){
+    el.innerHTML='<div class="scl-hq-ops-empty">Δεν υπάρχουν reporting tasks.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-ops-table">
+    <thead><tr><th>Φαρμακείο</th><th>Deal</th><th>Περίοδος</th><th>Frequency</th><th>Reports</th><th>Notes / Codes</th></tr></thead>
+    <tbody>${rows.map(d=>`<tr>
+      <td><strong>${scl210Esc(d.pharmacy_name)}</strong></td>
+      <td>${scl210Esc([d.supplier,d.brand,d.deal_theme].filter(Boolean).join(' / ')||'Συμφωνία')}</td>
+      <td>${scl210Esc(d.start_month_label||d.start_month)}–${scl210Esc(d.end_month_label||d.end_month)}</td>
+      <td>${scl210Pill(d.reporting_frequency||'none','report')}</td>
+      <td>${scl210Esc(d.reporting_total_reports||0)}</td>
+      <td>${Array.isArray(d.product_codes)?scl210Esc(d.product_codes.join(', ')):scl210Esc(d.product_codes||'')}<div class="scl-hq-ops-note">${scl210Esc(d.notes||'')}</div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+function scl210RenderDeals(rows){
+  const el=document.getElementById('sclHqDealsList');
+  if(!el)return;
+  if(!rows || !rows.length){
+    el.innerHTML='<div class="scl-hq-plan-empty">Δεν υπάρχουν κλεισμένες συμφωνίες ακόμη.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-plan-table">
+    <thead><tr><th>Φαρμακείο</th><th>Θέση</th><th>Διάρκεια</th><th>Supplier / Brand</th><th>Theme</th><th>Content</th><th>Reporting</th><th>Reports</th><th>Κωδικοί / Notes</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><strong>${scl210Esc(r.pharmacy_name)}</strong></td>
+      <td>${scl210Esc(r.position_name)}</td>
+      <td>${scl210Esc(r.start_month_label || r.start_month)}–${scl210Esc(r.end_month_label || r.end_month)}</td>
+      <td>${scl210Esc([r.supplier,r.brand].filter(Boolean).join(' / ') || '—')}</td>
+      <td>${scl210Esc(r.deal_theme || '—')}</td>
+      <td>${scl210Esc(r.deal_content_mode || '—')}</td>
+      <td>${r.reporting_requested?`<span class="scl-hq-plan-pill deal">${scl210Esc(r.reporting_frequency||'requested')}</span>`:'—'}</td>
+      <td>${scl210Esc(r.reporting_total_reports||0)}</td>
+      <td>${Array.isArray(r.product_codes)?scl210Esc(r.product_codes.join(', ')):scl210Esc(r.product_codes||'')}<div class="scl-hq-plan-note">${scl210Esc(r.notes || '')}</div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+if(typeof scl206RenderDeals==='function')scl206RenderDeals=scl210RenderDeals;
+
+async function scl210LoadOperations(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  if(!sb || !SCL_ROUTING?.hqKey)return;
+  const [{data:months,error:e1},{data:deals,error:e2}] = await Promise.all([
+    sb.rpc('hq_get_position_months',{p_hq_key:SCL_ROUTING.hqKey}),
+    sb.rpc('hq_get_deals',{p_hq_key:SCL_ROUTING.hqKey})
+  ]);
+  if(e1||e2){
+    const msg=(e1?.message||'')+' '+(e2?.message||'');
+    ['sclHqContentChangesList','sclHqBillingPreviewList','sclHqReportingTasksList'].forEach(id=>{
+      const el=document.getElementById(id); if(el)el.innerHTML='<div class="scl-hq-ops-empty">Σφάλμα: '+scl210Esc(msg)+'</div>';
+    });
+    return;
+  }
+  const m=months||[], d=deals||[];
+  scl210RenderOpsStats(m,d);
+  scl210RenderContentChanges(m);
+  scl210RenderBillingPreview(m,d);
+  scl210RenderReportingTasks(d);
+  scl210RenderDeals(d);
+}
+function scl210Bind(){
+  const btn=document.getElementById('sclHqOpsRefreshBtn');
+  if(btn && !btn.dataset.bound210){
+    btn.dataset.bound210='1';
+    btn.addEventListener('click',scl210LoadOperations);
+  }
+  if(typeof sclMode==='function' && sclMode()==='hq' && !window.__scl210Loaded){
+    window.__scl210Loaded=true;
+    scl210LoadOperations();
+  }
+}
+setTimeout(scl210Bind,600);
+setTimeout(scl210Bind,1800);
+setInterval(scl210Bind,5000);
 
 </script>
 
