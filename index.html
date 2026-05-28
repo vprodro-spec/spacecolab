@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v198 · no demo agreements · HQ reference layout';
+      content:'v199 · allow new agreements · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -17391,6 +17391,120 @@ function sclBindV198(){
 setTimeout(sclBindV198,300);
 setTimeout(sclBindV198,1200);
 setInterval(sclBindV198,3000);
+
+
+/* v199 — allow new agreements, block only demo agreements */
+const SCL_DEMO_TERMS_V199 = ['naos','bioderma','cerave','l’oréal',"l'oréal",'loreal','la roche-posay','la roche posay','bayer'];
+
+function sclV199LooksDemoText(value){
+  const s=String(value||'').toLowerCase();
+  return SCL_DEMO_TERMS_V199.some(t=>s.includes(t));
+}
+function sclV199ObjectLooksDemo(obj){
+  try{
+    return sclV199LooksDemoText(JSON.stringify(obj||{}));
+  }catch(e){
+    return false;
+  }
+}
+function sclV199CleanDemoOnly(obj, depth=0){
+  if(!obj || typeof obj!=='object' || depth>10)return obj;
+
+  if(Array.isArray(obj)){
+    return obj
+      .map(x=>sclV199CleanDemoOnly(x,depth+1))
+      .filter(x=>!sclV199ObjectLooksDemo(x));
+  }
+
+  Object.keys(obj).forEach(k=>{
+    const v=obj[k];
+
+    if(typeof v==='string' && sclV199LooksDemoText(v)){
+      obj[k]='';
+      return;
+    }
+
+    if(Array.isArray(v)){
+      obj[k]=v.map(x=>sclV199CleanDemoOnly(x,depth+1)).filter(x=>!sclV199ObjectLooksDemo(x));
+      return;
+    }
+
+    if(v && typeof v==='object'){
+      obj[k]=sclV199CleanDemoOnly(v,depth+1);
+    }
+  });
+
+  return obj;
+}
+
+function sclV199CleanDemoAgreementsButKeepUserOnes(){
+  try{
+    if(!state || !Array.isArray(state.cards))return;
+    state.cards.forEach(card=>{
+      sclV199CleanDemoOnly(card);
+
+      // Keep user-created agreement/deal arrays. Only remove rows containing known demo brands.
+      [
+        'deals','dealRows','dealSchedule','dealMonths','agreements','agreementRows','agreementSchedule',
+        'negotiations','negotiationRows','supplierDeals','supplierAgreements','brandDeals'
+      ].forEach(k=>{
+        if(Array.isArray(card[k])){
+          card[k]=card[k].filter(x=>!sclV199ObjectLooksDemo(x));
+        }
+      });
+
+      // Sponsored demo rows only
+      ['sponsoredShelves','sponsoredRows','sponsoredSchedule'].forEach(k=>{
+        if(Array.isArray(card[k])){
+          card[k]=card[k].filter(x=>!sclV199ObjectLooksDemo(x));
+        }
+      });
+    });
+  }catch(e){
+    console.warn('v199 demo-only clean failed', e);
+  }
+}
+
+// Override the too-aggressive v198 cleaner if present.
+if(typeof sclV198ForceNoDemoAgreements==='function'){
+  sclV198ForceNoDemoAgreements = sclV199CleanDemoAgreementsButKeepUserOnes;
+}
+if(typeof sclV198DeepCleanObject==='function'){
+  sclV198DeepCleanObject = function(obj){ return sclV199CleanDemoOnly(obj); };
+}
+
+// Ensure save still removes demo data but keeps newly activated agreements.
+const __oldSclStatePayloadV199 = typeof sclStatePayload==='function' ? sclStatePayload : null;
+if(__oldSclStatePayloadV199 && !window.__sclStatePayloadPatchedV199){
+  window.__sclStatePayloadPatchedV199=true;
+  sclStatePayload = function(){
+    sclV199CleanDemoAgreementsButKeepUserOnes();
+    const payload=__oldSclStatePayloadV199();
+    return sclV199CleanDemoOnly(payload);
+  };
+}
+
+// Patch refresh: do not wipe newly created agreements after UI actions.
+const __oldRefreshV199 = typeof refresh==='function' ? refresh : null;
+if(__oldRefreshV199 && !window.__sclRefreshPatchedV199){
+  window.__sclRefreshPatchedV199=true;
+  refresh=function(...args){
+    const result=__oldRefreshV199.apply(this,args);
+    if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+      setTimeout(()=>sclV199CleanDemoAgreementsButKeepUserOnes(),20);
+    }
+    return result;
+  };
+}
+
+function sclBindV199(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    sclV199CleanDemoAgreementsButKeepUserOnes();
+  }
+}
+setTimeout(sclBindV199,300);
+setTimeout(sclBindV199,1200);
+setInterval(sclBindV199,4000);
 
 </script>
 
