@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v206 · position months + deals · HQ reference layout';
+      content:'v207 · corrected converter · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -19081,6 +19081,363 @@ function scl206BindHQPanels(){
 setTimeout(()=>{scl206BindPharmacyWatcher();scl206BindHQPanels();},600);
 setTimeout(()=>{scl206BindPharmacyWatcher();scl206BindHQPanels();},1800);
 setInterval(()=>{scl206BindPharmacyWatcher();scl206BindHQPanels();},5000);
+
+
+/* v207 — corrected converter for basic themes, custom, deal, Pharmaplus orientation */
+function scl207Low(v){return String(v??'').toLowerCase();}
+function scl207Text(v){return String(v??'').trim();}
+function scl207Months(){
+  return typeof MONTHS_SHORT!=='undefined' ? MONTHS_SHORT : ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+}
+function scl207Pick(obj, keys){
+  if(!obj || typeof obj!=='object')return '';
+  for(const k of keys){
+    if(obj[k]!==undefined && obj[k]!==null && String(obj[k]).trim()!=='')return obj[k];
+  }
+  return '';
+}
+function scl207DeepFindTheme(obj, depth=0){
+  if(!obj || typeof obj !== 'object' || depth>4)return '';
+  if(Array.isArray(obj)){
+    for(const x of obj){
+      const found=scl207DeepFindTheme(x,depth+1);
+      if(found)return found;
+    }
+    return '';
+  }
+  const direct=scl207Pick(obj,[
+    'theme','themeName','theme_name','selectedTheme','selected_theme',
+    'topic','topicName','topic_name','programTheme','program_theme',
+    'title','name','label','monthTheme','monthlyTheme','basicTheme','basic_theme',
+    'libraryTheme','library_theme'
+  ]);
+  if(direct && typeof direct!=='object')return String(direct).trim();
+  for(const k of Object.keys(obj)){
+    if(['theme','topic','program','library','month','basic','custom'].some(x=>scl207Low(k).includes(x))){
+      const found=scl207DeepFindTheme(obj[k],depth+1);
+      if(found)return found;
+    }
+  }
+  return '';
+}
+function scl207IsPP(card){
+  const s=scl207Low(JSON.stringify({id:card?.id,type:card?.type,title:card?.title,name:card?.name,label:card?.label}));
+  return s.includes('pharmaplus') || s.includes('pp-') || card?.type==='hq';
+}
+function scl207IsExtra(card){
+  const s=scl207Low(JSON.stringify({id:card?.id,type:card?.type,title:card?.title,name:card?.name,label:card?.label}));
+  return s.includes('extra') || s.includes('έξτρα') || s.includes('εξτρα');
+}
+function scl207PositionType(card){
+  if(scl207IsPP(card))return 'pharmaplus';
+  if(scl207IsExtra(card))return 'extra';
+  return 'pharmacy';
+}
+function scl207CardId(card,idx){
+  return String(card?.id || card?.key || card?.cardId || (scl207IsPP(card)?'pharmaplus':`position_${idx+1}`));
+}
+function scl207CardName(card,idx){
+  return card?.title || card?.name || card?.label || (scl207IsPP(card)?'Pharmaplus Θέση':`Θέση Φαρμακείου ${idx+1}`);
+}
+function scl207RawOrientation(card){
+  const raw=scl207Pick(card,[
+    'orientation','screenOrientation','screen_orientation','placementOrientation',
+    'placement_orientation','format','screenFormat','screen_format','layout','displayOrientation'
+  ]);
+  const s=scl207Low(raw || JSON.stringify({
+    orientation:card?.orientation,
+    screenOrientation:card?.screenOrientation,
+    format:card?.format,
+    layout:card?.layout
+  }));
+  if(s.includes('vertical') || s.includes('portrait') || s.includes('κάθε') || s.includes('καθε'))return 'vertical';
+  if(s.includes('horizontal') || s.includes('landscape') || s.includes('οριζ'))return 'horizontal';
+  return '';
+}
+function scl207FirstPharmacyOrientation(cards){
+  for(const c of cards||[]){
+    if(scl207PositionType(c)==='pharmacy'){
+      const o=scl207RawOrientation(c);
+      if(o)return o;
+    }
+  }
+  return '';
+}
+function scl207Orientation(card,cards){
+  if(scl207IsPP(card))return scl207FirstPharmacyOrientation(cards) || scl207RawOrientation(card);
+  return scl207RawOrientation(card);
+}
+function scl207MonthItemFromPossibleArrays(card, month, names){
+  for(const name of names){
+    const arr=card?.[name];
+    if(Array.isArray(arr)){
+      if(arr[month] && typeof arr[month]==='object')return arr[month];
+      const found=arr.find(x=>{
+        if(!x || typeof x!=='object')return false;
+        const m=Number(x.month ?? x.monthIdx ?? x.month_index ?? x.startMonth ?? -1);
+        return m===month;
+      });
+      if(found)return found;
+    }
+  }
+  return null;
+}
+function scl207FindBasicTheme(card,month){
+  const item=scl207MonthItemFromPossibleArrays(card,month,[
+    'basicSchedule','simpleSchedule','pendingSimpleSchedule','schedule','program','months',
+    'monthlyProgram','monthly_program','yearProgram','year_program','basicProgram','basic_program',
+    'themes','monthlyThemes','monthly_themes','selectedThemes','selected_themes'
+  ]);
+  let theme=scl207DeepFindTheme(item);
+  if(theme)return theme;
+
+  // Some implementations store a selected annual program with months inside an object
+  const possibleObjs=[
+    card?.selectedProgram,card?.basicProgram,card?.annualProgram,card?.programData,
+    card?.themePlan,card?.yearPlan,card?.plan
+  ].filter(Boolean);
+  for(const obj of possibleObjs){
+    const arr=obj.months || obj.themes || obj.schedule || obj.items || obj.program || obj.monthlyThemes;
+    if(Array.isArray(arr)){
+      theme=scl207DeepFindTheme(arr[month]||{});
+      if(theme)return theme;
+    }
+  }
+  return '';
+}
+function scl207BasicSource(card,month){
+  const item=scl207MonthItemFromPossibleArrays(card,month,[
+    'basicSchedule','simpleSchedule','pendingSimpleSchedule','schedule','program','months'
+  ]);
+  return scl207Text(scl207Pick(item,['source','programSource','program_source','owner','mode','type']));
+}
+function scl207TypeHints(obj){
+  return scl207Low(JSON.stringify(obj||{}));
+}
+function scl207IsCustomObj(x){
+  const s=scl207TypeHints(x);
+  return s.includes('custom') || s.includes('εξατομ') || s.includes('library') || s.includes('theme_library') || s.includes('selectedtheme');
+}
+function scl207IsDealObj(x){
+  const s=scl207TypeHints(x);
+  const hasSupplier=!!scl207Pick(x,['supplier','supplierName','supplier_name','brand','deal_theme','series']);
+  return hasSupplier || s.includes('deal') || s.includes('συμφ') || s.includes('κλεισ');
+}
+function scl207FindCustom(card,month,basicTheme){
+  const arrays=[
+    card?.customizations,card?.customRows,card?.customSchedule,card?.customMonths,
+    card?.overrides,card?.monthlyOverrides,card?.changes,card?.actions,card?.activations,
+    card?.selectedCustomThemes,card?.customThemes
+  ].filter(Array.isArray);
+
+  for(const arr of arrays){
+    for(let i=0;i<arr.length;i++){
+      const x=arr[i];
+      if(!x || typeof x!=='object')continue;
+      const m=Number(x.month ?? x.monthIdx ?? x.month_index ?? x.startMonth ?? (arr.length===12?i:-1));
+      if(m!==month)continue;
+      const theme=scl207DeepFindTheme(x);
+      if(theme && theme!==basicTheme && (scl207IsCustomObj(x) || !scl207IsDealObj(x))){
+        return {
+          theme,
+          detail:scl207Text(scl207Pick(x,['detail','note','notes','message','description','format'])),
+          raw:x
+        };
+      }
+    }
+  }
+
+  // Some month item may directly include custom theme fields
+  const item=scl207MonthItemFromPossibleArrays(card,month,[
+    'basicSchedule','simpleSchedule','pendingSimpleSchedule','schedule','program','months'
+  ]);
+  if(item){
+    const customTheme=scl207Pick(item,[
+      'customTheme','custom_theme','overrideTheme','override_theme',
+      'selectedCustomTheme','selected_custom_theme','replacementTheme','replacement_theme'
+    ]);
+    if(customTheme && String(customTheme).trim()!==basicTheme){
+      return {theme:String(customTheme).trim(), detail:'', raw:item};
+    }
+  }
+  return null;
+}
+function scl207FindDeal(card,month){
+  const arrays=[
+    card?.deals,card?.dealRows,card?.dealSchedule,card?.agreements,card?.agreementRows,
+    card?.agreementSchedule,card?.confirmedDeals,card?.finalDeals,card?.supplierDeals
+  ].filter(Array.isArray);
+
+  for(const arr of arrays){
+    for(let i=0;i<arr.length;i++){
+      const x=arr[i];
+      if(!x || typeof x!=='object')continue;
+      if(!scl207IsDealObj(x))continue;
+      const sm=Number(x.startMonth ?? x.start_month ?? x.month ?? x.monthIdx ?? (arr.length===12?i:0));
+      const em=Number(x.endMonth ?? x.end_month ?? x.toMonth ?? sm);
+      if(month<sm || month>em)continue;
+
+      const supplier=scl207Text(scl207Pick(x,['supplier','supplierName','supplier_name','vendor']));
+      const brand=scl207Text(scl207Pick(x,['brand','brandName','brand_name']));
+      const dealTheme=scl207Text(scl207Pick(x,['deal_theme','dealTheme','theme','series','title','name','subject']));
+      if(!supplier && !brand && !dealTheme)continue;
+      return {
+        deal_id:String(scl207Pick(x,['id','deal_id','dealUid','deal_uid']) || `${scl207CardId(card,0)}_${sm}_${em}_${supplier}_${brand}_${dealTheme}`),
+        supplier,brand,deal_theme:dealTheme,raw:x,start_month:sm,end_month:em
+      };
+    }
+  }
+  return null;
+}
+function scl207FindSponsored(card,month){
+  const arrays=[card?.sponsoredShelves,card?.sponsoredRows,card?.sponsoredSchedule,card?.sponsored].filter(Array.isArray);
+  for(const arr of arrays){
+    for(const x of arr){
+      if(!x || typeof x!=='object')continue;
+      const sm=Number(x.startMonth ?? x.start_month ?? x.month ?? x.monthIdx ?? 0);
+      const dur=Number(x.duration || 1);
+      const em=Number(x.endMonth ?? x.end_month ?? (sm+dur-1));
+      if(month>=sm && month<=em){
+        return {
+          count:Number(x.shelves || x.count || x.sponsored_shelves_count || 0),
+          position:scl207Text(scl207Pick(x,['position','shelfPosition','shelf_position','sponsored_shelves_position','detail'])),
+          detail:scl207Text(scl207Pick(x,['detail','note','notes'])),
+          raw:x
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function scl207BuildPositionMonthsPayload(){
+  const rows=[];
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  cards.forEach((card,idx)=>{
+    const position_id=scl207CardId(card,idx);
+    const position_name=scl207CardName(card,idx);
+    const position_type=scl207PositionType(card);
+    const orientation=scl207Orientation(card,cards);
+
+    for(let m=0;m<12;m++){
+      const basicTheme=scl207FindBasicTheme(card,m);
+      const basicSource=scl207BasicSource(card,m);
+      let final_type=position_type==='pharmaplus'?'pharmaplus':'basic';
+      let final_title=basicTheme || '';
+      let final_detail='';
+      let change_from_basic=false;
+      let custom_theme='';
+      let deal_id=null, supplier='', brand='', deal_theme='';
+
+      const deal=scl207FindDeal(card,m);
+      const custom=scl207FindCustom(card,m,basicTheme);
+      const sponsored=scl207FindSponsored(card,m);
+
+      if(deal){
+        final_type='deal';
+        deal_id=deal.deal_id;
+        supplier=deal.supplier;
+        brand=deal.brand;
+        deal_theme=deal.deal_theme;
+        final_title=[supplier,brand,deal_theme].filter(Boolean).join(' / ') || 'Συμφωνία';
+        change_from_basic=true;
+      }else if(custom){
+        final_type='custom';
+        custom_theme=custom.theme;
+        final_title=custom_theme;
+        final_detail=custom.detail || '';
+        change_from_basic=true;
+      }
+
+      const sponsored_active=!!(sponsored && final_type!=='deal');
+
+      rows.push({
+        year:scl206Year ? scl206Year() : (typeof sclCurrentYear==='function'?sclCurrentYear():2026),
+        month:m,
+        month_label:scl207Months()[m],
+        position_id,
+        position_name,
+        position_type,
+        position_orientation:orientation,
+        basic_theme:basicTheme,
+        basic_source:basicSource,
+        final_type,
+        final_title,
+        final_detail,
+        change_from_basic,
+        custom_theme,
+        deal_id,
+        supplier,
+        brand,
+        deal_theme,
+        sponsored_active,
+        sponsored_shelves_count:sponsored_active?(sponsored.count||0):0,
+        sponsored_shelves_position:sponsored_active?(sponsored.position||''):'',
+        sponsored_detail:sponsored_active?(sponsored.detail||''):'',
+      });
+    }
+  });
+  return rows;
+}
+function scl207BuildDealsPayload(){
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  const deals=[];
+  cards.forEach((card,idx)=>{
+    const arrays=[
+      card?.deals,card?.dealRows,card?.dealSchedule,card?.agreements,card?.agreementRows,
+      card?.agreementSchedule,card?.confirmedDeals,card?.finalDeals,card?.supplierDeals
+    ].filter(Array.isArray);
+    arrays.forEach(arr=>{
+      arr.forEach((x,i)=>{
+        if(!x || typeof x!=='object' || !scl207IsDealObj(x))return;
+        const supplier=scl207Text(scl207Pick(x,['supplier','supplierName','supplier_name','vendor']));
+        const brand=scl207Text(scl207Pick(x,['brand','brandName','brand_name']));
+        const deal_theme=scl207Text(scl207Pick(x,['deal_theme','dealTheme','theme','series','title','name','subject']));
+        if(!supplier && !brand && !deal_theme)return;
+        const sm=Number(x.startMonth ?? x.start_month ?? x.month ?? x.monthIdx ?? 0);
+        const em=Number(x.endMonth ?? x.end_month ?? x.toMonth ?? sm);
+        const codes=x.product_codes || x.productCodes || x.codes || x.skus || [];
+        deals.push({
+          deal_uid:String(scl207Pick(x,['id','deal_id','dealUid','deal_uid']) || `${scl207CardId(card,idx)}_${i}_${sm}_${em}_${supplier}_${brand}_${deal_theme}`),
+          year:scl206Year ? scl206Year() : (typeof sclCurrentYear==='function'?sclCurrentYear():2026),
+          position_id:scl207CardId(card,idx),
+          position_name:scl207CardName(card,idx),
+          position_type:scl207PositionType(card),
+          start_month:sm,
+          end_month:em,
+          supplier,brand,deal_theme,
+          deal_content_mode:scl207Pick(x,['deal_content_mode','contentMode','content_mode']) || (x.monthlyContentChange?'changes_monthly':'same_all_months'),
+          reporting_requested:!!(x.reporting_requested || x.reportingRequested || x.report_required || x.reportRequired || x.reporting),
+          product_codes:Array.isArray(codes)?codes:String(codes||'').split(/[,\n;]/).map(s=>s.trim()).filter(Boolean),
+          notes:scl207Text(scl207Pick(x,['notes','note','supplier_notes','supplierNotes','reporting_notes','reportingNotes'])),
+          raw_json:x
+        });
+      });
+    });
+  });
+  return deals;
+}
+
+// Override v206 builders with corrected v207 logic
+if(typeof scl206BuildPositionMonthsPayload==='function')scl206BuildPositionMonthsPayload=scl207BuildPositionMonthsPayload;
+if(typeof scl206BuildDealsPayload==='function')scl206BuildDealsPayload=scl207BuildDealsPayload;
+
+// Force a plan contract save after interactions, using existing v206 save function
+function scl207Queue(){
+  if(typeof scl206QueuePlanSave==='function')scl206QueuePlanSave();
+}
+function scl207Bind(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    const root=document.querySelector('.shell')||document.body;
+    if(root && !root.dataset.bound207){
+      root.dataset.bound207='1';
+      ['click','change','input'].forEach(evt=>root.addEventListener(evt,()=>setTimeout(scl207Queue,200),true));
+    }
+  }
+}
+setTimeout(scl207Bind,500);
+setTimeout(scl207Bind,1600);
+setInterval(scl207Bind,5000);
 
 </script>
 
