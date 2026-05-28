@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v196 · real HQ overview stats · HQ reference layout';
+      content:'v197 · supabase source of truth · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5943,6 +5943,27 @@ button.scl-delete-pharmacy-btn:hover{
   background:#E6F1FB;
   color:#185FA5;
   border-color:#B7D7F2;
+}
+
+
+/* v197 — source-of-truth Supabase, no local bleed */
+.scl-real-overview-wrap{
+  margin:12px 0 16px;
+}
+.scl-real-overview-wrap table{
+  width:100%;
+}
+.scl-real-note{
+  font-size:12px;
+  color:#666;
+  margin:0 0 8px;
+}
+.scl-real-empty{
+  background:#f5f5f3;
+  border-radius:8px;
+  padding:12px;
+  font-size:13px;
+  color:#666;
 }
 
 </style>
@@ -17028,6 +17049,210 @@ function sclBindV196(){
 setTimeout(sclBindV196,500);
 setTimeout(sclBindV196,1500);
 setInterval(sclBindV196,5000);
+
+
+/* v197 — Supabase is source of truth; no localStorage/default bleed */
+function sclV197PharmacyScopedKey(){
+  return `spacecolab_active_${SCL_ROUTING?.pharmacyToken||'no-token'}_${typeof sclCurrentYear==='function'?sclCurrentYear():2026}`;
+}
+function sclV197ClearLikelyLocalState(){
+  try{
+    const keepKey=sclV197PharmacyScopedKey();
+    const toRemove=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(!k)continue;
+      const low=k.toLowerCase();
+      if(low.includes('space') || low.includes('pagk') || low.includes('counter') || low.includes('calculator') || low.includes('pharmacy')){
+        if(k!==keepKey)toRemove.push(k);
+      }
+    }
+    toRemove.forEach(k=>localStorage.removeItem(k));
+  }catch(e){console.warn('local clear failed',e);}
+}
+function sclV197HardBlankPharmacyState(){
+  try{
+    if(!state)return;
+    state.turnover = 0;
+    state.totalCounters = 0;
+    state.setupLocked = false;
+    state.selectedCardId = 'base-1';
+    if(Array.isArray(state.cards)){
+      state.cards.forEach((card,idx)=>{
+        const isHQ = card.type==='hq' || String(card.title||'').toLowerCase().includes('pharmaplus');
+        if(!isHQ){
+          ['basicSchedule','simpleSchedule','pendingSimpleSchedule'].forEach(k=>{
+            if(Array.isArray(card[k])){
+              card[k]=card[k].map(()=>({label:'',owner:'pending',mechanism:''}));
+            }
+          });
+          card.sponsoredShelves=[];
+          card.deals=[];
+          card.negotiations=[];
+          card.customizations=[];
+          card.actions=[];
+          card.initialPlanLocked=false;
+          card.defaultProgram='';
+          card.brand='';
+          card.series='';
+        }else{
+          // keep HQ card structure but clear pharmacy-level edits
+          card.sponsoredShelves=[];
+          card.deals=[];
+          card.negotiations=[];
+          card.customizations=[];
+          card.actions=[];
+        }
+      });
+    }
+  }catch(e){console.warn('hard blank failed',e);}
+}
+function sclV197MeaningfulState(obj){
+  if(!obj || typeof obj!=='object')return false;
+  if(!Object.keys(obj).length)return false;
+  if(Array.isArray(obj.cards) && obj.cards.length)return true;
+  return Object.keys(obj).some(k=>!String(k).startsWith('_'));
+}
+
+const __oldSclLoadPharmacyModeV197 = typeof sclLoadPharmacyMode==='function' ? sclLoadPharmacyMode : null;
+if(__oldSclLoadPharmacyModeV197){
+  sclLoadPharmacyMode = async function(){
+    if(!sb || !SCL_ROUTING.pharmacyToken)return;
+    sclV197ClearLikelyLocalState();
+    SCL_ROUTING.suppressSave=true;
+    if(typeof sclCloudStatus==='function')sclCloudStatus('Φόρτωση φαρμακείου από Supabase…');
+    const year=typeof sclCurrentYear==='function'?sclCurrentYear():2026;
+    const {data,error}=await sb.rpc('get_pharmacy_state_by_token',{p_token:SCL_ROUTING.pharmacyToken,p_year:year});
+    if(error){
+      SCL_ROUTING.ready=false;
+      SCL_ROUTING.suppressSave=true;
+      document.body.classList.remove('scl-locked','scl-hq');
+      document.body.classList.add('scl-pharmacy');
+      if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');
+      alert('Σφάλμα φόρτωσης pharmacy token: '+error.message);
+      return;
+    }
+    const row=Array.isArray(data)?data[0]:data;
+    if(!row || !row.pharmacy_id){
+      SCL_ROUTING.ready=false;
+      SCL_ROUTING.suppressSave=true;
+      document.body.classList.remove('scl-locked','scl-hq');
+      document.body.classList.add('scl-pharmacy');
+      if(typeof sclCloudStatus==='function')sclCloudStatus('Δεν βρέθηκε φαρμακείο για αυτό το token','err');
+      return;
+    }
+    SCL_ROUTING.pharmacy={id:row.pharmacy_id,name:row.pharmacy_name};
+    const hasState=sclV197MeaningfulState(row.state_json);
+    if(hasState){
+      if(typeof sclApplyStatePayload==='function')sclApplyStatePayload(row.state_json);
+    }else{
+      sclV197HardBlankPharmacyState();
+    }
+    SCL_ROUTING.ready=true;
+    SCL_ROUTING.suppressSave=false;
+    if(typeof sclAttachPharmacyPill==='function')sclAttachPharmacyPill();
+    if(typeof sclUpdatePharmacyIdentityV190==='function')sclUpdatePharmacyIdentityV190();
+    if(typeof sclCloudStatus==='function')sclCloudStatus(`${row.pharmacy_name} · ${hasState?'φορτώθηκε':'κενό νέο φαρμακείο'} · ${year}`,'ok');
+    try{ refresh(false); }catch(e){ console.warn('refresh failed',e); }
+    // Do not auto-save blank/default state on first open.
+    if(hasState && typeof sclLoadHQProgramReadOnly==='function')await sclLoadHQProgramReadOnly();
+  };
+}
+
+function sclV197Analyze(ps){
+  const cards=(ps?.state_json && Array.isArray(ps.state_json.cards))?ps.state_json.cards:[];
+  let actions=0, positions=0, types=new Set(), next='—';
+  const nowM=new Date().getMonth();
+  cards.forEach(card=>{
+    const isHQ=card.type==='hq'||String(card.title||'').toLowerCase().includes('pharmaplus');
+    if(!isHQ)positions++;
+    const arr=card.simpleSchedule||card.basicSchedule||card.pendingSimpleSchedule||[];
+    arr.forEach((it,m)=>{
+      const label=String(it?.label||'').trim();
+      const owner=String(it?.owner||'').trim().toLowerCase();
+      if(label && label!=='—' && owner && owner!=='pending'){
+        actions++;
+        let t='Basic';
+        if(owner.includes('custom'))t='Custom';
+        if(owner.includes('deal')||owner.includes('negotiation'))t='Deal';
+        if(owner.includes('sponsor'))t='Sponsored';
+        if(isHQ)t='Pharmaplus';
+        if(m===nowM)types.add(t);
+        if(next==='—' && m>=nowM && typeof MONTHS_SHORT!=='undefined')next=MONTHS_SHORT[m];
+      }
+    });
+    (card.sponsoredShelves||[]).forEach(s=>{actions++; types.add('Sponsored');});
+  });
+  return {positions,actions,types:[...types],next};
+}
+function sclV197RenderOverview(data){
+  const oldSec=[...document.querySelectorAll('.sec')].find(x=>x.textContent.includes('Φαρμακεία'));
+  const oldTable=oldSec?.nextElementSibling;
+  if(oldTable && oldTable.tagName==='TABLE'){
+    oldTable.style.display='none';
+  }
+  let wrap=document.getElementById('sclRealOverviewWrap');
+  if(!wrap && oldSec){
+    wrap=document.createElement('div');
+    wrap.id='sclRealOverviewWrap';
+    wrap.className='scl-real-overview-wrap';
+    oldSec.insertAdjacentElement('afterend',wrap);
+  }
+  if(!wrap)return;
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'el'));
+  const states=data?.pharmacy_state||[];
+  if(!pharmacies.length){
+    wrap.innerHTML='<div class="scl-real-empty">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+    return;
+  }
+  wrap.innerHTML=`<div class="scl-real-note">Πραγματικά δεδομένα από Supabase.</div>
+  <table><thead><tr><th>Φαρμακείο</th><th>Θέσεις</th><th>Τρέχων μήνας</th><th>Επόμενη αλλαγή</th><th>Status</th></tr></thead>
+  <tbody>${pharmacies.map(p=>{
+    const ps=states.filter(s=>s.pharmacy_id===p.id).sort((a,b)=>Number(b.year||0)-Number(a.year||0))[0];
+    const a=sclV197Analyze(ps);
+    const token=p.token||'';
+    const link=token?(location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token)):'';
+    const current=ps?(a.types.length?a.types.map(t=>`<span class="pill ${t==='Custom'?'custom':t==='Deal'?'deal':t==='Sponsored'?'sponsored':t==='Pharmaplus'?'pharmaplus':'basic'}">${t}</span>`).join(' '):'<span class="pill pending">χωρίς τρέχουσες</span>'):'<span class="pill pending">no state</span>';
+    const status=ps?`<span class="pill basic">${ps.year} saved</span><div class="sub-info">${(ps.updated_at||'').slice(0,10)}</div>`:'<span class="pill pending">κενό</span>';
+    return `<tr><td><strong>${esc(p.name||'Φαρμακείο')}</strong><div class="sub-info">${token?`<button data-v197-open="${esc(link)}">Open</button> <button data-v197-copy="${esc(link)}">Copy</button>`:''}</div></td><td>${a.positions}</td><td>${current}</td><td>${esc(a.next)}</td><td>${status}</td></tr>`;
+  }).join('')}</tbody></table>`;
+  wrap.querySelectorAll('[data-v197-open]').forEach(b=>b.addEventListener('click',()=>window.open(b.dataset.v197Open,'_blank')));
+  wrap.querySelectorAll('[data-v197-copy]').forEach(b=>b.addEventListener('click',()=>navigator.clipboard.writeText(b.dataset.v197Copy)));
+}
+function sclV197UpdateStats(data){
+  const stats=document.querySelectorAll('.stats-grid .stat');
+  const pharmacies=data?.pharmacies||[];
+  const states=data?.pharmacy_state||[];
+  const analyses=states.map(sclV197Analyze);
+  const saved=new Set(states.map(s=>s.pharmacy_id)).size;
+  const actions=analyses.reduce((s,a)=>s+a.actions,0);
+  const deals=analyses.reduce((s,a)=>s+(a.types.includes('Deal')?1:0),0);
+  if(stats[0]){stats[0].querySelector('.v').textContent=pharmacies.length;stats[0].querySelector('.sub').textContent=`${saved} με αποθηκευμένο state`;}
+  if(stats[1]){stats[1].querySelector('.v').textContent=deals;stats[1].querySelector('.sub').textContent='με Deal στο state';}
+  if(stats[2]){stats[2].querySelector('.v').textContent=actions;stats[2].querySelector('.sub').textContent='ενέργειες στα states';}
+}
+async function sclV197LoadHq(){
+  if(!sb || !SCL_ROUTING?.hqKey)return;
+  const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+  if(error){if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');return;}
+  window.SCL_HQ_DATA_V197=data||{};
+  sclV197RenderOverview(window.SCL_HQ_DATA_V197);
+  sclV197UpdateStats(window.SCL_HQ_DATA_V197);
+  if(typeof sclSimpleRenderHqListV193==='function')sclSimpleRenderHqListV193(window.SCL_HQ_DATA_V197);
+}
+const __oldSclLoadHqShellV197 = typeof sclLoadHqShell==='function' ? sclLoadHqShell : null;
+if(__oldSclLoadHqShellV197){
+  sclLoadHqShell = async function(){
+    await __oldSclLoadHqShellV197();
+    await sclV197LoadHq();
+  };
+}
+function sclBindV197(){
+  if(typeof sclMode==='function' && sclMode()==='hq')sclV197LoadHq();
+}
+setTimeout(sclBindV197,700);
+setTimeout(sclBindV197,1800);
+setInterval(sclBindV197,6000);
 
 </script>
 
