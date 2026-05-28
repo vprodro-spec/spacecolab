@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v213 · HQ cleanup create sort refresh · HQ reference layout';
+      content:'v215 · pharmacy management tab · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v212 · approved HQ dashboard — HQ exact reference layout, full-width */
+/* v214 · restore old pharmacy creation — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -6253,6 +6253,14 @@ body.scl-hq #sclHqDashboard{display:none!important}
 .scl212-table th.scl213-sorted .scl213-si{opacity:1}
 .scl213-refresh-status{font-size:12px;color:#666;margin-left:4px}
 .scl213-auto-badge{font-size:11px;padding:2px 8px;border-radius:999px;background:#EAF3DE;color:#3B6D11}
+
+
+/* v215 — Pharmacy management tab */
+.scl215-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:1rem}
+.scl215-quick-card{background:#f5f5f3;border-radius:8px;padding:12px}
+.scl215-quick-card .t{font-size:12px;color:#666;margin-bottom:6px}
+.scl215-quick-card .v{font-size:16px;font-weight:500}
+.scl215-quick-card .s{font-size:12px;color:#666;margin-top:3px}
 
 </style>
 
@@ -8820,6 +8828,7 @@ body.scl-hq #sclHqDashboard{display:none!important}
 
   <div class="scl212-tabs">
     <button class="scl212-tab active" data-tab="overview">Επισκόπηση</button>
+    <button class="scl212-tab" data-tab="pharmacies">Φαρμακεία</button>
     <button class="scl212-tab" data-tab="changes">Αλλαγές <span id="scl212Badge" class="scl212-badge" style="display:none">0</span></button>
     <button class="scl212-tab" data-tab="billing">Billing</button>
     <button class="scl212-tab" data-tab="stats">Στατιστικά</button>
@@ -8828,27 +8837,36 @@ body.scl-hq #sclHqDashboard{display:none!important}
   </div>
 
   <div id="scl212Page-overview" class="scl212-page active">
-    
-<div id="scl213CreatePharmacyCard" class="scl213-create-card">
-  <div class="scl213-create-head">Δημιουργία φαρμακείου</div>
-  <div class="scl213-create-row">
-    <input id="scl213PharmacyName" placeholder="Όνομα φαρμακείου">
-    <button id="scl213CreatePharmacyBtn" type="button">Δημιουργία</button>
-    <span id="scl213CreateStatus" class="scl213-refresh-status"></span>
-  </div>
-  <div id="scl213CreatedLink" class="scl213-link-box" style="display:none"></div>
-</div>
-
 <div class="scl212-todo-section">
       <div class="scl212-th">To-do — εκκρεμότητες</div>
       <div id="scl212Todo"></div>
     </div>
+    <div id="scl215OverviewQuick"></div>
+</div>
+
+  
+  <div id="scl212Page-pharmacies" class="scl212-page">
+    
+    
+<div id="scl213CreatePharmacyCard" class="scl213-create-card">
+  <div class="scl213-create-head">Δημιουργία φαρμακείου</div>
+  <div class="scl213-create-row">
+    <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
+    <button id="sclCreatePharmacyHqBtn" type="button">Δημιουργία token / link</button>
+    <span id="scl214CreateStatus" class="scl213-refresh-status"></span>
+  </div>
+  <div id="sclCreatedLinkBox" class="scl213-link-box" style="display:none"></div>
+</div>
+
+
+    
     <div class="scl212-sec">Φαρμακεία — κλικ για λεπτομέρειες</div>
     <table class="scl212-table">
       <thead><tr><th>Φαρμακείο</th><th>Θέσεις</th><th>Τρέχων μήνας</th><th>Επόμενη αλλαγή</th><th>Status</th></tr></thead>
       <tbody id="scl212Overview"></tbody>
     </table>
     <div id="scl212Detail"></div>
+  
   </div>
 
   <div id="scl212Page-changes" class="scl212-page">
@@ -9161,11 +9179,11 @@ body.scl-hq #sclHqDashboard{display:none!important}
         <div class="hq-ref-create">
           <div class="th" style="font-size:13px;font-weight:500;margin-bottom:8px">Νέο φαρμακείο / Link</div>
           <div class="hq-ref-create-row">
-            <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
-            <button id="sclCreatePharmacyHqBtn" type="button">Δημιουργία token / link</button>
+            <input id="sclOldHiddenPharmacyName" placeholder="Όνομα φαρμακείου">
+            <button id="sclOldHiddenCreatePharmacyHqBtn" type="button">Δημιουργία token / link</button>
             <button id="sclRefreshHqBtn" type="button">Ανανέωση HQ</button>
           </div>
-          <div id="sclCreatedLinkBox" class="hq-ref-created-link"></div>
+          <div id="sclOldHiddenCreatedLinkBox" class="hq-ref-created-link"></div>
         </div>
 
 <!-- v193 — simple guaranteed HQ pharmacy list -->
@@ -21212,7 +21230,7 @@ function scl213PharmacyUrl(token){
   const base=location.href.split('?')[0].split('#')[0];
   return base+'?pharmacy='+encodeURIComponent(token);
 }
-async function scl213CreatePharmacy(){
+async function scl213CreatePharmacy_DISABLED(){
   const nameEl=document.getElementById('scl213PharmacyName');
   const status=document.getElementById('scl213CreateStatus');
   const out=document.getElementById('scl213CreatedLink');
@@ -21267,6 +21285,48 @@ function scl213Boot(){
 setTimeout(scl213Boot,800);
 setTimeout(scl213Boot,2000);
 setInterval(scl213BindExtra,5000);
+
+
+/* v214 — restore exact old pharmacy creation mechanism inside new HQ dashboard */
+function scl214BindOldCreateIntoNewDashboard(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  const btn=document.getElementById('sclCreatePharmacyHqBtn');
+  const input=document.getElementById('sclNewPharmacyName');
+  const box=document.getElementById('sclCreatedLinkBox');
+  if(!btn || btn.dataset.bound214)return;
+  btn.dataset.bound214='1';
+  btn.addEventListener('click', async (e)=>{
+    e.preventDefault();
+    e.stopPropagation();
+    const status=document.getElementById('scl214CreateStatus');
+    if(status)status.textContent='';
+    if(typeof sclCreatePharmacyFromHq==='function'){
+      await sclCreatePharmacyFromHq();
+      if(status)status.textContent=' ';
+      // Make sure new HQ data refreshes after successful creation.
+      setTimeout(()=>{ if(typeof scl212Load==='function')scl212Load(); },600);
+      setTimeout(()=>{ if(typeof scl212Load==='function')scl212Load(); },1600);
+      return;
+    }
+    if(status)status.textContent='Δεν βρέθηκε ο παλιός μηχανισμός δημιουργίας.';
+  },true);
+  if(input && !input.dataset.bound214){
+    input.dataset.bound214='1';
+    input.addEventListener('keydown',e=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        btn.click();
+      }
+    });
+  }
+  if(box){
+    box.classList.add('scl213-link-box');
+    box.style.display=box.textContent.trim()?'flex':'none';
+  }
+}
+setTimeout(scl214BindOldCreateIntoNewDashboard,300);
+setTimeout(scl214BindOldCreateIntoNewDashboard,1200);
+setInterval(scl214BindOldCreateIntoNewDashboard,3000);
 
 </script>
 
