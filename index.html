@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v207 · corrected converter · HQ reference layout';
+      content:'v208 · real state mapping · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v206 · position months + deals — HQ exact reference layout, full-width */
+/* v208 · real state mapping — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -19438,6 +19438,278 @@ function scl207Bind(){
 setTimeout(scl207Bind,500);
 setTimeout(scl207Bind,1600);
 setInterval(scl207Bind,5000);
+
+
+/* v208 — exact converter from real state_json mapping */
+function scl208Year(){
+  try{ if(typeof sclCurrentYear==='function')return Number(sclCurrentYear()) || 2026; }catch(e){}
+  try{ if(typeof scl206Year==='function')return Number(scl206Year()) || 2026; }catch(e){}
+  return Number(state?.programYear)||2026;
+}
+function scl208Months(){
+  return typeof MONTHS_SHORT!=='undefined' ? MONTHS_SHORT : ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+}
+function scl208Text(v){ return String(v ?? '').trim(); }
+function scl208Low(v){ return scl208Text(v).toLowerCase(); }
+function scl208IsPP(card){
+  return card?.type==='hq' || card?.id==='hq' || scl208Low(card?.title).includes('pharmaplus');
+}
+function scl208IsExtra(card){
+  return card?.type==='extra' || scl208Low(card?.id).includes('extra') || scl208Low(card?.title).includes('extra') || scl208Low(card?.title).includes('έξτρα') || scl208Low(card?.title).includes('εξτρα');
+}
+function scl208PositionType(card){
+  if(scl208IsPP(card))return 'pharmaplus';
+  if(scl208IsExtra(card))return 'extra';
+  return 'pharmacy';
+}
+function scl208CardId(card,idx){
+  return String(card?.id || (scl208IsPP(card)?'pharmaplus':`position_${idx+1}`));
+}
+function scl208CardName(card,idx){
+  return card?.title || card?.name || (scl208IsPP(card)?'Pharmaplus':`Θέση Φαρμακείου ${idx+1}`);
+}
+function scl208FirstPharmacyOrientation(cards){
+  for(const c of cards||[]){
+    if(scl208PositionType(c)==='pharmacy'){
+      const o=scl208Text(c.screenFormat || c.pendingScreenFormat || c.orientation || '');
+      if(o)return o;
+    }
+  }
+  return '';
+}
+function scl208Orientation(card,cards){
+  if(scl208IsPP(card))return scl208FirstPharmacyOrientation(cards) || scl208Text(card.screenFormat || card.pendingScreenFormat || '');
+  return scl208Text(card.screenFormat || card.pendingScreenFormat || card.orientation || '');
+}
+function scl208ArrayVal(arr,month){
+  if(!Array.isArray(arr))return '';
+  return scl208Text(arr[month] ?? '');
+}
+function scl208BasicTheme(card,month){
+  // Real mapping from uploaded state: basicSchedule is string array.
+  return scl208ArrayVal(card.basicSchedule,month) || scl208ArrayVal(card.pendingInitialSchedule,month) || scl208ArrayVal(card.simpleSchedule,month);
+}
+function scl208SimpleTheme(card,month){
+  // Real mapping: simpleSchedule is current/final selected monthly theme.
+  return scl208ArrayVal(card.simpleSchedule,month) || scl208ArrayVal(card.pendingSimpleSchedule,month) || scl208BasicTheme(card,month);
+}
+function scl208DealCoversMonth(deal,month){
+  if(!deal || deal.confirmed !== true)return false;
+  const start=Number(deal.startMonth ?? 0);
+  const duration=Math.max(1,Number(deal.duration ?? 1));
+  const end=start+duration-1;
+  if(month<start || month>end)return false;
+  const sched=Array.isArray(deal.schedule)?deal.schedule:[];
+  // If schedule has content for this month, definitely active.
+  if(scl208Text(sched[month]))return true;
+  // If same content all months or duration covers this month, still active if any deal identifiers exist.
+  const anyContent=sched.some(x=>scl208Text(x));
+  const hasInfo=!!(scl208Text(deal.supplier)||scl208Text(deal.brand)||scl208Text(deal.subline)||scl208Text(deal.products)||anyContent);
+  return hasInfo;
+}
+function scl208DealTitleForMonth(deal,month){
+  const supplier=scl208Text(deal.supplier);
+  const brand=scl208Text(deal.brand);
+  const subline=scl208Text(deal.subline);
+  const schedule=scl208ArrayVal(deal.schedule,month);
+  const parts=[supplier,brand,subline].filter(Boolean);
+  if(parts.length)return parts.join(' / ');
+  if(schedule)return schedule;
+  return 'Συμφωνία';
+}
+function scl208FindConfirmedDeal(card,month){
+  const arr=Array.isArray(card.confirmedDeals)?card.confirmedDeals:[];
+  for(const d of arr){
+    if(scl208DealCoversMonth(d,month))return d;
+  }
+  return null;
+}
+function scl208SponsoredForMonth(card,month){
+  const arr=Array.isArray(card.sponsoredShelves)?card.sponsoredShelves:[];
+  for(const s of arr){
+    const sm=Number(s.month ?? s.startMonth ?? 0);
+    const duration=Math.max(1,Number(s.duration ?? 1));
+    const em=Number(s.endMonth ?? (sm+duration-1));
+    const status=scl208Low(s.status || 'confirmed');
+    if(month>=sm && month<=em && status!=='cancelled'){
+      return s;
+    }
+  }
+  return null;
+}
+function scl208BuildPositionMonthsPayload(){
+  const rows=[];
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  cards.forEach((card,idx)=>{
+    const position_id=scl208CardId(card,idx);
+    const position_name=scl208CardName(card,idx);
+    const position_type=scl208PositionType(card);
+    const position_orientation=scl208Orientation(card,cards);
+    for(let m=0;m<12;m++){
+      const basic_theme=scl208BasicTheme(card,m);
+      const simple_theme=scl208SimpleTheme(card,m);
+      const deal=scl208FindConfirmedDeal(card,m);
+      const sponsored=scl208SponsoredForMonth(card,m);
+
+      let final_type=position_type==='pharmaplus'?'pharmaplus':'basic';
+      let final_title=basic_theme;
+      let final_detail='';
+      let change_from_basic=false;
+      let custom_theme='';
+      let deal_id=null, supplier='', brand='', deal_theme='';
+
+      if(deal){
+        final_type='deal';
+        final_title=scl208DealTitleForMonth(deal,m);
+        final_detail=scl208Text(deal.notes || '');
+        change_from_basic=true;
+        deal_id=String(deal.id || `${position_id}_${deal.startMonth||0}_${deal.duration||1}`);
+        supplier=scl208Text(deal.supplier);
+        brand=scl208Text(deal.brand);
+        deal_theme=scl208Text(deal.subline || scl208ArrayVal(deal.schedule,m) || deal.products || '');
+      }else if(position_type!=='pharmaplus' && simple_theme && basic_theme && simple_theme !== basic_theme){
+        final_type='custom';
+        final_title=simple_theme;
+        custom_theme=simple_theme;
+        change_from_basic=true;
+      }else if(position_type!=='pharmaplus'){
+        final_type='basic';
+        final_title=basic_theme;
+      }else{
+        final_type='pharmaplus';
+        final_title=simple_theme || basic_theme || 'Pharmaplus';
+      }
+
+      const sponsored_active=!!(sponsored && final_type!=='deal');
+
+      rows.push({
+        year:scl208Year(),
+        month:m,
+        month_label:scl208Months()[m],
+        position_id,
+        position_name,
+        position_type,
+        position_orientation,
+        basic_theme,
+        basic_source:scl208Text(card.defaultProgram || card.initialPlanType || ''),
+        final_type,
+        final_title,
+        final_detail,
+        change_from_basic,
+        custom_theme,
+        deal_id,
+        supplier,
+        brand,
+        deal_theme,
+        sponsored_active,
+        sponsored_shelves_count:sponsored_active ? 1 : 0,
+        sponsored_shelves_position:sponsored_active ? scl208Text(sponsored.shelves || sponsored.position || '') : '',
+        sponsored_detail:sponsored_active ? scl208Text(sponsored.notes || sponsored.products || '') : '',
+      });
+    }
+  });
+  return rows;
+}
+function scl208BuildDealsPayload(){
+  const deals=[];
+  const cards=Array.isArray(state?.cards)?state.cards:[];
+  cards.forEach((card,idx)=>{
+    const arr=Array.isArray(card.confirmedDeals)?card.confirmedDeals:[];
+    arr.forEach((d,i)=>{
+      if(!d || d.confirmed !== true)return;
+      const start=Number(d.startMonth ?? 0);
+      const duration=Math.max(1,Number(d.duration ?? 1));
+      const end=start+duration-1;
+      const schedule=Array.isArray(d.schedule)?d.schedule:[];
+      const anySchedule=schedule.filter(x=>scl208Text(x));
+      const supplier=scl208Text(d.supplier);
+      const brand=scl208Text(d.brand);
+      const subline=scl208Text(d.subline);
+      const products=scl208Text(d.products);
+      if(!supplier && !brand && !subline && !products && !anySchedule.length)return;
+
+      const monthlyProducts=Array.isArray(d.monthlyProducts)?d.monthlyProducts:[];
+      const monthlySublines=Array.isArray(d.monthlySublines)?d.monthlySublines:[];
+      const codesRaw=[products].concat(monthlyProducts).filter(x=>scl208Text(x));
+      deals.push({
+        deal_uid:String(d.id || `${scl208CardId(card,idx)}_${i}_${start}_${end}`),
+        year:scl208Year(),
+        position_id:scl208CardId(card,idx),
+        position_name:scl208CardName(card,idx),
+        position_type:scl208PositionType(card),
+        start_month:start,
+        end_month:end,
+        supplier,
+        brand,
+        deal_theme:subline || anySchedule[0] || products || 'Συμφωνία',
+        deal_content_mode:d.monthlyContentChanges===true ? 'changes_monthly' : 'same_all_months',
+        reporting_requested:!!(d.reportEnabled || d.reportMode==='sellout' || d.reportMode==='monthly'),
+        product_codes:codesRaw.join('\n').split(/[,\n;]/).map(x=>x.trim()).filter(Boolean),
+        notes:scl208Text(d.notes || monthlySublines.filter(x=>scl208Text(x)).join(' | ')),
+        raw_json:d
+      });
+    });
+  });
+  return deals;
+}
+
+// Override previous converter builders
+if(typeof scl206BuildPositionMonthsPayload==='function')scl206BuildPositionMonthsPayload=scl208BuildPositionMonthsPayload;
+if(typeof scl206BuildDealsPayload==='function')scl206BuildDealsPayload=scl208BuildDealsPayload;
+if(typeof scl207BuildPositionMonthsPayload==='function')scl207BuildPositionMonthsPayload=scl208BuildPositionMonthsPayload;
+if(typeof scl207BuildDealsPayload==='function')scl207BuildDealsPayload=scl208BuildDealsPayload;
+
+// Improved HQ render columns for the test panel
+function scl208RenderPositionMonths(rows){
+  const el=document.getElementById('sclHqPlanList');
+  if(!el)return;
+  if(!rows || !rows.length){
+    el.innerHTML='<div class="scl-hq-plan-empty">Δεν υπάρχουν position-months ακόμη.</div>';
+    return;
+  }
+  el.innerHTML=`<table class="scl-hq-plan-table">
+    <thead><tr>
+      <th>Φαρμακείο</th>
+      <th>Μήνας</th>
+      <th>Θέση</th>
+      <th>Orientation</th>
+      <th>Basic θεματολογία</th>
+      <th>Τελικό πρόγραμμα</th>
+      <th>Τελική θεματολογία</th>
+      <th>Αλλαγή από basic</th>
+      <th>Sponsored</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><strong>${scl206Esc ? scl206Esc(r.pharmacy_name) : r.pharmacy_name}</strong></td>
+      <td>${scl206Esc ? scl206Esc(r.month_label || r.month) : (r.month_label || r.month)}</td>
+      <td>${scl206Esc ? scl206Esc(r.position_name) : r.position_name}<div class="scl-hq-plan-note">${scl206Esc ? scl206Esc(r.position_type) : r.position_type}</div></td>
+      <td>${scl206Esc ? scl206Esc(r.position_orientation || '—') : (r.position_orientation || '—')}</td>
+      <td>${scl206Esc ? scl206Esc(r.basic_theme || '—') : (r.basic_theme || '—')}</td>
+      <td><span class="scl-hq-plan-pill ${scl206Esc ? scl206Esc(r.final_type || 'empty') : (r.final_type || 'empty')}">${scl206Esc ? scl206Esc(r.final_type || 'empty') : (r.final_type || 'empty')}</span></td>
+      <td>${scl206Esc ? scl206Esc(r.final_title || '—') : (r.final_title || '—')}${r.final_detail?`<div class="scl-hq-plan-note">${scl206Esc ? scl206Esc(r.final_detail) : r.final_detail}</div>`:''}</td>
+      <td>${r.change_from_basic?'<span class="scl-hq-plan-pill custom">Ναι</span>':'—'}</td>
+      <td>${r.sponsored_active?'<span class="scl-hq-plan-pill sponsored">active</span>':'—'}${r.sponsored_shelves_position?`<div class="scl-hq-plan-note">${scl206Esc ? scl206Esc(r.sponsored_shelves_position) : r.sponsored_shelves_position}</div>`:''}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+if(typeof scl206RenderPositionMonths==='function')scl206RenderPositionMonths=scl208RenderPositionMonths;
+
+// Save again after interactions
+function scl208Queue(){
+  if(typeof scl206QueuePlanSave==='function')scl206QueuePlanSave();
+}
+function scl208Bind(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    const root=document.querySelector('.shell')||document.body;
+    if(root && !root.dataset.bound208){
+      root.dataset.bound208='1';
+      ['click','change','input'].forEach(evt=>root.addEventListener(evt,()=>setTimeout(scl208Queue,250),true));
+    }
+  }
+}
+setTimeout(scl208Bind,500);
+setTimeout(scl208Bind,1600);
+setInterval(scl208Bind,5000);
 
 </script>
 
