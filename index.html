@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v191 · HQ 2026 + delete · HQ reference layout';
+      content:'v193 · simple HQ list test · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -8495,6 +8495,21 @@ button.scl-delete-pharmacy-btn:hover{
           </div>
           <div id="sclCreatedLinkBox" class="hq-ref-created-link"></div>
         </div>
+
+<!-- v193 — simple guaranteed HQ pharmacy list -->
+<div id="sclSimpleHqPharmacyListBox" class="scl-simple-hq-list-box">
+  <div class="scl-simple-hq-list-head">
+    <div>
+      <div class="scl-simple-hq-title">Φαρμακεία</div>
+      <div class="scl-simple-hq-sub">Όλα τα φαρμακεία που έχουν δημιουργηθεί από το HQ.</div>
+    </div>
+    <button id="sclSimpleRefreshHqListBtn" type="button">Ανανέωση λίστας</button>
+  </div>
+  <div id="sclSimpleHqPharmacyList" class="scl-simple-hq-list">
+    <div class="scl-simple-empty">Φόρτωση...</div>
+  </div>
+</div>
+
         <div class="hq-ref-todo-section"><div class="th">To-do — εκκρεμότητες</div><div id="hqRefTodoList"></div></div>
         <div class="hq-ref-sec">Φαρμακεία — κλικ για λεπτομέρειες</div>
         <table class="hq-ref-table"><thead><tr><th>Φαρμακείο</th><th>Θέσεις</th><th>Τρέχων μήνας</th><th>Επόμενη αλλαγή</th><th>Status</th></tr></thead><tbody id="hqRefOverviewTbody"></tbody></table>
@@ -16485,6 +16500,96 @@ function sclBindV191(){
 setTimeout(sclBindV191,300);
 setTimeout(sclBindV191,1200);
 setInterval(sclBindV191,3000);
+
+
+/* v193 — simple guaranteed HQ pharmacy list */
+function sclSimpleBuildPharmacyLinkV193(token){
+  return location.href.split('?')[0].split('#')[0] + '?pharmacy=' + encodeURIComponent(token);
+}
+function sclSimpleStateSummaryV193(pharmacyId, states){
+  const s=(states||[]).filter(x=>x.pharmacy_id===pharmacyId);
+  if(!s.length)return 'no state yet';
+  return s.map(x=>`${x.year} saved`).join(' · ');
+}
+function sclSimpleCopyV193(text,btn){
+  navigator.clipboard.writeText(text).then(()=>{
+    const old=btn.textContent;
+    btn.textContent='Copied';
+    setTimeout(()=>btn.textContent=old,1200);
+  }).catch(()=>prompt('Copy link:',text));
+}
+async function sclSimpleDeletePharmacyV193(id,name){
+  if(!confirm(`Να διαγραφεί το φαρμακείο "${name}" μαζί με τα δεδομένα του;`))return;
+  const {error}=await sb.rpc('hq_delete_pharmacy',{p_hq_key:SCL_ROUTING.hqKey,p_pharmacy_id:id});
+  if(error){alert('Σφάλμα διαγραφής: '+error.message);return;}
+  await sclSimpleLoadHqListV193();
+}
+function sclSimpleRenderHqListV193(data){
+  const el=document.getElementById('sclSimpleHqPharmacyList');
+  if(!el)return;
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  const states=data?.pharmacy_state||[];
+  if(!pharmacies.length){
+    el.innerHTML='<div class="scl-simple-empty">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+    return;
+  }
+  el.innerHTML=pharmacies.map(p=>{
+    const token=p.token||'';
+    const link=token?sclSimpleBuildPharmacyLinkV193(token):'';
+    return `<div class="scl-simple-row">
+      <div>
+        <div class="scl-simple-name">${esc(p.name||'Φαρμακείο')}</div>
+        <div class="scl-simple-meta">${esc(sclSimpleStateSummaryV193(p.id,states))}</div>
+      </div>
+      <div class="scl-simple-meta">created: ${esc((p.created_at||'').slice(0,10))}</div>
+      <div class="scl-simple-link">${token?esc(link):'χωρίς token'}</div>
+      <div class="scl-simple-actions">
+        ${token?`<button type="button" data-simple-copy="${esc(link)}">Copy link</button><button type="button" class="open" data-simple-open="${esc(link)}">Open</button>`:''}
+        <button type="button" class="delete" data-simple-delete="${esc(p.id)}" data-simple-name="${esc(p.name||'Φαρμακείο')}">Διαγραφή</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('[data-simple-copy]').forEach(btn=>{
+    btn.addEventListener('click',()=>sclSimpleCopyV193(btn.dataset.simpleCopy,btn));
+  });
+  el.querySelectorAll('[data-simple-open]').forEach(btn=>{
+    btn.addEventListener('click',()=>window.open(btn.dataset.simpleOpen,'_blank'));
+  });
+  el.querySelectorAll('[data-simple-delete]').forEach(btn=>{
+    btn.addEventListener('click',()=>sclSimpleDeletePharmacyV193(btn.dataset.simpleDelete,btn.dataset.simpleName));
+  });
+}
+async function sclSimpleLoadHqListV193(){
+  const el=document.getElementById('sclSimpleHqPharmacyList');
+  if(el)el.innerHTML='<div class="scl-simple-empty">Φόρτωση...</div>';
+  if(!sb || !SCL_ROUTING?.hqKey){
+    if(el)el.innerHTML='<div class="scl-simple-empty">Δεν φορτώθηκε Supabase / HQ key.</div>';
+    return;
+  }
+  const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+  if(error){
+    if(el)el.innerHTML='<div class="scl-simple-empty">Σφάλμα: '+esc(error.message)+'</div>';
+    return;
+  }
+  window.SCL_HQ_DATA_V193=data;
+  sclSimpleRenderHqListV193(data);
+}
+function sclSimpleBindHqListV193(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  const btn=document.getElementById('sclSimpleRefreshHqListBtn');
+  if(btn && !btn.dataset.boundV193){
+    btn.dataset.boundV193='1';
+    btn.addEventListener('click',sclSimpleLoadHqListV193);
+  }
+  if(document.getElementById('sclSimpleHqPharmacyList') && !window.__sclSimpleHqLoadedV193){
+    window.__sclSimpleHqLoadedV193=true;
+    sclSimpleLoadHqListV193();
+  }
+}
+setTimeout(sclSimpleBindHqListV193,300);
+setTimeout(sclSimpleBindHqListV193,1200);
+setInterval(sclSimpleBindHqListV193,4000);
 
 </script>
 
