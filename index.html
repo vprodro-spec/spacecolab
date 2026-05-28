@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v190 · year/delete/reset/name · HQ reference layout';
+      content:'v191 · HQ 2026 + delete · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v189 — HQ exact reference layout, full-width */
+/* v191 · HQ 2026 + delete — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -5883,6 +5883,31 @@ body.scl-pharmacy .scl-pharmacy-namebar{display:flex}
   margin-top:8px;
 }
 body.scl-pharmacy .scl-pharmacy-reset-zone{display:block}
+
+
+/* v191 — HQ year 2026 + visible delete buttons */
+.scl-hq-year-lock{
+  display:inline-flex;
+  align-items:center;
+  border-radius:8px;
+  background:#E6F1FB;
+  color:#185FA5;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:500;
+}
+button.scl-delete-pharmacy-btn{
+  border:0.5px solid #F4B4B4!important;
+  background:#FCEBEB!important;
+  color:#A32D2D!important;
+  border-radius:6px!important;
+  padding:6px 10px!important;
+  font-size:12px!important;
+  cursor:pointer!important;
+}
+button.scl-delete-pharmacy-btn:hover{
+  background:#f8dada!important;
+}
 
 </style>
 
@@ -16312,6 +16337,154 @@ function sclBindV190(){
 setTimeout(sclBindV190,300);
 setTimeout(sclBindV190,1200);
 setInterval(sclBindV190,4000);
+
+
+/* v191 — force HQ year 2026 and visible delete buttons */
+const SCL_HQ_YEAR_V191 = 2026;
+
+function sclForceHqYearTextV191(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  // Replace visible 2027/2025 labels inside HQ shell only
+  const root=document.getElementById('sclHqShell') || document.body;
+  root.querySelectorAll('*').forEach(el=>{
+    if(el.children.length===0 && el.textContent){
+      if(el.textContent.includes('2027') || el.textContent.includes('2025')){
+        el.textContent = el.textContent.replace(/2027/g,'2026').replace(/2025/g,'2026');
+      }
+    }
+  });
+  root.querySelectorAll('select').forEach(sel=>{
+    if(sel.id && sel.id.toLowerCase().includes('year')){
+      if(!Array.from(sel.options).some(o=>o.value==='2026')){
+        const opt=document.createElement('option');
+        opt.value='2026'; opt.textContent='2026';
+        sel.prepend(opt);
+      }
+      sel.value='2026';
+    }else{
+      Array.from(sel.options).forEach(o=>{
+        if(o.textContent==='2027' || o.value==='2027' || o.textContent==='2025' || o.value==='2025'){
+          o.textContent='2026'; o.value='2026';
+        }
+      });
+      if(Array.from(sel.options).some(o=>o.value==='2026'))sel.value='2026';
+    }
+  });
+}
+
+async function sclDeletePharmacyV191(pharmacyId, pharmacyName){
+  if(!pharmacyId){alert('Δεν βρέθηκε ID φαρμακείου.');return;}
+  if(!sb){alert('Δεν φορτώθηκε το Supabase.');return;}
+  const ok=confirm(`Να διαγραφεί το φαρμακείο "${pharmacyName}" μαζί με όλα τα αποθηκευμένα δεδομένα του;`);
+  if(!ok)return;
+  const {error}=await sb.rpc('hq_delete_pharmacy',{
+    p_hq_key:SCL_ROUTING.hqKey,
+    p_pharmacy_id:pharmacyId
+  });
+  if(error){
+    alert('Σφάλμα διαγραφής: '+error.message);
+    if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');
+    return;
+  }
+  if(typeof sclCloudStatus==='function')sclCloudStatus('Το φαρμακείο διαγράφηκε.','ok');
+  if(typeof sclLoadHqShell==='function')await sclLoadHqShell();
+}
+
+function sclRenderHqPharmacyCardsV191(data){
+  const target=document.getElementById('sclHqPharmacyList');
+  const overview=document.getElementById('sclHqOverviewPharmacies');
+  if(!target && !overview)return false;
+  const statesBy = (typeof sclBuildStateMapV186==='function')
+    ? sclBuildStateMapV186(data?.pharmacy_state||[])
+    : {};
+  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
+
+  function statePills(states){
+    if(typeof sclStatePillsV186==='function')return sclStatePillsV186(states);
+    if(!states||!states.length)return '<span class="scl-state-pill none">no state yet</span>';
+    return states.map(s=>`<span class="scl-state-pill saved">${String(s.year||'—')} saved</span>`).join('');
+  }
+
+  function card(p, includeDelete=true){
+    const token=p.token||'';
+    const link=token && typeof sclBuildPharmacyLink==='function' ? sclBuildPharmacyLink(token) : '';
+    const states=statesBy[p.id]||[];
+    return `<div class="scl-hq-pharmacy-card" data-pharmacy-id="${esc(p.id||'')}">
+      <div>
+        <div class="scl-hq-pharmacy-title">${esc(p.name||'Φαρμακείο')}</div>
+        <div class="scl-hq-pharmacy-meta">${statePills(states)}</div>
+        <div class="scl-hq-link-mini">${token?esc(link):'Δεν υπάρχει token'}</div>
+      </div>
+      <div class="scl-hq-actions">
+        ${token?`<button class="scl-hq-btn" data-copy-link="${esc(link)}" type="button">Copy link</button><button class="scl-hq-btn green" type="button" onclick="window.open('${link.replace(/'/g,"\\'")}','_blank')">Open</button>`:''}
+        ${includeDelete?`<button class="scl-delete-pharmacy-btn" type="button" data-delete-pharmacy="${esc(p.id||'')}" data-delete-name="${esc(p.name||'Φαρμακείο')}">Διαγραφή</button>`:''}
+      </div>
+    </div>`;
+  }
+
+  if(target){
+    target.innerHTML=pharmacies.length?pharmacies.map(p=>card(p,true)).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+  }
+  if(overview){
+    overview.innerHTML=pharmacies.length?pharmacies.slice(0,4).map(p=>card(p,false)).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
+  }
+
+  document.querySelectorAll('[data-copy-link]').forEach(btn=>{
+    if(btn.dataset.boundV191)return;
+    btn.dataset.boundV191='1';
+    btn.addEventListener('click',()=>{
+      if(typeof sclCopyTextV186==='function')sclCopyTextV186(btn.dataset.copyLink,btn);
+      else navigator.clipboard.writeText(btn.dataset.copyLink);
+    });
+  });
+  document.querySelectorAll('[data-delete-pharmacy]').forEach(btn=>{
+    if(btn.dataset.boundV191)return;
+    btn.dataset.boundV191='1';
+    btn.addEventListener('click',()=>sclDeletePharmacyV191(btn.dataset.deletePharmacy,btn.dataset.deleteName));
+  });
+  return true;
+}
+
+// Wrap HQ loader and renderers so delete appears reliably
+const __oldSclLoadHqShellV191 = typeof sclLoadHqShell==='function' ? sclLoadHqShell : null;
+if(__oldSclLoadHqShellV191){
+  sclLoadHqShell = async function(){
+    if(!sb){if(typeof sclCloudStatus==='function')sclCloudStatus('Δεν φορτώθηκε το Supabase SDK.','err');return;}
+    if(typeof sclCloudStatus==='function')sclCloudStatus('Φόρτωση HQ…');
+    const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
+    if(error){if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');return;}
+    const d=data||{};
+    window.SCL_HQ_DATA_V186=d;
+    const pc=document.getElementById('sclHqPharmacyCount'); if(pc)pc.textContent=(d.pharmacies||[]).length;
+    const sc=document.getElementById('sclHqStateCount'); if(sc)sc.textContent=(d.pharmacy_state||[]).length;
+    const pr=document.getElementById('sclHqProgramCount'); if(pr)pr.textContent=(d.hq_programs||[]).length;
+    if(typeof sclRenderHqChangesCardsV186==='function')sclRenderHqChangesCardsV186(d);
+    else if(typeof sclRenderHqChangesV185==='function')sclRenderHqChangesV185(d);
+    if(typeof sclRenderProgramEditorV186==='function')sclRenderProgramEditorV186(d);
+    sclRenderHqPharmacyCardsV191(d);
+    if(typeof sclHqBindTabsV186==='function')sclHqBindTabsV186();
+    sclForceHqYearTextV191();
+    if(typeof sclCloudStatus==='function')sclCloudStatus('HQ φορτώθηκε.','ok');
+  };
+}
+
+// If another renderer runs later, patch afterwards
+const __oldSclRenderHqPharmacyCardsV186V191 = typeof sclRenderHqPharmacyCardsV186==='function' ? sclRenderHqPharmacyCardsV186 : null;
+if(__oldSclRenderHqPharmacyCardsV186V191){
+  sclRenderHqPharmacyCardsV186 = function(data){
+    return sclRenderHqPharmacyCardsV191(data);
+  };
+}
+
+function sclBindV191(){
+  if(typeof sclMode==='function' && sclMode()==='hq'){
+    sclForceHqYearTextV191();
+    if(window.SCL_HQ_DATA_V186)sclRenderHqPharmacyCardsV191(window.SCL_HQ_DATA_V186);
+  }
+}
+setTimeout(sclBindV191,300);
+setTimeout(sclBindV191,1200);
+setInterval(sclBindV191,3000);
 
 </script>
 
