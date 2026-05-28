@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v193 · simple HQ list test · HQ reference layout';
+      content:'v194 · HQ list auto reload · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v191 · HQ 2026 + delete — HQ exact reference layout, full-width */
+/* v194 · HQ list auto reload — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -16590,6 +16590,79 @@ function sclSimpleBindHqListV193(){
 setTimeout(sclSimpleBindHqListV193,300);
 setTimeout(sclSimpleBindHqListV193,1200);
 setInterval(sclSimpleBindHqListV193,4000);
+
+
+/* v194 — HQ list reload after creating pharmacy */
+async function sclReloadHqListHardV194(){
+  if(typeof sclSimpleLoadHqListV193==='function'){
+    await sclSimpleLoadHqListV193();
+  }
+  if(typeof sclLoadHqShell==='function' && !window.__sclReloadingShellV194){
+    window.__sclReloadingShellV194=true;
+    try{ await sclLoadHqShell(); }catch(e){ console.warn('HQ shell reload skipped',e); }
+    window.__sclReloadingShellV194=false;
+  }
+  if(typeof sclSimpleLoadHqListV193==='function'){
+    setTimeout(()=>sclSimpleLoadHqListV193(),250);
+  }
+}
+
+const __oldSclCreatePharmacyFromHqV194 = typeof sclCreatePharmacyFromHq==='function' ? sclCreatePharmacyFromHq : null;
+if(__oldSclCreatePharmacyFromHqV194){
+  sclCreatePharmacyFromHq = async function(){
+    await __oldSclCreatePharmacyFromHqV194();
+    setTimeout(()=>sclReloadHqListHardV194(),300);
+    setTimeout(()=>sclReloadHqListHardV194(),1200);
+  };
+}
+
+function sclPatchCreateButtonV194(){
+  const btn=document.getElementById('sclCreatePharmacyHqBtn');
+  if(btn && !btn.dataset.boundV194){
+    btn.dataset.boundV194='1';
+    btn.addEventListener('click',()=>{
+      setTimeout(()=>sclReloadHqListHardV194(),700);
+      setTimeout(()=>sclReloadHqListHardV194(),1800);
+    },true);
+  }
+
+  const refreshBtns=[
+    document.getElementById('sclSimpleRefreshHqListBtn'),
+    document.getElementById('sclRefreshHqBtn')
+  ].filter(Boolean);
+
+  refreshBtns.forEach(b=>{
+    if(b.dataset.boundV194)return;
+    b.dataset.boundV194='1';
+    b.addEventListener('click',(e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      sclReloadHqListHardV194();
+    },true);
+  });
+}
+
+function sclObserveHqCreatedLinkV194(){
+  const box=document.getElementById('sclCreatedLinkBox');
+  if(!box || box.dataset.observedV194)return;
+  box.dataset.observedV194='1';
+  const obs=new MutationObserver(()=>{
+    if(box.textContent.trim()){
+      setTimeout(()=>sclReloadHqListHardV194(),300);
+      setTimeout(()=>sclReloadHqListHardV194(),1200);
+    }
+  });
+  obs.observe(box,{childList:true,subtree:true,characterData:true});
+}
+
+function sclBindV194(){
+  if(typeof sclMode==='function' && sclMode()!=='hq')return;
+  sclPatchCreateButtonV194();
+  sclObserveHqCreatedLinkV194();
+}
+setTimeout(sclBindV194,300);
+setTimeout(sclBindV194,1200);
+setInterval(sclBindV194,3000);
 
 </script>
 
