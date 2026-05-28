@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v186 · HQ dashboard';
+      content:'v190 · year/delete/reset/name · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5765,354 +5765,124 @@ body:not(.scl-pharmacy) #sclSavebar,body:not(.scl-pharmacy) .scl-cloud-topbar{di
 }
 
 
-/* v186 — SpaceCoLab HQ dashboard redesign */
-body.scl-hq{
-  background:var(--bg,#eef2f7)!important;
-}
-body.scl-hq #sclHqShell{
-  max-width:none!important;
-  width:100%!important;
-  margin:0!important;
-  background:var(--soft,#f7f9fc)!important;
-  border:1px solid var(--line,#d9e1ea)!important;
-  border-radius:18px!important;
-  padding:14px!important;
-}
-.scl-hq-hero{
-  background:linear-gradient(90deg,var(--blue,#1f66ff),var(--blue2,#143fbd));
-  border-radius:14px;
-  min-height:92px;
-  padding:18px 22px;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  color:#fff;
-  flex-wrap:wrap;
-}
-.scl-hq-logo-main{
-  font-weight:950;
-  font-size:42px;
-  letter-spacing:-.06em;
-  line-height:.95;
-}
-.scl-hq-logo-main .thin{font-weight:300;letter-spacing:-.07em}
-.scl-hq-logo-sub{
-  font-size:12px;
-  letter-spacing:.14em;
-  margin-top:6px;
-  opacity:.9;
-  font-weight:850;
-}
-.scl-hq-hero-copy{
-  max-width:520px;
-  text-align:right;
-}
-.scl-hq-hero-kicker{
-  display:inline-flex;
-  border-radius:999px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.22);
-  padding:5px 10px;
-  font-size:10px;
-  font-weight:950;
-  margin-bottom:8px;
-}
-.scl-hq-hero-title{
-  font-size:18px;
-  font-weight:950;
-  letter-spacing:-.02em;
-}
-.scl-hq-hero-sub{
-  margin-top:4px;
-  font-size:12px;
-  line-height:1.35;
-  opacity:.9;
-  font-weight:750;
-}
-.scl-hq-tabs{
-  display:flex;
-  gap:8px;
-  margin:12px 0;
-  overflow-x:auto;
-  padding-bottom:2px;
-}
-.scl-hq-tab{
-  border:1px solid var(--line,#d9e1ea);
-  background:#fff;
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:950;
-  color:#40506a;
-  cursor:pointer;
-  white-space:nowrap;
-  font-size:12px;
-}
-.scl-hq-tab.active{
-  background:#111;
-  color:#fff;
-  border-color:#111;
-}
-.scl-hq-panel{display:none}
-.scl-hq-panel.active{display:block}
-.scl-hq-section{
-  background:#fff;
-  border:1px solid var(--line,#d9e1ea);
-  border-radius:14px;
-  padding:12px;
-  margin-bottom:14px;
-}
-.scl-hq-section-head{
-  font-size:10px;
-  color:var(--muted,#637083);
-  font-weight:950;
-  text-transform:uppercase;
-  letter-spacing:.06em;
-  border-bottom:1px solid var(--line,#d9e1ea);
-  padding:2px 4px 10px;
-  margin-bottom:12px;
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-.scl-hq-overview-grid{
-  display:grid;
-  grid-template-columns:repeat(5,1fr);
-  gap:10px;
-}
-.scl-hq-metric{
-  background:#fff;
-  border:1px solid var(--line,#d9e1ea);
-  border-radius:14px;
-  overflow:hidden;
-}
-.scl-hq-metric-head{
-  background:#111;
-  color:#fff;
-  padding:8px 10px;
-  font-size:10px;
-  font-weight:950;
-  text-transform:uppercase;
-}
-.scl-hq-metric-body{
-  padding:10px;
-  background:#fbfcff;
-}
-.scl-hq-metric-value{
-  font-size:24px;
-  font-weight:950;
-  letter-spacing:-.03em;
-}
-.scl-hq-metric-sub{
-  font-size:10px;
-  color:var(--muted,#637083);
-  margin-top:4px;
-  font-weight:750;
-}
-.scl-hq-two-col{
-  display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:14px;
-  align-items:start;
-}
-.scl-hq-card-list{
-  display:grid;
-  gap:10px;
-}
-.scl-hq-pharmacy-card{
-  border:1px solid var(--line,#d9e1ea);
-  border-radius:14px;
-  background:#fff;
-  padding:12px;
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:12px;
-  align-items:center;
-}
-.scl-hq-pharmacy-title{
-  font-size:14px;
-  font-weight:950;
-  color:var(--text,#14213d);
-}
-.scl-hq-pharmacy-meta{
-  margin-top:5px;
-  display:flex;
-  gap:5px;
-  flex-wrap:wrap;
-}
-.scl-hq-link-mini{
-  margin-top:8px;
-  font-size:10px;
-  color:#174dc2;
-  font-weight:850;
-  word-break:break-all;
-}
-.scl-hq-actions{
-  display:flex;
-  gap:7px;
-  flex-wrap:wrap;
-  justify-content:flex-end;
-}
-.scl-hq-btn{
-  border:1px solid #c9dafd;
-  background:var(--blueSoft,#edf4ff);
-  color:#174dc2;
-  border-radius:10px;
-  min-height:34px;
-  padding:0 11px;
-  font-size:10px;
-  font-weight:950;
-  cursor:pointer;
-  white-space:nowrap;
-}
-.scl-hq-btn.dark{
-  background:#111;
-  border-color:#111;
-  color:#fff;
-}
-.scl-hq-btn.green{
-  border-color:#bde5ce;
-  background:#eaf8f0;
-  color:#0e6f40;
-}
-.scl-hq-create-modern{
-  background:#fbfcff;
-  border:1px solid var(--line,#d9e1ea);
-  border-radius:14px;
-  padding:12px;
-}
-.scl-hq-create-modern .title{
-  font-size:14px;
-  font-weight:950;
-  color:var(--text,#14213d);
-}
-.scl-hq-create-modern .sub{
-  margin-top:3px;
-  font-size:11px;
-  color:var(--muted,#637083);
-  font-weight:750;
-}
-.scl-hq-create-form{
-  margin-top:10px;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.scl-hq-create-form input,
-.scl-hq-program-table input,
-.scl-hq-program-table textarea,
-.scl-hq-program-table select{
-  min-height:38px;
-  border:1px solid var(--line,#d9e1ea);
-  border-radius:10px;
-  padding:0 10px;
-  font-weight:850;
-  color:var(--text,#14213d);
-  background:#fff;
-}
-.scl-hq-create-form input{flex:1;min-width:240px}
-.scl-hq-created-modern{
+/* v187 — clean UX friendly landing */
+body.scl-locked{background:var(--bg,#eef2f7)!important}
+body.scl-locked #sclLanding{max-width:none!important;width:100%!important;margin:0!important;background:var(--soft,#f7f9fc)!important;border:1px solid var(--line,#d9e1ea)!important;border-radius:18px!important;padding:14px!important}
+.scl-landing-hero{background:linear-gradient(90deg,var(--blue,#1f66ff),var(--blue2,#143fbd));color:#fff;border-radius:14px;min-height:108px;padding:20px 22px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.scl-landing-logo-main{font-weight:950;font-size:44px;letter-spacing:-.06em;line-height:.95}
+.scl-landing-logo-main .thin{font-weight:300;letter-spacing:-.07em}
+.scl-landing-logo-sub{margin-top:6px;font-size:12px;letter-spacing:.14em;font-weight:850;opacity:.9}
+.scl-landing-hero-copy{max-width:520px;text-align:right}
+.scl-landing-kicker{display:inline-flex;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);padding:5px 10px;font-size:10px;font-weight:950;margin-bottom:8px}
+.scl-landing-title{font-size:18px;font-weight:950;letter-spacing:-.02em}
+.scl-landing-sub{margin-top:4px;font-size:12px;line-height:1.35;opacity:.9;font-weight:750}
+.scl-login-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.scl-login-card{background:#fff;border:1px solid var(--line,#d9e1ea);border-radius:14px;padding:14px}
+.scl-login-card.primary{border-color:#c9dafd;box-shadow:0 0 0 3px rgba(31,102,255,.06)}
+.scl-login-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.scl-login-label{font-size:10px;color:var(--muted,#637083);font-weight:950;text-transform:uppercase;letter-spacing:.06em}
+.scl-login-title{font-size:16px;font-weight:950;color:var(--text,#14213d);margin-top:3px}
+.scl-login-desc{color:var(--muted,#637083);font-size:12px;line-height:1.4;font-weight:750;margin-bottom:12px}
+.scl-login-badge{display:inline-flex;border-radius:999px;background:#111;color:#fff;padding:5px 9px;font-size:9px;font-weight:950;white-space:nowrap}
+.scl-login-form{display:grid;gap:8px}
+.scl-login-form input{width:100%;min-height:42px;border:1px solid var(--line,#d9e1ea);border-radius:10px;padding:0 12px;font-weight:850;color:var(--text,#14213d);background:#fff}
+.scl-login-form button{min-height:42px;border:1px solid #c9dafd;border-radius:10px;background:var(--blueSoft,#edf4ff);color:#174dc2;font-weight:950;cursor:pointer}
+.scl-login-form button.dark{background:#111;color:#fff;border-color:#111}
+.scl-login-hint{font-size:10px;color:var(--muted,#637083);font-weight:750;line-height:1.35}
+.scl-landing-footer{margin-top:14px;background:#fff;border:1px solid var(--line,#d9e1ea);border-radius:14px;padding:12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.scl-landing-footer strong{color:var(--text,#14213d);font-weight:950}
+.scl-landing-footer span{color:var(--muted,#637083);font-size:11px;font-weight:750}
+body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:none!important;content:none!important}
+@media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
+
+
+/* v189 — HQ exact reference layout, full-width */
+body.scl-hq{background:#fff!important;color:#1a1a1a!important}
+body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
+body.scl-hq #sclHqShell *{box-sizing:border-box}
+body.scl-hq #sclHqShell .wrap{max-width:none!important;margin:0!important;width:100%!important}
+.hq-ref-top-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;gap:12px;flex-wrap:wrap}
+.hq-ref-top-bar h2{font-size:18px;font-weight:500;margin:0;color:#1a1a1a}
+.hq-ref-badge{font-size:12px;padding:4px 10px;border-radius:8px;background:#E6F1FB;color:#185FA5;font-weight:500}
+.hq-ref-notif-bar{background:#FFF8E8;border:0.5px solid #E8C97A;border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hq-ref-notif-bar .nb-title{font-size:13px;font-weight:500;color:#854F0B;flex-shrink:0}
+.hq-ref-notif-item{font-size:12px;background:#fff;border:0.5px solid #E8C97A;border-radius:999px;padding:3px 10px;color:#854F0B;cursor:pointer}
+.hq-ref-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.hq-ref-stat{background:#f5f5f3;border-radius:8px;padding:1rem}
+.hq-ref-stat .k{font-size:13px;color:#666;margin-bottom:6px}
+.hq-ref-stat .v{font-size:24px;font-weight:500;color:#1a1a1a}
+.hq-ref-stat .sub{font-size:12px;color:#666;margin-top:3px}
+.hq-ref-tabs{display:flex;gap:0;margin-bottom:1.5rem;border-bottom:0.5px solid #e0e0e0;overflow-x:auto}
+.hq-ref-tab{font-size:13px;padding:8px 12px;border:none!important;background:none!important;cursor:pointer;color:#666;border-bottom:2px solid transparent!important;margin-bottom:-1px;font-family:inherit;white-space:nowrap;position:relative;border-radius:0!important}
+.hq-ref-tab.active{color:#1a1a1a!important;border-bottom-color:#1a1a1a!important;font-weight:500;background:none!important}
+.hq-ref-tab .badge{position:absolute;top:4px;right:4px;background:#E53935;color:#fff;border-radius:999px;font-size:9px;padding:1px 5px;font-weight:700}
+.hq-ref-page{display:none}.hq-ref-page.active{display:block}
+.hq-ref-sec{font-size:12px;font-weight:500;color:#666;text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.hq-ref-pill{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:500;white-space:nowrap}
+.hq-ref-pill.basic{background:#E6F1FB;color:#185FA5}.hq-ref-pill.custom{background:#EEEDFE;color:#3C3489}.hq-ref-pill.deal{background:#EAF3DE;color:#3B6D11}.hq-ref-pill.pending{background:#F1EFE8;color:#5F5E5A}.hq-ref-pill.sponsored{background:#FAEEDA;color:#854F0B}.hq-ref-pill.pharmaplus{background:#FCEBEB;color:#A32D2D}
+.hq-ref-table{width:100%;border-collapse:collapse;font-size:13px}
+.hq-ref-table th{text-align:left;padding:8px 10px;color:#666;font-weight:400;font-size:12px;border-bottom:0.5px solid #e0e0e0;cursor:pointer;user-select:none;white-space:nowrap}
+.hq-ref-table th .si{margin-left:3px;opacity:.4;font-size:10px}.hq-ref-table th.sorted .si{opacity:1}
+.hq-ref-table td{padding:8px 10px;border-bottom:0.5px solid #e0e0e0;vertical-align:middle;color:#1a1a1a}
+.hq-ref-table tr:last-child td{border-bottom:none}.hq-ref-table tr:hover td{background:#f9f9f7}
+.hq-ref-done-row td{opacity:.45;text-decoration:line-through}.hq-ref-done-row td:first-child{text-decoration:none;opacity:1}
+.hq-ref-sub-info{font-size:12px;color:#666;margin-top:2px}.hq-ref-controls{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}.hq-ref-count{font-size:13px;color:#666;margin-left:auto}.hq-ref-need-material{background:#FFF8E8}
+.hq-ref-detail-panel{background:#f5f5f3;border-radius:12px;padding:1rem;margin-top:10px}.hq-ref-detail-panel .dh{font-size:14px;font-weight:500;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}.hq-ref-pos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.hq-ref-pos-card{background:#fff;border:0.5px solid #e0e0e0;border-radius:8px;padding:10px}.hq-ref-pos-card .pt{font-size:12px;font-weight:500;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}.hq-ref-pos-row{font-size:12px;color:#666;padding:3px 0;border-top:0.5px solid #e0e0e0;margin-top:3px;display:flex;justify-content:space-between}.hq-ref-pos-row span:last-child{color:#1a1a1a;font-weight:500}.hq-ref-warn{color:#854F0B}
+.hq-ref-pp-head{display:grid;grid-template-columns:56px repeat(12,1fr);gap:3px;font-size:11px;color:#666;text-align:center;padding-bottom:4px}.hq-ref-pp-grid{display:grid;grid-template-columns:56px repeat(12,1fr);gap:3px;align-items:center;margin-bottom:12px}.hq-ref-pp-cell{border-radius:8px;padding:5px 2px;text-align:center;font-size:10px;cursor:pointer;border:2px solid transparent}.hq-ref-pp-cell:hover{border-color:#ccc}.hq-ref-pp-cell.editing{border-color:#185FA5}.hq-ref-pp-label{font-size:12px;font-weight:500}.hq-ref-pp-editor{background:#f5f5f3;border-radius:8px;padding:1rem;margin-top:10px}.hq-ref-pp-editor .eh{font-size:13px;font-weight:500;margin-bottom:10px}.hq-ref-theme-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}.hq-ref-theme-chip{font-size:12px;padding:5px 10px;border-radius:999px;border:0.5px solid #ccc;background:#fff;cursor:pointer;color:#666}.hq-ref-theme-chip.active{background:#E6F1FB;color:#185FA5;border-color:transparent}
+.hq-ref-chart-bar-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem}.hq-ref-chart-row{display:flex;align-items:center;gap:10px}.hq-ref-chart-row .label{width:110px;color:#666;text-align:right;flex-shrink:0;font-size:12px}.hq-ref-bar-track{flex:1;background:#f0f0ee;border-radius:999px;height:20px;overflow:hidden}.hq-ref-bar-fill{height:100%;border-radius:999px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:500;color:#fff;min-width:24px}.hq-ref-chart-row .val{width:36px;text-align:right;font-weight:500;font-size:12px}
+.hq-ref-two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}.hq-ref-export-bar{display:flex;gap:8px;margin-bottom:1rem;align-items:center;flex-wrap:wrap}.hq-ref-export-btn{font-size:12px;padding:6px 12px;border-radius:8px;border:0.5px solid #ccc;background:#fff;cursor:pointer;display:flex;align-items:center;gap:5px}
+.hq-ref-todo-section{background:#f5f5f3;border-radius:8px;padding:1rem;margin-bottom:1rem}.hq-ref-todo-section .th{font-size:13px;font-weight:500;margin-bottom:8px}.hq-ref-todo-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #e0e0e0;font-size:13px}.hq-ref-todo-item:last-child{border-bottom:none}.hq-ref-todo-item input[type=checkbox]{width:16px;height:16px;cursor:pointer;flex-shrink:0}.hq-ref-todo-item.checked span{text-decoration:line-through;opacity:.5}.hq-ref-todo-item .todo-meta{font-size:11px;color:#666;margin-left:auto;white-space:nowrap}
+.hq-ref-upload-zone{border:1.5px dashed #ccc;border-radius:12px;padding:2rem;text-align:center;color:#666;font-size:13px;cursor:pointer;margin-bottom:1rem}.hq-ref-upload-zone:hover{background:#f5f5f3}.hq-ref-report-list{display:flex;flex-direction:column;gap:8px}.hq-ref-report-item{background:#f5f5f3;border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:13px}.hq-ref-report-item .ri-name{font-weight:500;flex:1}.hq-ref-report-item .ri-meta{font-size:12px;color:#666}.hq-ref-report-item .ri-pill{font-size:11px;padding:2px 8px;border-radius:999px;background:#EAF3DE;color:#3B6D11;font-weight:500}.hq-ref-report-item .ri-btn{font-size:12px;padding:4px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;cursor:pointer}
+body.scl-hq #sclHqShell button{font-family:inherit;cursor:pointer;border:0.5px solid #ccc;background:#fff;border-radius:6px;padding:6px 12px;font-size:13px;color:#1a1a1a}body.scl-hq #sclHqShell button:hover{background:#f5f5f3}body.scl-hq #sclHqShell select,body.scl-hq #sclHqShell input{font-family:inherit;border:0.5px solid #ccc;border-radius:6px;padding:6px 10px;font-size:13px;background:#fff;color:#1a1a1a}
+.hq-ref-create{background:#f5f5f3;border-radius:8px;padding:1rem;margin-bottom:1rem}.hq-ref-create-row{display:flex;gap:8px;flex-wrap:wrap}.hq-ref-create-row input{flex:1;min-width:240px}.hq-ref-created-link{display:none;margin-top:8px;background:#EAF3DE;color:#3B6D11;border-radius:8px;padding:8px;font-size:12px;word-break:break-all}
+@media(max-width:600px){.hq-ref-two-col{grid-template-columns:1fr}.hq-ref-top-bar{align-items:flex-start}.hq-ref-pp-head,.hq-ref-pp-grid{grid-template-columns:56px repeat(12,80px);overflow-x:auto}.hq-ref-table{font-size:12px}}
+
+
+/* v190 — year alignment, deletion controls, pharmacy identity */
+.scl-pharmacy-namebar{
   display:none;
-  margin-top:10px;
-  border:1px solid #bde5ce;
-  background:#eaf8f0;
-  color:#0e6f40;
-  border-radius:12px;
-  padding:10px;
-  font-size:11px;
-  font-weight:850;
-  word-break:break-all;
-}
-.scl-hq-change-groups{
-  display:grid;
-  gap:12px;
-}
-.scl-hq-month-group{
+  margin:10px 0;
+  background:#fff;
   border:1px solid var(--line,#d9e1ea);
   border-radius:14px;
-  overflow:hidden;
-  background:#fff;
-}
-.scl-hq-month-title{
-  background:#fbfcff;
-  border-bottom:1px solid var(--line,#d9e1ea);
   padding:10px 12px;
-  font-size:12px;
-  font-weight:950;
-  display:flex;
+  align-items:center;
   justify-content:space-between;
-  gap:8px;
-}
-.scl-hq-month-count{
-  color:var(--muted,#637083);
-  font-size:10px;
-}
-.scl-hq-change-card{
-  padding:10px 12px;
-  border-bottom:1px solid var(--line,#d9e1ea);
-  display:grid;
-  grid-template-columns:26px 1fr auto;
   gap:10px;
-  align-items:start;
+  flex-wrap:wrap;
 }
-.scl-hq-change-card:last-child{border-bottom:none}
-.scl-hq-change-card.done{opacity:.56}
-.scl-hq-change-title{
+body.scl-pharmacy .scl-pharmacy-namebar{display:flex}
+.scl-pharmacy-namebar .name{
+  font-size:14px;
   font-weight:950;
   color:var(--text,#14213d);
 }
-.scl-hq-change-details{
-  margin-top:4px;
-  display:flex;
-  gap:5px;
-  flex-wrap:wrap;
-  font-size:10px;
+.scl-pharmacy-namebar .meta{
+  font-size:11px;
   color:var(--muted,#637083);
-  font-weight:850;
+  font-weight:750;
 }
-.scl-hq-program-table{
-  display:grid;
-  gap:8px;
+.scl-danger-btn{
+  border:1px solid #fecaca!important;
+  background:#fff1f1!important;
+  color:#b42318!important;
+  border-radius:10px!important;
+  padding:8px 11px!important;
+  font-size:10px!important;
+  font-weight:950!important;
+  cursor:pointer!important;
 }
-.scl-hq-program-row{
-  display:grid;
-  grid-template-columns:70px 1fr 1fr 1fr auto;
-  gap:8px;
-  align-items:start;
+.scl-hq-btn.danger,
+.scl-copy-btn.danger{
+  border-color:#fecaca!important;
+  background:#fff1f1!important;
+  color:#b42318!important;
 }
-.scl-hq-program-row.header{
-  font-size:10px;
-  color:var(--muted,#637083);
-  font-weight:950;
-  text-transform:uppercase;
+.scl-pharmacy-reset-zone{
+  display:none;
+  margin-top:8px;
 }
-.scl-hq-program-row textarea{
-  min-height:38px;
-  padding-top:8px;
-  resize:vertical;
-}
-.scl-hq-placeholder{
-  border:1px dashed #c9dafd;
-  border-radius:14px;
-  background:#fbfcff;
-  padding:16px;
-  color:var(--muted,#637083);
-  font-weight:850;
-  line-height:1.4;
-}
-@media(max-width:1100px){
-  .scl-hq-overview-grid{grid-template-columns:repeat(2,1fr)}
-  .scl-hq-two-col{grid-template-columns:1fr}
-  .scl-hq-hero-copy{text-align:left}
-  .scl-hq-program-row{grid-template-columns:1fr}
-}
-@media(max-width:700px){
-  .scl-hq-overview-grid{grid-template-columns:1fr}
-  .scl-hq-pharmacy-card{grid-template-columns:1fr}
-  .scl-hq-actions{justify-content:flex-start}
-}
+body.scl-pharmacy .scl-pharmacy-reset-zone{display:block}
 
 </style>
 
@@ -8611,153 +8381,133 @@ body.scl-hq #sclHqShell{
 
   <!-- v175 — Correct Supabase routing additions -->
   <div id="sclLanding" class="scl-access-card">
-    <div class="scl-access-hero">
+    <div class="scl-landing-hero">
       <div>
-        <div class="scl-access-title">SpaceCoLab</div>
-        <div class="scl-access-sub">Το εργαλείο ανοίγει μόνο με προσωπικό link φαρμακείου ή HQ link.</div>
+        <div class="scl-landing-logo-main">SPACE<span class="thin">COLL</span>AB</div>
+        <div class="scl-landing-logo-sub">RETAIL SPACE MANAGEMENT</div>
       </div>
-      <span class="scl-access-pill">Access required</span>
+      <div class="scl-landing-hero-copy">
+        <div class="scl-landing-kicker">Secure access</div>
+        <div class="scl-landing-title">Άνοιγμα εργαλείου με HQ κωδικό ή pharmacy token.</div>
+        <div class="scl-landing-sub">Διάλεξε τι θέλεις να ανοίξεις. Το HQ δημιουργεί links φαρμακείων. Το κάθε φαρμακείο μπαίνει μόνο με το δικό του προσωπικό link.</div>
+      </div>
     </div>
-    <div class="scl-access-section">
-      <h3>Δεν έχει οριστεί φαρμακείο</h3>
-      <p>Χρησιμοποίησε το προσωπικό link που έστειλε η Pharmaplus. Το link πρέπει να περιέχει <strong>?pharmacy=TOKEN</strong>.</p>
+    <div class="scl-login-grid">
+      <div class="scl-login-card primary">
+        <div class="scl-login-head">
+          <div><div class="scl-login-label">Για Pharmaplus</div><div class="scl-login-title">Είσοδος HQ</div></div>
+          <span class="scl-login-badge">HQ</span>
+        </div>
+        <div class="scl-login-desc">Μπες στο κεντρικό dashboard για δημιουργία φαρμακείων, copy links, αλλαγές, Pharmaplus πρόγραμμα και reporting.</div>
+        <div class="scl-login-form">
+          <input id="sclHqKeyInput" placeholder="Βάλε HQ κωδικό">
+          <button id="sclOpenHqBtn" class="dark" type="button">Άνοιγμα HQ dashboard</button>
+          <div class="scl-login-hint">Χρησιμοποίησε τον HQ κωδικό που έχει οριστεί για τη Pharmaplus.</div>
+        </div>
+      </div>
+      <div class="scl-login-card">
+        <div class="scl-login-head">
+          <div><div class="scl-login-label">Για φαρμακείο</div><div class="scl-login-title">Είσοδος Φαρμακείου</div></div>
+          <span class="scl-login-badge">Pharmacy</span>
+        </div>
+        <div class="scl-login-desc">Άνοιξε το περιβάλλον συγκεκριμένου φαρμακείου με το token που δημιουργείται από το HQ.</div>
+        <div class="scl-login-form">
+          <input id="sclPharmacyTokenInput" placeholder="Βάλε pharmacy token">
+          <button id="sclOpenPharmacyBtn" type="button">Άνοιγμα φαρμακείου</button>
+          <div class="scl-login-hint">Στην κανονική χρήση το φαρμακείο ανοίγει από έτοιμο link, όχι γράφοντας token με το χέρι.</div>
+        </div>
+      </div>
     </div>
-    <div class="scl-access-section">
-      <h3>HQ πρόσβαση</h3>
-      <p>Το HQ mode ανοίγει μόνο με ειδικό HQ link. Από εκεί θα γίνεται η δημιουργία φαρμακείων και η παραγωγή των pharmacy links.</p>
+    <div class="scl-landing-footer">
+      <strong>Τι χρειάζομαι;</strong>
+      <span>HQ: κωδικός Pharmaplus · Φαρμακείο: προσωπικό pharmacy link / token</span>
     </div>
-  </div>
+</div>
 
-
-    <div class="scl-access-section">
-      <h3>Άνοιγμα HQ mode</h3>
-      <p>Βάλε τον κωδικό HQ για να ανοίξει το περιβάλλον διαχείρισης, όπου δημιουργούνται τα φαρμακεία και τα προσωπικά links.</p>
-      <div class="scl-access-form">
-        <input id="sclHqKeyInput" placeholder="Κωδικός HQ">
-        <button id="sclOpenHqBtn" type="button">Άνοιγμα HQ</button>
-      </div>
-    </div>
-    <div class="scl-access-section">
-      <h3>Άνοιγμα φαρμακείου με token</h3>
-      <p>Για δοκιμή μπορείς να βάλεις εδώ token φαρμακείου. Κανονικά το φαρμακείο ανοίγει από έτοιμο link που δίνει το HQ.</p>
-      <div class="scl-access-form">
-        <input id="sclPharmacyTokenInput" placeholder="Pharmacy token">
-        <button id="sclOpenPharmacyBtn" type="button">Άνοιγμα φαρμακείου</button>
-      </div>
-    </div>
 
   <div id="sclHqShell" class="scl-access-card">
-    <div class="scl-hq-hero">
-      <div>
-        <div class="scl-hq-logo-main">SPACE<span class="thin">COLL</span>AB HQ</div>
-        <div class="scl-hq-logo-sub">CENTRAL RETAIL SPACE MANAGEMENT</div>
-      </div>
-      <div class="scl-hq-hero-copy">
-        <div class="scl-hq-hero-kicker">HQ mode</div>
-        <div class="scl-hq-hero-title">Κεντρική εικόνα φαρμακείων, ενεργειών και Pharmaplus προγράμματος.</div>
-        <div class="scl-hq-hero-sub">Δημιουργία links, παρακολούθηση αλλαγών, πρόγραμμα κεντρικής θέσης και μελλοντικά reporting / billing.</div>
-      </div>
-    </div>
-
-    <div class="scl-hq-tabs" id="sclHqTabs">
-      <button class="scl-hq-tab active" data-hq-tab="overview">Επισκόπηση</button>
-      <button class="scl-hq-tab" data-hq-tab="pharmacies">Φαρμακεία</button>
-      <button class="scl-hq-tab" data-hq-tab="changes">Αλλαγές</button>
-      <button class="scl-hq-tab" data-hq-tab="program">Pharmaplus πρόγραμμα</button>
-      <button class="scl-hq-tab" data-hq-tab="reporting">Reporting</button>
-      <button class="scl-hq-tab" data-hq-tab="billing">Billing</button>
-    </div>
-
-    <div class="scl-hq-panel active" data-hq-panel="overview">
-      <div class="scl-hq-overview-grid">
-        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Φαρμακεία</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqPharmacyCount">—</div><div class="scl-hq-metric-sub">με ενεργό link</div></div></div>
-        <div class="scl-hq-metric"><div class="scl-hq-metric-head">States</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqStateCount">—</div><div class="scl-hq-metric-sub">αποθηκευμένα προγράμματα</div></div></div>
-        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Προγράμματα</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqProgramCount">—</div><div class="scl-hq-metric-sub">Pharmaplus ανά έτος</div></div></div>
-        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Εκκρεμούν</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqPendingChanges">—</div><div class="scl-hq-metric-sub">αλλαγές προς HQ</div></div></div>
-        <div class="scl-hq-metric"><div class="scl-hq-metric-head">Μήνας</div><div class="scl-hq-metric-body"><div class="scl-hq-metric-value" id="sclHqCurrentMonth">—</div><div class="scl-hq-metric-sub">τρέχουσα εικόνα</div></div></div>
-      </div>
-
-      <div class="scl-hq-two-col" style="margin-top:14px">
-        <div class="scl-hq-section">
-          <div class="scl-hq-section-head"><span>Άμεσες εκκρεμότητες</span><button class="scl-hq-btn" data-hq-tab-jump="changes">Όλες οι αλλαγές</button></div>
-          <div id="sclHqOverviewChanges" class="scl-hq-change-groups"></div>
-        </div>
-        <div class="scl-hq-section">
-          <div class="scl-hq-section-head"><span>Τελευταία φαρμακεία</span><button class="scl-hq-btn" data-hq-tab-jump="pharmacies">Όλα τα φαρμακεία</button></div>
-          <div id="sclHqOverviewPharmacies" class="scl-hq-card-list"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="scl-hq-panel" data-hq-panel="pharmacies">
-      <div class="scl-hq-two-col">
+    <div class="wrap hq-ref-wrap">
+      <div class="hq-ref-top-bar">
         <div>
-          <div class="scl-hq-create-modern">
-            <div class="title">+ Νέο φαρμακείο</div>
-            <div class="sub">Το HQ δημιουργεί το φαρμακείο και παίρνει έτοιμο προσωπικό link για αποστολή.</div>
-            <div class="scl-hq-create-form">
-              <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
-              <button id="sclCreatePharmacyHqBtn" class="scl-hq-btn dark" type="button">Δημιουργία token / link</button>
-            </div>
-            <div id="sclCreatedLinkBox" class="scl-hq-created-modern"></div>
-          </div>
-          <div class="scl-hq-section" style="margin-top:14px">
-            <div class="scl-hq-section-head"><span>Φαρμακεία & προσωπικά links</span><button id="sclRefreshHqBtn" class="scl-hq-btn" type="button">Ανανέωση HQ</button></div>
-            <div id="sclHqPharmacyList" class="scl-hq-card-list"></div>
-          </div>
+          <div style="font-size:13px;color:#666;margin-bottom:4px">SpaceCoLab — HQ Mode</div>
+          <h2 id="hqRefTitle">Dashboard</h2>
         </div>
-        <div class="scl-hq-section">
-          <div class="scl-hq-section-head"><span>Οδηγία χρήσης</span></div>
-          <div class="scl-hq-placeholder">Το φαρμακείο δεν δημιουργεί λογαριασμό. Το HQ δημιουργεί το link και το στέλνει. Κάθε link περιέχει token και ανοίγει μόνο το αντίστοιχο pharmacy state.</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <select id="hqRefYearSelect"></select>
+          <span class="hq-ref-badge">HQ</span>
         </div>
       </div>
-    </div>
 
-    <div class="scl-hq-panel" data-hq-panel="changes">
-      <div class="scl-hq-section">
-        <div class="scl-hq-section-head">
-          <span>Αλλαγές / To-do από φαρμακεία</span>
-          <div class="scl-hq-filter">
-            <select id="sclHqChangeYearFilter"></select>
-            <select id="sclHqChangeMonthFilter"></select>
-            <select id="sclHqChangeTypeFilter">
-              <option value="">Όλα τα είδη</option>
-              <option value="basic">Βασικό</option>
-              <option value="custom">Εξατομικ.</option>
-              <option value="deal">Συμφων.</option>
-              <option value="sponsored">Χορηγ.</option>
-              <option value="hq">Pharmaplus</option>
-            </select>
+      <div class="hq-ref-notif-bar" id="hqRefNotifBar">
+        <span class="nb-title">⚡ Νέα:</span>
+        <span class="hq-ref-notif-item">Φόρτωση...</span>
+      </div>
+
+      <div class="hq-ref-stats-grid">
+        <div class="hq-ref-stat"><div class="k">Φαρμακεία</div><div class="v" id="sclHqPharmacyCount">—</div><div class="sub" id="hqRefLockedCount">με αποθηκευμένο state</div></div>
+        <div class="hq-ref-stat"><div class="k">Deals ενεργά</div><div class="v" id="hqRefDealsCount">—</div><div class="sub">συμφωνίες / προμηθευτές</div></div>
+        <div class="hq-ref-stat"><div class="k">Αλλαγές μήνα</div><div class="v" id="hqRefMonthChanges">—</div><div class="sub" style="color:#854F0B" id="sclHqPendingChanges">— εκκρεμούν</div></div>
+        <div class="hq-ref-stat"><div class="k">Χρεώσεις μήνα</div><div class="v" id="hqRefBillingMonth">—</div><div class="sub">εκτίμηση δικτύου</div></div>
+        <div class="hq-ref-stat"><div class="k">Programs</div><div class="v" id="sclHqProgramCount">—</div><div class="sub">Pharmaplus προγράμματα</div></div>
+      </div>
+
+      <div class="hq-ref-tabs">
+        <button class="hq-ref-tab active" data-ref-tab="overview">Επισκόπηση</button>
+        <button class="hq-ref-tab" data-ref-tab="changes" style="position:relative">Αλλαγές<span class="badge" id="hqRefChangeBadge">0</span></button>
+        <button class="hq-ref-tab" data-ref-tab="billing">Billing</button>
+        <button class="hq-ref-tab" data-ref-tab="stats">Στατιστικά</button>
+        <button class="hq-ref-tab" data-ref-tab="pharmaplus">Pharmaplus</button>
+        <button class="hq-ref-tab" data-ref-tab="reporting">Reporting</button>
+      </div>
+
+      <div id="tab-overview" class="hq-ref-page active">
+        <div class="hq-ref-create">
+          <div class="th" style="font-size:13px;font-weight:500;margin-bottom:8px">Νέο φαρμακείο / Link</div>
+          <div class="hq-ref-create-row">
+            <input id="sclNewPharmacyName" placeholder="Όνομα φαρμακείου">
+            <button id="sclCreatePharmacyHqBtn" type="button">Δημιουργία token / link</button>
+            <button id="sclRefreshHqBtn" type="button">Ανανέωση HQ</button>
           </div>
+          <div id="sclCreatedLinkBox" class="hq-ref-created-link"></div>
         </div>
-        <div id="sclHqChangesList"></div>
+        <div class="hq-ref-todo-section"><div class="th">To-do — εκκρεμότητες</div><div id="hqRefTodoList"></div></div>
+        <div class="hq-ref-sec">Φαρμακεία — κλικ για λεπτομέρειες</div>
+        <table class="hq-ref-table"><thead><tr><th>Φαρμακείο</th><th>Θέσεις</th><th>Τρέχων μήνας</th><th>Επόμενη αλλαγή</th><th>Status</th></tr></thead><tbody id="hqRefOverviewTbody"></tbody></table>
+        <div id="hqRefDetailPanel"></div>
       </div>
-    </div>
 
-    <div class="scl-hq-panel" data-hq-panel="program">
-      <div class="scl-hq-section">
-        <div class="scl-hq-section-head">
-          <span>Pharmaplus πρόγραμμα κεντρικής θέσης</span>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <select id="sclHqProgramYear"></select>
-            <button id="sclHqSaveProgramBtn" class="scl-hq-btn dark" type="button">Αποθήκευση προγράμματος</button>
-          </div>
+      <div id="tab-changes" class="hq-ref-page">
+        <div class="hq-ref-export-bar">
+          <select id="hqRefFilterMonth"></select>
+          <select id="hqRefFilterType"><option value="">Όλα τα είδη</option><option value="basic">Basic</option><option value="custom">Custom</option><option value="deal">Deal</option><option value="sponsored">Sponsored</option><option value="pharmaplus">Pharmaplus</option></select>
+          <span class="hq-ref-count" id="hqRefCountLabel"></span>
+          <div style="margin-left:auto;display:flex;gap:6px"><button class="hq-ref-export-btn">📄 Export PDF</button><button class="hq-ref-export-btn">📊 Export Excel</button></div>
         </div>
-        <div id="sclHqProgramEditor" class="scl-hq-program-table"></div>
+        <table class="hq-ref-table"><thead><tr><th style="width:36px"></th><th data-sort="monthIdx">Μήνας <span class="si">↕</span></th><th data-sort="pharmacy">Φαρμακείο <span class="si">↕</span></th><th data-sort="position">Θέση <span class="si">↕</span></th><th data-sort="type">Είδος <span class="si">↕</span></th><th data-sort="label">Περιεχόμενο <span class="si">↕</span></th><th data-sort="billing" style="text-align:right">Χρέωση <span class="si">↕</span></th></tr></thead><tbody id="hqRefChangesTbody"></tbody></table>
       </div>
-    </div>
 
-    <div class="scl-hq-panel" data-hq-panel="reporting">
-      <div class="scl-hq-section">
-        <div class="scl-hq-section-head"><span>Reporting</span></div>
-        <div class="scl-hq-placeholder">Επόμενο στάδιο: upload reports ανά φαρμακείο, σύνδεση με συμφωνία / brand / μήνα και αποθήκευση metadata στο Supabase.</div>
+      <div id="tab-billing" class="hq-ref-page">
+        <div class="hq-ref-controls"><select id="hqRefBillingMonth"></select><div style="margin-left:auto"><button class="hq-ref-export-btn">📊 Export Excel</button></div></div>
+        <table class="hq-ref-table"><thead><tr><th>Φαρμακείο</th><th>Platform</th><th>Custom</th><th>Deal</th><th>Ράφια</th><th style="text-align:right">Μήνας</th><th style="text-align:right">Ετήσιο</th></tr></thead><tbody id="hqRefBillingTbody"></tbody></table>
       </div>
-    </div>
 
-    <div class="scl-hq-panel" data-hq-panel="billing">
-      <div class="scl-hq-section">
-        <div class="scl-hq-section-head"><span>Billing</span></div>
-        <div class="scl-hq-placeholder">Επόμενο στάδιο: χρεώσεις Basic, Εξατομίκευση, Συμφωνίες, Χορηγούμενα, reports και συνολικό billing ανά φαρμακείο / έτος.</div>
+      <div id="tab-stats" class="hq-ref-page">
+        <div class="hq-ref-two-col">
+          <div><div class="hq-ref-sec">Φαρμακεία ανά είδος</div><div class="hq-ref-chart-bar-wrap" id="hqRefTypeChart"></div></div>
+          <div><div class="hq-ref-sec">Deals ανά προμηθευτή</div><div class="hq-ref-chart-bar-wrap" id="hqRefSupplierChart"></div></div>
+        </div>
+        <div class="hq-ref-sec">Αλλαγές ανά μήνα</div><div class="hq-ref-chart-bar-wrap" id="hqRefMonthChart"></div>
+      </div>
+
+      <div id="tab-pharmaplus" class="hq-ref-page">
+        <div class="hq-ref-sec">Pharmaplus — Πρόγραμμα · κλικ σε μήνα για επεξεργασία</div>
+        <div class="hq-ref-pp-head"><div></div><div>Ιαν</div><div>Φεβ</div><div>Μαρ</div><div>Απρ</div><div>Μάι</div><div>Ιουν</div><div>Ιουλ</div><div>Αυγ</div><div>Σεπ</div><div>Οκτ</div><div>Νοε</div><div>Δεκ</div></div>
+        <div class="hq-ref-pp-grid" id="hqRefPpGrid"></div><div id="hqRefPpEditor"></div>
+      </div>
+
+      <div id="tab-reporting" class="hq-ref-page">
+        <div class="hq-ref-upload-zone"><div style="font-size:24px;margin-bottom:8px">📂</div><div style="font-weight:500;margin-bottom:4px">Ανέβασμα αρχείου sell-out</div><div style="font-size:12px">Excel, CSV ή PDF · κλικ ή drag & drop</div><select id="hqRefReportPharmacy" style="margin-top:12px"><option>Επιλογή φαρμακείου...</option></select></div>
+        <div class="hq-ref-sec">Αρχεία ανά φαρμακείο / deal</div><div class="hq-ref-report-list" id="hqRefReportList"></div>
       </div>
     </div>
 </div>
@@ -8769,6 +8519,16 @@ body.scl-hq #sclHqShell{
     <div class="sticky-nav">
     <div class="hero"><img class="hero-logo" alt="SpaceCoLab" src="data:image/png;base64,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" /></div>
     <div class="tabs"><button class="tabbtn active" data-page="guide">Οδηγός</button><button class="tabbtn" data-page="overview">Το φαρμακείο μου</button><button class="tabbtn" data-page="planner">Προγραμματισμός</button></div>
+
+  <!-- v190 — pharmacy identity / reset -->
+  <div id="sclPharmacyNamebar" class="scl-pharmacy-namebar">
+    <div>
+      <div class="name" id="sclPharmacyVisibleName">Φαρμακείο</div>
+      <div class="meta">Cloud pharmacy mode · έτος <span id="sclPharmacyVisibleYear">2026</span></div>
+    </div>
+    <button id="sclResetPharmacyYearBtn" class="scl-danger-btn" type="button">Καθαρισμός δεδομένων έτους</button>
+  </div>
+
       <div id="yearControls" class="year-controls header-year-controls"></div>
     </div>
     
@@ -16368,201 +16128,190 @@ setTimeout(sclBindV185,300);
 setTimeout(sclBindV185,1200);
 
 
-/* v186 — SpaceCoLab HQ dashboard renderers */
-let SCL_HQ_DATA_V186 = null;
+/* v189 — HQ reference layout dynamic render */
+let HQREF_DATA=null, HQREF_CHANGES=[], HQREF_SORT='monthIdx', HQREF_SORT_DIR=1, HQREF_OPEN=-1, HQREF_PP_EDIT=-1;
+const HQREF_MONTHS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const HQREF_THEMES=['Ενυδάτωση','Αντηλιακά','Μαλλιά','Βιταμίνες','Back to school','Φθινόπωρο','Χειμώνας','Χριστούγεννα','Νέα προϊόντα','Best sellers','Δερματολογία','Στοματική υγεία'];
+const HQREF_COLORS={'Ενυδάτωση':['#E6F1FB','#185FA5'],'Αντηλιακά':['#EAF3DE','#3B6D11'],'Μαλλιά':['#FAEEDA','#854F0B'],'Back to school':['#EEEDFE','#3C3489'],'Φθινόπωρο':['#EEEDFE','#3C3489'],'Χειμώνας':['#F1EFE8','#5F5E5A'],'Χριστούγεννα':['#F1EFE8','#5F5E5A'],'Βιταμίνες':['#EAF3DE','#3B6D11'],'Νέα προϊόντα':['#FCEBEB','#A32D2D'],'Best sellers':['#E6F1FB','#185FA5'],'Δερματολογία':['#EEEDFE','#3C3489'],'Στοματική υγεία':['#F1EFE8','#5F5E5A']};
+function hqRefYear(){return Number(document.getElementById('hqRefYearSelect')?.value||new Date().getFullYear());}
+function hqRefPill(t){const m={basic:'basic',custom:'custom',deal:'deal',sponsored:'sponsored',pharmaplus:'pharmaplus',pending:'pending',Basic:'basic',Custom:'custom',Deal:'deal',Sponsored:'sponsored',Pharmaplus:'pharmaplus'};const label={basic:'Basic',custom:'Custom',deal:'Deal',sponsored:'Sponsored',pharmaplus:'Pharmaplus',pending:'pending'}[t]||t;return `<span class="hq-ref-pill ${m[t]||'basic'}">${esc(label)}</span>`;}
+function hqRefCards(ps){return Array.isArray(ps?.state_json?.cards)?ps.state_json.cards:[];}
+function hqRefMonthStatus(card,m){try{if(typeof monthStatus==='function')return monthStatus(card,m)}catch(e){} const arr=card.simpleSchedule||card.basicSchedule||card.pendingSimpleSchedule||[];return arr[m]||{label:'—',owner:'pending',mechanism:''};}
+function hqRefType(owner,label){const o=String(owner||'').toLowerCase(),l=String(label||'').toLowerCase();if(o.includes('deal')||l.includes('συμφ'))return'deal';if(o.includes('sponsor')||l.includes('χορηγ'))return'sponsored';if(o.includes('custom')||l.includes('εξατομ'))return'custom';if(o.includes('hq')||l.includes('pharmaplus'))return'pharmaplus';if(o.includes('basic')||l.includes('βασ'))return'basic';return'pending';}
+function hqRefPharmacies(data){const statesBy={};(data.pharmacy_state||[]).forEach(s=>{(statesBy[s.pharmacy_id]=statesBy[s.pharmacy_id]||[]).push(s)});return (data.pharmacies||[]).map(p=>{const states=(statesBy[p.id]||[]).sort((a,b)=>Number(b.year)-Number(a.year));const st=states.find(s=>Number(s.year)===hqRefYear())||states[0];const cards=hqRefCards(st);return {...p,states,state:st,cards,positions:cards.length};});}
+function hqRefBuildChanges(data){const ph={};(data.pharmacies||[]).forEach(p=>ph[p.id]=p);const done={};(data.hq_changes_done||[]).forEach(d=>done[d.change_key]=!!d.done);let out=[];(data.pharmacy_state||[]).filter(ps=>Number(ps.year)===hqRefYear()).forEach(ps=>{const p=ph[ps.pharmacy_id]||{};hqRefCards(ps).forEach(card=>{for(let m=0;m<12;m++){const st=hqRefMonthStatus(card,m);const type=hqRefType(st.owner,st.label);if(type!=='basic'&&st.label&&st.label!=='—'){const key=`${ps.pharmacy_id}|${ps.year}|${card.id||card.title}|${m}|${type}|${st.label}`;out.push({key,month:HQREF_MONTHS[m],monthIdx:m,pharmacy:p.name||'Φαρμακείο',position:card.title||card.name||'Θέση',type,label:st.label,extra:st.mechanism||'',billing:type==='custom'?15:type==='deal'?30:0,needMaterial:type==='deal',done:!!done[key]});}
+(card.sponsoredShelves||[]).forEach((s,i)=>{const start=Number(s.month??s.startMonth??0),dur=Number(s.duration||1);if(m>=start&&m<start+dur){const brand=s.brand||s.supplier||s.series||'Χορηγούμενα ράφια';const key=`${ps.pharmacy_id}|${ps.year}|${card.id||card.title}|${m}|sponsored|${brand}|${i}`;out.push({key,month:HQREF_MONTHS[m],monthIdx:m,pharmacy:p.name||'Φαρμακείο',position:card.title||card.name||'Θέση',type:'sponsored',label:brand,extra:`${s.series||''} ${s.shelves?`· ${s.shelves} ράφια`:''}`,billing:Number(s.price||s.monthlyPrice||0),needMaterial:false,done:!!done[key]});}});
+}})});return out;}
+function hqRefCurrentForPharmacy(p){const m=new Date().getMonth();let items=[];p.cards.forEach(c=>{const st=hqRefMonthStatus(c,m);items.push({pos:c.title||c.name||'Θέση',type:hqRefType(st.owner,st.label),detail:st.label||'—',fmt:st.mechanism||'—',warn:hqRefType(st.owner,st.label)==='deal'});});return items.length?items:[{pos:'—',type:'pending',detail:'Δεν υπάρχει state',fmt:'—'}];}
+function hqRefShowTab(id){document.querySelectorAll('#sclHqShell .hq-ref-page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('#sclHqShell .hq-ref-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+id)?.classList.add('active');document.querySelector(`#sclHqShell .hq-ref-tab[data-ref-tab="${id}"]`)?.classList.add('active');if(id==='changes')hqRefRenderChanges();if(id==='billing')hqRefRenderBilling();if(id==='stats')hqRefRenderStats();if(id==='pharmaplus')hqRefRenderPP();}
+function hqRefRenderTop(data){const ySel=document.getElementById('hqRefYearSelect');const years=[...new Set([new Date().getFullYear(),new Date().getFullYear()+1,...(data.pharmacy_state||[]).map(s=>Number(s.year)),...(data.hq_programs||[]).map(p=>Number(p.year))].filter(Boolean))].sort((a,b)=>b-a);if(ySel&&!ySel.dataset.ready){ySel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');ySel.dataset.ready='1';ySel.addEventListener('change',()=>hqRefRenderAll(HQREF_DATA));}document.getElementById('hqRefTitle').textContent='Dashboard '+hqRefYear();}
+function hqRefRenderStatsHeader(data){const ph=hqRefPharmacies(data), ch=HQREF_CHANGES, m=new Date().getMonth(), monthCh=ch.filter(c=>c.monthIdx===m);document.getElementById('sclHqPharmacyCount').textContent=ph.length;document.getElementById('hqRefLockedCount').textContent=`${ph.filter(p=>p.state).length} με αποθηκευμένο state`;document.getElementById('sclHqProgramCount').textContent=(data.hq_programs||[]).length;document.getElementById('hqRefDealsCount').textContent=ch.filter(c=>c.type==='deal').length;document.getElementById('hqRefMonthChanges').textContent=monthCh.length;document.getElementById('sclHqPendingChanges').textContent=`${monthCh.filter(c=>!c.done).length} εκκρεμούν`;document.getElementById('hqRefChangeBadge').textContent=ch.filter(c=>!c.done).length;document.getElementById('hqRefBillingMonth').textContent=(ch.reduce((s,c)=>s+(Number(c.billing)||0),0)||0)+'€';
+const nb=document.getElementById('hqRefNotifBar');const pending=ch.filter(c=>!c.done).slice(0,3);nb.innerHTML='<span class="nb-title">⚡ Νέα:</span>'+ (pending.length?pending.map(c=>`<span class="hq-ref-notif-item" onclick="hqRefShowTab('changes')">${esc(c.pharmacy)} — ${esc(c.label)}</span>`).join(''):'<span class="hq-ref-notif-item">Δεν υπάρχουν νέες εκκρεμότητες</span>');}
+function hqRefRenderTodos(){const el=document.getElementById('hqRefTodoList');const rows=HQREF_CHANGES.filter(c=>!c.done).slice(0,8);el.innerHTML=rows.length?rows.map(c=>`<div class="hq-ref-todo-item"><input type="checkbox" data-hqref-done="${esc(c.key)}"><span>${esc(c.pharmacy)} — ${esc(c.position)} · ${esc(c.label)}</span><span class="todo-meta">${esc(c.month)}</span></div>`).join(''):'<div class="hq-ref-todo-item"><span>Δεν υπάρχουν εκκρεμότητες</span></div>';document.querySelectorAll('[data-hqref-done]').forEach(i=>i.addEventListener('change',()=>hqRefSetDone(i.dataset.hqrefDone,i.checked)));}
+function hqRefRenderOverview(){const rows=hqRefPharmacies(HQREF_DATA);document.getElementById('hqRefOverviewTbody').innerHTML=rows.map((p,i)=>{const cur=hqRefCurrentForPharmacy(p);return `<tr style="cursor:pointer" onclick="hqRefToggleDetail(${i})"><td><strong>${esc(p.name)}</strong><div class="hq-ref-sub-info">${p.token?`<button onclick="event.stopPropagation();hqRefCopy('${sclBuildPharmacyLink(p.token).replace(/'/g,"\\'")}')">Copy link</button>`:''}</div></td><td>${p.positions}</td><td>${[...new Set(cur.map(c=>c.type))].map(hqRefPill).join(' ')}</td><td style="color:#666">${hqRefNextChange(p)}</td><td>${hqRefPill(p.state?'basic':'pending')} <span style="font-size:12px;color:#666">${p.state?'Κλειδωμένο':'Ανοιχτό'}</span></td></tr>`}).join('');hqRefRenderDetail();}
+function hqRefNextChange(p){const ch=HQREF_CHANGES.filter(c=>c.pharmacy===p.name&&!c.done).sort((a,b)=>a.monthIdx-b.monthIdx)[0];return ch?`1 ${ch.month}`:'—'}
+function hqRefToggleDetail(i){HQREF_OPEN=HQREF_OPEN===i?-1:i;hqRefRenderDetail();}
+function hqRefRenderDetail(){const el=document.getElementById('hqRefDetailPanel');if(HQREF_OPEN<0){el.innerHTML='';return;}const p=hqRefPharmacies(HQREF_DATA)[HQREF_OPEN];const cur=hqRefCurrentForPharmacy(p);const total=HQREF_CHANGES.filter(c=>c.pharmacy===p.name).reduce((s,c)=>s+(Number(c.billing)||0),0);el.innerHTML=`<div class="hq-ref-detail-panel"><div class="dh"><span>${esc(p.name)}</span><button onclick="HQREF_OPEN=-1;hqRefRenderDetail()">Κλείσιμο</button></div><div class="hq-ref-pos-grid">${cur.map(c=>`<div class="hq-ref-pos-card"><div class="pt">${esc(c.pos)} ${hqRefPill(c.type)}</div><div class="hq-ref-pos-row"><span>Περιεχόμενο</span><span>${esc(c.detail)}</span></div><div class="hq-ref-pos-row"><span>Format</span><span>${esc(c.fmt)}</span></div>${c.warn?'<div class="hq-ref-pos-row"><span class="hq-ref-warn">Αναμένεται υλικό</span><span></span></div>':''}</div>`).join('')}</div><div style="margin-top:10px;background:#fff;border:0.5px solid #e0e0e0;border-radius:8px;padding:10px"><div style="font-size:12px;font-weight:500;margin-bottom:6px">Billing τρέχοντος μήνα</div><div class="hq-ref-pos-row"><span>Σύνολο αλλαγών</span><span>${total}€</span></div></div></div>`;}
+function hqRefRenderChanges(){const fm=document.getElementById('hqRefFilterMonth').value, ft=document.getElementById('hqRefFilterType').value;let rows=HQREF_CHANGES.filter(r=>(!fm||r.month===fm)&&(!ft||r.type===ft));rows.sort((a,b)=>{const va=a[HQREF_SORT],vb=b[HQREF_SORT];return(typeof va==='string'?va.localeCompare(vb,'el'):(Number(va)||0)-(Number(vb)||0))*HQREF_SORT_DIR});document.getElementById('hqRefCountLabel').textContent=`${rows.length} αλλαγές`;document.getElementById('hqRefChangesTbody').innerHTML=rows.map(r=>`<tr class="${r.done?'hq-ref-done-row':''}${r.needMaterial&&!r.done?' hq-ref-need-material':''}"><td><input type="checkbox" ${r.done?'checked':''} data-hqref-done="${esc(r.key)}"></td><td style="color:#666;white-space:nowrap">1 ${esc(r.month)}</td><td><strong>${esc(r.pharmacy)}</strong></td><td style="color:#666">${esc(r.position)}</td><td>${hqRefPill(r.type)}</td><td><div style="font-weight:500">${esc(r.label)}</div><div class="hq-ref-sub-info">${esc(r.extra||'')}</div>${r.needMaterial&&!r.done?'<div style="font-size:11px;color:#854F0B;margin-top:2px">Αναμένεται υλικό από supplier</div>':''}</td><td style="text-align:right;font-variant-numeric:tabular-nums">${r.billing?r.billing+'€':'—'}</td></tr>`).join('');document.querySelectorAll('[data-hqref-done]').forEach(i=>{if(!i.dataset.bound){i.dataset.bound='1';i.addEventListener('change',()=>hqRefSetDone(i.dataset.hqrefDone,i.checked));}})}
+async function hqRefSetDone(key,done){if(!sb)return;const {error}=await sb.rpc('hq_set_change_done',{p_hq_key:SCL_ROUTING.hqKey,p_change_key:key,p_done:done});if(error){sclCloudStatus(error.message,'err');return;}await sclLoadHqShell();}
+function hqRefRenderBilling(){const tbody=document.getElementById('hqRefBillingTbody');const ph=hqRefPharmacies(HQREF_DATA);let total=0;tbody.innerHTML=ph.map(p=>{const ch=HQREF_CHANGES.filter(c=>c.pharmacy===p.name);const custom=ch.filter(c=>c.type==='custom').reduce((s,c)=>s+(c.billing||0),0),deal=ch.filter(c=>c.type==='deal').reduce((s,c)=>s+(c.billing||0),0),shelves=ch.filter(c=>c.type==='sponsored').reduce((s,c)=>s+(c.billing||0),0),platform=40,month=platform+custom+deal+shelves;total+=month;return `<tr><td><strong>${esc(p.name)}</strong></td><td>${platform}€</td><td>${custom?custom+'€':'—'}</td><td>${deal?deal+'€':'—'}</td><td>${shelves?shelves+'€':'—'}</td><td style="text-align:right;font-weight:500">${month}€</td><td style="text-align:right;color:#666">${month*12}€</td></tr>`}).join('')+`<tr style="background:#f5f5f3"><td><strong>Σύνολο</strong></td><td></td><td></td><td></td><td></td><td style="text-align:right;font-weight:500;color:#185FA5">${total}€</td><td style="text-align:right;color:#666;font-weight:500">${total*12}€</td></tr>`;}
+function hqRefBar(label,val,max,color){const w=max?Math.max(4,Math.round(val/max*100)):0;return `<div class="hq-ref-chart-row"><div class="label">${esc(label)}</div><div class="hq-ref-bar-track"><div class="hq-ref-bar-fill" style="width:${w}%;background:${color}">${val}</div></div><div class="val">${val}</div></div>`}
+function hqRefRenderStats(){const types={basic:0,custom:0,deal:0,sponsored:0,pending:0};HQREF_CHANGES.forEach(c=>{types[c.type]=(types[c.type]||0)+1});let max=Math.max(1,...Object.values(types));document.getElementById('hqRefTypeChart').innerHTML=Object.entries(types).map(([k,v])=>hqRefBar({basic:'Basic',custom:'Custom',deal:'Deal',sponsored:'Sponsored',pending:'Εκκρεμεί'}[k],v,max,{basic:'#185FA5',custom:'#3C3489',deal:'#3B6D11',sponsored:'#854F0B',pending:'#5F5E5A'}[k])).join('');const suppliers={};HQREF_CHANGES.filter(c=>c.type==='deal'||c.type==='sponsored').forEach(c=>{const s=(c.label||'Άλλο').split('·')[0].trim();suppliers[s]=(suppliers[s]||0)+1});max=Math.max(1,...Object.values(suppliers));document.getElementById('hqRefSupplierChart').innerHTML=Object.entries(suppliers).map(([k,v])=>hqRefBar(k,v,max,'#185FA5')).join('')||'<div class="hq-ref-sub-info">Δεν υπάρχουν deals.</div>';const months={};HQREF_CHANGES.forEach(c=>months[c.month]=(months[c.month]||0)+1);max=Math.max(1,...Object.values(months));document.getElementById('hqRefMonthChart').innerHTML=HQREF_MONTHS.map(m=>hqRefBar(m,months[m]||0,max,m===HQREF_MONTHS[new Date().getMonth()]?'#185FA5':'#378ADD')).join('');}
+function hqRefPpColor(t){return HQREF_COLORS[t]||['#F1EFE8','#5F5E5A'];}
+function hqRefProgram(){const y=hqRefYear();return (HQREF_DATA?.hq_programs||[]).find(p=>Number(p.year)===y)?.program_json||{};}
+function hqRefRenderPP(){const prog=hqRefProgram(), arr=prog.months||[];document.getElementById('hqRefPpGrid').innerHTML='<div class="hq-ref-pp-label">Θέμα</div>'+HQREF_MONTHS.map((m,i)=>{const t=arr[i]||'—';const [bg,col]=hqRefPpColor(t);return `<div class="hq-ref-pp-cell ${HQREF_PP_EDIT===i?'editing':''}" style="background:${bg};color:${col}" onclick="hqRefEditPP(${i})">${esc(t)}</div>`}).join('');hqRefRenderPPEditor();}
+function hqRefEditPP(i){HQREF_PP_EDIT=HQREF_PP_EDIT===i?-1:i;hqRefRenderPP();}
+function hqRefRenderPPEditor(){const el=document.getElementById('hqRefPpEditor');if(HQREF_PP_EDIT<0){el.innerHTML='';return;}const prog=hqRefProgram(), t=(prog.months||[])[HQREF_PP_EDIT]||'';el.innerHTML=`<div class="hq-ref-pp-editor"><div class="eh">${HQREF_MONTHS[HQREF_PP_EDIT]} — επιλογή θέματος</div><div class="hq-ref-theme-chips">${HQREF_THEMES.map(th=>`<div class="hq-ref-theme-chip ${th===t?'active':''}" onclick="hqRefSetPP('${th.replace(/'/g,"\\'")}')">${esc(th)}</div>`).join('')}</div><div style="display:flex;gap:8px;align-items:center"><input id="hqRefPpCustom" placeholder="ή γράψε δικό σου..." style="flex:1"><button onclick="hqRefSetPPCustom()">Εφαρμογή</button><button onclick="HQREF_PP_EDIT=-1;hqRefRenderPP()">Κλείσιμο</button></div></div>`;}
+async function hqRefSetPP(theme){await hqRefSavePP(theme);}function hqRefSetPPCustom(){const v=document.getElementById('hqRefPpCustom').value.trim();if(v)hqRefSavePP(v)}
+async function hqRefSavePP(theme){const y=hqRefYear(), old=hqRefProgram(), months=[...(old.months||Array(12).fill(''))],messages=[...(old.messages||Array(12).fill(''))],instructions=[...(old.instructions||Array(12).fill(''))],statuses=[...(old.statuses||Array(12).fill('draft'))];months[HQREF_PP_EDIT]=theme;const {error}=await sb.rpc('hq_upsert_program',{p_hq_key:SCL_ROUTING.hqKey,p_year:y,p_program_json:{months,messages,instructions,statuses}});if(error){sclCloudStatus(error.message,'err');return;}HQREF_PP_EDIT=-1;await sclLoadHqShell();}
+function hqRefCopy(text){navigator.clipboard.writeText(text).catch(()=>prompt('Copy link:',text));}
+function hqRefRenderReports(){const sel=document.getElementById('hqRefReportPharmacy');if(sel)sel.innerHTML='<option>Επιλογή φαρμακείου...</option>'+hqRefPharmacies(HQREF_DATA).map(p=>`<option>${esc(p.name)}</option>`).join('');document.getElementById('hqRefReportList').innerHTML=(HQREF_DATA?.reports||[]).map(r=>`<div class="hq-ref-report-item"><div>📄</div><div class="ri-name">${esc(r.filename||'Report')}<div class="ri-meta">${esc(r.uploaded_at||'')}</div></div><span class="ri-pill">Report</span><button class="ri-btn">Προβολή</button></div>`).join('')||'<div class="hq-ref-report-item"><div>📂</div><div class="ri-name">Δεν υπάρχουν reports ακόμη<div class="ri-meta">Θα συνδεθεί στο επόμενο στάδιο</div></div></div>';}
+function hqRefBind(){document.querySelectorAll('#sclHqShell .hq-ref-tab').forEach(b=>{if(!b.dataset.bound){b.dataset.bound='1';b.addEventListener('click',()=>hqRefShowTab(b.dataset.refTab));}});document.querySelectorAll('#sclHqShell th[data-sort]').forEach(th=>{if(!th.dataset.bound){th.dataset.bound='1';th.addEventListener('click',()=>{const c=th.dataset.sort;if(HQREF_SORT===c)HQREF_SORT_DIR*=-1;else{HQREF_SORT=c;HQREF_SORT_DIR=1;}hqRefRenderChanges();});}});['hqRefFilterMonth','hqRefFilterType'].forEach(id=>document.getElementById(id)?.addEventListener('change',hqRefRenderChanges));document.getElementById('hqRefBillingMonth')?.addEventListener('change',hqRefRenderBilling);}
+function hqRefRenderAll(data){HQREF_DATA=data||{};HQREF_CHANGES=hqRefBuildChanges(HQREF_DATA);hqRefRenderTop(HQREF_DATA);hqRefRenderStatsHeader(HQREF_DATA);const fm=document.getElementById('hqRefFilterMonth');if(fm&&!fm.dataset.ready){fm.innerHTML='<option value="">Όλοι οι μήνες</option>'+HQREF_MONTHS.map((m,i)=>`<option value="${m}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');fm.dataset.ready='1';}const bm=document.getElementById('hqRefBillingMonth');if(bm&&!bm.dataset.ready){bm.innerHTML=HQREF_MONTHS.map((m,i)=>`<option value="${m}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');bm.dataset.ready='1';}hqRefRenderTodos();hqRefRenderOverview();hqRefRenderChanges();hqRefRenderBilling();hqRefRenderStats();hqRefRenderPP();hqRefRenderReports();hqRefBind();}
+const __oldSclLoadHqShellV189=typeof sclLoadHqShell==='function'?sclLoadHqShell:null;
+sclLoadHqShell=async function(){if(!sb){sclCloudStatus('Δεν φορτώθηκε το Supabase SDK.','err');return;}sclCloudStatus('Φόρτωση HQ dashboard…');const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});if(error){sclCloudStatus(error.message,'err');return;}hqRefRenderAll(data||{});sclCloudStatus('HQ dashboard φορτώθηκε.','ok');};
+setTimeout(hqRefBind,300);
 
-function sclHqSetTabV186(tab){
-  document.querySelectorAll('.scl-hq-tab').forEach(b=>b.classList.toggle('active',b.dataset.hqTab===tab));
-  document.querySelectorAll('.scl-hq-panel').forEach(p=>p.classList.toggle('active',p.dataset.hqPanel===tab));
-}
-function sclHqBindTabsV186(){
-  document.querySelectorAll('[data-hq-tab]').forEach(b=>{
-    if(b.dataset.boundV186)return;
-    b.dataset.boundV186='1';
-    b.addEventListener('click',()=>sclHqSetTabV186(b.dataset.hqTab));
-  });
-  document.querySelectorAll('[data-hq-tab-jump]').forEach(b=>{
-    if(b.dataset.boundV186)return;
-    b.dataset.boundV186='1';
-    b.addEventListener('click',()=>sclHqSetTabV186(b.dataset.hqTabJump));
-  });
-}
-function sclCopyTextV186(text,btn){
-  if(!text)return;
-  navigator.clipboard.writeText(text).then(()=>{
-    if(btn){const old=btn.textContent;btn.textContent='Copied';btn.classList.add('copied');setTimeout(()=>{btn.textContent=old;btn.classList.remove('copied');},1200);}
-  }).catch(()=>prompt('Copy link:',text));
-}
-function sclBuildStateMapV186(states){
-  const map={};
-  (states||[]).forEach(s=>{if(!map[s.pharmacy_id])map[s.pharmacy_id]=[];map[s.pharmacy_id].push(s);});
-  Object.values(map).forEach(arr=>arr.sort((a,b)=>Number(b.year||0)-Number(a.year||0)));
-  return map;
-}
-function sclStatePillsV186(states){
-  if(!states||!states.length)return '<span class="scl-state-pill none">no state yet</span>';
-  return states.map(s=>{
-    const dt=s.updated_at?new Date(s.updated_at).toLocaleDateString('el-GR'):'';
-    return `<span class="scl-state-pill saved">${esc(String(s.year||'—'))} saved${dt?' · '+esc(dt):''}</span>`;
-  }).join('');
-}
-function sclRenderHqPharmacyCardsV186(data){
-  const target=document.getElementById('sclHqPharmacyList');
-  const overview=document.getElementById('sclHqOverviewPharmacies');
-  const statesBy=sclBuildStateMapV186(data?.pharmacy_state||[]);
-  const pharmacies=(data?.pharmacies||[]).slice().sort((a,b)=>String(b.created_at||'').localeCompare(String(a.created_at||'')));
-  const renderCard=p=>{
-    const token=p.token||'';
-    const link=token?sclBuildPharmacyLink(token):'';
-    const states=statesBy[p.id]||[];
-    return `<div class="scl-hq-pharmacy-card">
-      <div>
-        <div class="scl-hq-pharmacy-title">${esc(p.name||'Φαρμακείο')}</div>
-        <div class="scl-hq-pharmacy-meta">${sclStatePillsV186(states)}</div>
-        <div class="scl-hq-link-mini">${token?esc(link):'Δεν επιστρέφεται token από Supabase'}</div>
-      </div>
-      <div class="scl-hq-actions">
-        ${token?`<button class="scl-hq-btn" data-copy-link="${esc(link)}">Copy link</button><button class="scl-hq-btn green" onclick="window.open('${link.replace(/'/g,"\\'")}','_blank')">Open</button>`:'<button class="scl-hq-btn" disabled>no token</button>'}
-      </div>
-    </div>`;
-  };
-  if(target)target.innerHTML=pharmacies.length?pharmacies.map(renderCard).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
-  if(overview)overview.innerHTML=pharmacies.length?pharmacies.slice(0,4).map(renderCard).join(''):'<div class="scl-hq-placeholder">Δεν υπάρχουν φαρμακεία ακόμη.</div>';
-  document.querySelectorAll('[data-copy-link]').forEach(btn=>{
-    if(btn.dataset.boundV186)return;
-    btn.dataset.boundV186='1';
-    btn.addEventListener('click',()=>sclCopyTextV186(btn.dataset.copyLink,btn));
-  });
-}
-function sclRenderHqChangesCardsV186(data){
-  let changes=[];
-  if(typeof sclBuildChangesV185==='function')changes=sclBuildChangesV185(data);
-  const all=changes;
-  // populate filters if available
-  if(typeof sclPopulateChangeFiltersV185==='function')sclPopulateChangeFiltersV185(all);
-  const yf=document.getElementById('sclHqChangeYearFilter');
-  const mf=document.getElementById('sclHqChangeMonthFilter');
-  const tf=document.getElementById('sclHqChangeTypeFilter');
-  const yearVal=yf?.value||'';
-  const monthVal=mf?.value||'';
-  const typeVal=tf?.value||'';
-  const filtered=all.filter(c=>(!yearVal||String(c.year)===yearVal)&&(!monthVal||String(c.monthIdx)===monthVal)&&(!typeVal||c.type===typeVal));
-  document.getElementById('sclHqPendingChanges').textContent=String(all.filter(c=>!c.done).length);
-  const currentMonthEl=document.getElementById('sclHqCurrentMonth');
-  if(currentMonthEl)currentMonthEl.textContent=(typeof SCL_MONTHS_V185!=='undefined'?SCL_MONTHS_V185[new Date().getMonth()]:'—');
-  const target=document.getElementById('sclHqChangesList');
-  const overview=document.getElementById('sclHqOverviewChanges');
-  const renderList=(arr,limit=null)=>{
-    const rows=limit?arr.filter(c=>!c.done).slice(0,limit):arr;
-    if(!rows.length)return '<div class="scl-hq-placeholder">Δεν υπάρχουν αλλαγές με τα τρέχοντα φίλτρα.</div>';
-    const groups={};
-    rows.forEach(c=>{
-      const k=`${c.month} ${c.year}`;
-      if(!groups[k])groups[k]=[];
-      groups[k].push(c);
-    });
-    return Object.keys(groups).map(k=>`<div class="scl-hq-month-group">
-      <div class="scl-hq-month-title"><span>${esc(k)}</span><span class="scl-hq-month-count">${groups[k].length} αλλαγές</span></div>
-      ${groups[k].map(c=>`<div class="scl-hq-change-card ${c.done?'done':''}">
-        <div><input class="scl-hq-check" type="checkbox" ${c.done?'checked':''} data-change-key="${esc(c.key)}"></div>
-        <div>
-          <div class="scl-hq-change-title">${esc(c.pharmacy)} · ${esc(c.position)}</div>
-          <div class="scl-hq-change-details">
-            <span>${esc(c.label)}</span>
-            ${c.mechanism?`<span>· ${esc(c.mechanism)}</span>`:''}
-          </div>
-        </div>
-        <div><span class="scl-hq-type-pill ${c.type}">${esc(typeof sclTypeLabelV185==='function'?sclTypeLabelV185(c.type):c.type)}</span></div>
-      </div>`).join('')}
-    </div>`).join('');
-  };
-  if(target)target.innerHTML=renderList(filtered);
-  if(overview)overview.innerHTML=renderList(all,5);
-  document.querySelectorAll('[data-change-key]').forEach(chk=>{
-    if(chk.dataset.boundV186)return;
-    chk.dataset.boundV186='1';
-    chk.addEventListener('change',()=>typeof sclSetChangeDoneV185==='function'?sclSetChangeDoneV185(chk.dataset.changeKey,chk.checked):null);
-  });
-}
-function sclRenderProgramEditorV186(data){
-  const yearSel=document.getElementById('sclHqProgramYear');
-  const editor=document.getElementById('sclHqProgramEditor');
-  if(!yearSel||!editor)return;
-  const current=new Date().getFullYear();
-  const years=[...new Set([current,current+1,...(data?.hq_programs||[]).map(p=>Number(p.year)).filter(Boolean)])].sort((a,b)=>a-b);
-  if(!yearSel.dataset.ready){
-    yearSel.innerHTML=years.map(y=>`<option value="${y}">${y}</option>`).join('');
-    yearSel.value=String(current);
-    yearSel.dataset.ready='1';
-  }
-  const y=Number(yearSel.value);
-  const program=(data?.hq_programs||[]).find(p=>Number(p.year)===y)?.program_json||{};
-  const months=program.months||[];
-  const messages=program.messages||[];
-  const instructions=program.instructions||[];
-  editor.innerHTML='<div class="scl-hq-program-row header"><div>Μήνας</div><div>Θέμα</div><div>Μήνυμα</div><div>Οδηγίες</div><div>Status</div></div>'+
-    (typeof SCL_MONTHS_V185!=='undefined'?SCL_MONTHS_V185:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']).map((m,i)=>`
-      <div class="scl-hq-program-row" data-program-month="${i}">
-        <div><strong>${m}</strong></div>
-        <input data-program-field="theme" value="${esc(months[i]||'')}">
-        <textarea data-program-field="message">${esc(messages[i]||'')}</textarea>
-        <textarea data-program-field="instructions">${esc(instructions[i]||'')}</textarea>
-        <select data-program-field="status">
-          <option value="draft">Draft</option>
-          <option value="ready" ${(program.statuses||[])[i]==='ready'?'selected':''}>Ready</option>
-          <option value="live" ${(program.statuses||[])[i]==='live'?'selected':''}>Live</option>
-        </select>
-      </div>`).join('');
-}
-async function sclSaveProgramV186(){
-  if(!sb||sclMode()!=='hq')return;
-  const year=Number(document.getElementById('sclHqProgramYear')?.value||new Date().getFullYear());
-  const months=[],messages=[],instructions=[],statuses=[];
-  document.querySelectorAll('[data-program-month]').forEach(row=>{
-    const i=Number(row.dataset.programMonth);
-    months[i]=row.querySelector('[data-program-field="theme"]')?.value||'';
-    messages[i]=row.querySelector('[data-program-field="message"]')?.value||'';
-    instructions[i]=row.querySelector('[data-program-field="instructions"]')?.value||'';
-    statuses[i]=row.querySelector('[data-program-field="status"]')?.value||'draft';
-  });
-  const {error}=await sb.rpc('hq_upsert_program',{p_hq_key:SCL_ROUTING.hqKey,p_year:year,p_program_json:{months,messages,instructions,statuses}});
-  if(error){sclCloudStatus(error.message,'err');return;}
-  sclCloudStatus('Το Pharmaplus πρόγραμμα αποθηκεύτηκε.','ok');
-  await sclLoadHqShell();
-}
-const __oldSclLoadHqShellV186 = typeof sclLoadHqShell==='function' ? sclLoadHqShell : null;
-if(__oldSclLoadHqShellV186){
-  sclLoadHqShell = async function(){
-    if(!sb){sclCloudStatus('Δεν φορτώθηκε το Supabase SDK.','err');return;}
-    sclCloudStatus('Φόρτωση HQ dashboard…');
-    const {data,error}=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});
-    if(error){sclCloudStatus(error.message,'err');return;}
-    const d=data||{};
-    SCL_HQ_DATA_V186=d;
-    document.getElementById('sclHqPharmacyCount').textContent=(d.pharmacies||[]).length;
-    document.getElementById('sclHqStateCount').textContent=(d.pharmacy_state||[]).length;
-    document.getElementById('sclHqProgramCount').textContent=(d.hq_programs||[]).length;
-    sclRenderHqPharmacyCardsV186(d);
-    sclRenderHqChangesCardsV186(d);
-    sclRenderProgramEditorV186(d);
-    sclHqBindTabsV186();
-    sclCloudStatus('HQ dashboard φορτώθηκε.','ok');
-  }
-}
-function sclBindV186(){
-  sclHqBindTabsV186();
-  document.getElementById('sclHqSaveProgramBtn')?.addEventListener('click',sclSaveProgramV186);
-  document.getElementById('sclHqProgramYear')?.addEventListener('change',()=>SCL_HQ_DATA_V186?sclRenderProgramEditorV186(SCL_HQ_DATA_V186):null);
-  ['sclHqChangeYearFilter','sclHqChangeMonthFilter','sclHqChangeTypeFilter'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el&&!el.dataset.boundV186){
-      el.dataset.boundV186='1';
-      el.addEventListener('change',()=>SCL_HQ_DATA_V186?sclRenderHqChangesCardsV186(SCL_HQ_DATA_V186):null);
+
+/* v190 — year alignment + deletion/reset + pharmacy visible name */
+const SCL_DEFAULT_YEAR_V190 = 2026;
+
+function sclForceDefaultYearV190(){
+  try{
+    if(state && (!state.programYear || Number(state.programYear) < 2026 || Number(state.programYear) > 2026)){
+      state.programYear = SCL_DEFAULT_YEAR_V190;
     }
-  });
+  }catch(e){}
 }
-setTimeout(sclBindV186,300);
-setTimeout(sclBindV186,1200);
+function sclCurrentYearV190(){
+  return Number(state?.programYear)||SCL_DEFAULT_YEAR_V190;
+}
+if(typeof sclCurrentYear==='function'){
+  sclCurrentYear = function(){ return sclCurrentYearV190(); };
+}
+
+function sclUpdatePharmacyIdentityV190(){
+  if(typeof sclMode==='function' && sclMode()!=='pharmacy')return;
+  const name = SCL_ROUTING?.pharmacy?.name || 'Φαρμακείο';
+  const n=document.getElementById('sclPharmacyVisibleName');
+  const y=document.getElementById('sclPharmacyVisibleYear');
+  if(n)n.textContent=name;
+  if(y)y.textContent=String(sclCurrentYearV190());
+  const pill=document.getElementById('sclPharmacyPill');
+  if(pill && SCL_ROUTING?.pharmacy?.name) pill.textContent='☁ '+SCL_ROUTING.pharmacy.name;
+}
+const __oldSclLoadPharmacyModeV190 = typeof sclLoadPharmacyMode==='function' ? sclLoadPharmacyMode : null;
+if(__oldSclLoadPharmacyModeV190){
+  sclLoadPharmacyMode = async function(){
+    sclForceDefaultYearV190();
+    await __oldSclLoadPharmacyModeV190();
+    sclUpdatePharmacyIdentityV190();
+  }
+}
+
+async function sclResetCurrentPharmacyYearV190(){
+  if(!sb || typeof sclMode!=='function' || sclMode()!=='pharmacy')return;
+  const token=SCL_ROUTING?.pharmacyToken;
+  const year=sclCurrentYearV190();
+  if(!token){
+    alert('Δεν υπάρχει pharmacy token.');
+    return;
+  }
+  const ok=confirm(`Θέλεις σίγουρα να διαγραφούν όλα τα δεδομένα του φαρμακείου για το έτος ${year};\n\nΑυτό θα σβήσει το cloud state αυτού του έτους και το φαρμακείο θα ξεκινήσει από την αρχή.`);
+  if(!ok)return;
+  const {error}=await sb.rpc('delete_pharmacy_state_by_token',{p_token:token,p_year:year});
+  if(error){
+    alert('Σφάλμα διαγραφής state: '+error.message);
+    if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');
+    return;
+  }
+  try{
+    localStorage.clear();
+  }catch(e){}
+  alert('Τα δεδομένα του έτους διαγράφηκαν. Η σελίδα θα φορτώσει ξανά από την αρχή.');
+  location.reload();
+}
+
+async function sclDeletePharmacyFromHqV190(pharmacyId, pharmacyName){
+  if(!sb || typeof sclMode!=='function' || sclMode()!=='hq')return;
+  const ok=confirm(`Να διαγραφεί το φαρμακείο "${pharmacyName}" μαζί με όλα τα αποθηκευμένα states / αλλαγές / reports του;\n\nΗ ενέργεια δεν αναιρείται.`);
+  if(!ok)return;
+  const {error}=await sb.rpc('hq_delete_pharmacy',{p_hq_key:SCL_ROUTING.hqKey,p_pharmacy_id:pharmacyId});
+  if(error){
+    alert('Σφάλμα διαγραφής φαρμακείου: '+error.message);
+    if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');
+    return;
+  }
+  if(typeof sclCloudStatus==='function')sclCloudStatus('Το φαρμακείο διαγράφηκε.','ok');
+  if(typeof sclLoadHqShell==='function')await sclLoadHqShell();
+}
+
+function sclPatchDeleteButtonsV190(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    const btn=document.getElementById('sclResetPharmacyYearBtn');
+    if(btn && !btn.dataset.boundV190){
+      btn.dataset.boundV190='1';
+      btn.addEventListener('click',sclResetCurrentPharmacyYearV190);
+    }
+    sclUpdatePharmacyIdentityV190();
+  }
+  if(typeof sclMode==='function' && sclMode()==='hq' && window.SCL_HQ_DATA_V186){
+    document.querySelectorAll('.scl-hq-pharmacy-card').forEach(card=>{
+      if(card.dataset.deleteAdded)return;
+      const title=card.querySelector('.scl-hq-pharmacy-title')?.textContent?.trim()||'Φαρμακείο';
+      const p=(SCL_HQ_DATA_V186.pharmacies||[]).find(x=>(x.name||'Φαρμακείο')===title);
+      if(!p)return;
+      const actions=card.querySelector('.scl-hq-actions');
+      if(!actions)return;
+      const b=document.createElement('button');
+      b.className='scl-hq-btn danger';
+      b.type='button';
+      b.textContent='Διαγραφή';
+      b.addEventListener('click',()=>sclDeletePharmacyFromHqV190(p.id,p.name||title));
+      actions.appendChild(b);
+      card.dataset.deleteAdded='1';
+    });
+  }
+}
+
+const __oldSclRenderHqPharmacyCardsV186V190 = typeof sclRenderHqPharmacyCardsV186==='function' ? sclRenderHqPharmacyCardsV186 : null;
+if(__oldSclRenderHqPharmacyCardsV186V190){
+  sclRenderHqPharmacyCardsV186 = function(data){
+    __oldSclRenderHqPharmacyCardsV186V190(data);
+    setTimeout(sclPatchDeleteButtonsV190,50);
+  }
+}
+
+const __oldSclRenderProgramEditorV186V190 = typeof sclRenderProgramEditorV186==='function' ? sclRenderProgramEditorV186 : null;
+if(__oldSclRenderProgramEditorV186V190){
+  sclRenderProgramEditorV186 = function(data){
+    const yearSel=document.getElementById('sclHqProgramYear');
+    if(yearSel && !yearSel.dataset.v190Forced){
+      yearSel.dataset.ready='';
+      yearSel.dataset.v190Forced='1';
+    }
+    __oldSclRenderProgramEditorV186V190(data);
+    const ys=document.getElementById('sclHqProgramYear');
+    if(ys && Array.from(ys.options).some(o=>o.value==='2026') && !ys.dataset.v190Selected){
+      ys.value='2026';
+      ys.dataset.v190Selected='1';
+      __oldSclRenderProgramEditorV186V190(data);
+    }
+  }
+}
+
+function sclBindV190(){
+  sclForceDefaultYearV190();
+  sclPatchDeleteButtonsV190();
+  const btn=document.getElementById('sclResetPharmacyYearBtn');
+  if(btn && !btn.dataset.boundV190){
+    btn.dataset.boundV190='1';
+    btn.addEventListener('click',sclResetCurrentPharmacyYearV190);
+  }
+}
+setTimeout(sclBindV190,300);
+setTimeout(sclBindV190,1200);
+setInterval(sclBindV190,4000);
 
 </script>
 
