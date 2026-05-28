@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v199 · allow new agreements · HQ reference layout';
+      content:'v201 · isolated pharmacy storage + autosave · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v198 · no demo agreements — HQ exact reference layout, full-width */
+/* v200 · true blank new pharmacy — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -5964,6 +5964,41 @@ button.scl-delete-pharmacy-btn:hover{
   padding:12px;
   font-size:13px;
   color:#666;
+}
+
+
+/* v201 — pharmacy storage isolation + autosave visibility */
+.scl-autosave-strip{
+  display:none;
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  z-index:9200;
+  background:#fff;
+  border:0.5px solid #bde5ce;
+  border-radius:12px;
+  box-shadow:0 12px 28px rgba(20,33,61,.16);
+  padding:9px 12px;
+  font-size:12px;
+  color:#0e6f40;
+  font-weight:700;
+  max-width:min(460px,calc(100vw - 32px));
+}
+body.scl-pharmacy .scl-autosave-strip{display:block}
+.scl-autosave-strip .muted{
+  display:block;
+  color:#666;
+  font-size:10px;
+  font-weight:600;
+  margin-top:2px;
+}
+.scl-autosave-strip.saving{
+  border-color:#c9dafd;
+  color:#185FA5;
+}
+.scl-autosave-strip.err{
+  border-color:#F4B4B4;
+  color:#A32D2D;
 }
 
 </style>
@@ -9048,6 +9083,86 @@ button.scl-delete-pharmacy-btn:hover{
   <div id="sponsoredModal" class="modal"><div class="modal-card" data-modal-card style="width:min(820px,100%)"><div class="modal-head"><div><div class="modal-title">Χορηγούμενα Ράφια OTC</div><div class="small">Γενική οθόνη κατηγορίας, προμηθευτής στα ράφια. Δεν αντικαθιστά το πρόγραμμα.</div></div><button class="action" data-close="sponsoredModal">Κλείσιμο</button></div><div id="sponsoredModalBody"></div></div></div>
   <div id="planogramModal" class="modal"><div class="modal-card planogram-modal-card" data-modal-card><div class="modal-head"><div><div class="modal-title">Πλανόγραμμα</div><div class="small">Μη δεσμευτικός οδηγός στησίματος προϊόντων βάσει του format και του μηνιαίου θέματος.</div></div><button class="action" data-close="planogramModal">Κλείσιμο</button></div><div id="planogramModalBody"></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script data-role="v201-pharmacy-localstorage-scope">
+(function(){
+  try{
+    var params = new URLSearchParams(location.search);
+    var token = params.get('pharmacy');
+    var hq = params.get('hq');
+    if(!token || hq) return;
+
+    var prefix = 'scl_pharmacy_' + token + '_';
+    window.__SCL_PHARMACY_TOKEN__ = token;
+    window.__SCL_STORAGE_PREFIX__ = prefix;
+
+    var nativeGet = Storage.prototype.getItem;
+    var nativeSet = Storage.prototype.setItem;
+    var nativeRemove = Storage.prototype.removeItem;
+    var nativeClear = Storage.prototype.clear;
+    var nativeKey = Storage.prototype.key;
+
+    function shouldScope(key){
+      key = String(key || '');
+      if(key.indexOf('supabase.') === 0) return false;
+      if(key.indexOf('sb-') === 0) return false;
+      if(key.indexOf(prefix) === 0) return false;
+      return true;
+    }
+    function scoped(key){
+      key = String(key || '');
+      return shouldScope(key) ? prefix + key : key;
+    }
+
+    Storage.prototype.getItem = function(key){
+      return nativeGet.call(this, scoped(key));
+    };
+    Storage.prototype.setItem = function(key,value){
+      return nativeSet.call(this, scoped(key), value);
+    };
+    Storage.prototype.removeItem = function(key){
+      return nativeRemove.call(this, scoped(key));
+    };
+    Storage.prototype.clear = function(){
+      // In pharmacy mode, clear only this pharmacy namespace, not HQ / other pharmacies.
+      var keys = [];
+      for(var i=0;i<this.length;i++){
+        var k = nativeKey.call(this,i);
+        if(k && k.indexOf(prefix) === 0) keys.push(k);
+      }
+      keys.forEach(function(k){ nativeRemove.call(localStorage,k); });
+    };
+
+    window.sclClearThisPharmacyStorage = function(){
+      var keys = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = nativeKey.call(localStorage,i);
+        if(k && k.indexOf(prefix) === 0) keys.push(k);
+      }
+      keys.forEach(function(k){ nativeRemove.call(localStorage,k); });
+    };
+
+    window.sclClearUnscopedCalculatorStorage = function(){
+      var keys = [];
+      for(var i=0;i<localStorage.length;i++){
+        var k = nativeKey.call(localStorage,i);
+        if(!k) continue;
+        var low = k.toLowerCase();
+        var looksCalculator = low.indexOf('space')>=0 || low.indexOf('pagk')>=0 || low.indexOf('counter')>=0 || low.indexOf('calculator')>=0 || low.indexOf('pharmacy')>=0;
+        var isScoped = k.indexOf('scl_pharmacy_') === 0;
+        var isSupabase = k.indexOf('supabase.') === 0 || k.indexOf('sb-') === 0;
+        if(looksCalculator && !isScoped && !isSupabase) keys.push(k);
+      }
+      keys.forEach(function(k){ nativeRemove.call(localStorage,k); });
+    };
+
+    window.sclClearUnscopedCalculatorStorage();
+  }catch(e){
+    console.warn('SpaceCoLab storage scoping failed', e);
+  }
+})();
+</script>
+
 <script>
 const MONTHS=['Ιαν','Φεβ','Μαρ','Απρ','Μαι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
 const BASIC_PROGRAM_OPTIONS=['OTC1','OTC2','OTC3'];
@@ -15466,6 +15581,13 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
   <button id="sclCloudTopbarSaveBtn" type="button">Save cloud now</button>
 </div>
 
+
+<!-- v201 — pharmacy autosave visible status -->
+<div id="sclAutosaveStrip" class="scl-autosave-strip">
+  Auto-save cloud ενεργό
+  <span class="muted" id="sclAutosaveStripMeta">Αποθηκεύει αυτόματα κάθε αλλαγή στο φαρμακείο.</span>
+</div>
+
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
 });document.querySelectorAll('[data-clear-timeline-focus]').forEach(b=>b.onclick=()=>{state.timelineFocus=null;refresh();});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('open')});document.querySelectorAll('[data-modal-card]').forEach(x=>x.onclick=e=>e.stopPropagation());
@@ -17505,6 +17627,266 @@ function sclBindV199(){
 setTimeout(sclBindV199,300);
 setTimeout(sclBindV199,1200);
 setInterval(sclBindV199,4000);
+
+
+/* v200 — absolute empty state for brand-new pharmacy only */
+function sclV200AbsoluteEmptyValueForKey(key, value){
+  const low=String(key||'').toLowerCase();
+  const wipeFragments=[
+    'deal','agreement','negotiation','sponsor','sponsored','supplier',
+    'brand','series','mechanism','report','upload','billing','charge',
+    'promo','activation','contract','material','themechange'
+  ];
+  if(wipeFragments.some(f=>low.includes(f))){
+    if(Array.isArray(value))return [];
+    if(value && typeof value==='object')return {};
+    if(typeof value==='number')return 0;
+    if(typeof value==='boolean')return false;
+    return '';
+  }
+  return undefined;
+}
+function sclV200DeepEmptyPharmacyOwned(obj, depth=0){
+  if(!obj || typeof obj!=='object' || depth>10)return obj;
+
+  if(Array.isArray(obj)){
+    return obj.map(x=>sclV200DeepEmptyPharmacyOwned(x,depth+1));
+  }
+
+  Object.keys(obj).forEach(k=>{
+    const forced=sclV200AbsoluteEmptyValueForKey(k,obj[k]);
+    if(forced!==undefined){
+      obj[k]=forced;
+      return;
+    }
+
+    if(obj[k] && typeof obj[k]==='object'){
+      obj[k]=sclV200DeepEmptyPharmacyOwned(obj[k],depth+1);
+    }
+
+    if(typeof obj[k]==='string'){
+      const s=obj[k].toLowerCase();
+      if(['naos','bioderma','cerave','l’oréal',"l'oréal",'loreal','bayer','la roche'].some(t=>s.includes(t))){
+        obj[k]='';
+      }
+    }
+  });
+
+  return obj;
+}
+function sclV200AbsoluteBlankNewPharmacy(){
+  try{
+    if(!state)return;
+
+    // Basic pharmacy setup starts empty.
+    state.turnover = 0;
+    state.totalCounters = 0;
+    state.setupLocked = false;
+    state.selectedCardId = 'base-1';
+
+    if(Array.isArray(state.cards)){
+      state.cards.forEach(card=>{
+        const isHQ = card.type==='hq' || String(card.title||'').toLowerCase().includes('pharmaplus');
+
+        // Schedules: clear pharmacy positions completely.
+        if(!isHQ){
+          ['basicSchedule','simpleSchedule','pendingSimpleSchedule'].forEach(k=>{
+            if(Array.isArray(card[k])){
+              card[k]=card[k].map(()=>({label:'',owner:'pending',mechanism:''}));
+            }
+          });
+          card.initialPlanLocked=false;
+          card.defaultProgram='';
+        }
+
+        // Even on HQ card, remove pharmacy-created extras.
+        [
+          'deals','dealRows','dealSchedule','dealMonths',
+          'agreements','agreementRows','agreementSchedule',
+          'negotiations','negotiationRows',
+          'supplierDeals','supplierAgreements','brandDeals',
+          'sponsoredShelves','sponsoredRows','sponsoredSchedule',
+          'customizations','actions','reports','billingRows'
+        ].forEach(k=>{
+          if(k in card){
+            if(Array.isArray(card[k]))card[k]=[];
+            else if(card[k] && typeof card[k]==='object')card[k]={};
+            else if(typeof card[k]==='number')card[k]=0;
+            else if(typeof card[k]==='boolean')card[k]=false;
+            else card[k]='';
+          }
+        });
+
+        // Deep wipe any hidden/nested pharmacy-owned objects.
+        sclV200DeepEmptyPharmacyOwned(card);
+      });
+    }
+
+    // Also wipe top-level hidden deal/agreement structures.
+    [
+      'deals','agreements','negotiations','supplierDeals','sponsoredShelves',
+      'reports','billingRows','customizations','actions'
+    ].forEach(k=>{
+      if(k in state){
+        if(Array.isArray(state[k]))state[k]=[];
+        else if(state[k] && typeof state[k]==='object')state[k]={};
+        else state[k]='';
+      }
+    });
+  }catch(e){
+    console.warn('v200 absolute blank failed',e);
+  }
+}
+
+// Critical: blank only when there is NO Supabase state.
+// After a pharmacy has state, user-created agreements remain.
+if(typeof sclV197HardBlankPharmacyState==='function'){
+  sclV197HardBlankPharmacyState = sclV200AbsoluteBlankNewPharmacy;
+}
+if(typeof sclCleanNewPharmacyStateV195==='function'){
+  sclCleanNewPharmacyStateV195 = sclV200AbsoluteBlankNewPharmacy;
+}
+
+// Patch the pharmacy loader again so no-state always calls the absolute blank and never auto-saves previous browser state.
+const __oldSclLoadPharmacyModeV200 = typeof sclLoadPharmacyMode==='function' ? sclLoadPharmacyMode : null;
+if(__oldSclLoadPharmacyModeV200){
+  sclLoadPharmacyMode = async function(){
+    if(!sb || !SCL_ROUTING.pharmacyToken)return;
+
+    try{
+      // Remove any local browser carry-over before doing anything.
+      localStorage.clear();
+    }catch(e){}
+
+    SCL_ROUTING.suppressSave=true;
+    if(typeof sclCloudStatus==='function')sclCloudStatus('Φόρτωση φαρμακείου από Supabase…');
+
+    const year=typeof sclCurrentYear==='function'?sclCurrentYear():2026;
+    const {data,error}=await sb.rpc('get_pharmacy_state_by_token',{
+      p_token:SCL_ROUTING.pharmacyToken,
+      p_year:year
+    });
+
+    if(error){
+      SCL_ROUTING.ready=false;
+      SCL_ROUTING.suppressSave=true;
+      document.body.classList.remove('scl-locked','scl-hq');
+      document.body.classList.add('scl-pharmacy');
+      if(typeof sclCloudStatus==='function')sclCloudStatus(error.message,'err');
+      alert('Σφάλμα φόρτωσης pharmacy token: '+error.message);
+      return;
+    }
+
+    const row=Array.isArray(data)?data[0]:data;
+    if(!row || !row.pharmacy_id){
+      SCL_ROUTING.ready=false;
+      SCL_ROUTING.suppressSave=true;
+      document.body.classList.remove('scl-locked','scl-hq');
+      document.body.classList.add('scl-pharmacy');
+      if(typeof sclCloudStatus==='function')sclCloudStatus('Δεν βρέθηκε φαρμακείο για αυτό το token','err');
+      return;
+    }
+
+    SCL_ROUTING.pharmacy={id:row.pharmacy_id,name:row.pharmacy_name};
+
+    const hasState = row.state_json && typeof row.state_json==='object' && Object.keys(row.state_json).length>0;
+
+    if(hasState){
+      if(typeof sclApplyStatePayload==='function')sclApplyStatePayload(row.state_json);
+    }else{
+      sclV200AbsoluteBlankNewPharmacy();
+    }
+
+    SCL_ROUTING.ready=true;
+    SCL_ROUTING.suppressSave=false;
+
+    if(typeof sclAttachPharmacyPill==='function')sclAttachPharmacyPill();
+    if(typeof sclUpdatePharmacyIdentityV190==='function')sclUpdatePharmacyIdentityV190();
+
+    if(typeof sclCloudStatus==='function'){
+      sclCloudStatus(`${row.pharmacy_name} · ${hasState?'φορτώθηκε':'νέο τελείως κενό φαρμακείο'} · ${year}`,'ok');
+    }
+
+    try{ refresh(false); }catch(e){ console.warn('refresh failed',e); }
+
+    // No auto-save for new empty state. User action creates first state.
+    if(hasState && typeof sclLoadHQProgramReadOnly==='function'){
+      await sclLoadHQProgramReadOnly();
+    }
+  };
+}
+
+// IMPORTANT: do not run destructive blanking during refresh/save for existing states.
+// Keep v199 demo-only cleaning for save, but never wipe user-created agreements globally.
+function sclBindV200(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy' && SCL_ROUTING && SCL_ROUTING.ready && !SCL_ROUTING.pharmacy){
+    // no-op; guard only
+  }
+}
+setTimeout(sclBindV200,300);
+setTimeout(sclBindV200,1200);
+
+
+/* v201 — cloud autosave status + scoped reset */
+function sclAutosaveStatusV201(text,type=''){
+  const box=document.getElementById('sclAutosaveStrip');
+  const meta=document.getElementById('sclAutosaveStripMeta');
+  if(!box || !meta)return;
+  box.className='scl-autosave-strip '+type;
+  meta.textContent=text;
+}
+const __oldSclQueueSaveV201 = typeof sclQueueSave==='function' ? sclQueueSave : null;
+if(__oldSclQueueSaveV201){
+  sclQueueSave = function(){
+    if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+      sclAutosaveStatusV201('Αναμονή αποθήκευσης...', 'saving');
+    }
+    return __oldSclQueueSaveV201.apply(this,arguments);
+  };
+}
+const __oldSclSaveNowV201 = typeof sclSaveNow==='function' ? sclSaveNow : null;
+if(__oldSclSaveNowV201){
+  sclSaveNow = async function(){
+    if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+      sclAutosaveStatusV201('Αποθήκευση στο Supabase...', 'saving');
+    }
+    try{
+      const r = await __oldSclSaveNowV201.apply(this,arguments);
+      if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+        const t=new Date().toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        sclAutosaveStatusV201('Τελευταία αποθήκευση: '+t, '');
+      }
+      return r;
+    }catch(e){
+      if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+        sclAutosaveStatusV201('Σφάλμα auto-save: '+(e?.message||String(e)), 'err');
+      }
+      throw e;
+    }
+  };
+}
+
+// Replace broad localStorage.clear behavior in pharmacy reset helpers with scoped clear if available.
+const __oldSclResetCurrentPharmacyYearV190V201 = typeof sclResetCurrentPharmacyYearV190==='function' ? sclResetCurrentPharmacyYearV190 : null;
+if(__oldSclResetCurrentPharmacyYearV190V201){
+  sclResetCurrentPharmacyYearV190 = async function(){
+    try{
+      if(window.sclClearThisPharmacyStorage) window.sclClearThisPharmacyStorage();
+    }catch(e){}
+    return __oldSclResetCurrentPharmacyYearV190V201.apply(this,arguments);
+  };
+}
+
+function sclBindV201(){
+  if(typeof sclMode==='function' && sclMode()==='pharmacy'){
+    const name=SCL_ROUTING?.pharmacy?.name || 'φαρμακείο';
+    const token=(SCL_ROUTING?.pharmacyToken||'').slice(0,8);
+    sclAutosaveStatusV201('Auto-save ενεργό · '+name+' · token '+token+'…','');
+  }
+}
+setTimeout(sclBindV201,400);
+setTimeout(sclBindV201,1400);
+setInterval(sclBindV201,6000);
 
 </script>
 
