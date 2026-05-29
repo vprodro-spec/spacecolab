@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v239 · pharmaplus diagnostics only · HQ reference layout';
+      content:'v240 · fixed pharmaplus diagnostics · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -7040,8 +7040,8 @@ body.scl-hq #sclHqDashboard{display:none!important}
 }
 
 
-/* v239 — Pharmaplus diagnostics only */
-.scl239-panel{
+/* v240 — Pharmaplus diagnostics fixed */
+.scl240-panel{
   margin:14px 0;
   background:#fff;
   border:1px solid #d8e2f8;
@@ -7049,67 +7049,19 @@ body.scl-hq #sclHqDashboard{display:none!important}
   padding:12px;
   font-size:12px;
 }
-.scl239-head{
-  display:flex;
-  justify-content:space-between;
-  gap:10px;
-  align-items:center;
-  margin-bottom:10px;
-}
-.scl239-title{
-  font-weight:800;
-  color:#185FA5;
-  font-size:13px;
-}
-.scl239-btn{
-  border:0.5px solid #c9dafd;
-  background:#E6F1FB;
-  color:#185FA5;
-  border-radius:8px;
-  padding:6px 10px;
-  cursor:pointer;
-  font-size:12px;
-  font-weight:700;
-}
-.scl239-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-  gap:8px;
-  margin-bottom:10px;
-}
-.scl239-kpi{
-  background:#f5f5f3;
-  border-radius:8px;
-  padding:8px;
-}
-.scl239-kpi .k{
-  color:#666;
-  font-weight:700;
-  margin-bottom:4px;
-}
-.scl239-kpi .v{
-  font-weight:800;
-  word-break:break-word;
-}
-.scl239-table{
-  width:100%;
-  border-collapse:collapse;
-  font-size:12px;
-}
-.scl239-table th,.scl239-table td{
-  border-top:1px solid #eee;
-  padding:6px;
-  text-align:left;
-  vertical-align:top;
-}
-.scl239-table th{
-  color:#666;
-  font-weight:800;
-  background:#fafafa;
-}
-.scl239-ok{color:#16803A;font-weight:800}
-.scl239-bad{color:#A32D2D;font-weight:800}
-.scl239-warn{color:#854F0B;font-weight:800}
+.scl240-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.scl240-title{font-weight:800;color:#185FA5;font-size:13px}
+.scl240-btn{border:0.5px solid #c9dafd;background:#E6F1FB;color:#185FA5;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;font-weight:700}
+.scl240-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-bottom:10px}
+.scl240-kpi{background:#f5f5f3;border-radius:8px;padding:8px}
+.scl240-kpi .k{color:#666;font-weight:700;margin-bottom:4px}
+.scl240-kpi .v{font-weight:800;word-break:break-word}
+.scl240-table{width:100%;border-collapse:collapse;font-size:12px}
+.scl240-table th,.scl240-table td{border-top:1px solid #eee;padding:6px;text-align:left;vertical-align:top}
+.scl240-table th{color:#666;font-weight:800;background:#fafafa}
+.scl240-ok{color:#16803A;font-weight:800}
+.scl240-bad{color:#A32D2D;font-weight:800}
+.scl240-warn{color:#854F0B;font-weight:800}
 
 </style>
 
@@ -24502,14 +24454,27 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 
 
-/* v239 — Pharmaplus diagnostic panel only, no card/timeline changes */
+/* v240 — fixed Pharmaplus diagnostic panel only, no card/timeline changes */
 (function(){
-  window.SCL239_DIAG = {last:null};
+  window.SCL240_DIAG = {last:null};
 
-  function clean(v){
-    if(v===null || v===undefined)return '';
-    if(typeof v==='object')return JSON.stringify(v);
-    return String(v).trim();
+  function appSb(){
+    try{
+      if(typeof sb !== 'undefined' && sb)return sb;
+    }catch(e){}
+    try{
+      if(window.sb)return window.sb;
+    }catch(e){}
+    return null;
+  }
+  function routing(){
+    try{
+      if(typeof SCL_ROUTING !== 'undefined' && SCL_ROUTING)return SCL_ROUTING;
+    }catch(e){}
+    try{
+      if(window.SCL_ROUTING)return window.SCL_ROUTING;
+    }catch(e){}
+    return {};
   }
   function esc(v){
     try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
@@ -24520,11 +24485,12 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   }
   function mode(){
     try{ if(typeof sclMode==='function')return sclMode(); }catch(e){}
-    return window.SCL_ROUTING?.mode || '';
+    return routing().mode || '';
   }
   function year(){
     try{ if(typeof realProgramYear==='function')return Number(realProgramYear()); }catch(e){}
     try{ if(typeof sclYear==='function')return Number(sclYear()); }catch(e){}
+    try{ if(typeof sclCurrentYear==='function')return Number(sclCurrentYear()); }catch(e){}
     return Number(document.getElementById('scl212Year')?.value || new Date().getFullYear());
   }
   function tokenCandidates(){
@@ -24534,17 +24500,16 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
       const v=qs.get(k);
       if(v)out.push({source:'url:'+k,value:v});
     });
-    try{
-      [
-        ['SCL_ROUTING.pharmacyToken',window.SCL_ROUTING?.pharmacyToken],
-        ['SCL_ROUTING.token',window.SCL_ROUTING?.token],
-        ['SCL_ROUTING.pharmacy_token',window.SCL_ROUTING?.pharmacy_token],
-        ['state.pharmacyToken',window.state?.pharmacyToken],
-        ['state.token',window.state?.token],
-        ['window.pharmacyToken',window.pharmacyToken],
-        ['window.PHARMACY_TOKEN',window.PHARMACY_TOKEN],
-      ].forEach(([source,value])=>{ if(value)out.push({source,value:String(value)}); });
-    }catch(e){}
+    const r=routing();
+    [
+      ['SCL_ROUTING.pharmacyToken',r.pharmacyToken],
+      ['SCL_ROUTING.token',r.token],
+      ['SCL_ROUTING.pharmacy_token',r.pharmacy_token],
+      ['state.pharmacyToken',window.state?.pharmacyToken],
+      ['state.token',window.state?.token],
+      ['window.pharmacyToken',window.pharmacyToken],
+      ['window.PHARMACY_TOKEN',window.PHARMACY_TOKEN],
+    ].forEach(([source,value])=>{ if(value)out.push({source,value:String(value)}); });
     return out;
   }
   function hqKeyCandidates(){
@@ -24554,45 +24519,37 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
       const v=qs.get(k);
       if(v)out.push({source:'url:'+k,value:v});
     });
-    try{
-      [
-        ['SCL_ROUTING.hqKey',window.SCL_ROUTING?.hqKey],
-        ['window.HQ_KEY',window.HQ_KEY],
-      ].forEach(([source,value])=>{ if(value)out.push({source,value:String(value)}); });
-    }catch(e){}
+    const r=routing();
+    [
+      ['SCL_ROUTING.hqKey',r.hqKey],
+      ['window.HQ_KEY',window.HQ_KEY],
+    ].forEach(([source,value])=>{ if(value)out.push({source,value:String(value)}); });
     return out;
   }
-  function chosenToken(){
-    const t=tokenCandidates();
-    return t[0]?.value || '';
-  }
-  function chosenHqKey(){
-    const h=hqKeyCandidates();
-    return h[0]?.value || '';
-  }
+  function chosenToken(){return tokenCandidates()[0]?.value || ''}
+  function chosenHqKey(){return hqKeyCandidates()[0]?.value || ''}
   function panelHost(){
-    let host=document.getElementById('scl239Diagnostics');
+    let host=document.getElementById('scl240Diagnostics');
     if(host)return host;
     host=document.createElement('div');
-    host.id='scl239Diagnostics';
-    host.className='scl239-panel';
+    host.id='scl240Diagnostics';
+    host.className='scl240-panel';
 
-    // Put it right after operational status if possible, otherwise top of app/body.
-    const anchor=[...document.querySelectorAll('section, div')].find(el=>(el.innerText||'').includes('ΘΕΣΕΙΣ ΠΑΓΚΟΥ') && (el.innerText||'').includes('OPERATIONAL STATUS'));
+    const anchor=[...document.querySelectorAll('section, div')].find(el=>{
+      const t=el.innerText||'';
+      return t.includes('ΘΕΣΕΙΣ ΠΑΓΚΟΥ') && t.includes('OPERATIONAL STATUS');
+    });
     if(anchor && anchor.parentNode)anchor.parentNode.insertBefore(host,anchor.nextSibling);
     else (document.querySelector('main')||document.body).prepend(host);
     return host;
   }
-  function statusClass(ok,warn=false){
-    return ok?'scl239-ok':warn?'scl239-warn':'scl239-bad';
-  }
+  function statusClass(ok,warn=false){return ok?'scl240-ok':warn?'scl240-warn':'scl240-bad'}
   function summarizeRows(rows){
     const byMonth={};
-    (rows||[]).forEach(r=>{byMonth[Number(r.month)]=r;});
+    (rows||[]).forEach(r=>{byMonth[Number(r.month)]=r});
     return months().map((m,i)=>{
       const r=byMonth[i];
       return {
-        month:i,
         monthLabel:m,
         found:!!r,
         display_kind:r?.display_kind || '',
@@ -24607,30 +24564,34 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   }
   function render(result){
     const host=panelHost();
-    const tokenList=tokenCandidates();
-    const hqList=hqKeyCandidates();
     const rows=result?.rows || [];
     const error=result?.error || '';
     const source=result?.source || '—';
+    const sbExists=!!appSb();
+    const tokenList=tokenCandidates();
+    const hqList=hqKeyCandidates();
     const summary=summarizeRows(rows);
+    const r=routing();
 
     host.innerHTML=`
-      <div class="scl239-head">
+      <div class="scl240-head">
         <div>
-          <div class="scl239-title">Pharmaplus Campaign Diagnostics</div>
+          <div class="scl240-title">Pharmaplus Campaign Diagnostics v240</div>
           <div style="color:#666">Μόνο διάγνωση. Δεν αλλάζει κάρτες ή timeline.</div>
         </div>
-        <button type="button" class="scl239-btn" id="scl239Reload">Έλεγχος ξανά</button>
+        <button type="button" class="scl240-btn" id="scl240Reload">Έλεγχος ξανά</button>
       </div>
-      <div class="scl239-grid">
-        <div class="scl239-kpi"><div class="k">Mode</div><div class="v">${esc(mode()||'—')}</div></div>
-        <div class="scl239-kpi"><div class="k">Year</div><div class="v">${esc(year())}</div></div>
-        <div class="scl239-kpi"><div class="k">Token detected</div><div class="v ${statusClass(!!chosenToken())}">${esc(chosenToken()?chosenToken():'ΟΧΙ')}</div></div>
-        <div class="scl239-kpi"><div class="k">HQ key detected</div><div class="v ${statusClass(!!chosenHqKey(),true)}">${esc(chosenHqKey()?chosenHqKey():'ΟΧΙ')}</div></div>
-        <div class="scl239-kpi"><div class="k">RPC source</div><div class="v">${esc(source)}</div></div>
-        <div class="scl239-kpi"><div class="k">Rows found</div><div class="v ${statusClass(rows.length>0)}">${esc(rows.length)}</div></div>
+      <div class="scl240-grid">
+        <div class="scl240-kpi"><div class="k">Mode</div><div class="v">${esc(mode()||'—')}</div></div>
+        <div class="scl240-kpi"><div class="k">Year</div><div class="v">${esc(year())}</div></div>
+        <div class="scl240-kpi"><div class="k">Supabase client</div><div class="v ${statusClass(sbExists)}">${sbExists?'ΝΑΙ':'ΟΧΙ'}</div></div>
+        <div class="scl240-kpi"><div class="k">Token detected</div><div class="v ${statusClass(!!chosenToken())}">${esc(chosenToken()?chosenToken():'ΟΧΙ')}</div></div>
+        <div class="scl240-kpi"><div class="k">HQ key detected</div><div class="v ${statusClass(!!chosenHqKey(),true)}">${esc(chosenHqKey()?chosenHqKey():'ΟΧΙ')}</div></div>
+        <div class="scl240-kpi"><div class="k">Routing ready</div><div class="v ${statusClass(!!r.ready,true)}">${esc(r.ready?'ΝΑΙ':'ΟΧΙ')}</div></div>
+        <div class="scl240-kpi"><div class="k">RPC source</div><div class="v">${esc(source)}</div></div>
+        <div class="scl240-kpi"><div class="k">Rows found</div><div class="v ${statusClass(rows.length>0)}">${esc(rows.length)}</div></div>
       </div>
-      ${error?`<div class="scl239-kpi" style="margin-bottom:10px"><div class="k">Error</div><div class="v scl239-bad">${esc(error)}</div></div>`:''}
+      ${error?`<div class="scl240-kpi" style="margin-bottom:10px"><div class="k">Error</div><div class="v scl240-bad">${esc(error)}</div></div>`:''}
       <details style="margin-bottom:8px">
         <summary style="cursor:pointer;font-weight:700">Token / key candidates</summary>
         <div style="margin-top:8px;color:#666">
@@ -24638,7 +24599,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
           <div><strong>HQ keys:</strong> ${hqList.length?hqList.map(x=>`${esc(x.source)}=${esc(x.value)}`).join(' · '):'κανένα'}</div>
         </div>
       </details>
-      <table class="scl239-table">
+      <table class="scl240-table">
         <thead><tr><th>Μήνας</th><th>Found</th><th>Kind</th><th>Display title</th><th>Title</th><th>Supplier</th><th>Fallback</th><th>Scope</th></tr></thead>
         <tbody>
           ${summary.map(r=>`<tr>
@@ -24654,36 +24615,40 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
         </tbody>
       </table>
     `;
-    document.getElementById('scl239Reload')?.addEventListener('click',run);
+    document.getElementById('scl240Reload')?.addEventListener('click',run);
   }
   async function run(){
     const result={source:'none',rows:[],error:''};
     try{
-      if(!window.sb){
-        result.error='Supabase client (sb) δεν υπάρχει.';
+      const client=appSb();
+      if(!client){
+        result.error='Supabase client δεν υπάρχει ή δεν έχει φορτώσει.';
         render(result);
         return;
       }
       const token=chosenToken();
       const hqKey=chosenHqKey();
+
       if(token){
-        const {data,error}=await sb.rpc('pharmacy_get_pharmaplus_campaigns',{p_pharmacy_token:token,p_year:year()});
+        const {data,error}=await client.rpc('pharmacy_get_pharmaplus_campaigns',{p_pharmacy_token:token,p_year:year()});
         result.source='pharmacy_get_pharmaplus_campaigns';
         if(error)result.error=error.message || JSON.stringify(error);
         result.rows=data||[];
-        window.SCL239_DIAG.last=result;
+        window.SCL240_DIAG.last=result;
         render(result);
         return;
       }
+
       if(hqKey){
-        const {data,error}=await sb.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:hqKey,p_year:year()});
+        const {data,error}=await client.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:hqKey,p_year:year()});
         result.source='hq_get_pharmaplus_campaigns';
         if(error)result.error=error.message || JSON.stringify(error);
         result.rows=data||[];
-        window.SCL239_DIAG.last=result;
+        window.SCL240_DIAG.last=result;
         render(result);
         return;
       }
+
       result.error='Δεν βρέθηκε pharmacy token ούτε HQ key.';
       render(result);
     }catch(e){
@@ -24692,8 +24657,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     }
   }
 
-  window.scl239RunPharmaplusDiagnostics=run;
-
+  window.scl240RunPharmaplusDiagnostics=run;
   setTimeout(run,800);
   setTimeout(run,2200);
 })();
