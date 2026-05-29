@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v235 · targeted pharmaplus pharmacy labels · HQ reference layout';
+      content:'v236 · safe rollback no pharmacy overwrite · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v235 · targeted pharmaplus pharmacy labels — HQ exact reference layout, full-width */
+/* v236 · safe rollback no pharmacy overwrite — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -7037,20 +7037,6 @@ body.scl-hq #sclHqDashboard{display:none!important}
 @media(max-width:700px){
   .scl234-brief-header{display:block}
   .scl234-supplier{text-align:left;margin-top:12px}
-}
-
-
-/* v235 — targeted Pharmaplus campaign labels, no icons */
-.scl235-pharmaplus-brief-target{cursor:pointer}
-.scl235-hq-badge{
-  display:inline-flex;
-  align-items:center;
-  padding:2px 8px;
-  border-radius:999px;
-  background:#FCEBEB;
-  color:#A32D2D;
-  font-size:10px;
-  font-weight:800;
 }
 
 </style>
@@ -24401,217 +24387,46 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 
 
-/* v235 — targeted Pharmaplus integration for pharmacy card + timeline */
+/* v236 — safe rollback: no pharmacy/timeline DOM overwrite */
 (function(){
-  window.SCL235_FINAL = window.SCL235_FINAL || [];
+  // This version intentionally does NOT rewrite Pharmaplus card or timeline.
+  // It only keeps the safe popup/data helpers available for the next exact-selector integration.
+  window.SCL236_SAFE_PHARMAPLUS = true;
 
-  function esc(v){
-    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
-    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  }
-  function clean(v){
-    if(v===null || v===undefined)return '';
-    if(typeof v==='object')return '';
-    const s=String(v).trim();
-    if(!s || s==='[object Object]' || s==='null' || s==='undefined')return '';
-    return s;
-  }
-  function monthLabels(){
-    return (typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']);
-  }
-  function currentYear(){
-    try{ if(typeof sclYear==='function')return Number(sclYear()); }catch(e){}
-    return Number(document.getElementById('scl212Year')?.value || new Date().getFullYear());
-  }
-  function routeToken(){
-    try{
-      if(window.SCL_ROUTING?.pharmacyToken)return String(SCL_ROUTING.pharmacyToken);
-      if(window.SCL_ROUTING?.token)return String(SCL_ROUTING.token);
-      const qs=new URLSearchParams(location.search);
-      return qs.get('pharmacy') || qs.get('token') || qs.get('p') || '';
-    }catch(e){return '';}
-  }
-  function isHQ(){
-    try{ return typeof sclMode==='function' && sclMode()==='hq'; }catch(e){return false;}
-  }
-  function finalFor(month){
-    const m=Number(month);
-    const row=(window.SCL235_FINAL||[]).find(x=>Number(x.month)===m);
-    if(row)return row;
-    return {month:m, display_title:'Προσεχώς', display_kind:'soon'};
-  }
-  function badgeFor(kind){
-    if(kind==='main')return 'HQ';
-    if(kind==='fallback')return 'HQ';
-    return 'HQ';
-  }
-
-  async function loadFinal(){
-    if(!window.sb)return;
-    const y=currentYear();
-    try{
-      if(isHQ() && window.SCL_ROUTING?.hqKey){
-        const {data,error}=await sb.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:SCL_ROUTING.hqKey,p_year:y});
-        if(error){console.warn(error);return;}
-        window.SCL235_FINAL=(data||[]).map(c=>({
-          ...c,
-          month:Number(c.month),
-          display_title:clean(c.title)||clean(c.fallback_title)||'Προσεχώς',
-          display_kind:clean(c.title)?'main':clean(c.fallback_title)?'fallback':'soon'
-        }));
-      }else{
-        const token=routeToken();
-        if(!token)return;
-        const {data,error}=await sb.rpc('pharmacy_get_pharmaplus_campaigns',{p_pharmacy_token:token,p_year:y});
-        if(error){console.warn(error);return;}
-        window.SCL235_FINAL=data||[];
-      }
-      applyTargeted();
-    }catch(e){console.warn(e);}
-  }
-
-  function textMonth(txt){
-    const t=String(txt||'').toLowerCase();
-    const labels=monthLabels();
-    for(let i=0;i<labels.length;i++){
-      if(t.includes(labels[i].toLowerCase()))return i;
-    }
-    return null;
-  }
-  function replaceTextNode(el, fromRegex, to){
-    const walker=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
-    let n;
-    while(n=walker.nextNode()){
-      if(fromRegex.test(n.nodeValue)){
-        n.nodeValue=n.nodeValue.replace(fromRegex,to);
-      }
-    }
-  }
-  function replaceBadgeInRow(row, kind){
-    // Only inside Pharmaplus row/card: replace old BASIC indication with HQ without changing layout.
-    const nodes=[...row.querySelectorAll('*')].filter(x=>{
-      const t=(x.innerText||'').trim();
-      return t==='ΒΑΣΙΚΟ'||t==='BASIC'||t==='basic';
+  // Remove any v235 damage if browser cache somehow kept classes/data.
+  function cleanupV235Artifacts(){
+    document.querySelectorAll('.scl235-pharmaplus-brief-target').forEach(el=>{
+      el.classList.remove('scl235-pharmaplus-brief-target');
+      delete el.dataset.scl235Month;
+      delete el.dataset.scl235Bound;
     });
-    nodes.forEach(x=>{
-      x.textContent=badgeFor(kind);
-      x.classList.add('scl235-hq-badge');
+    document.querySelectorAll('.scl235-hq-badge').forEach(el=>{
+      el.classList.remove('scl235-hq-badge');
     });
   }
 
-  function isPharmaplusCard(el){
-    const txt=(el.innerText||'').trim();
-    if(!txt.includes('Pharmaplus'))return false;
-    // top operational card usually contains fixed/central text or many month rows.
-    return txt.includes('σταθερή') || txt.includes('κεντρική') || txt.includes('TIMELINE') || txt.includes('ΤΩΡΑ') || txt.includes('ΕΠΟΜΕΝΟ');
-  }
-  function findPharmaplusCard(){
-    const candidates=[...document.querySelectorAll('section, .card, .scl-card, div')].filter(isPharmaplusCard);
-    // Prefer a card that is not the entire body and has manageable text.
-    return candidates
-      .filter(el=>el!==document.body && (el.innerText||'').length<2000)
-      .sort((a,b)=>(a.innerText||'').length-(b.innerText||'').length)[0] || null;
-  }
-
-  function applyToOperationalCard(){
-    const card=findPharmaplusCard();
-    if(!card)return;
-
-    // row-like elements containing a month and Pharmaplus.
-    const rows=[...card.querySelectorAll('div, li, tr')].filter(el=>{
-      const txt=(el.innerText||'').trim();
-      if(!txt || txt.length>260)return false;
-      return txt.includes('Pharmaplus') && textMonth(txt)!==null;
-    });
-
-    rows.forEach(row=>{
-      const m=textMonth(row.innerText);
-      if(m===null)return;
-      const f=finalFor(m);
-      replaceTextNode(row, /Pharmaplus/g, clean(f.display_title)||'Προσεχώς');
-      replaceBadgeInRow(row,f.display_kind);
-      row.classList.add('scl235-pharmaplus-brief-target');
-      row.dataset.scl235Month=String(m);
-      if(!row.dataset.scl235Bound){
-        row.dataset.scl235Bound='1';
-        row.addEventListener('click',e=>{
-          if(e.target.closest('button,input,select,textarea,a'))return;
-          if(typeof window.scl234OpenCampaignPopup==='function')window.scl234OpenCampaignPopup(m);
-        });
-      }
-    });
-  }
-
-  function applyToTimeline(){
-    // Locate yearly timeline tables/sections and only the Pharmaplus row.
-    const sections=[...document.querySelectorAll('section, div')].filter(el=>{
-      const txt=(el.innerText||'');
-      return txt.includes('ΕΤΗΣΙΟ TIMELINE') || txt.includes('TIMELINE ΘΕΣΕΩΝ');
-    });
-    sections.forEach(sec=>{
-      const rowCandidates=[...sec.querySelectorAll('tr, .row, div')].filter(el=>{
-        const txt=(el.innerText||'').trim();
-        return txt.includes('Pharmaplus') && (txt.includes('Κεντρική') || txt.length<800);
-      });
-      rowCandidates.forEach(row=>{
-        // Month cells are usually children after first label cell.
-        const children=[...row.children].filter(ch=>(ch.innerText||'').trim());
-        children.forEach((ch,idx)=>{
-          const txt=(ch.innerText||'').trim();
-          if(idx===0 && txt.includes('Pharmaplus'))return;
-          let m=textMonth(txt);
-          // If cell itself has only title but column order gives month, infer from index-1 when plausible.
-          if(m===null && children.length>=13 && idx>0 && idx<=12)m=idx-1;
-          if(m===null || m<0 || m>11)return;
-          const f=finalFor(m);
-          // Replace only if current cell is generic Pharmaplus/blank/default-looking.
-          if(txt.includes('Pharmaplus') || txt==='Κεντρική' || txt.length<80){
-            ch.textContent=clean(f.display_title)||'Προσεχώς';
-            ch.classList.add('scl235-pharmaplus-brief-target');
-            ch.dataset.scl235Month=String(m);
-            if(!ch.dataset.scl235Bound){
-              ch.dataset.scl235Bound='1';
-              ch.addEventListener('click',e=>{
-                if(e.target.closest('button,input,select,textarea,a'))return;
-                if(typeof window.scl234OpenCampaignPopup==='function')window.scl234OpenCampaignPopup(m);
-              });
-            }
-          }
-        });
-      });
-    });
-  }
-
-  function applyTargeted(){
-    applyToOperationalCard();
-    applyToTimeline();
-  }
-
-  window.scl235LoadFinalPharmaplus=loadFinal;
-  window.scl235ApplyPharmaplus=applyTargeted;
-
-  const oldRender=typeof sclRender==='function'?sclRender:null;
-  if(oldRender){
+  const oldRender = typeof sclRender==='function' ? sclRender : null;
+  if(oldRender && !oldRender.__v236){
     window.sclRender=function(){
       const r=oldRender.apply(this,arguments);
-      setTimeout(applyTargeted,150);
+      setTimeout(cleanupV235Artifacts,100);
       return r;
     };
-  }
-  const oldRender2=typeof render==='function'?render:null;
-  if(oldRender2){
-    window.render=function(){
-      const r=oldRender2.apply(this,arguments);
-      setTimeout(applyTargeted,150);
-      return r;
-    };
+    window.sclRender.__v236=true;
   }
 
-  setTimeout(loadFinal,600);
-  setTimeout(loadFinal,1800);
-  setInterval(()=>{
-    if(typeof sclMode==='function' && sclMode()==='pharmacy')applyTargeted();
-  },3500);
+  const oldRender2 = typeof render==='function' ? render : null;
+  if(oldRender2 && !oldRender2.__v236){
+    window.render=function(){
+      const r=oldRender2.apply(this,arguments);
+      setTimeout(cleanupV235Artifacts,100);
+      return r;
+    };
+    window.render.__v236=true;
+  }
+
+  setTimeout(cleanupV235Artifacts,300);
+  setTimeout(cleanupV235Artifacts,1200);
 })();
 
 </script>
