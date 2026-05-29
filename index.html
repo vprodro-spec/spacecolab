@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v220 · detail checkbox filters · HQ reference layout';
+      content:'v223 · pharmacy token url admin · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v220 · detail checkbox filters — HQ exact reference layout, full-width */
+/* v222 · changes checkbox filters orientation — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -6434,6 +6434,86 @@ body.scl-hq #sclHqDashboard{display:none!important}
   font-size:11px;
   color:#666;
   margin-top:6px;
+}
+
+
+/* v222 — central Changes true checkbox filters + orientation */
+#scl212Page-changes .scl212-controls select#scl212FilterMonth,
+#scl212Page-changes .scl212-controls select#scl212FilterType,
+#scl212Page-changes .scl212-controls select#scl216FilterPharmacy,
+#scl212Page-changes .scl212-controls select#scl216FilterTheme{display:none!important}
+
+#scl217MultiFilters .scl217-check-list{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  max-height:180px!important;
+  overflow:auto!important;
+  padding-right:4px!important;
+}
+#scl217MultiFilters .scl217-chip{display:none!important}
+#scl217MultiFilters .scl222-check{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  font-size:12px!important;
+  padding:5px 7px!important;
+  border-radius:6px!important;
+  cursor:pointer!important;
+  color:#1a1a1a!important;
+  background:#fff!important;
+  border:none!important;
+}
+#scl217MultiFilters .scl222-check:hover{background:#f5f5f3!important}
+#scl217MultiFilters .scl222-check input{
+  width:14px!important;
+  height:14px!important;
+  cursor:pointer!important;
+  flex-shrink:0!important;
+  accent-color:#185FA5!important;
+}
+#scl217MultiFilters .scl222-help{font-size:11px;color:#666;margin-top:6px}
+#scl217MultiFilters .scl222-count{font-size:11px;color:#185FA5;font-weight:500;margin-left:4px}
+
+
+/* v223 — pharmacy token/url admin columns */
+.scl223-token{
+  display:inline-block;
+  max-width:150px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  vertical-align:middle;
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:6px;
+  padding:4px 7px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:11px;
+  color:#1a1a1a;
+}
+.scl223-actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.scl223-actions button{
+  font-size:11px;
+  padding:5px 8px;
+  border-radius:6px;
+  border:0.5px solid #ccc;
+  background:#fff;
+  cursor:pointer;
+}
+.scl223-actions .primary{
+  border-color:#c9dafd;
+  background:#E6F1FB;
+  color:#185FA5;
+}
+.scl223-actions .danger{
+  border-color:#F0B8B8;
+  background:#FCEBEB;
+  color:#A32D2D;
 }
 
 </style>
@@ -9084,6 +9164,14 @@ body.scl-hq #sclHqDashboard{display:none!important}
       <div id="scl217Pharmacies" class="scl217-check-list"></div>
     </div>
     <div class="scl217-filter-group">
+      <div class="scl217-filter-label">Orientation</div>
+      <div id="scl222Orientations" class="scl217-check-list"></div>
+    </div>
+    <div class="scl217-filter-group">
+      <div class="scl217-filter-label">Orientation</div>
+      <div id="scl222Orientations" class="scl217-check-list"></div>
+    </div>
+    <div class="scl217-filter-group">
       <div class="scl217-filter-label">Θέματα / Περιεχόμενο</div>
       <div id="scl217Themes" class="scl217-check-list"></div>
     </div>
@@ -9091,7 +9179,7 @@ body.scl-hq #sclHqDashboard{display:none!important}
 </div>
 
     <table class="scl212-table">
-      <thead><tr><th style="width:36px"></th><th class="scl213-sortable" data-sort="month">Μήνας <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="pharmacy">Φαρμακείο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="position">Θέση <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="type">Είδος <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="content">Περιεχόμενο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="billing" style="text-align:right">Χρέωση <span class="scl213-si">↕</span></th></tr></thead>
+      <thead><tr><th style="width:36px"></th><th class="scl213-sortable" data-sort="month">Μήνας <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="pharmacy">Φαρμακείο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="position">Θέση <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="orientation">Orientation <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="type">Είδος <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="content">Περιεχόμενο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="billing" style="text-align:right">Χρέωση <span class="scl213-si">↕</span></th></tr></thead>
       <tbody id="scl212Changes"></tbody>
     </table>
   </div>
@@ -22156,6 +22244,390 @@ function scl216RenderDetailMonthly(){
     SCL220_DETAIL_FILTERS={months:new Set(),types:new Set()};
     scl216RenderDetailMonthly();
   });
+}
+
+
+/* v221 — orientation column + multi-filter in central Changes tab */
+(function(){
+  function esc(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  function ensureOrientationFilterSet(){
+    if(window.SCL219_FILTERS && !SCL219_FILTERS.orientations)SCL219_FILTERS.orientations=new Set();
+    if(window.SCL217_FILTERS && !SCL217_FILTERS.orientations)SCL217_FILTERS.orientations=new Set();
+  }
+
+  function activeFilters(){
+    ensureOrientationFilterSet();
+    if(window.SCL219_FILTERS)return SCL219_FILTERS;
+    if(window.SCL217_FILTERS)return SCL217_FILTERS;
+    window.SCL219_FILTERS={months:new Set(),types:new Set(),pharmacies:new Set(),themes:new Set(),orientations:new Set()};
+    return window.SCL219_FILTERS;
+  }
+
+  function checkHtml(setName,value,label){
+    const f=activeFilters();
+    const active=f[setName]?.has(String(value));
+    return `<label class="scl219-check">
+      <input type="checkbox" data-scl221-set="${esc(setName)}" data-scl221-val="${esc(value)}" ${active?'checked':''}>
+      <span>${esc(label)}</span>
+    </label>`;
+  }
+
+  function countHtml(setName){
+    const f=activeFilters();
+    const n=f[setName]?.size||0;
+    return n?`<span class="scl219-count">${n} επιλεγμένα</span>`:`<span class="scl219-count">Όλα</span>`;
+  }
+
+  function renderOrientationFilter(){
+    ensureOrientationFilterSet();
+    const el=document.getElementById('scl221Orientations');
+    if(!el || !window.SCL212)return;
+    el.className='scl217-check-list';
+    const vals=[...new Set((SCL212.months||[]).map(r=>r.position_orientation).filter(Boolean).map(String))]
+      .sort((a,b)=>a.localeCompare(b,'el'));
+    el.innerHTML=vals.map(v=>checkHtml('orientations',v,v)).join('') || '<div class="scl212-sub">Δεν υπάρχουν orientations</div>';
+    const group=el.closest('.scl217-filter-group');
+    const label=group?.querySelector('.scl217-filter-label');
+    if(label){
+      if(!label.dataset.scl221Base)label.dataset.scl221Base='Orientation';
+      label.innerHTML=label.dataset.scl221Base+' '+countHtml('orientations');
+    }
+    if(group && !group.querySelector('.scl219-help')){
+      group.insertAdjacentHTML('beforeend','<div class="scl219-help">Καμία επιλογή = όλα</div>');
+    }
+    el.querySelectorAll('input[data-scl221-set]').forEach(cb=>{
+      cb.addEventListener('change',()=>{
+        const f=activeFilters();
+        const setName=cb.dataset.scl221Set;
+        const val=String(cb.dataset.scl221Val);
+        if(!f[setName])f[setName]=new Set();
+        if(cb.checked)f[setName].add(val);
+        else f[setName].delete(val);
+        renderOrientationFilter();
+        if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+      });
+    });
+  }
+
+  // Patch sort values to support orientation.
+  const oldSortValue = typeof scl213SortValue==='function' ? scl213SortValue : null;
+  window.scl213SortValue = function(r,col){
+    if(col==='orientation')return String(r.position_orientation||'');
+    return oldSortValue ? oldSortValue(r,col) : '';
+  };
+
+  function filterPass221(r){
+    const f=activeFilters();
+    if(f.orientations && f.orientations.size && !f.orientations.has(String(r.position_orientation||'')))return false;
+    if(typeof scl219FilterPass==='function')return scl219FilterPass(r);
+    if(typeof scl217FilterPass==='function')return scl217FilterPass(r);
+    return true;
+  }
+
+  // Override central changes rendering to include orientation column and orientation filter.
+  window.scl212RenderChanges=function(){
+    ensureOrientationFilterSet();
+    let rows=(typeof scl212VisibleChanges==='function'?scl212VisibleChanges():[]).filter(filterPass221);
+    if(typeof scl213ApplySort==='function')rows=scl213ApplySort(rows);
+    else rows=rows.sort((a,b)=>Number(a.month)-Number(b.month)||String(a.pharmacy_name).localeCompare(String(b.pharmacy_name),'el'));
+
+    const count=document.getElementById('scl212Count');
+    if(count)count.textContent=`${rows.length} αλλαγές`;
+    const tbody=document.getElementById('scl212Changes');
+    if(!tbody)return;
+
+    tbody.innerHTML=rows.map(r=>{
+      const id=scl212TaskId(['change',r.pharmacy_id,r.position_id,r.month]);
+      const done=!!SCL212.done[id];
+      const mat=typeof scl212NeedsMaterial==='function'?scl212NeedsMaterial(r):false;
+      return `<tr class="${done?'scl212-done-row':''}${mat&&!done?' scl212-need-material':''}">
+        <td><input type="checkbox"${done?' checked':''} data-task="${esc(id)}"></td>
+        <td style="color:#666">${esc(r.month_label)}</td>
+        <td><strong>${esc(r.pharmacy_name)}</strong></td>
+        <td style="color:#666">${esc(r.position_name)}</td>
+        <td style="color:#666">${esc(r.position_orientation||'—')}</td>
+        <td>${scl212Pill(r.final_type,r.final_type)}</td>
+        <td><div style="font-weight:500">${esc(r.final_title||'—')}</div><div class="scl212-sub">${esc(r.content_change_reason||'')}</div>${mat&&!done?`<div style="font-size:11px;color:#854F0B;margin-top:2px">Χρειάζεται έλεγχος υλικού / supplier</div>`:''}</td>
+        <td style="text-align:right">${r.billing_change_applies?'event':'—'}</td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('input[data-task]').forEach(cb=>cb.addEventListener('change',()=>{
+      SCL212.done[cb.dataset.task]=cb.checked;
+      if(typeof scl213SaveDone==='function')scl213SaveDone();
+      if(typeof scl212Render==='function')scl212Render();
+    }));
+    if(typeof scl213MarkSortHeader==='function')scl213MarkSortHeader();
+    if(typeof scl219RenderFilters==='function')scl219RenderFilters();
+    else if(typeof scl217RenderFilters==='function')scl217RenderFilters();
+    renderOrientationFilter();
+  };
+
+  const oldRender = typeof scl212Render==='function' ? scl212Render : null;
+  if(oldRender){
+    window.scl212Render=function(){
+      const r=oldRender.apply(this,arguments);
+      renderOrientationFilter();
+      return r;
+    };
+  }
+
+  const oldLoad = typeof scl212Load==='function' ? scl212Load : null;
+  if(oldLoad){
+    window.scl212Load=async function(){
+      const r=await oldLoad.apply(this,arguments);
+      renderOrientationFilter();
+      return r;
+    };
+  }
+
+  setTimeout(renderOrientationFilter,700);
+  setTimeout(renderOrientationFilter,1800);
+  setInterval(renderOrientationFilter,5000);
+})();
+
+
+/* v222 — central Changes: true checkbox filters + Orientation column */
+(function(){
+  let FILTERS = window.SCL222_FILTERS || {months:new Set(), types:new Set(), pharmacies:new Set(), orientations:new Set(), themes:new Set()};
+  window.SCL222_FILTERS = FILTERS;
+
+  function esc(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function monthsArr(){
+    return (typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']);
+  }
+  function check(setName,value,label){
+    const active=FILTERS[setName]?.has(String(value));
+    return `<label class="scl222-check">
+      <input type="checkbox" data-scl222-set="${esc(setName)}" data-scl222-val="${esc(value)}" ${active?'checked':''}>
+      <span>${esc(label)}</span>
+    </label>`;
+  }
+  function count(setName){
+    const n=FILTERS[setName]?.size||0;
+    return n?`<span class="scl222-count">${n} επιλεγμένα</span>`:`<span class="scl222-count">Όλα</span>`;
+  }
+  function updateGroupLabel(id,setName,base){
+    const group=document.getElementById(id)?.closest('.scl217-filter-group');
+    const label=group?.querySelector('.scl217-filter-label');
+    if(label)label.innerHTML=esc(base)+' '+count(setName);
+    if(group && !group.querySelector('.scl222-help'))group.insertAdjacentHTML('beforeend','<div class="scl222-help">Καμία επιλογή = όλα</div>');
+  }
+
+  function renderFilters(){
+    if(!window.SCL212)return;
+    const rows=SCL212.months||[];
+    const monthEl=document.getElementById('scl217Months');
+    const typeEl=document.getElementById('scl217Types');
+    const pharmEl=document.getElementById('scl217Pharmacies');
+    const orientEl=document.getElementById('scl222Orientations') || document.getElementById('scl221Orientations');
+    const themeEl=document.getElementById('scl217Themes');
+    if(!monthEl || !typeEl || !pharmEl || !themeEl)return;
+
+    const months=[...new Set(rows.map(r=>Number(r.month)).filter(n=>!Number.isNaN(n)))].sort((a,b)=>a-b);
+    const types=[...new Set(rows.flatMap(r=>{
+      const out=[];
+      if(r.final_type)out.push(String(r.final_type));
+      if(r.sponsored_active)out.push('sponsored');
+      return out;
+    }))].sort((a,b)=>a.localeCompare(b,'el'));
+    const pharmacies=[...new Set(rows.map(r=>r.pharmacy_name).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'el'));
+    const orientations=[...new Set(rows.map(r=>r.position_orientation).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'el'));
+    const themes=[...new Set(rows.flatMap(r=>[r.basic_theme,r.final_title,r.custom_theme,r.deal_theme,r.supplier,r.brand]).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'el'));
+
+    [monthEl,typeEl,pharmEl,orientEl,themeEl].filter(Boolean).forEach(el=>{el.className='scl217-check-list';});
+
+    monthEl.innerHTML=months.map(m=>check('months',m,monthsArr()[m]||m)).join('') || '<div class="scl212-sub">Δεν υπάρχουν μήνες</div>';
+    typeEl.innerHTML=types.map(t=>check('types',t,t)).join('') || '<div class="scl212-sub">Δεν υπάρχουν είδη</div>';
+    pharmEl.innerHTML=pharmacies.map(p=>check('pharmacies',p,p)).join('') || '<div class="scl212-sub">Δεν υπάρχουν φαρμακεία</div>';
+    if(orientEl)orientEl.innerHTML=orientations.map(o=>check('orientations',o,o)).join('') || '<div class="scl212-sub">Δεν υπάρχουν orientation</div>';
+    themeEl.innerHTML=themes.map(t=>check('themes',t,t)).join('') || '<div class="scl212-sub">Δεν υπάρχουν θέματα</div>';
+
+    updateGroupLabel('scl217Months','months','Μήνες');
+    updateGroupLabel('scl217Types','types','Είδη');
+    updateGroupLabel('scl217Pharmacies','pharmacies','Φαρμακεία');
+    if(orientEl)updateGroupLabel(orientEl.id,'orientations','Orientation');
+    updateGroupLabel('scl217Themes','themes','Θέματα / Περιεχόμενο');
+
+    document.querySelectorAll('#scl217MultiFilters input[type="checkbox"][data-scl222-set]').forEach(cb=>{
+      cb.addEventListener('change',()=>{
+        const setName=cb.dataset.scl222Set;
+        const val=String(cb.dataset.scl222Val);
+        if(!FILTERS[setName])FILTERS[setName]=new Set();
+        if(cb.checked)FILTERS[setName].add(val);
+        else FILTERS[setName].delete(val);
+        renderFilters();
+        if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+      });
+    });
+
+    const clear=document.getElementById('scl217ClearFilters');
+    if(clear && !clear.dataset.bound222){
+      clear.dataset.bound222='1';
+      clear.addEventListener('click',()=>{
+        FILTERS.months.clear(); FILTERS.types.clear(); FILTERS.pharmacies.clear(); FILTERS.orientations.clear(); FILTERS.themes.clear();
+        renderFilters();
+        if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+      },true);
+    }
+  }
+
+  function pass(r){
+    if(FILTERS.months.size && !FILTERS.months.has(String(r.month)))return false;
+    if(FILTERS.types.size && !(FILTERS.types.has(String(r.final_type)) || (r.sponsored_active && FILTERS.types.has('sponsored'))))return false;
+    if(FILTERS.pharmacies.size && !FILTERS.pharmacies.has(String(r.pharmacy_name)))return false;
+    if(FILTERS.orientations.size && !FILTERS.orientations.has(String(r.position_orientation||'')))return false;
+    if(FILTERS.themes.size){
+      const vals=[r.basic_theme,r.final_title,r.custom_theme,r.deal_theme,r.supplier,r.brand].filter(Boolean).map(String);
+      if(!vals.some(v=>FILTERS.themes.has(v)))return false;
+    }
+    return true;
+  }
+
+  // Patch sorting.
+  const oldSortValue = typeof scl213SortValue==='function' ? scl213SortValue : null;
+  window.scl213SortValue=function(r,col){
+    if(col==='orientation')return String(r.position_orientation||'');
+    return oldSortValue ? oldSortValue(r,col) : '';
+  };
+
+  // Hard override central Changes render.
+  window.scl212RenderChanges=function(){
+    let rows=(typeof scl212VisibleChanges==='function'?scl212VisibleChanges():[]).filter(pass);
+    if(typeof scl213ApplySort==='function')rows=scl213ApplySort(rows);
+    else rows=rows.sort((a,b)=>Number(a.month)-Number(b.month)||String(a.pharmacy_name).localeCompare(String(b.pharmacy_name),'el'));
+
+    const countEl=document.getElementById('scl212Count');
+    if(countEl)countEl.textContent=`${rows.length} αλλαγές`;
+    const tbody=document.getElementById('scl212Changes');
+    if(!tbody)return;
+
+    tbody.innerHTML=rows.map(r=>{
+      const id=scl212TaskId(['change',r.pharmacy_id,r.position_id,r.month]);
+      const done=!!SCL212.done[id];
+      const mat=typeof scl212NeedsMaterial==='function'?scl212NeedsMaterial(r):false;
+      return `<tr class="${done?'scl212-done-row':''}${mat&&!done?' scl212-need-material':''}">
+        <td><input type="checkbox"${done?' checked':''} data-task="${esc(id)}"></td>
+        <td style="color:#666">${esc(r.month_label)}</td>
+        <td><strong>${esc(r.pharmacy_name)}</strong></td>
+        <td style="color:#666">${esc(r.position_name)}</td>
+        <td style="color:#666">${esc(r.position_orientation||'—')}</td>
+        <td>${scl212Pill(r.final_type,r.final_type)}</td>
+        <td><div style="font-weight:500">${esc(r.final_title||'—')}</div><div class="scl212-sub">${esc(r.content_change_reason||'')}</div>${mat&&!done?`<div style="font-size:11px;color:#854F0B;margin-top:2px">Χρειάζεται έλεγχος υλικού / supplier</div>`:''}</td>
+        <td style="text-align:right">${r.billing_change_applies?'event':'—'}</td>
+      </tr>`;
+    }).join('');
+
+    tbody.querySelectorAll('input[data-task]').forEach(cb=>cb.addEventListener('change',()=>{
+      SCL212.done[cb.dataset.task]=cb.checked;
+      if(typeof scl213SaveDone==='function')scl213SaveDone();
+      if(typeof scl212Render==='function')scl212Render();
+    }));
+
+    if(typeof scl213MarkSortHeader==='function')scl213MarkSortHeader();
+    renderFilters();
+  };
+
+  const oldRender = typeof scl212Render==='function' ? scl212Render : null;
+  if(oldRender){
+    window.scl212Render=function(){
+      const result=oldRender.apply(this,arguments);
+      renderFilters();
+      return result;
+    };
+  }
+
+  const oldLoad = typeof scl212Load==='function' ? scl212Load : null;
+  if(oldLoad){
+    window.scl212Load=async function(){
+      const result=await oldLoad.apply(this,arguments);
+      renderFilters();
+      return result;
+    };
+  }
+
+  setTimeout(renderFilters,400);
+  setTimeout(renderFilters,1200);
+  setInterval(renderFilters,4000);
+})();
+
+
+/* v223 — show pharmacy token/url and open/copy buttons */
+function scl223PharmacyToken(p){
+  return p?.setup?.token || p?.setup?.pharmacy_token || p?.setup?.access_token || p?.token || p?.months?.[0]?.token || p?.months?.[0]?.pharmacy_token || '';
+}
+function scl223PharmacyUrl(token){
+  if(!token)return '';
+  try{
+    const base=location.href.split('?')[0].split('#')[0];
+    return base+'?pharmacy='+encodeURIComponent(token);
+  }catch(e){
+    return '?pharmacy='+encodeURIComponent(token);
+  }
+}
+function scl223Copy(text,label){
+  if(!text)return;
+  navigator.clipboard?.writeText(text);
+  const msg=label ? `${label} copied` : 'copied';
+  const el=document.getElementById('scl213RefreshStatus') || document.getElementById('scl223CopyStatus');
+  if(el){el.textContent=msg; setTimeout(()=>{el.textContent='';},1600);}
+}
+function scl223Open(token){
+  const url=scl223PharmacyUrl(token);
+  if(url)window.open(url,'_blank');
+}
+const __oldScl212RenderOverviewV223 = typeof scl212RenderOverview==='function' ? scl212RenderOverview : null;
+if(__oldScl212RenderOverviewV223){
+  scl212RenderOverview=function(){
+    const rows=scl212Pharmacies();
+    const table=document.querySelector('#scl212Overview')?.closest('table');
+    const head=table?.querySelector('thead tr');
+    if(head && !head.dataset.v223){
+      head.dataset.v223='1';
+      head.innerHTML='<th>Φαρμακείο</th><th>Token / Κωδικός</th><th>URL</th><th>Θέσεις</th><th>Τρέχων μήνας</th><th>Επόμενη αλλαγή</th><th>Status / Ενέργειες</th>';
+    }
+    document.getElementById('scl212Overview').innerHTML=rows.map(p=>{
+      const pos=p.setup?.total_positions||new Set(p.months.map(m=>m.position_id)).size||'—';
+      const token=scl223PharmacyToken(p);
+      const url=scl223PharmacyUrl(token);
+      const shortUrl=url ? url.replace(/^https?:\/\//,'') : '—';
+      return `<tr style="cursor:pointer" data-p="${scl212Esc(p.id)}">
+        <td><strong>${scl212Esc(p.name)}</strong></td>
+        <td>${token?`<code class="scl223-token" title="${scl212Esc(token)}">${scl212Esc(token)}</code>`:'—'}</td>
+        <td>${url?`<code class="scl223-token" title="${scl212Esc(url)}">${scl212Esc(shortUrl)}</code>`:'—'}</td>
+        <td>${pos}</td>
+        <td>${scl212CurrentTypes(p.months).map(t=>scl212Pill(t,t)).join(' ')}</td>
+        <td style="color:#666">${scl212Esc(scl212NextChange(p.months))}</td>
+        <td>
+          <div class="scl223-actions">
+            ${p.setup?.setup_locked?scl212Pill('basic','Κλειδωμένο'):scl212Pill('pending','Ανοιχτό')}
+            ${token?`<button type="button" class="primary" data-open-token="${scl212Esc(token)}">Άνοιγμα</button>
+            <button type="button" data-copy-url="${scl212Esc(url)}">Copy link</button>
+            <button type="button" data-copy-token="${scl212Esc(token)}">Copy token</button>`:''}
+            <button type="button" class="danger" data-del="${scl212Esc(p.id)}" data-name="${scl212Esc(p.name)}">Διαγραφή</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.querySelectorAll('#scl212Overview tr[data-p]').forEach(tr=>tr.addEventListener('click',(e)=>{
+      if(e.target.closest('button'))return;
+      SCL212.open=SCL212.open===tr.dataset.p?null:tr.dataset.p;
+      scl212RenderDetail();
+    }));
+    document.querySelectorAll('#scl212Overview button[data-open-token]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();scl223Open(b.dataset.openToken);}));
+    document.querySelectorAll('#scl212Overview button[data-copy-url]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();scl223Copy(b.dataset.copyUrl,'link');}));
+    document.querySelectorAll('#scl212Overview button[data-copy-token]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();scl223Copy(b.dataset.copyToken,'token');}));
+    document.querySelectorAll('#scl212Overview button[data-del]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();scl216DeletePharmacy(b.dataset.del,b.dataset.name);}));
+    scl212RenderDetail();
+  };
 }
 
 </script>
