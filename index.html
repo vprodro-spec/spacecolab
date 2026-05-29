@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v217 · multi filters changes · HQ reference layout';
+      content:'v218 · true multiple checkbox filters · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v216 · pharmacy admin filters detail drilldown — HQ exact reference layout, full-width */
+/* v218 · true multiple checkbox filters — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -6300,6 +6300,45 @@ body.scl-hq #sclHqDashboard{display:none!important}
 .scl217-chip.custom.active{background:#EEEDFE;color:#3C3489}
 .scl217-chip.sponsored.active{background:#FAEEDA;color:#854F0B}
 .scl217-chip.pharmaplus.active{background:#FCEBEB;color:#A32D2D}
+
+
+/* v218 — true multi-select checkbox filters */
+.scl218-check-list{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  max-height:170px;
+  overflow:auto;
+  padding-right:4px;
+}
+.scl218-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  padding:5px 7px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.scl218-check:hover{background:#f5f5f3}
+.scl218-check input{
+  width:14px;
+  height:14px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.scl218-check span{line-height:1.25}
+.scl218-filter-help{
+  font-size:11px;
+  color:#666;
+  margin-top:6px;
+}
+.scl218-active-count{
+  font-size:11px;
+  color:#185FA5;
+  font-weight:500;
+  margin-left:4px;
+}
 
 </style>
 
@@ -21674,6 +21713,88 @@ if(__oldScl212RenderChangesV217){
 
 setTimeout(()=>{scl217RenderFilters();scl217BindFilters();},700);
 setTimeout(()=>{scl217RenderFilters();scl217BindFilters();},1800);
+
+
+/* v218 — replace chips with real multiple checkbox selections */
+function scl218SetFromCheckboxes(setName){
+  const selector=`#scl217MultiFilters input[type="checkbox"][data-set="${setName}"]`;
+  const values=[...document.querySelectorAll(selector)].filter(x=>x.checked).map(x=>String(x.dataset.val));
+  SCL217_FILTERS[setName]=new Set(values);
+}
+function scl218OnFilterChange(setName){
+  scl218SetFromCheckboxes(setName);
+  if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+}
+function scl218SafeId(setName,value){
+  return `scl218_${setName}_${String(value).replace(/[^a-zA-Z0-9α-ωΑ-Ω]/g,'_')}`;
+}
+function scl218Check(label,value,setName,active=false){
+  const id=scl218SafeId(setName,value);
+  return `<label class="scl218-check" for="${scl212Esc(id)}">
+    <input id="${scl212Esc(id)}" type="checkbox" data-set="${scl212Esc(setName)}" data-val="${scl212Esc(value)}" ${active?'checked':''}>
+    <span>${scl212Esc(label)}</span>
+  </label>`;
+}
+function scl218CountText(setName){
+  const n=SCL217_FILTERS?.[setName]?.size || 0;
+  return n ? `<span class="scl218-active-count">${n} επιλεγμένα</span>` : `<span class="scl218-active-count">Όλα</span>`;
+}
+function scl217RenderFilters(){
+  if(!window.SCL212 || !window.SCL217_FILTERS)return;
+  const monthsEl=document.getElementById('scl217Months');
+  const typesEl=document.getElementById('scl217Types');
+  const phEl=document.getElementById('scl217Pharmacies');
+  const thEl=document.getElementById('scl217Themes');
+  if(!monthsEl || !typesEl || !phEl || !thEl)return;
+
+  const rows=(SCL212.months||[]);
+  const monthSet=[...new Set(rows.map(r=>Number(r.month)).filter(n=>!Number.isNaN(n)))].sort((a,b)=>a-b);
+  const types=[...new Set(rows.flatMap(r=>{
+    const arr=[r.final_type].filter(Boolean);
+    if(r.sponsored_active)arr.push('sponsored');
+    return arr;
+  }))].sort((a,b)=>a.localeCompare(b,'el'));
+  const pharmacies=[...new Set(rows.map(r=>r.pharmacy_name).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'el'));
+  const themes=[...new Set(rows.flatMap(r=>[r.basic_theme,r.final_title,r.custom_theme,r.deal_theme,r.supplier,r.brand]).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'el'));
+
+  monthsEl.className='scl218-check-list';
+  typesEl.className='scl218-check-list';
+  phEl.className='scl218-check-list';
+  thEl.className='scl218-check-list';
+
+  monthsEl.innerHTML = monthSet.map(m=>scl218Check(SCL212_MONTHS[m]||m,m,'months',SCL217_FILTERS.months.has(String(m)))).join('') || '<span class="scl212-sub">Δεν υπάρχουν μήνες</span>';
+  typesEl.innerHTML = types.map(t=>scl218Check(t,t,'types',SCL217_FILTERS.types.has(String(t)))).join('') || '<span class="scl212-sub">Δεν υπάρχουν είδη</span>';
+  phEl.innerHTML = pharmacies.map(p=>scl218Check(p,p,'pharmacies',SCL217_FILTERS.pharmacies.has(String(p)))).join('') || '<span class="scl212-sub">Δεν υπάρχουν φαρμακεία</span>';
+  thEl.innerHTML = themes.map(t=>scl218Check(t,t,'themes',SCL217_FILTERS.themes.has(String(t)))).join('') || '<span class="scl212-sub">Δεν υπάρχουν θέματα</span>';
+
+  document.querySelectorAll('#scl217MultiFilters input[type="checkbox"][data-set]').forEach(cb=>{
+    cb.addEventListener('change',()=>scl218OnFilterChange(cb.dataset.set));
+  });
+
+  const labels=[
+    ['scl217Months','months'],
+    ['scl217Types','types'],
+    ['scl217Pharmacies','pharmacies'],
+    ['scl217Themes','themes']
+  ];
+  labels.forEach(([id,setName])=>{
+    const group=document.getElementById(id)?.closest('.scl217-filter-group');
+    const label=group?.querySelector('.scl217-filter-label');
+    if(label && !label.dataset.baseText)label.dataset.baseText=label.textContent.replace(/\s+Όλα$|\s+\d+ επιλεγμένα$/,'');
+    if(label)label.innerHTML=scl212Esc(label.dataset.baseText)+' '+scl218CountText(setName);
+    if(group && !group.querySelector('.scl218-filter-help')){
+      group.insertAdjacentHTML('beforeend','<div class="scl218-filter-help">Καμία επιλογή = όλα</div>');
+    }
+  });
+}
+function scl217ClearFilters(){
+  SCL217_FILTERS={months:new Set(),types:new Set(),pharmacies:new Set(),themes:new Set()};
+  ['scl212FilterMonth','scl212FilterType','scl216FilterPharmacy','scl216FilterTheme'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.value='';
+  });
+  scl217RenderFilters();
+  if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+}
 
 </script>
 
