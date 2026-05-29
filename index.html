@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v218 · true multiple checkbox filters · HQ reference layout';
+      content:'v219 · force checkbox filters · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -6339,6 +6339,41 @@ body.scl-hq #sclHqDashboard{display:none!important}
   font-weight:500;
   margin-left:4px;
 }
+
+
+/* v219 — force checkbox multi filters */
+#scl217MultiFilters .scl217-check-list,
+#scl217MultiFilters .scl218-check-list{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  max-height:180px!important;
+  overflow:auto!important;
+  padding-right:4px!important;
+}
+#scl217MultiFilters .scl217-chip{display:none!important}
+#scl217MultiFilters .scl219-check{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  font-size:12px!important;
+  padding:5px 7px!important;
+  border-radius:6px!important;
+  cursor:pointer!important;
+  color:#1a1a1a!important;
+  background:#fff!important;
+  border:none!important;
+}
+#scl217MultiFilters .scl219-check:hover{background:#f5f5f3!important}
+#scl217MultiFilters .scl219-check input{
+  width:14px!important;
+  height:14px!important;
+  cursor:pointer!important;
+  flex-shrink:0!important;
+  accent-color:#185FA5!important;
+}
+#scl217MultiFilters .scl219-help{font-size:11px;color:#666;margin-top:6px}
+#scl217MultiFilters .scl219-count{font-size:11px;color:#185FA5;font-weight:500;margin-left:4px}
 
 </style>
 
@@ -21795,6 +21830,161 @@ function scl217ClearFilters(){
   scl217RenderFilters();
   if(typeof scl212RenderChanges==='function')scl212RenderChanges();
 }
+
+
+/* v219 — hard replace filters with real checkbox multi-selects */
+let SCL219_FILTERS = { months:new Set(), types:new Set(), pharmacies:new Set(), themes:new Set() };
+
+function scl219Esc(v){
+  try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function scl219Safe(v){return String(v??'').replace(/"/g,'&quot;')}
+function scl219MonthsArr(){return (typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']);}
+function scl219Check(setName,value,label){
+  const active=SCL219_FILTERS[setName].has(String(value));
+  return `<label class="scl219-check">
+    <input type="checkbox" data-scl219-set="${scl219Esc(setName)}" data-scl219-val="${scl219Esc(value)}" ${active?'checked':''}>
+    <span>${scl219Esc(label)}</span>
+  </label>`;
+}
+function scl219Count(setName){
+  const n=SCL219_FILTERS[setName].size;
+  return n ? `<span class="scl219-count">${n} επιλεγμένα</span>` : `<span class="scl219-count">Όλα</span>`;
+}
+function scl219SetGroupTitle(containerId,setName){
+  const group=document.getElementById(containerId)?.closest('.scl217-filter-group');
+  const label=group?.querySelector('.scl217-filter-label');
+  if(!label)return;
+  if(!label.dataset.scl219Base)label.dataset.scl219Base=label.textContent.replace(/Όλα|\d+ επιλεγμένα/g,'').trim();
+  label.innerHTML=scl219Esc(label.dataset.scl219Base)+' '+scl219Count(setName);
+}
+function scl219RenderFilters(){
+  if(!window.SCL212)return;
+  const panel=document.getElementById('scl217MultiFilters');
+  if(!panel)return;
+
+  const rows=(SCL212.months||[]);
+  const months=[...new Set(rows.map(r=>Number(r.month)).filter(n=>!Number.isNaN(n)))].sort((a,b)=>a-b);
+  const types=[...new Set(rows.flatMap(r=>{
+    const out=[];
+    if(r.final_type)out.push(String(r.final_type));
+    if(r.sponsored_active)out.push('sponsored');
+    return out;
+  }))].sort((a,b)=>a.localeCompare(b,'el'));
+  const pharmacies=[...new Set(rows.map(r=>r.pharmacy_name).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'el'));
+  const themes=[...new Set(rows.flatMap(r=>[r.basic_theme,r.final_title,r.custom_theme,r.deal_theme,r.supplier,r.brand]).filter(Boolean).map(String))].sort((a,b)=>a.localeCompare(b,'el'));
+
+  const monthEl=document.getElementById('scl217Months');
+  const typeEl=document.getElementById('scl217Types');
+  const pharmEl=document.getElementById('scl217Pharmacies');
+  const themeEl=document.getElementById('scl217Themes');
+  if(!monthEl||!typeEl||!pharmEl||!themeEl)return;
+
+  [monthEl,typeEl,pharmEl,themeEl].forEach(el=>{el.className='scl217-check-list';});
+
+  monthEl.innerHTML=months.map(m=>scl219Check('months',m,scl219MonthsArr()[m]||m)).join('') || '<div class="scl212-sub">Δεν υπάρχουν μήνες</div>';
+  typeEl.innerHTML=types.map(t=>scl219Check('types',t,t)).join('') || '<div class="scl212-sub">Δεν υπάρχουν είδη</div>';
+  pharmEl.innerHTML=pharmacies.map(p=>scl219Check('pharmacies',p,p)).join('') || '<div class="scl212-sub">Δεν υπάρχουν φαρμακεία</div>';
+  themeEl.innerHTML=themes.map(t=>scl219Check('themes',t,t)).join('') || '<div class="scl212-sub">Δεν υπάρχουν θέματα</div>';
+
+  [['scl217Months','months'],['scl217Types','types'],['scl217Pharmacies','pharmacies'],['scl217Themes','themes']].forEach(([id,set])=>{
+    scl219SetGroupTitle(id,set);
+    const group=document.getElementById(id)?.closest('.scl217-filter-group');
+    if(group && !group.querySelector('.scl219-help'))group.insertAdjacentHTML('beforeend','<div class="scl219-help">Καμία επιλογή = όλα</div>');
+  });
+
+  panel.querySelectorAll('input[type="checkbox"][data-scl219-set]').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      const setName=cb.dataset.scl219Set;
+      const val=String(cb.dataset.scl219Val);
+      if(cb.checked)SCL219_FILTERS[setName].add(val);
+      else SCL219_FILTERS[setName].delete(val);
+      scl219SetGroupTitle(cb.closest('.scl217-filter-group')?.querySelector('.scl217-check-list')?.id||'',setName);
+      if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+    });
+  });
+}
+function scl219FilterPass(r){
+  const f=SCL219_FILTERS;
+  if(f.months.size && !f.months.has(String(r.month)))return false;
+  if(f.types.size && !(f.types.has(String(r.final_type)) || (r.sponsored_active && f.types.has('sponsored'))))return false;
+  if(f.pharmacies.size && !f.pharmacies.has(String(r.pharmacy_name)))return false;
+  if(f.themes.size){
+    const vals=[r.basic_theme,r.final_title,r.custom_theme,r.deal_theme,r.supplier,r.brand].filter(Boolean).map(String);
+    if(!vals.some(v=>f.themes.has(v)))return false;
+  }
+  return true;
+}
+function scl219Clear(){
+  SCL219_FILTERS={months:new Set(),types:new Set(),pharmacies:new Set(),themes:new Set()};
+  scl219RenderFilters();
+  if(typeof scl212RenderChanges==='function')scl212RenderChanges();
+}
+
+// Force clear button
+function scl219Bind(){
+  const clear=document.getElementById('scl217ClearFilters');
+  if(clear && !clear.dataset.bound219){
+    clear.dataset.bound219='1';
+    clear.addEventListener('click',scl219Clear,true);
+  }
+  scl219RenderFilters();
+}
+
+// Full override changes rendering so old filters/chips cannot interfere.
+function scl212RenderChanges(){
+  let rows=(typeof scl212VisibleChanges==='function'?scl212VisibleChanges():[]).filter(scl219FilterPass);
+  if(typeof scl213ApplySort==='function')rows=scl213ApplySort(rows);
+  else rows=rows.sort((a,b)=>Number(a.month)-Number(b.month)||String(a.pharmacy_name).localeCompare(String(b.pharmacy_name),'el'));
+
+  const count=document.getElementById('scl212Count');
+  if(count)count.textContent=`${rows.length} αλλαγές`;
+  const tbody=document.getElementById('scl212Changes');
+  if(!tbody)return;
+
+  tbody.innerHTML=rows.map(r=>{
+    const id=scl212TaskId(['change',r.pharmacy_id,r.position_id,r.month]);
+    const done=!!SCL212.done[id];
+    const mat=typeof scl212NeedsMaterial==='function'?scl212NeedsMaterial(r):false;
+    return `<tr class="${done?'scl212-done-row':''}${mat&&!done?' scl212-need-material':''}">
+      <td><input type="checkbox"${done?' checked':''} data-task="${scl219Esc(id)}"></td>
+      <td style="color:#666">${scl219Esc(r.month_label)}</td>
+      <td><strong>${scl219Esc(r.pharmacy_name)}</strong></td>
+      <td style="color:#666">${scl219Esc(r.position_name)}</td>
+      <td>${scl212Pill(r.final_type,r.final_type)}</td>
+      <td><div style="font-weight:500">${scl219Esc(r.final_title||'—')}</div><div class="scl212-sub">${scl219Esc(r.content_change_reason||'')}</div>${mat&&!done?`<div style="font-size:11px;color:#854F0B;margin-top:2px">Χρειάζεται έλεγχος υλικού / supplier</div>`:''}</td>
+      <td style="text-align:right">${r.billing_change_applies?'event':'—'}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('input[data-task]').forEach(cb=>cb.addEventListener('change',()=>{
+    SCL212.done[cb.dataset.task]=cb.checked;
+    if(typeof scl213SaveDone==='function')scl213SaveDone();
+    if(typeof scl212Render==='function')scl212Render();
+  }));
+  if(typeof scl213MarkSortHeader==='function')scl213MarkSortHeader();
+  scl219RenderFilters();
+}
+const __oldScl212RenderV219 = typeof scl212Render==='function' ? scl212Render : null;
+if(__oldScl212RenderV219){
+  scl212Render=function(){
+    const r=__oldScl212RenderV219.apply(this,arguments);
+    scl219Bind();
+    return r;
+  };
+}
+const __oldScl212LoadV219 = typeof scl212Load==='function' ? scl212Load : null;
+if(__oldScl212LoadV219){
+  scl212Load=async function(){
+    const r=await __oldScl212LoadV219.apply(this,arguments);
+    scl219Bind();
+    return r;
+  };
+}
+setTimeout(scl219Bind,500);
+setTimeout(scl219Bind,1500);
+setInterval(scl219Bind,4000);
 
 </script>
 
