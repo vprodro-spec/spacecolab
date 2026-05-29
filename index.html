@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v219 · force checkbox filters · HQ reference layout';
+      content:'v220 · detail checkbox filters · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v218 · true multiple checkbox filters — HQ exact reference layout, full-width */
+/* v220 · detail checkbox filters — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -6374,6 +6374,67 @@ body.scl-hq #sclHqDashboard{display:none!important}
 }
 #scl217MultiFilters .scl219-help{font-size:11px;color:#666;margin-top:6px}
 #scl217MultiFilters .scl219-count{font-size:11px;color:#185FA5;font-weight:500;margin-left:4px}
+
+
+/* v220 — true multi filters inside pharmacy detail drilldown */
+.scl220-detail-filter-panel{
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:8px;
+  padding:10px;
+  margin:8px 0;
+}
+.scl220-detail-filter-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:10px;
+}
+.scl220-filter-group{
+  background:#f5f5f3;
+  border-radius:8px;
+  padding:10px;
+}
+.scl220-filter-label{
+  font-size:12px;
+  font-weight:500;
+  color:#666;
+  margin-bottom:7px;
+}
+.scl220-check-list{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  max-height:150px;
+  overflow:auto;
+}
+.scl220-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  padding:5px 7px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.scl220-check:hover{background:#fff}
+.scl220-check input{
+  width:14px;
+  height:14px;
+  cursor:pointer;
+  flex-shrink:0;
+  accent-color:#185FA5;
+}
+.scl220-count{
+  font-size:11px;
+  color:#185FA5;
+  font-weight:500;
+  margin-left:4px;
+}
+.scl220-help{
+  font-size:11px;
+  color:#666;
+  margin-top:6px;
+}
 
 </style>
 
@@ -21985,6 +22046,117 @@ if(__oldScl212LoadV219){
 setTimeout(scl219Bind,500);
 setTimeout(scl219Bind,1500);
 setInterval(scl219Bind,4000);
+
+
+/* v220 — replace pharmacy detail dropdowns with real multiple checkbox filters */
+let SCL220_DETAIL_FILTERS = { months:new Set(), types:new Set() };
+
+function scl220Esc(v){
+  try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+  return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function scl220MonthsArr(){
+  return (typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']);
+}
+function scl220Check(setName,value,label){
+  const active=SCL220_DETAIL_FILTERS[setName].has(String(value));
+  return `<label class="scl220-check">
+    <input type="checkbox" data-scl220-set="${scl220Esc(setName)}" data-scl220-val="${scl220Esc(value)}" ${active?'checked':''}>
+    <span>${scl220Esc(label)}</span>
+  </label>`;
+}
+function scl220Count(setName){
+  const n=SCL220_DETAIL_FILTERS[setName].size;
+  return n ? `<span class="scl220-count">${n} επιλεγμένα</span>` : `<span class="scl220-count">Όλα</span>`;
+}
+function scl220DetailFilterPass(r){
+  const f=SCL220_DETAIL_FILTERS;
+  if(f.months.size && !f.months.has(String(r.month)))return false;
+  if(f.types.size && !(f.types.has(String(r.final_type)) || (r.sponsored_active && f.types.has('sponsored'))))return false;
+  return true;
+}
+function scl220DetailBaseRows(){
+  if(typeof scl216DetailRowsForOpen==='function')return scl216DetailRowsForOpen();
+  if(!window.SCL212 || !SCL212.open)return [];
+  const p=scl212Pharmacies().find(x=>x.id===SCL212.open);
+  return p ? p.months.slice().sort((a,b)=>Number(a.month)-Number(b.month)||String(a.position_name).localeCompare(String(b.position_name),'el')) : [];
+}
+function scl220DetailRows(){
+  let rows=scl220DetailBaseRows();
+  if(SCL216_DETAIL_VIEW==='changes')rows=rows.filter(r=>r.content_change_required);
+  if(SCL216_DETAIL_VIEW==='billing')rows=rows.filter(r=>r.billing_change_applies || r.sponsored_active);
+  return rows.filter(scl220DetailFilterPass);
+}
+function scl220RenderDetailFilters(baseRows){
+  const monthVals=[...new Set(baseRows.map(r=>Number(r.month)).filter(n=>!Number.isNaN(n)))].sort((a,b)=>a-b);
+  const typeVals=[...new Set(baseRows.flatMap(r=>{
+    const out=[];
+    if(r.final_type)out.push(String(r.final_type));
+    if(r.sponsored_active)out.push('sponsored');
+    return out;
+  }))].sort((a,b)=>a.localeCompare(b,'el'));
+
+  return `<div class="scl220-detail-filter-panel">
+    <div class="scl220-detail-filter-grid">
+      <div class="scl220-filter-group">
+        <div class="scl220-filter-label">Μήνες ${scl220Count('months')}</div>
+        <div class="scl220-check-list">
+          ${monthVals.map(m=>scl220Check('months',m,scl220MonthsArr()[m]||m)).join('') || '<div class="scl212-sub">Δεν υπάρχουν μήνες</div>'}
+        </div>
+        <div class="scl220-help">Καμία επιλογή = όλοι οι μήνες</div>
+      </div>
+      <div class="scl220-filter-group">
+        <div class="scl220-filter-label">Είδη ${scl220Count('types')}</div>
+        <div class="scl220-check-list">
+          ${typeVals.map(t=>scl220Check('types',t,t)).join('') || '<div class="scl212-sub">Δεν υπάρχουν είδη</div>'}
+        </div>
+        <div class="scl220-help">Καμία επιλογή = όλα τα είδη</div>
+      </div>
+    </div>
+    <div style="margin-top:8px">
+      <button type="button" class="scl216-mini-btn" id="scl220ClearDetailFilters">Καθαρισμός φίλτρων</button>
+    </div>
+  </div>`;
+}
+function scl216RenderDetailMonthly(){
+  const host=document.getElementById('scl216PharmacyMonthly');
+  if(!host)return;
+  const baseRows=scl220DetailBaseRows();
+  const rows=scl220DetailRows();
+
+  host.innerHTML=`
+    <div class="scl216-detail-tabs">
+      ${['schedule','changes','billing'].map(v=>`<button type="button" class="scl216-detail-tab ${SCL216_DETAIL_VIEW===v?'active':''}" data-view="${v}">${v==='schedule'?'Πρόγραμμα':v==='changes'?'Αλλαγές':'Billing events'}</button>`).join('')}
+    </div>
+    ${scl220RenderDetailFilters(baseRows)}
+    <div class="scl212-sub" style="margin-bottom:8px">${rows.length} γραμμές</div>
+    ${rows.length?`<div class="scl216-month-grid">${rows.map(r=>`
+      <div class="scl216-month-card">
+        <div class="m">${scl220Esc(r.month_label)} · ${scl220Esc(r.position_name)}</div>
+        <div>${scl212Pill(r.final_type,r.final_type)} ${r.sponsored_active?scl212Pill('sponsored','Sponsored'):''}</div>
+        <div class="scl216-row"><span>Basic</span><span>${scl220Esc(r.basic_theme||'—')}</span></div>
+        <div class="scl216-row"><span>Τελικό</span><span>${scl220Esc(r.final_title||'—')}</span></div>
+        <div class="scl216-row"><span>Format</span><span>${scl220Esc(r.position_orientation||'—')}</span></div>
+        <div class="scl216-row"><span>Αλλαγή</span><span>${scl220Esc(r.content_change_reason||'none')}</span></div>
+        <div class="scl216-row"><span>Billing</span><span>${r.billing_change_applies?scl220Esc(r.billing_reason||'event'):'—'}</span></div>
+      </div>`).join('')}</div>`:'<div class="scl216-empty">Δεν υπάρχουν γραμμές για τα επιλεγμένα φίλτρα.</div>'}`;
+
+  host.querySelectorAll('.scl216-detail-tab').forEach(b=>b.addEventListener('click',()=>{
+    SCL216_DETAIL_VIEW=b.dataset.view;
+    scl216RenderDetailMonthly();
+  }));
+  host.querySelectorAll('input[type="checkbox"][data-scl220-set]').forEach(cb=>cb.addEventListener('change',()=>{
+    const setName=cb.dataset.scl220Set;
+    const val=String(cb.dataset.scl220Val);
+    if(cb.checked)SCL220_DETAIL_FILTERS[setName].add(val);
+    else SCL220_DETAIL_FILTERS[setName].delete(val);
+    scl216RenderDetailMonthly();
+  }));
+  host.querySelector('#scl220ClearDetailFilters')?.addEventListener('click',()=>{
+    SCL220_DETAIL_FILTERS={months:new Set(),types:new Set()};
+    scl216RenderDetailMonthly();
+  });
+}
 
 </script>
 
