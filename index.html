@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v228 · split theme change compact filters · HQ reference layout';
+      content:'v229 · exclude inactive empty positions · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -23373,6 +23373,118 @@ if(__oldScl212RenderOverviewV223){
   setTimeout(refresh,1500);
   setInterval(()=>{
     if(document.getElementById('scl212Page-changes')?.classList.contains('active'))refresh();
+  },3000);
+})();
+
+
+/* v229 — exclude inactive empty positions from changes */
+(function(){
+  function clean(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    const s=String(v).trim();
+    if(!s || s==='—' || s==='-' || s==='[object Object]' || s.toLowerCase()==='null' || s.toLowerCase()==='undefined')return '';
+    return s;
+  }
+
+  function isInactiveInitialRow(r){
+    const reason=clean(r?.content_change_reason);
+    const finalType=clean(r?.final_type);
+    if(reason !== 'initial_basic_setup')return false;
+    if(finalType && finalType !== 'basic')return false;
+
+    const title=clean(r?.final_title);
+    const basic=clean(r?.basic_theme);
+    const custom=clean(r?.custom_theme);
+    const deal=clean(r?.deal_theme);
+    const supplier=clean(r?.supplier);
+    const brand=clean(r?.brand);
+
+    // If there is no real theme/program/deal information, the position is only available,
+    // not activated. It must not become an HQ content-change task.
+    return !title && !basic && !custom && !deal && !supplier && !brand;
+  }
+
+  function isInactiveInitialDomRow(tr){
+    const cells=[...tr.children].map(td=>String(td.innerText||'').trim());
+    const themeText=cells.join(' ');
+    const hasInitial=themeText.includes('initial_basic_setup');
+    if(!hasInitial)return false;
+
+    // After v228, columns are:
+    // 0 checkbox, 1 month, 2 pharmacy, 3 position, 4 orientation, 5 type, 6 theme, 7 change, 8 billing.
+    const type=(cells[5]||'').trim();
+    const theme=(cells[6]||'').trim();
+    const change=(cells[7]||'').trim();
+
+    const emptyTheme=!theme || theme==='—' || theme==='-' || theme==='[object Object]';
+    return (!type || type.includes('basic')) && emptyTheme && change.includes('initial_basic_setup');
+  }
+
+  const oldVisible = typeof scl212VisibleChanges==='function' ? scl212VisibleChanges : null;
+  window.scl212VisibleChanges=function(){
+    const rows = oldVisible ? oldVisible.apply(this,arguments) : ((window.SCL212?.months||[]).filter(r=>r.content_change_required));
+    return rows.filter(r=>!isInactiveInitialRow(r));
+  };
+
+  // Patch existing in-memory rows as an extra safety, so other counters using SCL212.months do not count empty positions.
+  function markInactiveRows(){
+    if(!window.SCL212 || !Array.isArray(SCL212.months))return;
+    SCL212.months.forEach(r=>{
+      if(isInactiveInitialRow(r)){
+        r.content_change_required=false;
+        r.content_change_reason='inactive_empty_position';
+        r.billing_change_applies=false;
+        r.billing_reason='none';
+      }
+    });
+  }
+
+  const oldLoad = typeof scl212Load==='function' ? scl212Load : null;
+  if(oldLoad){
+    window.scl212Load=async function(){
+      const res=await oldLoad.apply(this,arguments);
+      markInactiveRows();
+      if(typeof scl212Render==='function')setTimeout(()=>scl212Render(),0);
+      return res;
+    };
+  }
+
+  const oldRender = typeof scl212Render==='function' ? scl212Render : null;
+  if(oldRender){
+    window.scl212Render=function(){
+      markInactiveRows();
+      return oldRender.apply(this,arguments);
+    };
+  }
+
+  // If any older DOM-based filter/render already printed an empty inactive row, hide it.
+  function hideInactiveDomRows(){
+    document.querySelectorAll('#scl212Changes tr').forEach(tr=>{
+      if(isInactiveInitialDomRow(tr))tr.style.display='none';
+    });
+    const visible=[...document.querySelectorAll('#scl212Changes tr')].filter(tr=>tr.style.display!=='none').length;
+    const count=document.getElementById('scl212Count');
+    if(count)count.textContent=`${visible} αλλαγές`;
+  }
+
+  const oldChanges = typeof scl212RenderChanges==='function' ? scl212RenderChanges : null;
+  if(oldChanges){
+    window.scl212RenderChanges=function(){
+      const res=oldChanges.apply(this,arguments);
+      setTimeout(hideInactiveDomRows,0);
+      setTimeout(hideInactiveDomRows,200);
+      return res;
+    };
+  }
+
+  setTimeout(()=>{markInactiveRows(); hideInactiveDomRows();},500);
+  setTimeout(()=>{markInactiveRows(); hideInactiveDomRows();},1500);
+  setInterval(()=>{
+    if(document.getElementById('scl212Page-changes')?.classList.contains('active')){
+      markInactiveRows();
+      hideInactiveDomRows();
+    }
   },3000);
 })();
 
