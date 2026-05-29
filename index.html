@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v227 · safe DOM changes filters · HQ reference layout';
+      content:'v228 · split theme change compact filters · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v224 · clean changes filters orientation — HQ exact reference layout, full-width */
+/* v228 · split theme change compact filters — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -6624,6 +6624,111 @@ body.scl-hq #sclHqDashboard{display:none!important}
 .scl227-check{display:flex;align-items:center;gap:7px;font-size:12px;padding:5px 7px;border-radius:6px;cursor:pointer;color:#1a1a1a;}
 .scl227-check:hover{background:#f5f5f3}.scl227-check input{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:#185FA5;}
 @media(max-width:700px){.scl227-box.wide{grid-column:span 1}}
+
+
+/* v228 — compact filters + split Theme / Change type */
+#scl212Page-changes #scl217MultiFilters,
+#scl212Page-changes #scl224Filters,
+#scl212Page-changes #scl227DomFilters,
+#scl212Page-changes .scl217-filter-panel,
+#scl212Page-changes .scl224-filter-panel,
+#scl212Page-changes .scl212-controls select#scl212FilterMonth,
+#scl212Page-changes .scl212-controls select#scl212FilterType,
+#scl212Page-changes .scl212-controls select#scl216FilterPharmacy,
+#scl212Page-changes .scl212-controls select#scl216FilterTheme{
+  display:none!important;
+}
+.scl228-panel{
+  background:#f5f5f3;
+  border-radius:8px;
+  padding:10px 12px;
+  margin-bottom:12px;
+}
+.scl228-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:10px;
+  margin-bottom:8px;
+}
+.scl228-title{font-size:13px;font-weight:600}
+.scl228-sub{font-size:12px;color:#666;margin-top:2px}
+#scl228Clear{
+  font-size:12px;
+  padding:6px 12px;
+  border-radius:8px;
+  border:0.5px solid #ccc;
+  background:#fff;
+  cursor:pointer;
+}
+.scl228-filter-row{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:flex-start;
+}
+.scl228-dd{
+  position:relative;
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:8px;
+  min-width:150px;
+}
+.scl228-dd summary{
+  list-style:none;
+  cursor:pointer;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:600;
+  color:#666;
+  white-space:nowrap;
+}
+.scl228-dd summary::-webkit-details-marker{display:none}
+.scl228-dd summary span{
+  color:#185FA5;
+  font-weight:500;
+  margin-left:4px;
+}
+.scl228-dd[open]{
+  z-index:30;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+.scl228-list{
+  position:absolute;
+  left:0;
+  top:32px;
+  width:240px;
+  max-height:230px;
+  overflow:auto;
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:8px;
+  padding:8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.08);
+}
+.scl228-check{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:12px;
+  padding:5px 6px;
+  border-radius:6px;
+  cursor:pointer;
+}
+.scl228-check:hover{background:#f5f5f3}
+.scl228-check input{
+  width:14px;
+  height:14px;
+  flex-shrink:0;
+  cursor:pointer;
+  accent-color:#185FA5;
+}
+.scl228-theme-cell .theme{font-weight:500}
+.scl228-change-cell{color:#666;font-size:12px}
+@media(max-width:700px){
+  .scl228-dd{min-width:calc(50% - 4px)}
+  .scl228-list{width:220px}
+}
 
 </style>
 
@@ -9335,6 +9440,25 @@ body.scl-hq #sclHqDashboard{display:none!important}
     <div class="scl227-box"><div class="scl227-label">Φαρμακεία <span id="scl227PharmaciesCount">Όλα</span></div><div id="scl227Pharmacies" class="scl227-list"></div></div>
     <div class="scl227-box"><div class="scl227-label">Orientation <span id="scl227OrientationsCount">Όλα</span></div><div id="scl227Orientations" class="scl227-list"></div></div>
     <div class="scl227-box wide"><div class="scl227-label">Θέματα / Περιεχόμενο <span id="scl227ThemesCount">Όλα</span></div><div id="scl227Themes" class="scl227-list"></div></div>
+  </div>
+</div>
+
+    
+<div id="scl228Filters" class="scl228-panel">
+  <div class="scl228-head">
+    <div>
+      <div class="scl228-title">Φίλτρα αλλαγών</div>
+      <div class="scl228-sub">Πολλαπλή επιλογή. Καμία επιλογή = όλα.</div>
+    </div>
+    <button type="button" id="scl228Clear">Καθαρισμός φίλτρων</button>
+  </div>
+  <div class="scl228-filter-row">
+    <details class="scl228-dd"><summary>Μήνες <span id="scl228CountMonths">Όλα</span></summary><div id="scl228Months" class="scl228-list"></div></details>
+    <details class="scl228-dd"><summary>Είδη <span id="scl228CountTypes">Όλα</span></summary><div id="scl228Types" class="scl228-list"></div></details>
+    <details class="scl228-dd"><summary>Φαρμακεία <span id="scl228CountPharmacies">Όλα</span></summary><div id="scl228Pharmacies" class="scl228-list"></div></details>
+    <details class="scl228-dd"><summary>Orientation <span id="scl228CountOrientations">Όλα</span></summary><div id="scl228Orientations" class="scl228-list"></div></details>
+    <details class="scl228-dd"><summary>Θέμα <span id="scl228CountThemes">Όλα</span></summary><div id="scl228Themes" class="scl228-list"></div></details>
+    <details class="scl228-dd"><summary>Change type <span id="scl228CountChanges">Όλα</span></summary><div id="scl228Changes" class="scl228-list"></div></details>
   </div>
 </div>
 
@@ -23013,6 +23137,243 @@ if(__oldScl212RenderOverviewV223){
   const oldChanges=typeof scl212RenderChanges==='function'?scl212RenderChanges:null; if(oldChanges){ window.scl212RenderChanges=function(){ const res=oldChanges.apply(this,arguments); setTimeout(refresh,0); setTimeout(refresh,250); return res; }; }
   const oldLoad=typeof scl212Load==='function'?scl212Load:null; if(oldLoad){ window.scl212Load=async function(){ const res=await oldLoad.apply(this,arguments); setTimeout(refresh,250); setTimeout(refresh,900); return res; }; }
   setTimeout(refresh,500); setTimeout(refresh,1500); setInterval(()=>{ if(document.getElementById('scl212Page-changes')?.classList.contains('active'))refresh(); },3000);
+})();
+
+
+/* v228 — split Theme / Change type and compact DOM filters */
+(function(){
+  const F = window.SCL228_FILTERS || {
+    months:new Set(),
+    types:new Set(),
+    pharmacies:new Set(),
+    orientations:new Set(),
+    themes:new Set(),
+    changes:new Set()
+  };
+  window.SCL228_FILTERS = F;
+
+  function esc(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function clean(s){return String(s||'').replace(/\s+/g,' ').trim();}
+  function rows(){return [...document.querySelectorAll('#scl212Changes tr')];}
+
+  function splitContent(text){
+    const lines=String(text||'').split(/\n+/).map(clean).filter(Boolean);
+    let theme=lines[0]||'—';
+    let change=lines.slice(1).join(' ')||'';
+    if(theme.includes(' initial_') || theme.includes(' basic_') || theme.includes(' custom_') || theme.includes(' deal_')){
+      const parts=theme.split(' ');
+      change=parts.pop();
+      theme=parts.join(' ')||'—';
+    }
+    if(theme==='[object Object]')theme='—';
+    if(change==='[object Object]')change='';
+    return {theme,change};
+  }
+
+  function normalizeRows(){
+    const tbody=document.getElementById('scl212Changes');
+    const table=tbody?.closest('table');
+    const head=table?.querySelector('thead tr');
+    if(head){
+      head.innerHTML='<th style="width:36px"></th><th class="scl213-sortable" data-sort="month">Μήνας <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="pharmacy">Φαρμακείο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="position">Θέση <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="orientation">Orientation <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="type">Είδος <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="theme">Θέμα <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="change">Change type <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="billing" style="text-align:right">Χρέωση <span class="scl213-si">↕</span></th>';
+    }
+
+    rows().forEach(tr=>{
+      const cells=[...tr.children];
+      if(cells.length===9){
+        // already normalized
+        return;
+      }
+      if(cells.length<8)return;
+
+      const contentCell=cells[6];
+      const billingCell=cells[7];
+      const parsed=splitContent(contentCell.innerText);
+
+      tr.dataset.scl228Month=clean(cells[1].innerText);
+      tr.dataset.scl228Pharmacy=clean(cells[2].innerText);
+      tr.dataset.scl228Position=clean(cells[3].innerText);
+      tr.dataset.scl228Orientation=clean(cells[4].innerText)||'—';
+      tr.dataset.scl228Type=clean(cells[5].innerText);
+      tr.dataset.scl228Theme=parsed.theme;
+      tr.dataset.scl228Change=parsed.change||'—';
+      tr.dataset.scl228Billing=clean(billingCell.innerText)||'—';
+
+      contentCell.className='scl228-theme-cell';
+      contentCell.innerHTML=`<div class="theme">${esc(parsed.theme)}</div>`;
+
+      const changeTd=document.createElement('td');
+      changeTd.className='scl228-change-cell';
+      changeTd.textContent=parsed.change||'—';
+      tr.insertBefore(changeTd,billingCell);
+    });
+
+    // Re-bind sorting header, including new cols as DOM sort.
+    document.querySelectorAll('#scl212Page-changes th.scl213-sortable').forEach(th=>{
+      if(th.dataset.bound228)return;
+      th.dataset.bound228='1';
+      th.addEventListener('click',()=>{
+        sortBy(th.dataset.sort);
+      });
+    });
+  }
+
+  function rowData(tr){
+    normalizeRows();
+    return {
+      tr,
+      month:tr.dataset.scl228Month || clean(tr.children[1]?.innerText),
+      pharmacy:tr.dataset.scl228Pharmacy || clean(tr.children[2]?.innerText),
+      position:tr.dataset.scl228Position || clean(tr.children[3]?.innerText),
+      orientation:tr.dataset.scl228Orientation || clean(tr.children[4]?.innerText) || '—',
+      type:tr.dataset.scl228Type || clean(tr.children[5]?.innerText),
+      theme:tr.dataset.scl228Theme || clean(tr.children[6]?.innerText) || '—',
+      change:tr.dataset.scl228Change || clean(tr.children[7]?.innerText) || '—',
+      billing:tr.dataset.scl228Billing || clean(tr.children[8]?.innerText) || '—'
+    };
+  }
+  function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'el'));}
+  function allValues(){
+    const data=rows().map(rowData);
+    return {
+      months:uniq(data.map(x=>x.month)),
+      types:uniq(data.map(x=>x.type)),
+      pharmacies:uniq(data.map(x=>x.pharmacy)),
+      orientations:uniq(data.map(x=>x.orientation)),
+      themes:uniq(data.map(x=>x.theme).filter(x=>x && x!=='—')),
+      changes:uniq(data.map(x=>x.change).filter(x=>x && x!=='—'))
+    };
+  }
+  function item(group,value){
+    const checked=F[group].has(value);
+    return `<label class="scl228-check"><input type="checkbox" data-scl228-group="${esc(group)}" data-scl228-value="${esc(value)}" ${checked?'checked':''}><span>${esc(value)}</span></label>`;
+  }
+  function count(group){const n=F[group].size; return n?`${n} επιλεγμένα`:'Όλα';}
+  function fill(id,items){
+    const el=document.getElementById(id);
+    if(el)el.innerHTML=items.length?items.map(x=>item(id.replace('scl228','').toLowerCase(),x)).join(''):'<div class="scl212-sub">Δεν υπάρχουν επιλογές</div>';
+  }
+  const MAP={
+    scl228Months:'months',
+    scl228Types:'types',
+    scl228Pharmacies:'pharmacies',
+    scl228Orientations:'orientations',
+    scl228Themes:'themes',
+    scl228Changes:'changes'
+  };
+  function renderFilters(){
+    normalizeRows();
+    const v=allValues();
+
+    Object.entries(MAP).forEach(([id,group])=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      const arr=v[group]||[];
+      el.innerHTML=arr.length?arr.map(x=>`<label class="scl228-check"><input type="checkbox" data-scl228-group="${group}" data-scl228-value="${esc(x)}" ${F[group].has(x)?'checked':''}><span>${esc(x)}</span></label>`).join(''):'<div class="scl212-sub">Δεν υπάρχουν επιλογές</div>';
+    });
+
+    [['scl228CountMonths','months'],['scl228CountTypes','types'],['scl228CountPharmacies','pharmacies'],['scl228CountOrientations','orientations'],['scl228CountThemes','themes'],['scl228CountChanges','changes']].forEach(([id,g])=>{
+      const el=document.getElementById(id); if(el)el.textContent=count(g);
+    });
+
+    document.querySelectorAll('#scl228Filters input[data-scl228-group]').forEach(cb=>{
+      cb.addEventListener('change',()=>{
+        const g=cb.dataset.scl228Group;
+        const val=cb.dataset.scl228Value;
+        if(cb.checked)F[g].add(val); else F[g].delete(val);
+        applyFilters();
+        renderFilters();
+      });
+    });
+    const clear=document.getElementById('scl228Clear');
+    if(clear && !clear.dataset.bound228){
+      clear.dataset.bound228='1';
+      clear.addEventListener('click',()=>{
+        Object.values(F).forEach(s=>s.clear());
+        applyFilters();
+        renderFilters();
+      });
+    }
+  }
+  function pass(d){
+    if(F.months.size && !F.months.has(d.month))return false;
+    if(F.types.size && !F.types.has(d.type))return false;
+    if(F.pharmacies.size && !F.pharmacies.has(d.pharmacy))return false;
+    if(F.orientations.size && !F.orientations.has(d.orientation))return false;
+    if(F.themes.size && !F.themes.has(d.theme))return false;
+    if(F.changes.size && !F.changes.has(d.change))return false;
+    return true;
+  }
+  function applyFilters(){
+    normalizeRows();
+    let shown=0;
+    rows().forEach(tr=>{
+      const ok=pass(rowData(tr));
+      tr.style.display=ok?'':'none';
+      if(ok)shown++;
+    });
+    const countEl=document.getElementById('scl212Count');
+    if(countEl)countEl.textContent=`${shown} αλλαγές`;
+  }
+  let SORT={col:null,dir:1};
+  function sortBy(col){
+    const tbody=document.getElementById('scl212Changes');
+    if(!tbody)return;
+    normalizeRows();
+    SORT.dir = SORT.col===col ? SORT.dir*-1 : 1;
+    SORT.col=col;
+    const rs=rows();
+    const keyMap={month:'month',pharmacy:'pharmacy',position:'position',orientation:'orientation',type:'type',theme:'theme',change:'change',billing:'billing'};
+    const key=keyMap[col]||col;
+    rs.sort((a,b)=>{
+      const da=rowData(a), db=rowData(b);
+      return String(da[key]||'').localeCompare(String(db[key]||''),'el')*SORT.dir;
+    });
+    rs.forEach(r=>tbody.appendChild(r));
+    applyFilters();
+  }
+  function refresh(){
+    normalizeRows();
+    renderFilters();
+    applyFilters();
+  }
+
+  const oldRender=typeof scl212Render==='function'?scl212Render:null;
+  if(oldRender){
+    window.scl212Render=function(){
+      const res=oldRender.apply(this,arguments);
+      setTimeout(refresh,0);
+      setTimeout(refresh,250);
+      return res;
+    };
+  }
+  const oldChanges=typeof scl212RenderChanges==='function'?scl212RenderChanges:null;
+  if(oldChanges){
+    window.scl212RenderChanges=function(){
+      const res=oldChanges.apply(this,arguments);
+      setTimeout(refresh,0);
+      setTimeout(refresh,250);
+      return res;
+    };
+  }
+  const oldLoad=typeof scl212Load==='function'?scl212Load:null;
+  if(oldLoad){
+    window.scl212Load=async function(){
+      const res=await oldLoad.apply(this,arguments);
+      setTimeout(refresh,250);
+      setTimeout(refresh,900);
+      return res;
+    };
+  }
+
+  setTimeout(refresh,500);
+  setTimeout(refresh,1500);
+  setInterval(()=>{
+    if(document.getElementById('scl212Page-changes')?.classList.contains('active'))refresh();
+  },3000);
 })();
 
 </script>
