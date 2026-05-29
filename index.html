@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v232 · pharmaplus editor edit delete shelves · HQ reference layout';
+      content:'v233 · pharmaplus campaign popup pharmacy · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -6900,6 +6900,162 @@ body.scl-hq #sclHqDashboard{display:none!important}
 .scl232-brief-shelf{background:#fff;border:0.5px solid #e0e0e0;border-radius:10px;padding:10px}
 .scl232-brief-shelf .k{font-size:12px;font-weight:800;color:#666;margin-bottom:6px}
 .scl232-brief-shelf .v{font-size:13px;line-height:1.35;white-space:pre-wrap}
+
+
+/* v233 — Pharmaplus campaign popup for pharmacy/timeline */
+.scl233-clickable-campaign{
+  cursor:pointer!important;
+  position:relative;
+}
+.scl233-clickable-campaign:hover{
+  filter:brightness(.98);
+}
+.scl233-clickable-campaign:after{
+  content:'ⓘ';
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  border-radius:999px;
+  background:#E6F1FB;
+  color:#185FA5;
+  font-size:11px;
+  font-weight:800;
+  margin-left:5px;
+  vertical-align:middle;
+}
+.scl233-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.35);
+  z-index:99999;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.scl233-card{
+  position:relative;
+  background:#fff;
+  color:#1a1a1a;
+  border-radius:18px;
+  width:min(920px,100%);
+  max-height:88vh;
+  overflow:auto;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+  font-family:inherit;
+}
+.scl233-close{
+  position:absolute;
+  right:14px;
+  top:12px;
+  border:none;
+  background:#f5f5f3;
+  border-radius:999px;
+  width:32px;
+  height:32px;
+  font-size:22px;
+  cursor:pointer;
+  line-height:1;
+}
+.scl233-brief-header{
+  background:#d9d9d9;
+  border-radius:14px;
+  padding:18px 20px;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  align-items:flex-start;
+}
+.scl233-kicker{
+  display:inline-block;
+  background:#fff;
+  padding:8px 18px;
+  font-weight:800;
+  margin-bottom:12px;
+  font-size:13px;
+}
+.scl233-title{
+  font-size:28px;
+  font-weight:900;
+  line-height:1.05;
+  text-transform:uppercase;
+}
+.scl233-supplier{
+  font-size:24px;
+  font-weight:900;
+  text-align:right;
+  text-transform:uppercase;
+}
+.scl233-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:10px;
+  margin:12px 0;
+}
+.scl233-info-card{
+  background:#f5f5f3;
+  border-radius:12px;
+  padding:12px;
+}
+.scl233-info-card .k{
+  font-size:11px;
+  color:#666;
+  font-weight:700;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+.scl233-info-card .v{
+  font-size:17px;
+  font-weight:800;
+  white-space:pre-wrap;
+}
+.scl233-section{
+  margin-top:14px;
+  background:#f5f5f3;
+  border-radius:12px;
+  padding:14px;
+}
+.scl233-section h4{
+  margin:0 0 8px;
+  font-size:14px;
+  text-transform:uppercase;
+}
+.scl233-section div{
+  white-space:pre-wrap;
+  font-size:13px;
+  line-height:1.4;
+}
+.scl233-shelves{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.scl233-shelf{
+  background:#fff;
+  border:0.5px solid #e0e0e0;
+  border-radius:10px;
+  padding:10px;
+}
+.scl233-shelf .k{
+  font-size:12px;
+  font-weight:800;
+  color:#666;
+  margin-bottom:6px;
+}
+.scl233-shelf .v{
+  font-size:13px;
+  line-height:1.35;
+  white-space:pre-wrap;
+}
+@media(max-width:700px){
+  .scl233-brief-header{display:block}
+  .scl233-supplier{text-align:left;margin-top:12px}
+}
 
 </style>
 
@@ -24100,6 +24256,238 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(patch232,300);
   setTimeout(patch232,1200);
   setTimeout(patch232,2500);
+})();
+
+
+/* v233 — Pharmaplus campaign output for pharmacy card/timeline */
+(function(){
+  window.SCL233_CAMPAIGNS = window.SCL233_CAMPAIGNS || [];
+
+  function esc(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function clean(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    const s=String(v).trim();
+    if(!s || s==='[object Object]' || s==='null' || s==='undefined')return '';
+    return s;
+  }
+  function year(){
+    try{
+      if(typeof sclYear==='function')return Number(sclYear());
+    }catch(e){}
+    return Number(document.getElementById('scl212Year')?.value || new Date().getFullYear());
+  }
+  function monthLabels(){
+    return (typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']);
+  }
+  function currentPharmacyId(){
+    try{
+      if(window.SCL_ROUTING?.pharmacyId)return String(SCL_ROUTING.pharmacyId);
+      if(window.currentPharmacyId)return String(window.currentPharmacyId);
+      if(window.state?.pharmacyId)return String(state.pharmacyId);
+      if(window.pharmacyState?.pharmacy_id)return String(pharmacyState.pharmacy_id);
+    }catch(e){}
+    return '';
+  }
+  function pharmacyInScope(c,pharmacyId){
+    const mode=c?.scope_mode || 'all';
+    const ids=(c?.scope_pharmacy_ids||[]).map(String);
+    if(mode==='all')return true;
+    if(mode==='only')return ids.includes(String(pharmacyId));
+    if(mode==='except')return !ids.includes(String(pharmacyId));
+    return true;
+  }
+  function hasMain(c){
+    return !!(c && (clean(c.title)||clean(c.supplier)||clean(c.campaign_type)||clean(c.company_benefit)||clean(c.products_text)||clean(c.shelf_instructions)||clean(c.shelf_1)||clean(c.shelf_2)||clean(c.shelf_3)||clean(c.shelf_4)));
+  }
+  function hasFallback(c){
+    return !!(c && (clean(c.fallback_title)||clean(c.fallback_description)||clean(c.fallback_products_text)||clean(c.fallback_instructions)));
+  }
+  function campaignFor(month,pharmacyId=currentPharmacyId()){
+    const c=(window.SCL233_CAMPAIGNS||[]).find(x=>Number(x.month)===Number(month));
+    if(!c)return {kind:'soon', month:Number(month), title:'Προσεχώς'};
+    if(hasMain(c) && pharmacyInScope(c,pharmacyId))return {kind:'main', month:Number(month), campaign:c, title:clean(c.title)||clean(c.supplier)||'Pharmaplus ενέργεια'};
+    if(hasFallback(c))return {kind:'fallback', month:Number(month), campaign:c, title:clean(c.fallback_title)||'Pharmaplus fallback'};
+    return {kind:'soon', month:Number(month), campaign:c, title:'Προσεχώς'};
+  }
+  function cardTitleFor(month){
+    return campaignFor(month).title || 'Προσεχώς';
+  }
+  async function loadCampaigns(){
+    if(!window.sb || !window.SCL_ROUTING?.hqKey)return;
+    const {data,error}=await sb.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:SCL_ROUTING.hqKey,p_year:year()});
+    if(error){console.warn('Pharmaplus campaigns load error',error);return;}
+    window.SCL233_CAMPAIGNS=data||[];
+    applyCampaignLabels();
+  }
+  function summaryFor(result){
+    const c=result.campaign||{};
+    if(result.kind==='soon'){
+      return {
+        kicker:'PHARMAPLUS',
+        title:'Προσεχώς',
+        supplier:'PHARMAPLUS',
+        summary:[],
+        sections:[['Ενημέρωση','Η ενέργεια του μήνα θα ανακοινωθεί από τη Pharmaplus.']],
+        shelves:[]
+      };
+    }
+    if(result.kind==='fallback'){
+      return {
+        kicker:'PHARMAPLUS',
+        title:clean(c.fallback_title)||'Pharmaplus',
+        supplier:'PHARMAPLUS',
+        summary:[],
+        sections:[
+          ['Περιγραφή',clean(c.fallback_description)],
+          ['Κωδικοί / προϊόντα',clean(c.fallback_products_text)],
+          ['Οδηγίες στησίματος',clean(c.fallback_instructions)]
+        ].filter(x=>x[1]),
+        shelves:[]
+      };
+    }
+    return {
+      kicker:clean(c.campaign_type)||'PHARMAPLUS ΕΝΕΡΓΕΙΑ',
+      title:clean(c.title)||'Pharmaplus',
+      supplier:clean(c.supplier)||'PHARMAPLUS',
+      summary:[
+        ['Μήνας',clean(c.date_range)||monthLabels()[Number(c.month)]],
+        ['Εταιρεία',clean(c.supplier)],
+        ['Παροχή εταιρείας',clean(c.company_benefit)],
+        ['Ημερ. τοποθέτησης',clean(c.placement_dates)],
+        ['Υλικά in-store',clean(c.instore_materials)],
+        ['Digital',clean(c.digital_support)]
+      ].filter(x=>x[1]),
+      sections:[
+        ['Κωδικοί / προϊόντα',clean(c.products_text)],
+        ['Οδηγίες στησίματος',clean(c.shelf_instructions)],
+        ['Σημειώσεις',clean(c.notes)]
+      ].filter(x=>x[1]),
+      shelves:[
+        ['Ράφι 1',clean(c.shelf_1)],
+        ['Ράφι 2',clean(c.shelf_2)],
+        ['Ράφι 3',clean(c.shelf_3)],
+        ['Ράφι 4',clean(c.shelf_4)]
+      ].filter(x=>x[1])
+    };
+  }
+  function openPopup(month){
+    const res=campaignFor(month);
+    const brief=summaryFor(res);
+    let modal=document.getElementById('scl233Modal');
+    if(!modal){
+      modal=document.createElement('div');
+      modal.id='scl233Modal';
+      modal.className='scl233-modal';
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML=`
+      <div class="scl233-card">
+        <button type="button" class="scl233-close" id="scl233Close">×</button>
+        <div class="scl233-brief-header">
+          <div><div class="scl233-kicker">${esc(brief.kicker)}</div><div class="scl233-title">${esc(brief.title)}</div></div>
+          <div class="scl233-supplier">${esc(brief.supplier)}</div>
+        </div>
+        ${brief.summary.length?`<div class="scl233-grid">${brief.summary.map(([k,v])=>`<div class="scl233-info-card"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>`:''}
+        ${brief.sections.map(([k,v])=>`<div class="scl233-section"><h4>${esc(k)}</h4><div>${esc(v)}</div></div>`).join('')}
+        ${brief.shelves.length?`<div class="scl233-section"><h4>Στήσιμο ραφιών</h4><div class="scl233-shelves">${brief.shelves.map(([k,v])=>`<div class="scl233-shelf"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div></div>`:''}
+      </div>`;
+    modal.style.display='flex';
+    document.getElementById('scl233Close')?.addEventListener('click',()=>modal.style.display='none');
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.style.display='none';},{once:true});
+  }
+  function monthFromText(txt){
+    const labels=monthLabels();
+    const t=String(txt||'').toLowerCase();
+    for(let i=0;i<labels.length;i++){
+      if(t.includes(labels[i].toLowerCase()))return i;
+    }
+    return null;
+  }
+  function applyCampaignLabels(){
+    const labels=monthLabels();
+
+    // Try known month-based rows/cards that mention Pharmaplus.
+    const candidates=[...document.querySelectorAll('body *')].filter(el=>{
+      if(el.children.length>8)return false;
+      const txt=(el.innerText||'').trim();
+      if(!txt || txt.length>240)return false;
+      return /pharmaplus|φαρμαπλας|φαρμακε/i.test(txt) && monthFromText(txt)!==null;
+    });
+
+    candidates.forEach(el=>{
+      if(el.dataset.scl233Bound)return;
+      const m=monthFromText(el.innerText);
+      if(m===null)return;
+      const title=cardTitleFor(m);
+      // Minimal visual change: only add click affordance and title tooltip. Do not restructure existing card.
+      el.classList.add('scl233-clickable-campaign');
+      el.dataset.scl233Bound='1';
+      el.title='Προβολή Pharmaplus brief: '+title;
+      el.addEventListener('click',e=>{
+        // Avoid stealing clicks from inputs/buttons.
+        if(e.target.closest('button,input,select,textarea,a'))return;
+        openPopup(m);
+      });
+    });
+
+    // Timeline items: anything with data-month or month text and Pharmaplus.
+    document.querySelectorAll('[data-month]').forEach(el=>{
+      const txt=(el.innerText||'').toLowerCase();
+      if(!txt.includes('pharmaplus'))return;
+      const m=Number(el.dataset.month);
+      if(Number.isNaN(m)||m<0||m>11)return;
+      if(el.dataset.scl233Bound)return;
+      el.classList.add('scl233-clickable-campaign');
+      el.dataset.scl233Bound='1';
+      el.title='Προβολή Pharmaplus brief: '+cardTitleFor(m);
+      el.addEventListener('click',e=>{
+        if(e.target.closest('button,input,select,textarea,a'))return;
+        openPopup(m);
+      });
+    });
+  }
+
+  // Public hooks for future direct use.
+  window.scl233LoadCampaigns=loadCampaigns;
+  window.scl233OpenCampaignPopup=openPopup;
+  window.scl233CampaignFor=campaignFor;
+
+  const oldRender=typeof sclRender==='function'?sclRender:null;
+  if(oldRender){
+    window.sclRender=function(){
+      const r=oldRender.apply(this,arguments);
+      setTimeout(applyCampaignLabels,200);
+      return r;
+    };
+  }
+
+  const oldRenderAll=typeof render==='function'?render:null;
+  if(oldRenderAll){
+    window.render=function(){
+      const r=oldRenderAll.apply(this,arguments);
+      setTimeout(applyCampaignLabels,200);
+      return r;
+    };
+  }
+
+  const oldLoad=typeof sclLoad==='function'?sclLoad:null;
+  if(oldLoad){
+    window.sclLoad=async function(){
+      const r=await oldLoad.apply(this,arguments);
+      setTimeout(loadCampaigns,300);
+      return r;
+    };
+  }
+
+  setTimeout(loadCampaigns,800);
+  setTimeout(loadCampaigns,2200);
+  setInterval(()=>{
+    if(typeof sclMode==='function' && sclMode()==='pharmacy')applyCampaignLabels();
+  },4000);
 })();
 
 </script>
