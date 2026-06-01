@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v246 · pharmaplus rows debug section · HQ reference layout';
+      content:'v247 · pharmaplus rows in main changes table · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -5796,7 +5796,7 @@ body.scl-locked #sclLanding::before,body.scl-locked #sclLanding::after{display:n
 @media(max-width:900px){.scl-login-grid{grid-template-columns:1fr}.scl-landing-hero-copy{text-align:left}.scl-landing-logo-main{font-size:34px}}
 
 
-/* v245 · pharmaplus operational rows visible changes — HQ exact reference layout, full-width */
+/* v247 · pharmaplus rows in main changes table — HQ exact reference layout, full-width */
 body.scl-hq{background:#fff!important;color:#1a1a1a!important}
 body.scl-hq #sclHqShell{display:block!important;max-width:none!important;width:100%!important;margin:0!important;border:0!important;background:#fff!important;border-radius:0!important;padding:20px!important;color:#1a1a1a!important;font-family:system-ui,-apple-system,sans-serif!important;font-size:14px!important}
 body.scl-hq #sclHqShell *{box-sizing:border-box}
@@ -7136,6 +7136,27 @@ body.scl-hq #sclHqDashboard{display:none!important}
 .scl246-empty{
   color:#666;
   font-style:italic;
+}
+
+
+/* v247 — Pharmaplus rows inside main Changes table */
+.scl247-pp-row{
+  background:#fffafa!important;
+}
+.scl247-pp-row td{
+  background:#fffafa!important;
+}
+.scl247-chip{
+  display:inline-flex;
+  padding:2px 8px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:11px;
+  background:#FCEBEB;
+  color:#A32D2D;
+}
+#scl246PharmaplusRows{
+  display:none!important;
 }
 
 </style>
@@ -25699,6 +25720,225 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(render246,800);
   setTimeout(render246,2200);
   setTimeout(render246,4000);
+})();
+
+
+/* v247 — move Pharmaplus operational rows into the main Changes table */
+(function(){
+  function clean247(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    const s=String(v).trim();
+    if(!s || s==='[object Object]' || s==='null' || s==='undefined' || s==='—')return '';
+    return s;
+  }
+  function esc247(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function isHQ247(){
+    try{return typeof sclMode==='function' && sclMode()==='hq';}catch(e){return false;}
+  }
+  function rows247(){
+    try{
+      if(typeof scl246BuildPharmaplusRows==='function'){
+        return scl246BuildPharmaplusRows() || [];
+      }
+    }catch(e){console.warn('scl246BuildPharmaplusRows failed',e);}
+    try{
+      if(window.SCL246_ROWS && Array.isArray(SCL246_ROWS))return SCL246_ROWS;
+    }catch(e){}
+    return [];
+  }
+  function findChangesTable247(){
+    const tables=[...document.querySelectorAll('table')];
+    const wanted=['Μήνας','Φαρμακείο','Θέση','Είδος','Θέμα','Change type','Χρέωση'];
+    let best=null;
+    let bestScore=0;
+
+    tables.forEach(tbl=>{
+      const txt=(tbl.innerText||'');
+      let score=0;
+      wanted.forEach(w=>{ if(txt.includes(w))score++; });
+      if(score>bestScore){
+        bestScore=score;
+        best=tbl;
+      }
+    });
+
+    if(best && bestScore>=5)return best;
+
+    // fallback: table immediately after filters area
+    const filter=[...document.querySelectorAll('div, section')].find(x=>{
+      const t=x.innerText||'';
+      return t.includes('Φίλτρα αλλαγών') && t.includes('Change type');
+    });
+    if(filter){
+      let p=filter;
+      for(let i=0;i<6 && p;i++,p=p.parentElement){
+        const tbl=p.querySelector('table');
+        if(tbl)return tbl;
+      }
+    }
+    return null;
+  }
+  function ensureTbody247(tbl){
+    if(!tbl)return null;
+    let tbody=tbl.querySelector('tbody');
+    if(tbody)return tbody;
+
+    // If rows are directly in table, create tbody and move non-thead rows.
+    tbody=document.createElement('tbody');
+    const rows=[...tbl.querySelectorAll(':scope > tr')];
+    rows.forEach(tr=>tbody.appendChild(tr));
+    tbl.appendChild(tbody);
+    return tbody;
+  }
+  function monthIndex247(label){
+    const months=(typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:(typeof MONTHS!=='undefined'?MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']));
+    return months.findIndex(m=>String(m)===String(label));
+  }
+  function existingRowKey247(tr){
+    const cells=[...tr.children].map(td=>(td.innerText||'').trim());
+    // Expected: checkbox, month, pharmacy, position, orientation, type, theme, change type, charge
+    return [
+      cells[1]||'',
+      cells[2]||'',
+      cells[3]||'',
+      cells[5]||'',
+      cells[6]||'',
+      cells[7]||''
+    ].join('|');
+  }
+  function ppRowKey247(r){
+    return [
+      r.month_label||'',
+      r.pharmacy_name||'',
+      r.position_name||'Pharmaplus',
+      r.final_type||'',
+      r.final_title||'',
+      r.content_change_reason||''
+    ].join('|');
+  }
+  function rowHtml247(r){
+    const id=`scl247_${r.pharmacy_id||r.pharmacy_name}_${r.month}_${r.final_type}_${String(r.final_title||'').replace(/\W+/g,'_')}`;
+    return `<tr class="scl247-pp-row" data-scl247-row="1" data-month="${esc247(r.month_label||'')}" data-kind="${esc247(r.final_type||'')}">
+      <td><input type="checkbox" data-task="${esc247(id)}"></td>
+      <td>${esc247(r.month_label||'')}</td>
+      <td><strong>${esc247(r.pharmacy_name||'')}</strong></td>
+      <td>${esc247(r.position_name||'Pharmaplus')}</td>
+      <td>${esc247(r.position_orientation||'—')}</td>
+      <td><span class="scl247-chip">${esc247(r.final_type||'pharmaplus_campaign')}</span></td>
+      <td><div style="font-weight:700">${esc247(r.final_title||'—')}</div>${r.supplier?`<div class="scl212-sub">${esc247(r.supplier)}</div>`:''}</td>
+      <td>${esc247(r.content_change_reason||'')}</td>
+      <td style="text-align:right">—</td>
+    </tr>`;
+  }
+  function sortTable247(tbody){
+    const rows=[...tbody.querySelectorAll('tr')];
+    const months=(typeof SCL212_MONTHS!=='undefined'?SCL212_MONTHS:(typeof MONTHS!=='undefined'?MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ']));
+    rows.sort((a,b)=>{
+      const ac=[...a.children].map(x=>(x.innerText||'').trim());
+      const bc=[...b.children].map(x=>(x.innerText||'').trim());
+      const am=months.indexOf(ac[1]);
+      const bm=months.indexOf(bc[1]);
+      if(am!==bm)return (am<0?99:am)-(bm<0?99:bm);
+      const ap=ac[2]||'';
+      const bp=bc[2]||'';
+      if(ap!==bp)return ap.localeCompare(bp,'el');
+      return (ac[3]||'').localeCompare(bc[3]||'','el');
+    });
+    rows.forEach(r=>tbody.appendChild(r));
+  }
+  function updateCount247(tbody){
+    const total=[...tbody.querySelectorAll('tr')].length;
+    const countEls=[...document.querySelectorAll('*')].filter(el=>{
+      const t=(el.innerText||'').trim();
+      return /^\d+\s+αλλαγές$/.test(t);
+    });
+    countEls.forEach(el=>{el.textContent=`${total} αλλαγές`;});
+    const badge=[...document.querySelectorAll('.badge, .pill, span, div')].find(el=>(el.innerText||'').trim()==='57');
+    // Avoid risky global badge rewrite; table text count is enough for now.
+  }
+  function addFilterValues247(){
+    // Add checkboxes to the existing "Είδη" and "Change type" dropdowns if those lists are visible/rendered.
+    const boxes=[...document.querySelectorAll('label')];
+    // Only do minimal: rows are still searchable by existing "Όλα"; specific filter integration can follow after table insertion works.
+  }
+  function apply247(){
+    if(!isHQ247())return;
+    const tbl=findChangesTable247();
+    if(!tbl)return;
+    const tbody=ensureTbody247(tbl);
+    if(!tbody)return;
+
+    // remove old injected rows before rebuilding
+    tbody.querySelectorAll('tr[data-scl247-row="1"]').forEach(x=>x.remove());
+
+    const ppRows=rows247();
+    if(!ppRows.length)return;
+
+    const existing=new Set([...tbody.querySelectorAll('tr')].map(existingRowKey247));
+    const html=ppRows
+      .filter(r=>!existing.has(ppRowKey247(r)))
+      .map(rowHtml247)
+      .join('');
+
+    if(html){
+      tbody.insertAdjacentHTML('beforeend', html);
+      sortTable247(tbody);
+      updateCount247(tbody);
+    }
+
+    // Hide old debug section if present.
+    document.getElementById('scl246PharmaplusRows')?.remove();
+  }
+
+  window.scl247ApplyPharmaplusRowsToChanges=apply247;
+
+  const prevRender246=typeof scl246RenderPharmaplusRows==='function'?scl246RenderPharmaplusRows:null;
+  if(prevRender246 && !prevRender246.__scl247){
+    window.scl246RenderPharmaplusRows=function(){
+      // Do not render separate debug box anymore; apply to main table.
+      setTimeout(apply247,0);
+      return null;
+    };
+    window.scl246RenderPharmaplusRows.__scl247=true;
+  }
+
+  const prevRender=typeof scl212Render==='function'?scl212Render:null;
+  if(prevRender && !prevRender.__scl247){
+    window.scl212Render=function(){
+      const r=prevRender.apply(this,arguments);
+      setTimeout(apply247,100);
+      return r;
+    };
+    window.scl212Render.__scl247=true;
+  }
+
+  const prevRenderChanges=typeof scl212RenderChanges==='function'?scl212RenderChanges:null;
+  if(prevRenderChanges && !prevRenderChanges.__scl247){
+    window.scl212RenderChanges=function(){
+      const r=prevRenderChanges.apply(this,arguments);
+      setTimeout(apply247,100);
+      return r;
+    };
+    window.scl212RenderChanges.__scl247=true;
+  }
+
+  const prevLoad245=typeof scl245LoadPharmaplusOperationalCampaigns==='function'?scl245LoadPharmaplusOperationalCampaigns:null;
+  if(prevLoad245 && !prevLoad245.__scl247){
+    window.scl245LoadPharmaplusOperationalCampaigns=async function(){
+      const r=await prevLoad245.apply(this,arguments);
+      setTimeout(apply247,200);
+      return r;
+    };
+    window.scl245LoadPharmaplusOperationalCampaigns.__scl247=true;
+  }
+
+  setTimeout(apply247,900);
+  setTimeout(apply247,2200);
+  setTimeout(apply247,4500);
 })();
 
 </script>
