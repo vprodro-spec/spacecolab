@@ -17260,6 +17260,334 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
   <span class="muted" id="sclAutosaveStripMeta">Αποθηκεύει αυτόματα κάθε αλλαγή στο φαρμακείο.</span>
 </div>
 
+
+<script>
+/* v249 — Pharmaplus changes count in tab badge + simpler Scope UX */
+(function(){
+  window.SCL249 = window.SCL249 || {version:'v249-pharmaplus-badge-scope-ux'};
+
+  function clean249(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    var s=String(v).trim();
+    if(!s || s==='[object Object]' || s==='null' || s==='undefined' || s==='—')return '';
+    return s;
+  }
+  function esc249(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    try{ if(typeof esc==='function')return esc(v); }catch(e){}
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function months249(){
+    try{ if(typeof SCL212_MONTHS!=='undefined' && SCL212_MONTHS && SCL212_MONTHS.length)return SCL212_MONTHS; }catch(e){}
+    try{ if(typeof HQREF_MONTHS!=='undefined' && HQREF_MONTHS && HQREF_MONTHS.length)return HQREF_MONTHS; }catch(e){}
+    return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  }
+  function currentYear249(){
+    try{ if(typeof hqRefYear==='function')return Number(hqRefYear())||2026; }catch(e){}
+    try{ if(typeof scl212Year==='function')return Number(scl212Year())||2026; }catch(e){}
+    return Number(document.getElementById('hqRefYearSelect')?.value || document.getElementById('scl212Year')?.value || 2026);
+  }
+  function baseDoneMap249(){
+    var map={};
+    try{ (window.HQREF_DATA && Array.isArray(HQREF_DATA.hq_changes_done) ? HQREF_DATA.hq_changes_done : []).forEach(function(d){map[String(d.change_key)] = !!d.done;}); }catch(e){}
+    return map;
+  }
+  function ensureRows249(){
+    try{ if(window.SCL248 && typeof window.scl248BuildPharmaplusScheduleRows==='function')window.scl248BuildPharmaplusScheduleRows(); }catch(e){}
+    return (window.SCL248 && Array.isArray(window.SCL248.changeRows)) ? window.SCL248.changeRows : [];
+  }
+  function ppKey249(r){
+    return ['pp', r.pharmacy_id||'', currentYear249(), r.month, r.pharmaplus_kind || r.final_type || 'pharmaplus', clean249(r.final_title), clean249(r.content_change_reason)].join('|');
+  }
+  function ppChanges249(){
+    var done=baseDoneMap249();
+    var base=(typeof HQREF_CHANGES!=='undefined' && Array.isArray(HQREF_CHANGES)) ? HQREF_CHANGES : [];
+    var seenBase={};
+    base.forEach(function(c){
+      var k=[clean249(c.pharmacy), clean249(c.position), clean249(c.month), clean249(c.label)].join('|');
+      seenBase[k]=true;
+    });
+    var out=[];
+    ensureRows249().forEach(function(r){
+      if(!r || !r.content_change_required || r.planning_gap)return;
+      var month=clean249(r.month_label) || months249()[Number(r.month)] || String(r.month);
+      var item={
+        key:ppKey249(r),
+        month:month,
+        monthIdx:Number(r.month),
+        pharmacy:clean249(r.pharmacy_name)||'Φαρμακείο',
+        position:clean249(r.position_name)||'Pharmaplus',
+        type:'pharmaplus',
+        label:clean249(r.final_title)||'Pharmaplus',
+        extra:[clean249(r.content_change_reason), clean249(r.supplier)].filter(Boolean).join(' · '),
+        billing:0,
+        needMaterial:false
+      };
+      var sig=[item.pharmacy,item.position,item.month,item.label].join('|');
+      if(seenBase[sig])return;
+      item.done=!!done[item.key];
+      out.push(item);
+    });
+    var seen={};
+    return out.filter(function(x){
+      var k=[x.key,x.pharmacy,x.position,x.month,x.label].join('|');
+      if(seen[k])return false;
+      seen[k]=true;
+      return true;
+    });
+  }
+  function countMetrics249(){
+    var base=(typeof HQREF_CHANGES!=='undefined' && Array.isArray(HQREF_CHANGES)) ? HQREF_CHANGES : [];
+    var pp=ppChanges249();
+    var total=base.length + pp.length;
+    var pendingBase=base.filter(function(c){return !c.done;}).length;
+    var pendingPP=pp.filter(function(c){return !c.done;}).length;
+    var currentMonth=(new Date().getFullYear()===currentYear249()) ? new Date().getMonth() : 0;
+    var monthTotal=base.filter(function(c){return Number(c.monthIdx)===currentMonth;}).length + pp.filter(function(c){return Number(c.monthIdx)===currentMonth;}).length;
+    var monthPending=base.filter(function(c){return Number(c.monthIdx)===currentMonth && !c.done;}).length + pp.filter(function(c){return Number(c.monthIdx)===currentMonth && !c.done;}).length;
+    return {base:base.length, pp:pp.length, total:total, pending:pendingBase+pendingPP, monthTotal:monthTotal, monthPending:monthPending};
+  }
+  function updateBadges249(){
+    var m=countMetrics249();
+    var badge=document.getElementById('hqRefChangeBadge');
+    if(badge){
+      badge.textContent=String(m.pending);
+      badge.style.display=m.pending?'inline-flex':'none';
+      badge.title='Εκκρεμείς αλλαγές μαζί με Pharmaplus';
+    }
+    var stat=document.getElementById('hqRefMonthChanges');
+    if(stat){
+      // Existing label says "Αλλαγές" in the current layout, so show the full actionable total.
+      stat.textContent=String(m.total);
+      stat.title='Σύνολο αλλαγών μαζί με Pharmaplus';
+    }
+    var pending=document.getElementById('sclHqPendingChanges');
+    if(pending){
+      pending.textContent=String(m.pending)+' εκκρεμούν';
+      pending.title='Εκκρεμείς αλλαγές μαζί με Pharmaplus';
+    }
+    var countLabel=document.getElementById('hqRefCountLabel');
+    if(countLabel){
+      var table=document.getElementById('hqRefChangesTbody');
+      var renderedRows=table ? table.querySelectorAll('tr').length : 0;
+      var n=Math.max(renderedRows, m.total);
+      countLabel.textContent=String(n)+' αλλαγές';
+    }
+    // Older SCL212/SCL211 badges, if they are visible in another HQ panel.
+    ['scl212Badge','scl211ChangesBadge'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && m.pending){el.textContent=String(m.pending);el.style.display='inline-flex';}
+    });
+  }
+
+  function installCountPatch249(){
+    if(typeof hqRefRenderStatsHeader==='function' && !hqRefRenderStatsHeader.__scl249){
+      var oldStats=hqRefRenderStatsHeader;
+      hqRefRenderStatsHeader=function(){
+        var r=oldStats.apply(this,arguments);
+        setTimeout(updateBadges249,0);
+        setTimeout(updateBadges249,250);
+        return r;
+      };
+      hqRefRenderStatsHeader.__scl249=true;
+    }
+    if(typeof hqRefRenderChanges==='function' && !hqRefRenderChanges.__scl249){
+      var oldChanges=hqRefRenderChanges;
+      hqRefRenderChanges=function(){
+        var r=oldChanges.apply(this,arguments);
+        setTimeout(updateBadges249,80);
+        setTimeout(updateBadges249,350);
+        return r;
+      };
+      hqRefRenderChanges.__scl249=true;
+    }
+    if(typeof hqRefRenderTodos==='function' && !hqRefRenderTodos.__scl249){
+      var oldTodos=hqRefRenderTodos;
+      hqRefRenderTodos=function(){
+        var r=oldTodos.apply(this,arguments);
+        setTimeout(updateBadges249,0);
+        return r;
+      };
+      hqRefRenderTodos.__scl249=true;
+    }
+  }
+
+  function scopeText249(mode,count){
+    if(mode==='only')return count ? ('Παίζει μόνο σε '+count+' φαρμακείο/α') : 'Παίζει μόνο στα φαρμακεία που θα τσεκάρεις';
+    if(mode==='except')return count ? ('Παίζει παντού, εκτός από '+count+' φαρμακείο/α') : 'Παίζει παντού, εκτός από όσα θα τσεκάρεις';
+    return 'Παίζει αυτόματα σε όλα τα φαρμακεία';
+  }
+  function scopeHelp249(mode){
+    if(mode==='only')return 'Τσέκαρε μόνο τα φαρμακεία που θα συμμετέχουν. Όλα τα υπόλοιπα θα δουν fallback ή Προσεχώς.';
+    if(mode==='except')return 'Τσέκαρε μόνο τα φαρμακεία που ΔΕΝ θα συμμετέχουν. Τα υπόλοιπα θα δουν την κεντρική ενέργεια.';
+    return 'Δεν χρειάζεται επιλογή φαρμακείων. Η ενέργεια ισχύει για όλο το δίκτυο.';
+  }
+  function selectedScopeCount249(){
+    return document.querySelectorAll('#scl231ScopeList input[type="checkbox"]:checked').length;
+  }
+  function enhanceScope249(){
+    var sel=document.getElementById('scl231ScopeMode');
+    if(!sel)return;
+    // Keep the original select as the data source, but make the UI clearer.
+    Array.from(sel.options||[]).forEach(function(o){
+      if(o.value==='all')o.textContent='Σε όλα';
+      if(o.value==='only')o.textContent='Μόνο σε αυτά';
+      if(o.value==='except')o.textContent='Σε όλα εκτός από αυτά';
+    });
+    var field=sel.closest ? sel.closest('.field') : null;
+    if(field){
+      var label=field.querySelector('label');
+      if(label)label.textContent='Πού θα εμφανιστεί η καμπάνια;';
+      field.classList.add('scl249-scope-field');
+    }
+    sel.style.display='none';
+    var panel=document.getElementById('scl249ScopePanel');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='scl249ScopePanel';
+      panel.className='scl249-scope-panel';
+      panel.innerHTML='<div class="scl249-scope-title">Πού παίζει η καμπάνια;</div>'+ 
+        '<div class="scl249-scope-buttons">'+
+          '<button type="button" data-scl249-scope="all"><strong>Όλα</strong><span>παίζει παντού</span></button>'+ 
+          '<button type="button" data-scl249-scope="only"><strong>Μόνο αυτά</strong><span>διαλέγω συμμετέχοντα</span></button>'+ 
+          '<button type="button" data-scl249-scope="except"><strong>Εξαιρέσεις</strong><span>διαλέγω ποια μένουν έξω</span></button>'+ 
+        '</div>'+ 
+        '<div class="scl249-scope-summary" id="scl249ScopeSummary"></div>'+ 
+        '<div class="scl249-scope-help" id="scl249ScopeHelp"></div>';
+      (field || sel.parentElement || sel).appendChild(panel);
+      panel.querySelectorAll('[data-scl249-scope]').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          sel.value=btn.dataset.scl249Scope;
+          sel.dispatchEvent(new Event('change',{bubbles:true}));
+          refreshScope249();
+        });
+      });
+    }
+    if(!sel.dataset.scl249Bound){
+      sel.dataset.scl249Bound='1';
+      sel.addEventListener('change',refreshScope249);
+    }
+    var list=document.getElementById('scl231ScopeList');
+    if(list && !list.dataset.scl249Bound){
+      list.dataset.scl249Bound='1';
+      list.addEventListener('change',refreshScope249);
+    }
+    refreshScope249();
+  }
+  function refreshScope249(){
+    var sel=document.getElementById('scl231ScopeMode');
+    if(!sel)return;
+    var mode=sel.value || 'all';
+    var count=selectedScopeCount249();
+    var panel=document.getElementById('scl249ScopePanel');
+    if(panel){
+      panel.querySelectorAll('[data-scl249-scope]').forEach(function(btn){
+        btn.classList.toggle('active',btn.dataset.scl249Scope===mode);
+      });
+    }
+    var summary=document.getElementById('scl249ScopeSummary');
+    if(summary)summary.textContent=scopeText249(mode,count);
+    var help=document.getElementById('scl249ScopeHelp');
+    if(help)help.textContent=scopeHelp249(mode);
+    var list=document.getElementById('scl231ScopeList');
+    if(list){
+      list.style.display=(mode==='all')?'none':'grid';
+      list.classList.add('scl249-scope-list');
+    }
+  }
+
+  function installScopePatch249(){
+    if(typeof scl231ScopeText==='function' && !scl231ScopeText.__scl249){
+      scl231ScopeText=function(c){
+        var mode=(c && c.scope_mode) || 'all';
+        var ids=(c && Array.isArray(c.scope_pharmacy_ids)) ? c.scope_pharmacy_ids : [];
+        if(mode==='only')return ids.length ? ('Μόνο '+ids.length) : 'Μόνο επιλεγμένα';
+        if(mode==='except')return ids.length ? ('Εκτός '+ids.length) : 'Με εξαιρέσεις';
+        return 'Όλα';
+      };
+      scl231ScopeText.__scl249=true;
+    }
+    if(typeof scl231RenderScopeList==='function' && !scl231RenderScopeList.__scl249){
+      var oldList=scl231RenderScopeList;
+      scl231RenderScopeList=function(){
+        var r=oldList.apply(this,arguments);
+        setTimeout(enhanceScope249,0);
+        setTimeout(refreshScope249,50);
+        return r;
+      };
+      scl231RenderScopeList.__scl249=true;
+    }
+    if(typeof scl231OpenEditor==='function' && !scl231OpenEditor.__scl249){
+      var oldOpen=scl231OpenEditor;
+      scl231OpenEditor=function(){
+        var r=oldOpen.apply(this,arguments);
+        setTimeout(enhanceScope249,0);
+        setTimeout(refreshScope249,100);
+        return r;
+      };
+      scl231OpenEditor.__scl249=true;
+    }
+    if(typeof scl231CollectScopeIds==='function' && !scl231CollectScopeIds.__scl249){
+      var oldCollect=scl231CollectScopeIds;
+      scl231CollectScopeIds=function(){
+        var mode=document.getElementById('scl231ScopeMode')?.value || 'all';
+        if(mode==='all')return [];
+        return oldCollect.apply(this,arguments);
+      };
+      scl231CollectScopeIds.__scl249=true;
+    }
+    if(typeof scl231SaveCampaign==='function' && !scl231SaveCampaign.__scl249){
+      var oldSave=scl231SaveCampaign;
+      scl231SaveCampaign=async function(){
+        var mode=document.getElementById('scl231ScopeMode')?.value || 'all';
+        var count=selectedScopeCount249();
+        if(mode!=='all' && count===0){
+          alert('Διάλεξε τουλάχιστον ένα φαρμακείο ή γύρισε το scope σε «Όλα».');
+          return;
+        }
+        return await oldSave.apply(this,arguments);
+      };
+      scl231SaveCampaign.__scl249=true;
+    }
+  }
+
+  function injectStyle249(){
+    if(document.getElementById('scl249Style'))return;
+    var st=document.createElement('style');
+    st.id='scl249Style';
+    st.textContent='\n'+
+      '.scl249-scope-field{grid-column:1 / -1;}\n'+
+      '.scl249-scope-panel{border:1px solid #d9e1ea;background:#fbfcff;border-radius:12px;padding:10px;margin-top:6px;}\n'+
+      '.scl249-scope-title{font-size:10px;font-weight:950;color:#637083;text-transform:uppercase;margin-bottom:7px;}\n'+
+      '.scl249-scope-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}\n'+
+      '.scl249-scope-buttons button{border:1px solid #d9e1ea;background:#fff;border-radius:11px;padding:9px;cursor:pointer;text-align:left;min-height:54px;}\n'+
+      '.scl249-scope-buttons button strong{display:block;font-size:12px;color:#14213d;margin-bottom:3px;}\n'+
+      '.scl249-scope-buttons button span{display:block;font-size:10px;color:#637083;line-height:1.25;}\n'+
+      '.scl249-scope-buttons button.active{border-color:#1f66ff;background:#edf4ff;box-shadow:0 2px 10px rgba(31,102,255,.10);}\n'+
+      '.scl249-scope-buttons button.active strong{color:#174dc2;}\n'+
+      '.scl249-scope-summary{margin-top:8px;font-size:12px;font-weight:950;color:#14213d;}\n'+
+      '.scl249-scope-help{margin-top:3px;font-size:10px;color:#637083;line-height:1.35;}\n'+
+      '.scl249-scope-list{margin-top:8px;max-height:240px;overflow:auto;border:1px solid #e5eaf1;border-radius:10px;padding:7px;background:#fff;}\n'+
+      '@media(max-width:760px){.scl249-scope-buttons{grid-template-columns:1fr;}}\n';
+    document.head.appendChild(st);
+  }
+
+  function boot249(){
+    injectStyle249();
+    installCountPatch249();
+    installScopePatch249();
+    enhanceScope249();
+    updateBadges249();
+  }
+
+  setTimeout(boot249,300);
+  setTimeout(boot249,1200);
+  setTimeout(boot249,2500);
+  setInterval(function(){try{boot249();}catch(e){}},5000);
+})();
+
+</script>
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
 });document.querySelectorAll('[data-clear-timeline-focus]').forEach(b=>b.onclick=()=>{state.timelineFocus=null;refresh();});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('open')});document.querySelectorAll('[data-modal-card]').forEach(x=>x.onclick=e=>e.stopPropagation());
@@ -26482,5 +26810,333 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     </div>
   </div>
 
+
+<script>
+/* v249 — Pharmaplus changes count in tab badge + simpler Scope UX */
+(function(){
+  window.SCL249 = window.SCL249 || {version:'v249-pharmaplus-badge-scope-ux'};
+
+  function clean249(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    var s=String(v).trim();
+    if(!s || s==='[object Object]' || s==='null' || s==='undefined' || s==='—')return '';
+    return s;
+  }
+  function esc249(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    try{ if(typeof esc==='function')return esc(v); }catch(e){}
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function months249(){
+    try{ if(typeof SCL212_MONTHS!=='undefined' && SCL212_MONTHS && SCL212_MONTHS.length)return SCL212_MONTHS; }catch(e){}
+    try{ if(typeof HQREF_MONTHS!=='undefined' && HQREF_MONTHS && HQREF_MONTHS.length)return HQREF_MONTHS; }catch(e){}
+    return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  }
+  function currentYear249(){
+    try{ if(typeof hqRefYear==='function')return Number(hqRefYear())||2026; }catch(e){}
+    try{ if(typeof scl212Year==='function')return Number(scl212Year())||2026; }catch(e){}
+    return Number(document.getElementById('hqRefYearSelect')?.value || document.getElementById('scl212Year')?.value || 2026);
+  }
+  function baseDoneMap249(){
+    var map={};
+    try{ (window.HQREF_DATA && Array.isArray(HQREF_DATA.hq_changes_done) ? HQREF_DATA.hq_changes_done : []).forEach(function(d){map[String(d.change_key)] = !!d.done;}); }catch(e){}
+    return map;
+  }
+  function ensureRows249(){
+    try{ if(window.SCL248 && typeof window.scl248BuildPharmaplusScheduleRows==='function')window.scl248BuildPharmaplusScheduleRows(); }catch(e){}
+    return (window.SCL248 && Array.isArray(window.SCL248.changeRows)) ? window.SCL248.changeRows : [];
+  }
+  function ppKey249(r){
+    return ['pp', r.pharmacy_id||'', currentYear249(), r.month, r.pharmaplus_kind || r.final_type || 'pharmaplus', clean249(r.final_title), clean249(r.content_change_reason)].join('|');
+  }
+  function ppChanges249(){
+    var done=baseDoneMap249();
+    var base=(typeof HQREF_CHANGES!=='undefined' && Array.isArray(HQREF_CHANGES)) ? HQREF_CHANGES : [];
+    var seenBase={};
+    base.forEach(function(c){
+      var k=[clean249(c.pharmacy), clean249(c.position), clean249(c.month), clean249(c.label)].join('|');
+      seenBase[k]=true;
+    });
+    var out=[];
+    ensureRows249().forEach(function(r){
+      if(!r || !r.content_change_required || r.planning_gap)return;
+      var month=clean249(r.month_label) || months249()[Number(r.month)] || String(r.month);
+      var item={
+        key:ppKey249(r),
+        month:month,
+        monthIdx:Number(r.month),
+        pharmacy:clean249(r.pharmacy_name)||'Φαρμακείο',
+        position:clean249(r.position_name)||'Pharmaplus',
+        type:'pharmaplus',
+        label:clean249(r.final_title)||'Pharmaplus',
+        extra:[clean249(r.content_change_reason), clean249(r.supplier)].filter(Boolean).join(' · '),
+        billing:0,
+        needMaterial:false
+      };
+      var sig=[item.pharmacy,item.position,item.month,item.label].join('|');
+      if(seenBase[sig])return;
+      item.done=!!done[item.key];
+      out.push(item);
+    });
+    var seen={};
+    return out.filter(function(x){
+      var k=[x.key,x.pharmacy,x.position,x.month,x.label].join('|');
+      if(seen[k])return false;
+      seen[k]=true;
+      return true;
+    });
+  }
+  function countMetrics249(){
+    var base=(typeof HQREF_CHANGES!=='undefined' && Array.isArray(HQREF_CHANGES)) ? HQREF_CHANGES : [];
+    var pp=ppChanges249();
+    var total=base.length + pp.length;
+    var pendingBase=base.filter(function(c){return !c.done;}).length;
+    var pendingPP=pp.filter(function(c){return !c.done;}).length;
+    var currentMonth=(new Date().getFullYear()===currentYear249()) ? new Date().getMonth() : 0;
+    var monthTotal=base.filter(function(c){return Number(c.monthIdx)===currentMonth;}).length + pp.filter(function(c){return Number(c.monthIdx)===currentMonth;}).length;
+    var monthPending=base.filter(function(c){return Number(c.monthIdx)===currentMonth && !c.done;}).length + pp.filter(function(c){return Number(c.monthIdx)===currentMonth && !c.done;}).length;
+    return {base:base.length, pp:pp.length, total:total, pending:pendingBase+pendingPP, monthTotal:monthTotal, monthPending:monthPending};
+  }
+  function updateBadges249(){
+    var m=countMetrics249();
+    var badge=document.getElementById('hqRefChangeBadge');
+    if(badge){
+      badge.textContent=String(m.pending);
+      badge.style.display=m.pending?'inline-flex':'none';
+      badge.title='Εκκρεμείς αλλαγές μαζί με Pharmaplus';
+    }
+    var stat=document.getElementById('hqRefMonthChanges');
+    if(stat){
+      // Existing label says "Αλλαγές" in the current layout, so show the full actionable total.
+      stat.textContent=String(m.total);
+      stat.title='Σύνολο αλλαγών μαζί με Pharmaplus';
+    }
+    var pending=document.getElementById('sclHqPendingChanges');
+    if(pending){
+      pending.textContent=String(m.pending)+' εκκρεμούν';
+      pending.title='Εκκρεμείς αλλαγές μαζί με Pharmaplus';
+    }
+    var countLabel=document.getElementById('hqRefCountLabel');
+    if(countLabel){
+      var table=document.getElementById('hqRefChangesTbody');
+      var renderedRows=table ? table.querySelectorAll('tr').length : 0;
+      var n=Math.max(renderedRows, m.total);
+      countLabel.textContent=String(n)+' αλλαγές';
+    }
+    // Older SCL212/SCL211 badges, if they are visible in another HQ panel.
+    ['scl212Badge','scl211ChangesBadge'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el && m.pending){el.textContent=String(m.pending);el.style.display='inline-flex';}
+    });
+  }
+
+  function installCountPatch249(){
+    if(typeof hqRefRenderStatsHeader==='function' && !hqRefRenderStatsHeader.__scl249){
+      var oldStats=hqRefRenderStatsHeader;
+      hqRefRenderStatsHeader=function(){
+        var r=oldStats.apply(this,arguments);
+        setTimeout(updateBadges249,0);
+        setTimeout(updateBadges249,250);
+        return r;
+      };
+      hqRefRenderStatsHeader.__scl249=true;
+    }
+    if(typeof hqRefRenderChanges==='function' && !hqRefRenderChanges.__scl249){
+      var oldChanges=hqRefRenderChanges;
+      hqRefRenderChanges=function(){
+        var r=oldChanges.apply(this,arguments);
+        setTimeout(updateBadges249,80);
+        setTimeout(updateBadges249,350);
+        return r;
+      };
+      hqRefRenderChanges.__scl249=true;
+    }
+    if(typeof hqRefRenderTodos==='function' && !hqRefRenderTodos.__scl249){
+      var oldTodos=hqRefRenderTodos;
+      hqRefRenderTodos=function(){
+        var r=oldTodos.apply(this,arguments);
+        setTimeout(updateBadges249,0);
+        return r;
+      };
+      hqRefRenderTodos.__scl249=true;
+    }
+  }
+
+  function scopeText249(mode,count){
+    if(mode==='only')return count ? ('Παίζει μόνο σε '+count+' φαρμακείο/α') : 'Παίζει μόνο στα φαρμακεία που θα τσεκάρεις';
+    if(mode==='except')return count ? ('Παίζει παντού, εκτός από '+count+' φαρμακείο/α') : 'Παίζει παντού, εκτός από όσα θα τσεκάρεις';
+    return 'Παίζει αυτόματα σε όλα τα φαρμακεία';
+  }
+  function scopeHelp249(mode){
+    if(mode==='only')return 'Τσέκαρε μόνο τα φαρμακεία που θα συμμετέχουν. Όλα τα υπόλοιπα θα δουν fallback ή Προσεχώς.';
+    if(mode==='except')return 'Τσέκαρε μόνο τα φαρμακεία που ΔΕΝ θα συμμετέχουν. Τα υπόλοιπα θα δουν την κεντρική ενέργεια.';
+    return 'Δεν χρειάζεται επιλογή φαρμακείων. Η ενέργεια ισχύει για όλο το δίκτυο.';
+  }
+  function selectedScopeCount249(){
+    return document.querySelectorAll('#scl231ScopeList input[type="checkbox"]:checked').length;
+  }
+  function enhanceScope249(){
+    var sel=document.getElementById('scl231ScopeMode');
+    if(!sel)return;
+    // Keep the original select as the data source, but make the UI clearer.
+    Array.from(sel.options||[]).forEach(function(o){
+      if(o.value==='all')o.textContent='Σε όλα';
+      if(o.value==='only')o.textContent='Μόνο σε αυτά';
+      if(o.value==='except')o.textContent='Σε όλα εκτός από αυτά';
+    });
+    var field=sel.closest ? sel.closest('.field') : null;
+    if(field){
+      var label=field.querySelector('label');
+      if(label)label.textContent='Πού θα εμφανιστεί η καμπάνια;';
+      field.classList.add('scl249-scope-field');
+    }
+    sel.style.display='none';
+    var panel=document.getElementById('scl249ScopePanel');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='scl249ScopePanel';
+      panel.className='scl249-scope-panel';
+      panel.innerHTML='<div class="scl249-scope-title">Πού παίζει η καμπάνια;</div>'+ 
+        '<div class="scl249-scope-buttons">'+
+          '<button type="button" data-scl249-scope="all"><strong>Όλα</strong><span>παίζει παντού</span></button>'+ 
+          '<button type="button" data-scl249-scope="only"><strong>Μόνο αυτά</strong><span>διαλέγω συμμετέχοντα</span></button>'+ 
+          '<button type="button" data-scl249-scope="except"><strong>Εξαιρέσεις</strong><span>διαλέγω ποια μένουν έξω</span></button>'+ 
+        '</div>'+ 
+        '<div class="scl249-scope-summary" id="scl249ScopeSummary"></div>'+ 
+        '<div class="scl249-scope-help" id="scl249ScopeHelp"></div>';
+      (field || sel.parentElement || sel).appendChild(panel);
+      panel.querySelectorAll('[data-scl249-scope]').forEach(function(btn){
+        btn.addEventListener('click',function(){
+          sel.value=btn.dataset.scl249Scope;
+          sel.dispatchEvent(new Event('change',{bubbles:true}));
+          refreshScope249();
+        });
+      });
+    }
+    if(!sel.dataset.scl249Bound){
+      sel.dataset.scl249Bound='1';
+      sel.addEventListener('change',refreshScope249);
+    }
+    var list=document.getElementById('scl231ScopeList');
+    if(list && !list.dataset.scl249Bound){
+      list.dataset.scl249Bound='1';
+      list.addEventListener('change',refreshScope249);
+    }
+    refreshScope249();
+  }
+  function refreshScope249(){
+    var sel=document.getElementById('scl231ScopeMode');
+    if(!sel)return;
+    var mode=sel.value || 'all';
+    var count=selectedScopeCount249();
+    var panel=document.getElementById('scl249ScopePanel');
+    if(panel){
+      panel.querySelectorAll('[data-scl249-scope]').forEach(function(btn){
+        btn.classList.toggle('active',btn.dataset.scl249Scope===mode);
+      });
+    }
+    var summary=document.getElementById('scl249ScopeSummary');
+    if(summary)summary.textContent=scopeText249(mode,count);
+    var help=document.getElementById('scl249ScopeHelp');
+    if(help)help.textContent=scopeHelp249(mode);
+    var list=document.getElementById('scl231ScopeList');
+    if(list){
+      list.style.display=(mode==='all')?'none':'grid';
+      list.classList.add('scl249-scope-list');
+    }
+  }
+
+  function installScopePatch249(){
+    if(typeof scl231ScopeText==='function' && !scl231ScopeText.__scl249){
+      scl231ScopeText=function(c){
+        var mode=(c && c.scope_mode) || 'all';
+        var ids=(c && Array.isArray(c.scope_pharmacy_ids)) ? c.scope_pharmacy_ids : [];
+        if(mode==='only')return ids.length ? ('Μόνο '+ids.length) : 'Μόνο επιλεγμένα';
+        if(mode==='except')return ids.length ? ('Εκτός '+ids.length) : 'Με εξαιρέσεις';
+        return 'Όλα';
+      };
+      scl231ScopeText.__scl249=true;
+    }
+    if(typeof scl231RenderScopeList==='function' && !scl231RenderScopeList.__scl249){
+      var oldList=scl231RenderScopeList;
+      scl231RenderScopeList=function(){
+        var r=oldList.apply(this,arguments);
+        setTimeout(enhanceScope249,0);
+        setTimeout(refreshScope249,50);
+        return r;
+      };
+      scl231RenderScopeList.__scl249=true;
+    }
+    if(typeof scl231OpenEditor==='function' && !scl231OpenEditor.__scl249){
+      var oldOpen=scl231OpenEditor;
+      scl231OpenEditor=function(){
+        var r=oldOpen.apply(this,arguments);
+        setTimeout(enhanceScope249,0);
+        setTimeout(refreshScope249,100);
+        return r;
+      };
+      scl231OpenEditor.__scl249=true;
+    }
+    if(typeof scl231CollectScopeIds==='function' && !scl231CollectScopeIds.__scl249){
+      var oldCollect=scl231CollectScopeIds;
+      scl231CollectScopeIds=function(){
+        var mode=document.getElementById('scl231ScopeMode')?.value || 'all';
+        if(mode==='all')return [];
+        return oldCollect.apply(this,arguments);
+      };
+      scl231CollectScopeIds.__scl249=true;
+    }
+    if(typeof scl231SaveCampaign==='function' && !scl231SaveCampaign.__scl249){
+      var oldSave=scl231SaveCampaign;
+      scl231SaveCampaign=async function(){
+        var mode=document.getElementById('scl231ScopeMode')?.value || 'all';
+        var count=selectedScopeCount249();
+        if(mode!=='all' && count===0){
+          alert('Διάλεξε τουλάχιστον ένα φαρμακείο ή γύρισε το scope σε «Όλα».');
+          return;
+        }
+        return await oldSave.apply(this,arguments);
+      };
+      scl231SaveCampaign.__scl249=true;
+    }
+  }
+
+  function injectStyle249(){
+    if(document.getElementById('scl249Style'))return;
+    var st=document.createElement('style');
+    st.id='scl249Style';
+    st.textContent='\n'+
+      '.scl249-scope-field{grid-column:1 / -1;}\n'+
+      '.scl249-scope-panel{border:1px solid #d9e1ea;background:#fbfcff;border-radius:12px;padding:10px;margin-top:6px;}\n'+
+      '.scl249-scope-title{font-size:10px;font-weight:950;color:#637083;text-transform:uppercase;margin-bottom:7px;}\n'+
+      '.scl249-scope-buttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}\n'+
+      '.scl249-scope-buttons button{border:1px solid #d9e1ea;background:#fff;border-radius:11px;padding:9px;cursor:pointer;text-align:left;min-height:54px;}\n'+
+      '.scl249-scope-buttons button strong{display:block;font-size:12px;color:#14213d;margin-bottom:3px;}\n'+
+      '.scl249-scope-buttons button span{display:block;font-size:10px;color:#637083;line-height:1.25;}\n'+
+      '.scl249-scope-buttons button.active{border-color:#1f66ff;background:#edf4ff;box-shadow:0 2px 10px rgba(31,102,255,.10);}\n'+
+      '.scl249-scope-buttons button.active strong{color:#174dc2;}\n'+
+      '.scl249-scope-summary{margin-top:8px;font-size:12px;font-weight:950;color:#14213d;}\n'+
+      '.scl249-scope-help{margin-top:3px;font-size:10px;color:#637083;line-height:1.35;}\n'+
+      '.scl249-scope-list{margin-top:8px;max-height:240px;overflow:auto;border:1px solid #e5eaf1;border-radius:10px;padding:7px;background:#fff;}\n'+
+      '@media(max-width:760px){.scl249-scope-buttons{grid-template-columns:1fr;}}\n';
+    document.head.appendChild(st);
+  }
+
+  function boot249(){
+    injectStyle249();
+    installCountPatch249();
+    installScopePatch249();
+    enhanceScope249();
+    updateBadges249();
+  }
+
+  setTimeout(boot249,300);
+  setTimeout(boot249,1200);
+  setTimeout(boot249,2500);
+  setInterval(function(){try{boot249();}catch(e){}},5000);
+})();
+
+</script>
 </body>
 </html>
