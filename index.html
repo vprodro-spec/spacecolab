@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v243 · pharmaplus operational rows changes only · HQ reference layout';
+      content:'v244 · force pharmaplus rows into changes · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -7089,6 +7089,22 @@ body.scl-hq #sclHqDashboard{display:none!important}
 }
 .scl243-pharmaplus-row td{
   background:#fffafa;
+}
+
+
+/* v244 — force Pharmaplus operational rows into Changes table */
+.scl244-pp-row td{
+  background:#fffafa!important;
+}
+.scl244-pp-chip{
+  display:inline-flex;
+  align-items:center;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#FCEBEB;
+  color:#A32D2D;
+  font-size:11px;
+  font-weight:800;
 }
 
 </style>
@@ -25487,6 +25503,233 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 
   setTimeout(refresh243,800);
   setTimeout(refresh243,2200);
+})();
+
+
+/* v244 — force append Pharmaplus rows into HQ Changes table */
+(function(){
+  function clean244(v){
+    if(v===null || v===undefined)return '';
+    if(typeof v==='object')return '';
+    const s=String(v).trim();
+    if(!s || s==='[object Object]' || s==='null' || s==='undefined' || s==='—')return '';
+    return s;
+  }
+  function esc244(v){
+    try{ if(typeof scl212Esc==='function')return scl212Esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+  function isHQ244(){
+    try{return typeof sclMode==='function' && sclMode()==='hq';}catch(e){return false;}
+  }
+  function monthLabel244(m){
+    try{
+      if(typeof SCL212_MONTHS!=='undefined' && SCL212_MONTHS[m])return SCL212_MONTHS[m];
+      if(typeof MONTHS!=='undefined' && MONTHS[m])return MONTHS[m];
+    }catch(e){}
+    return String(m);
+  }
+  function campaigns244(){
+    if(window.SCL241 && Array.isArray(SCL241.rows) && SCL241.rows.length)return SCL241.rows;
+    if(window.SCL231 && Array.isArray(SCL231.campaigns) && SCL231.campaigns.length)return SCL231.campaigns;
+    return [];
+  }
+  function campaignsByMonth244(){
+    const out={};
+    campaigns244().forEach(c=>out[Number(c.month)]=c);
+    return out;
+  }
+  function hasMain244(c){
+    return !!(c && (
+      clean244(c.title)||clean244(c.supplier)||clean244(c.campaign_type)||
+      clean244(c.company_benefit)||clean244(c.products_text)||clean244(c.shelf_instructions)||
+      clean244(c.shelf_1)||clean244(c.shelf_2)||clean244(c.shelf_3)||clean244(c.shelf_4)
+    ));
+  }
+  function hasFallback244(c){
+    return !!(c && (
+      clean244(c.fallback_title)||clean244(c.fallback_description)||clean244(c.fallback_products_text)||clean244(c.fallback_instructions)
+    ));
+  }
+  function inScope244(c,pharmacyId){
+    const mode=clean244(c?.scope_mode)||'all';
+    const ids=(c?.scope_pharmacy_ids||[]).map(String);
+    if(mode==='all')return true;
+    if(mode==='only')return ids.includes(String(pharmacyId));
+    if(mode==='except')return !ids.includes(String(pharmacyId));
+    return true;
+  }
+  function pharmacies244(){
+    try{ if(typeof scl212Pharmacies==='function')return scl212Pharmacies(); }catch(e){}
+    const by={};
+    (window.SCL212?.months||[]).forEach(r=>{
+      if(!r.pharmacy_id)return;
+      if(!by[r.pharmacy_id])by[r.pharmacy_id]={id:r.pharmacy_id,name:r.pharmacy_name,months:[]};
+      by[r.pharmacy_id].months.push(r);
+    });
+    return Object.values(by);
+  }
+  function ppMeta244(p){
+    const rows=(p.months||[]).filter(r=>{
+      const pn=String(r.position_name||'').toLowerCase();
+      const pt=String(r.position_type||'').toLowerCase();
+      return pn.includes('pharmaplus') || pt==='pharmaplus';
+    });
+    const sample=rows[0]||{};
+    return {
+      position_id:sample.position_id||`pharmaplus_${p.id}`,
+      position_name:sample.position_name||'Pharmaplus',
+      position_orientation:sample.position_orientation||'—'
+    };
+  }
+  function final244(c,pharmacyId,m){
+    if(!c)return {kind:'empty',title:'Προσεχώς',key:`empty|${m}`};
+    const main=hasMain244(c);
+    const fallback=hasFallback244(c);
+    if(main && inScope244(c,pharmacyId)){
+      const title=clean244(c.display_title)||clean244(c.title)||clean244(c.supplier)||'Pharmaplus ενέργεια';
+      const key=['main',clean244(c.title),clean244(c.supplier),clean244(c.campaign_type),clean244(c.company_benefit),clean244(c.products_text),clean244(c.shelf_instructions),clean244(c.shelf_1),clean244(c.shelf_2),clean244(c.shelf_3),clean244(c.shelf_4)].join('|');
+      return {kind:'main',title,key,campaign:c};
+    }
+    if(fallback){
+      const title=clean244(c.fallback_title)||'Pharmaplus';
+      const key=['fallback',clean244(c.fallback_title),clean244(c.fallback_description),clean244(c.fallback_products_text),clean244(c.fallback_instructions)].join('|');
+      return {kind:'fallback',title,key,campaign:c};
+    }
+    return {kind:'empty',title:'Προσεχώς',key:`empty|${m}`,campaign:c};
+  }
+  function reason244(prev,curr){
+    if(!curr || curr.kind==='empty')return '';
+    if(!prev || prev.kind==='empty')return curr.kind==='fallback'?'pharmaplus_fallback_start':'pharmaplus_campaign_start';
+    if(prev.key===curr.key)return '';
+    if(prev.kind==='fallback' && curr.kind==='main')return 'pharmaplus_campaign_resume';
+    if(prev.kind==='main' && curr.kind==='fallback')return 'pharmaplus_fallback_applied';
+    if(curr.kind==='fallback')return 'pharmaplus_fallback_change';
+    return 'pharmaplus_campaign_change';
+  }
+  function build244(){
+    if(!isHQ244() || !window.SCL212)return [];
+    const byMonth=campaignsByMonth244();
+    const rows=[];
+    pharmacies244().forEach(p=>{
+      const meta=ppMeta244(p);
+      let prev=null;
+      for(let m=0;m<12;m++){
+        const curr=final244(byMonth[m],p.id,m);
+        const reason=reason244(prev,curr);
+        if(reason){
+          rows.push({
+            __scl244:true,
+            pharmacy_id:p.id,
+            pharmacy_name:p.name,
+            position_id:meta.position_id,
+            position_name:meta.position_name,
+            position_orientation:meta.position_orientation,
+            month:m,
+            month_label:monthLabel244(m),
+            final_type:curr.kind==='fallback'?'pharmaplus_fallback':'pharmaplus_campaign',
+            final_title:curr.title,
+            content_change_reason:reason,
+            supplier:clean244(curr.campaign?.supplier),
+            billing_change_applies:false,
+            billing_reason:'none'
+          });
+        }
+        prev=curr;
+      }
+    });
+    window.SCL244_PP_ROWS=rows;
+    return rows;
+  }
+  function existingKeys244(){
+    const keys=new Set();
+    document.querySelectorAll('#scl212Changes tr').forEach(tr=>{
+      const t=tr.innerText||'';
+      if(t.includes('pharmaplus_campaign')||t.includes('pharmaplus_fallback')){
+        const cells=[...tr.children].map(x=>(x.innerText||'').trim());
+        keys.add(cells.join('|'));
+      }
+    });
+    return keys;
+  }
+  function rowHtml244(r){
+    const id=`scl244_${r.pharmacy_id}_${r.month}_${r.final_type}`;
+    const chip=`<span class="scl244-pp-chip">${esc244(r.final_type)}</span>`;
+    return `<tr class="scl244-pp-row" data-scl244-row="1">
+      <td><input type="checkbox" data-task="${esc244(id)}"></td>
+      <td style="color:#666">${esc244(r.month_label)}</td>
+      <td><strong>${esc244(r.pharmacy_name)}</strong></td>
+      <td style="color:#666">${esc244(r.position_name)}</td>
+      <td style="color:#666">${esc244(r.position_orientation||'—')}</td>
+      <td>${chip}</td>
+      <td><div style="font-weight:500">${esc244(r.final_title||'—')}</div><div class="scl212-sub">${esc244(r.content_change_reason||'')}</div></td>
+      <td style="text-align:right">—</td>
+    </tr>`;
+  }
+  function ensureOrientationHeader244(){
+    const head=document.querySelector('#scl212Changes')?.closest('table')?.querySelector('thead tr');
+    if(!head)return;
+    const headers=[...head.children].map(th=>(th.innerText||'').trim().toLowerCase());
+    if(headers.some(h=>h.includes('orientation')))return;
+    // If older header has no orientation, don't rewrite everything unless needed by our 8-cell rows.
+  }
+  function append244(){
+    if(!isHQ244())return;
+    const tbody=document.getElementById('scl212Changes');
+    if(!tbody)return;
+
+    // remove previous injected rows before rebuilding
+    tbody.querySelectorAll('tr[data-scl244-row="1"]').forEach(x=>x.remove());
+
+    const rows=build244();
+    if(!rows.length)return;
+
+    ensureOrientationHeader244();
+    tbody.insertAdjacentHTML('beforeend', rows.map(rowHtml244).join(''));
+
+    // update visible count without touching filters logic too much
+    const visible=[...tbody.querySelectorAll('tr')].filter(tr=>tr.style.display!=='none').length;
+    const count=document.getElementById('scl212Count');
+    if(count)count.textContent=`${visible} αλλαγές`;
+  }
+
+  window.scl244BuildPharmaplusChangesRows=build244;
+  window.scl244AppendPharmaplusChangesRows=append244;
+
+  const prevRenderChanges = typeof scl212RenderChanges==='function' ? scl212RenderChanges : null;
+  if(prevRenderChanges && !prevRenderChanges.__scl244){
+    window.scl212RenderChanges=function(){
+      const res=prevRenderChanges.apply(this,arguments);
+      setTimeout(append244,0);
+      setTimeout(append244,200);
+      return res;
+    };
+    window.scl212RenderChanges.__scl244=true;
+  }
+
+  const prevRender = typeof scl212Render==='function' ? scl212Render : null;
+  if(prevRender && !prevRender.__scl244){
+    window.scl212Render=function(){
+      const res=prevRender.apply(this,arguments);
+      setTimeout(append244,0);
+      return res;
+    };
+    window.scl212Render.__scl244=true;
+  }
+
+  const prevLoad241 = typeof scl241LoadPharmaplusCampaigns==='function' ? scl241LoadPharmaplusCampaigns : null;
+  if(prevLoad241 && !prevLoad241.__scl244){
+    window.scl241LoadPharmaplusCampaigns=async function(){
+      const res=await prevLoad241.apply(this,arguments);
+      setTimeout(append244,100);
+      return res;
+    };
+    window.scl241LoadPharmaplusCampaigns.__scl244=true;
+  }
+
+  setTimeout(append244,800);
+  setTimeout(append244,1800);
+  setTimeout(append244,3500);
 })();
 
 </script>
