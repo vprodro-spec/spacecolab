@@ -25969,5 +25969,203 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     </div>
   </div>
 
+
+<script>
+/* v248 — Pharmaplus scope save/load hardening
+   Goal: keep scope_mode + scope_pharmacy_ids stable across save, reload and editor reopen.
+   Does not touch local operational logic, billing, or Pharmaplus row generation. */
+(function(){
+  if(window.__SCL248_SCOPE_FIX__)return;
+  window.__SCL248_SCOPE_FIX__=true;
+  window.SCL248_SCOPE={lastByMonth:{},lastPayload:null,lastVerify:null};
+
+  function mode248(v){
+    const m=String(v||'all').trim().toLowerCase();
+    return ['all','only','except'].includes(m)?m:'all';
+  }
+  function ids248(v){
+    if(v===null||v===undefined||v==='')return [];
+    let raw=v;
+    if(typeof raw==='string'){
+      const s=raw.trim();
+      if(!s)return [];
+      try{ raw=JSON.parse(s); }
+      catch(e){ raw=s.split(',').map(x=>x.trim()).filter(Boolean); }
+    }
+    if(!Array.isArray(raw))raw=[raw];
+    const out=[];
+    raw.forEach(x=>{
+      let id=x;
+      if(id && typeof id==='object')id=id.id||id.pharmacy_id||id.pharmacyId||id.value||'';
+      id=String(id??'').trim();
+      if(id && !out.includes(id))out.push(id);
+    });
+    return out;
+  }
+  function normCampaign248(c){
+    const n=Object.assign({},c||{});
+    n.month=Number(n.month);
+    n.scope_mode=mode248(n.scope_mode);
+    n.scope_pharmacy_ids=ids248(n.scope_pharmacy_ids);
+    return n;
+  }
+  function month248(){
+    return window.SCL231 && SCL231.selectedMonth!==null && SCL231.selectedMonth!==undefined ? Number(SCL231.selectedMonth) : null;
+  }
+  function campaign248(m=month248()){
+    try{ if(typeof scl231Campaign==='function')return normCampaign248(scl231Campaign(m)||{}); }catch(e){}
+    try{ return normCampaign248((SCL231.campaigns||[]).find(c=>Number(c.month)===Number(m))||{}); }catch(e){}
+    return {month:m,scope_mode:'all',scope_pharmacy_ids:[]};
+  }
+  function pharmaciesReady248(){
+    try{ return typeof scl231Pharmacies==='function' && (scl231Pharmacies()||[]).length>0; }catch(e){return false;}
+  }
+  function checkedIds248(){
+    return [...document.querySelectorAll('#scl231ScopeList input[type="checkbox"]:checked')]
+      .map(x=>String(x.dataset.pharmacyId||'').trim())
+      .filter(Boolean)
+      .filter((x,i,a)=>a.indexOf(x)===i);
+  }
+  function setStatus248(text,kind){
+    const el=document.getElementById('scl231SaveStatus');
+    if(el){
+      el.textContent=text||'';
+      if(kind)el.dataset.scopeStatus=kind;
+    }
+  }
+  function sameIds248(a,b){
+    a=ids248(a).sort(); b=ids248(b).sort();
+    return a.length===b.length && a.every((x,i)=>x===b[i]);
+  }
+
+  function patchRenderScopeList248(){
+    if(typeof scl231RenderScopeList!=='function' || scl231RenderScopeList.__scl248)return;
+    const prev=scl231RenderScopeList;
+    window.scl231RenderScopeList=function(selectedIds=[]){
+      const m=month248();
+      const normalized=ids248(selectedIds);
+      if(m!==null)SCL248_SCOPE.lastByMonth[m]=normalized;
+      const host=document.getElementById('scl231ScopeList');
+      const rows=(()=>{try{return typeof scl231Pharmacies==='function'?(scl231Pharmacies()||[]):[]}catch(e){return[];}})();
+      if(host && !rows.length){
+        host.innerHTML='<div class="scl231-help">Φόρτωση φαρμακείων για scope… Δεν θα σβηστούν οι υπάρχουσες επιλογές.</div>';
+        return;
+      }
+      return prev.call(this,normalized);
+    };
+    window.scl231RenderScopeList.__scl248=true;
+  }
+
+  function patchOpenEditor248(){
+    if(typeof scl231OpenEditor!=='function' || scl231OpenEditor.__scl248)return;
+    const prev=scl231OpenEditor;
+    window.scl231OpenEditor=function(month){
+      const c=campaign248(month);
+      const res=prev.apply(this,arguments);
+      try{
+        const modeEl=document.getElementById('scl231ScopeMode');
+        if(modeEl)modeEl.value=mode248(c.scope_mode);
+        if(typeof scl231RenderScopeList==='function')scl231RenderScopeList(ids248(c.scope_pharmacy_ids));
+      }catch(e){console.warn('v248 scope reopen patch error',e);}
+      return res;
+    };
+    window.scl231OpenEditor.__scl248=true;
+  }
+
+  function patchCollectPayload248(){
+    if(typeof scl231CollectScopeIds==='function' && !scl231CollectScopeIds.__scl248){
+      window.scl231CollectScopeIds=function(){
+        const host=document.getElementById('scl231ScopeList');
+        const hasBoxes=!!host?.querySelector('input[type="checkbox"]');
+        if(hasBoxes)return checkedIds248();
+        const m=month248();
+        const existing=campaign248(m).scope_pharmacy_ids;
+        return ids248(existing.length?existing:(SCL248_SCOPE.lastByMonth[m]||[]));
+      };
+      window.scl231CollectScopeIds.__scl248=true;
+    }
+    if(typeof scl231Payload==='function' && !scl231Payload.__scl248){
+      const prev=scl231Payload;
+      window.scl231Payload=function(){
+        const p=prev.apply(this,arguments);
+        p.p_scope_mode=mode248(p.p_scope_mode||document.getElementById('scl231ScopeMode')?.value);
+        p.p_scope_pharmacy_ids=p.p_scope_mode==='all'?[]:ids248(p.p_scope_pharmacy_ids);
+        SCL248_SCOPE.lastPayload={month:p.p_month,mode:p.p_scope_mode,ids:p.p_scope_pharmacy_ids.slice()};
+        return p;
+      };
+      window.scl231Payload.__scl248=true;
+    }
+  }
+
+  function patchLoad248(){
+    if(typeof scl231LoadCampaigns==='function' && !scl231LoadCampaigns.__scl248){
+      const prev=scl231LoadCampaigns;
+      window.scl231LoadCampaigns=async function(){
+        const r=await prev.apply(this,arguments);
+        try{
+          if(window.SCL231){
+            SCL231.campaigns=(SCL231.campaigns||[]).map(normCampaign248);
+            SCL231.campaigns.forEach(c=>{SCL248_SCOPE.lastByMonth[Number(c.month)]=ids248(c.scope_pharmacy_ids);});
+            if(typeof scl231RenderCards==='function')scl231RenderCards();
+          }
+        }catch(e){console.warn('v248 scope load normalize error',e);}
+        return r;
+      };
+      window.scl231LoadCampaigns.__scl248=true;
+    }
+  }
+
+  function patchSave248(){
+    if(typeof scl231SaveCampaign==='function' && !scl231SaveCampaign.__scl248){
+      window.scl231SaveCampaign=async function(){
+        if(!window.SCL231 || SCL231.selectedMonth===null){alert('Διάλεξε μήνα.');return;}
+        if(!window.sb || !window.SCL_ROUTING?.hqKey){alert('Δεν υπάρχει HQ cloud σύνδεση.');return;}
+        const payload=typeof scl231Payload==='function'?scl231Payload():null;
+        if(!payload){alert('Δεν δημιουργήθηκε payload.');return;}
+        setStatus248('αποθήκευση scope...','saving');
+        const {error}=await sb.rpc('hq_upsert_pharmaplus_campaign',payload);
+        if(error){console.error(error);setStatus248('Σφάλμα: '+error.message,'error');return;}
+        await scl231LoadCampaigns();
+        const saved=campaign248(payload.p_month);
+        const ok=mode248(saved.scope_mode)===payload.p_scope_mode && sameIds248(saved.scope_pharmacy_ids,payload.p_scope_pharmacy_ids);
+        SCL248_SCOPE.lastVerify={month:payload.p_month,expected:payload,saved,ok};
+        setStatus248(ok?'Αποθηκεύτηκε · scope OK':'Αποθηκεύτηκε, αλλά το scope δεν γύρισε ίδιο από Supabase. Θέλει SQL/RPC έλεγχο. ',ok?'ok':'warn');
+        if(typeof scl231OpenEditor==='function')scl231OpenEditor(payload.p_month);
+      };
+      window.scl231SaveCampaign.__scl248=true;
+    }
+  }
+
+  function bindMode248(){
+    const el=document.getElementById('scl231ScopeMode');
+    if(el && !el.dataset.scl248){
+      el.dataset.scl248='1';
+      el.addEventListener('change',()=>{
+        if(el.value==='all')return;
+        const host=document.getElementById('scl231ScopeList');
+        if(host && !host.querySelector('input[type="checkbox"]') && typeof scl231RenderScopeList==='function'){
+          scl231RenderScopeList(campaign248().scope_pharmacy_ids);
+        }
+      });
+    }
+  }
+
+  function boot248(){
+    patchRenderScopeList248();
+    patchOpenEditor248();
+    patchCollectPayload248();
+    patchLoad248();
+    patchSave248();
+    bindMode248();
+    try{
+      if(window.SCL231?.campaigns?.length){
+        SCL231.campaigns=SCL231.campaigns.map(normCampaign248);
+      }
+    }catch(e){}
+  }
+  [300,900,1800,3200,5200].forEach(t=>setTimeout(boot248,t));
+})();
+</script>
+
 </body>
 </html>
