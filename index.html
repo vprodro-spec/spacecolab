@@ -5505,7 +5505,7 @@
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'v247 · pharmaplus rows in main changes table · HQ reference layout';
+      content:'v248b · Pharmaplus scope persist fix · HQ reference layout';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -17260,6 +17260,210 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
   <span class="muted" id="sclAutosaveStripMeta">Αποθηκεύει αυτόματα κάθε αλλαγή στο φαρμακείο.</span>
 </div>
 
+
+<script>
+/* v248b — Definitive Pharmaplus scope persistence patch
+   Fixes the real UI issue: old click handlers bound before patches could still save with stale/empty scope.
+   This capture-level save handler runs before old handlers, sends normalized scope, reloads from Supabase,
+   and reports if RPC/SQL did not persist scope. No local operational logic or billing touched. */
+(function(){
+  if(window.__SCL248B_SCOPE_DEFINITIVE__)return;
+  window.__SCL248B_SCOPE_DEFINITIVE__=true;
+  window.SCL248B_SCOPE={lastPayload:null,lastVerify:null,lastError:null};
+
+  function esc(v){
+    return String(v??'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function val(id){return document.getElementById(id)?.value?.trim()||'';}
+  function setVal(id,v){const el=document.getElementById(id); if(el)el.value=v||'';}
+  function mode(v){const m=String(v||'all').trim().toLowerCase(); return ['all','only','except'].includes(m)?m:'all';}
+  function ids(v){
+    if(v===null||v===undefined||v==='')return [];
+    let raw=v;
+    if(typeof raw==='string'){
+      const s=raw.trim();
+      if(!s)return [];
+      try{raw=JSON.parse(s);}catch(e){raw=s.split(',').map(x=>x.trim()).filter(Boolean);}
+    }
+    if(!Array.isArray(raw))raw=[raw];
+    const out=[];
+    raw.forEach(x=>{
+      let id=x;
+      if(id && typeof id==='object')id=id.id||id.pharmacy_id||id.pharmacyId||id.token||id.value||'';
+      id=String(id??'').trim();
+      if(id && !out.includes(id))out.push(id);
+    });
+    return out;
+  }
+  function sameIds(a,b){a=ids(a).sort(); b=ids(b).sort(); return a.length===b.length && a.every((x,i)=>x===b[i]);}
+  function month(){return window.SCL231 && SCL231.selectedMonth!==null && SCL231.selectedMonth!==undefined ? Number(SCL231.selectedMonth) : null;}
+  function year(){try{if(typeof scl231Year==='function')return Number(scl231Year());}catch(e){} return Number(document.getElementById('scl212Year')?.value||new Date().getFullYear());}
+  function hqKey(){return window.SCL_ROUTING?.hqKey || window.SCL_HQ_KEY || val('sclHqKey') || '';}
+  function setStatus(text,kind){
+    const el=document.getElementById('scl231SaveStatus');
+    if(el){el.textContent=text||''; el.dataset.scopeStatus=kind||'';}
+  }
+  function campaignFor(m){
+    try{return (window.SCL231?.campaigns||[]).find(c=>Number(c.month)===Number(m))||null;}catch(e){return null;}
+  }
+  function normCampaign(c){
+    const n=Object.assign({},c||{});
+    n.month=Number(n.month);
+    n.scope_mode=mode(n.scope_mode);
+    n.scope_pharmacy_ids=ids(n.scope_pharmacy_ids);
+    return n;
+  }
+  function pharmacies(){
+    try{if(typeof scl231Pharmacies==='function')return scl231Pharmacies()||[];}catch(e){}
+    try{if(typeof scl212Pharmacies==='function')return scl212Pharmacies()||[];}catch(e){}
+    return [];
+  }
+  function pharmacyId(p){return String(p?.id||p?.pharmacy_id||p?.pharmacyId||p?.token||p?.name||'').trim();}
+  function pharmacyName(p){return String(p?.name||p?.pharmacy_name||p?.title||pharmacyId(p)||'Φαρμακείο').trim();}
+  function selectedIdsFromDom(){
+    return ids([].slice.call(document.querySelectorAll('#scl231ScopeList input[type="checkbox"]:checked')).map(x=>x.dataset.pharmacyId||x.value));
+  }
+  function renderScopeListFixed(selected){
+    const host=document.getElementById('scl231ScopeList');
+    if(!host)return;
+    const selectedSet=new Set(ids(selected));
+    const rows=pharmacies().filter(p=>pharmacyId(p));
+    if(!rows.length){
+      host.innerHTML='<div class="scl231-help">Δεν έχουν φορτώσει ακόμη τα φαρμακεία. Οι επιλογές scope δεν θα σβηστούν.</div>';
+      return;
+    }
+    host.innerHTML=rows.map(p=>{
+      const id=pharmacyId(p);
+      return `<label class="scl231-scope-item"><input type="checkbox" value="${esc(id)}" data-pharmacy-id="${esc(id)}" ${selectedSet.has(id)?'checked':''}><span>${esc(pharmacyName(p))}</span></label>`;
+    }).join('');
+  }
+  function payloadFixed(){
+    const m=month();
+    const selectedMode=mode(val('scl231ScopeMode'));
+    const picked=selectedMode==='all'?[]:selectedIdsFromDom();
+    const p={
+      p_hq_key:hqKey(),
+      p_year:year(),
+      p_month:m,
+      p_campaign_type:val('scl231Type'),
+      p_title:val('scl231Title'),
+      p_supplier:val('scl231Supplier'),
+      p_date_range:val('scl231DateRange'),
+      p_company_benefit:val('scl231Benefit'),
+      p_placement_dates:val('scl231PlacementDates'),
+      p_products_text:val('scl231Products'),
+      p_instore_materials:val('scl231Materials'),
+      p_digital_support:val('scl231Digital'),
+      p_shelf_instructions:val('scl231ShelfInstructions'),
+      p_notes:val('scl231Notes'),
+      p_fallback_title:val('scl231FallbackTitle'),
+      p_fallback_description:val('scl231FallbackDescription'),
+      p_fallback_products_text:val('scl231FallbackProducts'),
+      p_fallback_instructions:val('scl231FallbackInstructions'),
+      p_scope_mode:selectedMode,
+      p_scope_pharmacy_ids:picked,
+      p_shelf_1:val('scl232Shelf1'),
+      p_shelf_2:val('scl232Shelf2'),
+      p_shelf_3:val('scl232Shelf3'),
+      p_shelf_4:val('scl232Shelf4')
+    };
+    window.SCL248B_SCOPE.lastPayload={month:p.p_month,mode:p.p_scope_mode,ids:p.p_scope_pharmacy_ids.slice(),raw:p};
+    return p;
+  }
+  async function reloadCampaignsFixed(){
+    if(!window.sb||!hqKey())return [];
+    const {data,error}=await sb.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:hqKey(),p_year:year()});
+    if(error)throw error;
+    const rows=(data||[]).map(normCampaign);
+    if(window.SCL231){SCL231.campaigns=rows;}
+    try{if(typeof scl231RenderCards==='function')scl231RenderCards();}catch(e){}
+    return rows;
+  }
+  async function saveFixed(){
+    if(!window.SCL231 || month()===null){alert('Διάλεξε μήνα.');return;}
+    if(!window.sb || !hqKey()){alert('Δεν υπάρχει HQ cloud σύνδεση.');return;}
+    const p=payloadFixed();
+    if(p.p_scope_mode!=='all' && !p.p_scope_pharmacy_ids.length){
+      const proceed=confirm('Έχεις επιλέξει scope "μόνο/εκτός", αλλά δεν υπάρχει κανένα επιλεγμένο φαρμακείο. Θέλεις να αποθηκευτεί έτσι;');
+      if(!proceed)return;
+    }
+    setStatus(`αποθήκευση scope: ${p.p_scope_mode}${p.p_scope_mode==='all'?'':` · ${p.p_scope_pharmacy_ids.length} φαρμακεία`}...`,'saving');
+    try{
+      const {error}=await sb.rpc('hq_upsert_pharmaplus_campaign',p);
+      if(error)throw error;
+      const rows=await reloadCampaignsFixed();
+      const saved=normCampaign(rows.find(c=>Number(c.month)===Number(p.p_month))||{});
+      const ok=mode(saved.scope_mode)===p.p_scope_mode && sameIds(saved.scope_pharmacy_ids,p.p_scope_pharmacy_ids);
+      window.SCL248B_SCOPE.lastVerify={ok,expected:{mode:p.p_scope_mode,ids:p.p_scope_pharmacy_ids},saved};
+      if(ok){
+        setStatus(`Αποθηκεύτηκε · scope OK (${p.p_scope_mode}${p.p_scope_mode==='all'?'':` · ${p.p_scope_pharmacy_ids.length}`})`,'ok');
+      }else{
+        setStatus(`Αποθηκεύτηκε αλλά το Supabase επέστρεψε scope ${saved.scope_mode||'—'} / ${ids(saved.scope_pharmacy_ids).length} ids. Θέλει RPC/SQL έλεγχο.`,'warn');
+        console.warn('SCL248B scope mismatch',window.SCL248B_SCOPE.lastVerify);
+        // Keep the editor visually on the expected values so the user does not lose the selected checkboxes before SQL is fixed.
+        if(window.SCL231){
+          const existing=campaignFor(p.p_month)||{month:p.p_month};
+          const patched=Object.assign({},existing,{scope_mode:p.p_scope_mode,scope_pharmacy_ids:p.p_scope_pharmacy_ids.slice()});
+          SCL231.campaigns=(SCL231.campaigns||[]).filter(c=>Number(c.month)!==Number(p.p_month));
+          SCL231.campaigns.push(patched);
+        }
+      }
+      if(typeof scl231OpenEditor==='function')scl231OpenEditor(p.p_month);
+      setVal('scl231ScopeMode',p.p_scope_mode);
+      renderScopeListFixed(p.p_scope_pharmacy_ids);
+      try{if(typeof scl231RenderCards==='function')scl231RenderCards();}catch(e){}
+    }catch(e){
+      window.SCL248B_SCOPE.lastError=e;
+      console.error(e);
+      setStatus('Σφάλμα scope save: '+(e.message||e),'error');
+    }
+  }
+
+  function patchRenderAndOpen(){
+    if(typeof window.scl231RenderScopeList==='function' && !window.scl231RenderScopeList.__scl248b){
+      window.scl231RenderScopeList=function(selectedIds){renderScopeListFixed(selectedIds);};
+      window.scl231RenderScopeList.__scl248b=true;
+    }
+    if(typeof window.scl231OpenEditor==='function' && !window.scl231OpenEditor.__scl248b){
+      const prev=window.scl231OpenEditor;
+      window.scl231OpenEditor=function(m){
+        const existing=normCampaign(campaignFor(m)||{});
+        const res=prev.apply(this,arguments);
+        setVal('scl231ScopeMode',existing.scope_mode||'all');
+        renderScopeListFixed(existing.scope_pharmacy_ids||[]);
+        return res;
+      };
+      window.scl231OpenEditor.__scl248b=true;
+    }
+  }
+
+  function interceptSaveClicks(){
+    if(window.__SCL248B_SAVE_CAPTURE__)return;
+    window.__SCL248B_SAVE_CAPTURE__=true;
+    document.addEventListener('click',function(e){
+      const btn=e.target && e.target.closest ? e.target.closest('#scl231SaveCampaign') : null;
+      if(!btn)return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      saveFixed();
+    },true);
+  }
+
+  function boot(){
+    patchRenderAndOpen();
+    interceptSaveClicks();
+    try{ if(window.SCL231?.campaigns?.length)SCL231.campaigns=SCL231.campaigns.map(normCampaign); }catch(e){}
+    const host=document.getElementById('scl231ScopeList');
+    const c=campaignFor(month());
+    if(host && c && !host.querySelector('input[type="checkbox"]'))renderScopeListFixed(c.scope_pharmacy_ids||[]);
+  }
+
+  window.scl248bSavePharmaplusScope=saveFixed;
+  [100,500,1000,1800,3000,5000,8000].forEach(t=>setTimeout(boot,t));
+})();
+
+</script>
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
 });document.querySelectorAll('[data-clear-timeline-focus]').forEach(b=>b.onclick=()=>{state.timelineFocus=null;refresh();});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('open')});document.querySelectorAll('[data-modal-card]').forEach(x=>x.onclick=e=>e.stopPropagation());
@@ -26167,5 +26371,209 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 </script>
 
+
+<script>
+/* v248b — Definitive Pharmaplus scope persistence patch
+   Fixes the real UI issue: old click handlers bound before patches could still save with stale/empty scope.
+   This capture-level save handler runs before old handlers, sends normalized scope, reloads from Supabase,
+   and reports if RPC/SQL did not persist scope. No local operational logic or billing touched. */
+(function(){
+  if(window.__SCL248B_SCOPE_DEFINITIVE__)return;
+  window.__SCL248B_SCOPE_DEFINITIVE__=true;
+  window.SCL248B_SCOPE={lastPayload:null,lastVerify:null,lastError:null};
+
+  function esc(v){
+    return String(v??'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function val(id){return document.getElementById(id)?.value?.trim()||'';}
+  function setVal(id,v){const el=document.getElementById(id); if(el)el.value=v||'';}
+  function mode(v){const m=String(v||'all').trim().toLowerCase(); return ['all','only','except'].includes(m)?m:'all';}
+  function ids(v){
+    if(v===null||v===undefined||v==='')return [];
+    let raw=v;
+    if(typeof raw==='string'){
+      const s=raw.trim();
+      if(!s)return [];
+      try{raw=JSON.parse(s);}catch(e){raw=s.split(',').map(x=>x.trim()).filter(Boolean);}
+    }
+    if(!Array.isArray(raw))raw=[raw];
+    const out=[];
+    raw.forEach(x=>{
+      let id=x;
+      if(id && typeof id==='object')id=id.id||id.pharmacy_id||id.pharmacyId||id.token||id.value||'';
+      id=String(id??'').trim();
+      if(id && !out.includes(id))out.push(id);
+    });
+    return out;
+  }
+  function sameIds(a,b){a=ids(a).sort(); b=ids(b).sort(); return a.length===b.length && a.every((x,i)=>x===b[i]);}
+  function month(){return window.SCL231 && SCL231.selectedMonth!==null && SCL231.selectedMonth!==undefined ? Number(SCL231.selectedMonth) : null;}
+  function year(){try{if(typeof scl231Year==='function')return Number(scl231Year());}catch(e){} return Number(document.getElementById('scl212Year')?.value||new Date().getFullYear());}
+  function hqKey(){return window.SCL_ROUTING?.hqKey || window.SCL_HQ_KEY || val('sclHqKey') || '';}
+  function setStatus(text,kind){
+    const el=document.getElementById('scl231SaveStatus');
+    if(el){el.textContent=text||''; el.dataset.scopeStatus=kind||'';}
+  }
+  function campaignFor(m){
+    try{return (window.SCL231?.campaigns||[]).find(c=>Number(c.month)===Number(m))||null;}catch(e){return null;}
+  }
+  function normCampaign(c){
+    const n=Object.assign({},c||{});
+    n.month=Number(n.month);
+    n.scope_mode=mode(n.scope_mode);
+    n.scope_pharmacy_ids=ids(n.scope_pharmacy_ids);
+    return n;
+  }
+  function pharmacies(){
+    try{if(typeof scl231Pharmacies==='function')return scl231Pharmacies()||[];}catch(e){}
+    try{if(typeof scl212Pharmacies==='function')return scl212Pharmacies()||[];}catch(e){}
+    return [];
+  }
+  function pharmacyId(p){return String(p?.id||p?.pharmacy_id||p?.pharmacyId||p?.token||p?.name||'').trim();}
+  function pharmacyName(p){return String(p?.name||p?.pharmacy_name||p?.title||pharmacyId(p)||'Φαρμακείο').trim();}
+  function selectedIdsFromDom(){
+    return ids([].slice.call(document.querySelectorAll('#scl231ScopeList input[type="checkbox"]:checked')).map(x=>x.dataset.pharmacyId||x.value));
+  }
+  function renderScopeListFixed(selected){
+    const host=document.getElementById('scl231ScopeList');
+    if(!host)return;
+    const selectedSet=new Set(ids(selected));
+    const rows=pharmacies().filter(p=>pharmacyId(p));
+    if(!rows.length){
+      host.innerHTML='<div class="scl231-help">Δεν έχουν φορτώσει ακόμη τα φαρμακεία. Οι επιλογές scope δεν θα σβηστούν.</div>';
+      return;
+    }
+    host.innerHTML=rows.map(p=>{
+      const id=pharmacyId(p);
+      return `<label class="scl231-scope-item"><input type="checkbox" value="${esc(id)}" data-pharmacy-id="${esc(id)}" ${selectedSet.has(id)?'checked':''}><span>${esc(pharmacyName(p))}</span></label>`;
+    }).join('');
+  }
+  function payloadFixed(){
+    const m=month();
+    const selectedMode=mode(val('scl231ScopeMode'));
+    const picked=selectedMode==='all'?[]:selectedIdsFromDom();
+    const p={
+      p_hq_key:hqKey(),
+      p_year:year(),
+      p_month:m,
+      p_campaign_type:val('scl231Type'),
+      p_title:val('scl231Title'),
+      p_supplier:val('scl231Supplier'),
+      p_date_range:val('scl231DateRange'),
+      p_company_benefit:val('scl231Benefit'),
+      p_placement_dates:val('scl231PlacementDates'),
+      p_products_text:val('scl231Products'),
+      p_instore_materials:val('scl231Materials'),
+      p_digital_support:val('scl231Digital'),
+      p_shelf_instructions:val('scl231ShelfInstructions'),
+      p_notes:val('scl231Notes'),
+      p_fallback_title:val('scl231FallbackTitle'),
+      p_fallback_description:val('scl231FallbackDescription'),
+      p_fallback_products_text:val('scl231FallbackProducts'),
+      p_fallback_instructions:val('scl231FallbackInstructions'),
+      p_scope_mode:selectedMode,
+      p_scope_pharmacy_ids:picked,
+      p_shelf_1:val('scl232Shelf1'),
+      p_shelf_2:val('scl232Shelf2'),
+      p_shelf_3:val('scl232Shelf3'),
+      p_shelf_4:val('scl232Shelf4')
+    };
+    window.SCL248B_SCOPE.lastPayload={month:p.p_month,mode:p.p_scope_mode,ids:p.p_scope_pharmacy_ids.slice(),raw:p};
+    return p;
+  }
+  async function reloadCampaignsFixed(){
+    if(!window.sb||!hqKey())return [];
+    const {data,error}=await sb.rpc('hq_get_pharmaplus_campaigns',{p_hq_key:hqKey(),p_year:year()});
+    if(error)throw error;
+    const rows=(data||[]).map(normCampaign);
+    if(window.SCL231){SCL231.campaigns=rows;}
+    try{if(typeof scl231RenderCards==='function')scl231RenderCards();}catch(e){}
+    return rows;
+  }
+  async function saveFixed(){
+    if(!window.SCL231 || month()===null){alert('Διάλεξε μήνα.');return;}
+    if(!window.sb || !hqKey()){alert('Δεν υπάρχει HQ cloud σύνδεση.');return;}
+    const p=payloadFixed();
+    if(p.p_scope_mode!=='all' && !p.p_scope_pharmacy_ids.length){
+      const proceed=confirm('Έχεις επιλέξει scope "μόνο/εκτός", αλλά δεν υπάρχει κανένα επιλεγμένο φαρμακείο. Θέλεις να αποθηκευτεί έτσι;');
+      if(!proceed)return;
+    }
+    setStatus(`αποθήκευση scope: ${p.p_scope_mode}${p.p_scope_mode==='all'?'':` · ${p.p_scope_pharmacy_ids.length} φαρμακεία`}...`,'saving');
+    try{
+      const {error}=await sb.rpc('hq_upsert_pharmaplus_campaign',p);
+      if(error)throw error;
+      const rows=await reloadCampaignsFixed();
+      const saved=normCampaign(rows.find(c=>Number(c.month)===Number(p.p_month))||{});
+      const ok=mode(saved.scope_mode)===p.p_scope_mode && sameIds(saved.scope_pharmacy_ids,p.p_scope_pharmacy_ids);
+      window.SCL248B_SCOPE.lastVerify={ok,expected:{mode:p.p_scope_mode,ids:p.p_scope_pharmacy_ids},saved};
+      if(ok){
+        setStatus(`Αποθηκεύτηκε · scope OK (${p.p_scope_mode}${p.p_scope_mode==='all'?'':` · ${p.p_scope_pharmacy_ids.length}`})`,'ok');
+      }else{
+        setStatus(`Αποθηκεύτηκε αλλά το Supabase επέστρεψε scope ${saved.scope_mode||'—'} / ${ids(saved.scope_pharmacy_ids).length} ids. Θέλει RPC/SQL έλεγχο.`,'warn');
+        console.warn('SCL248B scope mismatch',window.SCL248B_SCOPE.lastVerify);
+        // Keep the editor visually on the expected values so the user does not lose the selected checkboxes before SQL is fixed.
+        if(window.SCL231){
+          const existing=campaignFor(p.p_month)||{month:p.p_month};
+          const patched=Object.assign({},existing,{scope_mode:p.p_scope_mode,scope_pharmacy_ids:p.p_scope_pharmacy_ids.slice()});
+          SCL231.campaigns=(SCL231.campaigns||[]).filter(c=>Number(c.month)!==Number(p.p_month));
+          SCL231.campaigns.push(patched);
+        }
+      }
+      if(typeof scl231OpenEditor==='function')scl231OpenEditor(p.p_month);
+      setVal('scl231ScopeMode',p.p_scope_mode);
+      renderScopeListFixed(p.p_scope_pharmacy_ids);
+      try{if(typeof scl231RenderCards==='function')scl231RenderCards();}catch(e){}
+    }catch(e){
+      window.SCL248B_SCOPE.lastError=e;
+      console.error(e);
+      setStatus('Σφάλμα scope save: '+(e.message||e),'error');
+    }
+  }
+
+  function patchRenderAndOpen(){
+    if(typeof window.scl231RenderScopeList==='function' && !window.scl231RenderScopeList.__scl248b){
+      window.scl231RenderScopeList=function(selectedIds){renderScopeListFixed(selectedIds);};
+      window.scl231RenderScopeList.__scl248b=true;
+    }
+    if(typeof window.scl231OpenEditor==='function' && !window.scl231OpenEditor.__scl248b){
+      const prev=window.scl231OpenEditor;
+      window.scl231OpenEditor=function(m){
+        const existing=normCampaign(campaignFor(m)||{});
+        const res=prev.apply(this,arguments);
+        setVal('scl231ScopeMode',existing.scope_mode||'all');
+        renderScopeListFixed(existing.scope_pharmacy_ids||[]);
+        return res;
+      };
+      window.scl231OpenEditor.__scl248b=true;
+    }
+  }
+
+  function interceptSaveClicks(){
+    if(window.__SCL248B_SAVE_CAPTURE__)return;
+    window.__SCL248B_SAVE_CAPTURE__=true;
+    document.addEventListener('click',function(e){
+      const btn=e.target && e.target.closest ? e.target.closest('#scl231SaveCampaign') : null;
+      if(!btn)return;
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      saveFixed();
+    },true);
+  }
+
+  function boot(){
+    patchRenderAndOpen();
+    interceptSaveClicks();
+    try{ if(window.SCL231?.campaigns?.length)SCL231.campaigns=SCL231.campaigns.map(normCampaign); }catch(e){}
+    const host=document.getElementById('scl231ScopeList');
+    const c=campaignFor(month());
+    if(host && c && !host.querySelector('input[type="checkbox"]'))renderScopeListFixed(c.scope_pharmacy_ids||[]);
+  }
+
+  window.scl248bSavePharmaplusScope=saveFixed;
+  [100,500,1000,1800,3000,5000,8000].forEach(t=>setTimeout(boot,t));
+})();
+
+</script>
 </body>
 </html>
