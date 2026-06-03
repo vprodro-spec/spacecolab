@@ -28030,5 +28030,155 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 </script>
 
+
+<script id="scl261-past-deal-todo-fix">
+/* v261 — Past Deal Lock + Past To-dos Visual History
+   - Blocks Pharmacy negotiation/deal save/edit when the deal starts in a past month.
+   - Visually marks HQ past to-dos as historical: faint, struck-through, checked/disabled in UI only.
+   Built as a safe append-only patch after v260. */
+(function(){
+  if(window.__SCL261_PAST_DEAL_TODO_FIX__)return;
+  window.__SCL261_PAST_DEAL_TODO_FIX__=true;
+
+  const MONTHS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  const CURRENT_MONTH=(window.SCL260&&Number.isFinite(Number(SCL260.currentMonth)))?Number(SCL260.currentMonth):(new Date()).getMonth();
+  const CURRENT_YEAR=(window.SCL260&&Number.isFinite(Number(SCL260.currentYear)))?Number(SCL260.currentYear):(new Date()).getFullYear();
+  function esc(v){try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){} return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function getState(){try{if(typeof state!=='undefined'&&state)return state;}catch(e){} return window.state||null;}
+  function getCard(cardId){const st=getState();return (st&&Array.isArray(st.cards))?st.cards.find(c=>String(c.id)===String(cardId)):null;}
+  function isPastMonth(m){m=Number(m); if(!Number.isFinite(m))return false; try{if(typeof scl260IsPastMonth==='function')return !!scl260IsPastMonth(m);}catch(e){} return m<CURRENT_MONTH;}
+  function toast(msg){
+    try{ if(typeof flashLockNote==='function'){flashLockNote(msg);return;} }catch(e){}
+    let n=document.getElementById('scl260LockToast')||document.getElementById('scl261LockToast');
+    if(!n){n=document.createElement('div');n.id='scl261LockToast';document.body.appendChild(n);}
+    n.textContent=msg; n.className='show'; clearTimeout(window.__scl261ToastTimer); window.__scl261ToastTimer=setTimeout(()=>{n.className='';},1900);
+  }
+  function blockEvent(e,msg){ e.preventDefault(); e.stopPropagation(); if(e.stopImmediatePropagation)e.stopImmediatePropagation(); toast(msg||'Ο μήνας έχει περάσει και είναι μόνο για ιστορική προβολή.'); return false; }
+  function dealStartForCard(card){return Math.max(0,Math.min(11,Number(card&&card.negotiation&&card.negotiation.startMonth)||0));}
+  function dealHasPastStart(card){return isPastMonth(dealStartForCard(card));}
+  function targetCardId(el){
+    if(!el||!el.dataset)return null;
+    return el.dataset.confirmNeg||el.dataset.savePreagreement||el.dataset.saveNegEdit||el.dataset.cardId||el.dataset.newNeg||el.dataset.openNeg||el.dataset.editConfirmedDeal||el.dataset.editPreagreement||null;
+  }
+
+  /* Hard stop before original inline/on* handlers run. */
+  document.addEventListener('click',function(e){
+    const el=e.target&&e.target.closest&&e.target.closest('[data-confirm-neg],[data-save-preagreement],[data-save-neg-edit],[data-neg-start-chip],[data-neg-month],[data-neg-theme],[data-neg-mechanism],[data-reset-neg]');
+    if(!el)return;
+    if(el.matches('[data-neg-start-chip]')){
+      const m=Number(el.dataset.negStartChip);
+      if(isPastMonth(m))return blockEvent(e,'Δεν μπορεί να ξεκινήσει συμφωνία σε παρελθόντα μήνα.');
+      return;
+    }
+    if(el.matches('[data-neg-month]')){
+      const m=Number(el.dataset.negMonth);
+      if(isPastMonth(m))return blockEvent(e,'Ο μήνας έχει περάσει και το περιεχόμενο συμφωνίας είναι μόνο για προβολή.');
+      return;
+    }
+    if(el.matches('[data-neg-theme],[data-neg-mechanism]')){
+      const st=getState(); const m=Number(st&&st.negotiationEditorMonth);
+      if(isPastMonth(m))return blockEvent(e,'Δεν μπορείς να αλλάξεις θεματολογία συμφωνίας σε παρελθόντα μήνα.');
+      return;
+    }
+    const id=targetCardId(el); const card=getCard(id);
+    if(el.matches('[data-confirm-neg],[data-save-preagreement],[data-save-neg-edit]') && card && dealHasPastStart(card)){
+      return blockEvent(e,'Δεν μπορεί να κλειστεί ή να αλλάξει συμφωνία που ξεκινά σε παρελθόντα μήνα. Διάλεξε τρέχον ή μελλοντικό μήνα.');
+    }
+  },true);
+
+  document.addEventListener('change',function(e){
+    const el=e.target;
+    if(!el||!el.matches)return;
+    if(el.matches('[data-neg-number="startMonth"]')){
+      let m=Number(el.value);
+      if(isPastMonth(m)){
+        el.value=String(CURRENT_MONTH);
+        const card=getCard(el.dataset.cardId);
+        if(card&&card.negotiation)card.negotiation.startMonth=CURRENT_MONTH;
+        blockEvent(e,'Δεν μπορεί να ξεκινήσει συμφωνία σε παρελθόντα μήνα.');
+        try{ if(typeof renderNegotiationModal==='function')renderNegotiationModal(el.dataset.cardId); }catch(err){}
+      }
+    }
+  },true);
+
+  document.addEventListener('input',function(e){
+    const el=e.target;
+    if(!el||!el.matches)return;
+    if(el.matches('[data-neg-number="startMonth"]')){
+      let m=Number(el.value);
+      if(isPastMonth(m)){
+        el.value=String(CURRENT_MONTH);
+        const card=getCard(el.dataset.cardId);
+        if(card&&card.negotiation)card.negotiation.startMonth=CURRENT_MONTH;
+      }
+    }
+  },true);
+
+  function monthIndexFromText(txt){
+    txt=String(txt||'');
+    for(let i=0;i<MONTHS.length;i++){ if(txt.includes(MONTHS[i])) return i; }
+    return null;
+  }
+  function markPastTodo(el){
+    if(!el||el.dataset.scl261PastTodo==='1')return;
+    const txt=el.textContent||'';
+    const m=monthIndexFromText(txt);
+    if(m===null||!isPastMonth(m))return;
+    el.dataset.scl261PastTodo='1';
+    el.classList.add('scl261-past-todo');
+    const cb=el.querySelector('input[type="checkbox"]');
+    if(cb){ cb.checked=true; cb.disabled=true; cb.setAttribute('aria-disabled','true'); cb.title='Ιστορικό task — παρελθών μήνας'; }
+    if(!el.querySelector('.scl261-history-chip')){
+      const chip=document.createElement('span'); chip.className='scl261-history-chip'; chip.textContent='Ιστορικό'; el.appendChild(chip);
+    }
+  }
+  function decoratePastTodos(){
+    document.querySelectorAll('.scl212-todo-item,.hq-ref-todo-item,tr').forEach(el=>{
+      const txt=(el.textContent||'').slice(0,240);
+      if(/Ιαν|Φεβ|Μαρ|Απρ|Μάι|Ιουν|Ιουλ|Αυγ|Σεπ|Οκτ|Νοε|Δεκ/.test(txt)) markPastTodo(el);
+    });
+  }
+
+  /* Disable visible past start chips/options even if a render recreates them. */
+  function decorateDealModal(){
+    document.querySelectorAll('[data-neg-start-chip],[data-neg-month]').forEach(el=>{
+      const m=Number(el.dataset.negStartChip??el.dataset.negMonth);
+      if(isPastMonth(m)){
+        el.classList.add('scl261-past-disabled');
+        el.setAttribute('aria-disabled','true');
+        if('disabled' in el)el.disabled=true;
+        el.title='Παρελθών μήνας: μόνο ιστορική προβολή';
+      }
+    });
+    document.querySelectorAll('[data-neg-number="startMonth"]').forEach(el=>{
+      const min=String(CURRENT_MONTH);
+      if(!el.min||Number(el.min)<CURRENT_MONTH)el.min=min;
+      if(isPastMonth(Number(el.value)))el.value=min;
+    });
+  }
+
+  function decorateAll(){decorateDealModal(); decoratePastTodos();}
+
+  const oldRenderNeg=typeof renderNegotiationModal==='function'?renderNegotiationModal:null;
+  if(oldRenderNeg&&!oldRenderNeg.__scl261){
+    window.renderNegotiationModal=function(){const r=oldRenderNeg.apply(this,arguments);setTimeout(decorateAll,20);setTimeout(decorateAll,120);return r;};
+    window.renderNegotiationModal.__scl261=true;
+    try{renderNegotiationModal=window.renderNegotiationModal;}catch(e){}
+  }
+  const oldRender=typeof scl212Render==='function'?scl212Render:null;
+  if(oldRender&&!oldRender.__scl261){
+    window.scl212Render=function(){const r=oldRender.apply(this,arguments);setTimeout(decorateAll,40);setTimeout(decorateAll,180);return r;};
+    window.scl212Render.__scl261=true;
+    try{scl212Render=window.scl212Render;}catch(e){}
+  }
+
+  const css=document.createElement('style'); css.id='scl261Css'; css.textContent=`
+    .scl261-past-disabled{cursor:not-allowed!important;opacity:.45!important;filter:grayscale(.35)!important}.scl261-past-disabled *{pointer-events:none!important}.scl261-past-todo{opacity:.42!important;background:#f4f4f4!important;color:#777!important}.scl261-past-todo span,.scl261-past-todo td,.scl261-past-todo b,.scl261-past-todo strong{text-decoration:line-through!important;text-decoration-thickness:1px!important}.scl261-past-todo input{opacity:.7!important}.scl261-history-chip{margin-left:auto;border:1px solid #ddd;border-radius:999px;padding:2px 7px;font-size:10px;font-weight:800;color:#777;background:#fff;text-decoration:none!important;white-space:nowrap}#scl261LockToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:800;z-index:99999;opacity:0;pointer-events:none;transition:.18s ease}#scl261LockToast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  `; if(!document.getElementById('scl261Css'))document.head.appendChild(css);
+
+  setTimeout(decorateAll,500); setTimeout(decorateAll,1500); setInterval(decorateAll,2500);
+})();
+</script>
+
 </body>
 </html>
