@@ -27820,5 +27820,215 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(()=>{try{patchRenderOverviewClick();renderDetail();}catch(e){}},900);
 })();
 </script>
+
+
+<script id="scl260-current-month-past-lock">
+/* v260 — Current Month & Past Lock Logic
+   Past = read-only/history, current = active management, future = planning.
+   Applies to HQ and Pharmacy without changing billing rules or local operational logic. */
+(function(){
+  if(window.__SCL260_CURRENT_MONTH_PAST_LOCK__)return;
+  window.__SCL260_CURRENT_MONTH_PAST_LOCK__=true;
+
+  const MONTH_NAMES=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  const now=new Date();
+  const CURRENT_YEAR=now.getFullYear();
+  const CURRENT_MONTH=now.getMonth();
+  window.SCL260=window.SCL260||{};
+  window.SCL260.currentYear=CURRENT_YEAR;
+  window.SCL260.currentMonth=CURRENT_MONTH;
+  window.SCL260.billingMonthDefaultApplied=!!window.SCL260.billingMonthDefaultApplied;
+  window.SCL260.billingManualOverride=!!window.SCL260.billingManualOverride;
+  window.SCL260.overviewManualOverride=!!window.SCL260.overviewManualOverride;
+
+  function esc(v){try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){}return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function appYear(){try{if(typeof state!=='undefined'&&state&&Number(state.programYear))return Number(state.programYear);}catch(e){}try{if(typeof scl212Year==='function')return Number(scl212Year())||CURRENT_YEAR;}catch(e){}return CURRENT_YEAR;}
+  function isPastMonth(m,year=appYear()){m=Number(m);year=Number(year)||CURRENT_YEAR;if(!Number.isFinite(m))return false;if(year<CURRENT_YEAR)return true;if(year>CURRENT_YEAR)return false;return m<CURRENT_MONTH;}
+  function isCurrentMonth(m,year=appYear()){m=Number(m);year=Number(year)||CURRENT_YEAR;return year===CURRENT_YEAR&&m===CURRENT_MONTH;}
+  function timeState(m,year=appYear()){if(isPastMonth(m,year))return 'past';if(isCurrentMonth(m,year))return 'current';return 'future';}
+  function monthLabel(m){return MONTH_NAMES[Number(m)]||String(m??'');}
+  function textForState(st){return st==='past'?'Ιστορικό / read-only':(st==='current'?'Τρέχων μήνας':'Μελλοντικός προγραμματισμός');}
+  window.scl260IsPastMonth=isPastMonth;
+  window.scl260IsCurrentMonth=isCurrentMonth;
+
+  /* Pharmacy-side core rule: past months cannot be edited; current and future can. */
+  const oldOperational=typeof operationalMonthEditable==='function'?operationalMonthEditable:null;
+  try{
+    window.operationalMonthEditable=function(monthIndex){return !isPastMonth(Number(monthIndex));};
+    /* Some code paths call the global function lexically; reassigning the function name in non-module scope keeps them aligned. */
+    try{operationalMonthEditable=window.operationalMonthEditable;}catch(e){}
+  }catch(e){console.warn('v260 operationalMonthEditable patch failed',e);}
+
+  const oldReadOnly=typeof isCustomReadOnlyMonth==='function'?isCustomReadOnlyMonth:null;
+  try{
+    window.isCustomReadOnlyMonth=function(card,monthIndex){
+      try{if(typeof getDealMonths==='function'&&getDealMonths(card).has(Number(monthIndex)))return true;}catch(e){}
+      return isPastMonth(Number(monthIndex));
+    };
+    try{isCustomReadOnlyMonth=window.isCustomReadOnlyMonth;}catch(e){}
+  }catch(e){}
+
+  const oldFirstDealStart=typeof firstAvailableDealStart==='function'?firstAvailableDealStart:null;
+  try{
+    window.firstAvailableDealStart=function(card){
+      let m=CURRENT_MONTH;
+      try{if(oldFirstDealStart)m=Math.max(Number(oldFirstDealStart(card))||0,CURRENT_MONTH);}catch(e){}
+      return Math.max(CURRENT_MONTH,Math.min(11,m));
+    };
+    try{firstAvailableDealStart=window.firstAvailableDealStart;}catch(e){}
+  }catch(e){}
+
+  function markControl(el,m){
+    const st=timeState(m);
+    el.classList.toggle('scl260-month-past',st==='past');
+    el.classList.toggle('scl260-month-current',st==='current');
+    el.classList.toggle('scl260-month-future',st==='future');
+    if(st==='past'){
+      const tag=(el.tagName||'').toLowerCase();
+      const interactive=tag==='button'||tag==='input'||tag==='select'||tag==='textarea'||el.getAttribute('role')==='button'||el.classList.contains('choice-chip')||el.classList.contains('theme-card')||el.classList.contains('deal-theme-card')||el.classList.contains('sponsored-badge')||el.classList.contains('predeal-month-badge');
+      if(interactive){
+        if('disabled' in el)el.disabled=true;
+        el.setAttribute('aria-disabled','true');
+        el.setAttribute('title','Παρελθών μήνας: μόνο ιστορική προβολή');
+        el.classList.add('scl260-past-disabled');
+      }
+    }
+  }
+
+  function decorateMonthElements(root=document){
+    const attrs=['data-custom-month','data-neg-month','data-sponsored-month','data-edit-month','data-delete-month','data-planner-month','data-initial-month','data-planogram-month','data-pharmaplus-month','data-month'];
+    attrs.forEach(a=>{
+      root.querySelectorAll('['+a+']').forEach(el=>{
+        const raw=el.getAttribute(a);
+        const m=Number(raw);
+        if(Number.isFinite(m)&&m>=0&&m<=11)markControl(el,m);
+      });
+    });
+    root.querySelectorAll('option[value]').forEach(opt=>{
+      const m=Number(opt.value);
+      if(Number.isFinite(m)&&m>=0&&m<=11){
+        if(isCurrentMonth(m))opt.textContent=opt.textContent.replace(/\s*•\s*Τρέχων$/,'')+' • Τρέχων';
+      }
+    });
+    root.querySelectorAll('.month-item,.compact-month,.monthly-plan-line,.overview-month-card,.tc,.scl259-month-section').forEach(el=>{
+      const txt=(el.textContent||'').slice(0,80);
+      MONTH_NAMES.forEach((name,i)=>{if(txt.includes(name))el.classList.toggle('scl260-month-current',isCurrentMonth(i));});
+    });
+  }
+
+  function bannerHtml(st,m){return `<div id="scl260TimeBanner" class="scl260-time-banner ${esc(st)}"><strong>${esc(textForState(st))}</strong><span>${esc(monthLabel(m))} ${esc(String(appYear()))}</span></div>`;}
+  function decorateOverview(){
+    try{
+      if(window.SCL250&&!window.SCL260.overviewManualOverride){
+        if(!Number.isFinite(Number(SCL250.overviewMonth)))SCL250.overviewMonth=CURRENT_MONTH;
+      }
+    }catch(e){}
+    const host=document.getElementById('scl250OverviewRoom');
+    if(host){
+      const sel=host.querySelector('#scl250OverviewMonth');
+      const m=Number(sel?.value ?? window.SCL250?.overviewMonth ?? CURRENT_MONTH);
+      const st=timeState(m);
+      let b=host.querySelector('#scl260TimeBanner');
+      if(!b){host.insertAdjacentHTML('afterbegin',bannerHtml(st,m));}
+      else{b.outerHTML=bannerHtml(st,m);}
+      if(sel&&!sel.dataset.bound260){sel.dataset.bound260='1';sel.addEventListener('change',()=>{window.SCL260.overviewManualOverride=true;setTimeout(decorateAll,40);});}
+    }
+  }
+
+  function ensureCurrentBillingDefault(){
+    try{
+      if(!window.SCL256||window.SCL260.billingManualOverride||window.SCL260.billingMonthDefaultApplied)return;
+      const f=window.SCL256.filters||(window.SCL256.filters={months:[],categories:[],pharmacies:[],payers:[],sources:[]});
+      if(!Array.isArray(f.months)||!f.months.length)f.months=[String(CURRENT_MONTH)];
+      window.SCL260.billingMonthDefaultApplied=true;
+    }catch(e){}
+  }
+  function decorateBilling(){
+    const page=document.getElementById('scl212Page-billing'); if(!page)return;
+    const bar=document.getElementById('scl256BillingFilters');
+    if(bar&&!document.getElementById('scl260BillingNowBtn')){
+      const head=bar.querySelector('.scl256-filter-head');
+      if(head){
+        const btn=document.createElement('button');
+        btn.type='button'; btn.id='scl260BillingNowBtn'; btn.textContent='Τρέχων μήνας';
+        btn.addEventListener('click',()=>{window.SCL260.billingManualOverride=true;window.SCL256=window.SCL256||{};window.SCL256.filters=window.SCL256.filters||{months:[],categories:[],pharmacies:[],payers:[],sources:[]};window.SCL256.filters.months=[String(CURRENT_MONTH)];try{(window.scl256RenderBilling||window.scl212RenderBilling||function(){})();}catch(e){}});
+        head.appendChild(btn);
+      }
+    }
+    const selected=(window.SCL256&&window.SCL256.filters&&Array.isArray(SCL256.filters.months))?SCL256.filters.months:[];
+    const m=selected.length===1?Number(selected[0]):CURRENT_MONTH;
+    const st=selected.length===1?timeState(m):'future';
+    let note=page.querySelector('#scl260BillingReadOnlyNote');
+    const msg=selected.length===1?`${textForState(st)} · ${monthLabel(m)} ${appYear()}`:'Πολλαπλοί μήνες / ετήσια προβολή · τα παρελθόντα στοιχεία είναι ιστορικά';
+    if(!note){note=document.createElement('div');note.id='scl260BillingReadOnlyNote';note.className='scl260-time-banner billing';const filters=document.getElementById('scl256BillingFilters');if(filters&&filters.parentNode)filters.parentNode.insertBefore(note,filters.nextSibling);}
+    note.innerHTML=`<strong>${esc(msg)}</strong><span>Billing ledger: δημιουργία νέων χρεώσεων μόνο από τρέχοντα ή μελλοντικά blocks.</span>`;
+  }
+
+  /* Mark manual override when user changes billing filters. */
+  document.addEventListener('change',function(e){
+    if(e.target&&e.target.matches('[data-scl256-filter-check]'))window.SCL260.billingManualOverride=true;
+  },true);
+  document.addEventListener('click',function(e){
+    const el=e.target&&e.target.closest&&e.target.closest('.scl260-past-disabled,[aria-disabled="true"]');
+    if(el&&el.classList.contains('scl260-past-disabled')){
+      e.preventDefault(); e.stopPropagation();
+      flashLockNote('Ο μήνας έχει περάσει και είναι μόνο για ιστορική προβολή.');
+      return false;
+    }
+  },true);
+
+  function flashLockNote(msg){
+    let n=document.getElementById('scl260LockToast');
+    if(!n){n=document.createElement('div');n.id='scl260LockToast';document.body.appendChild(n);}
+    n.textContent=msg; n.className='show';
+    clearTimeout(window.__scl260ToastTimer); window.__scl260ToastTimer=setTimeout(()=>{n.className='';},1800);
+  }
+
+  function patchBillingRender(){
+    const f=window.scl256RenderBilling||window.scl212RenderBilling;
+    if(f&&!f.__scl260){
+      const wrapped=function(){ensureCurrentBillingDefault();const r=f.apply(this,arguments);setTimeout(decorateBilling,30);setTimeout(decorateMonthElements,60);return r;};
+      wrapped.__scl260=true;
+      window.scl256RenderBilling=wrapped; window.scl212RenderBilling=wrapped;
+    }
+  }
+
+  function patchHQFilters(){
+    try{
+      const fm=document.getElementById('scl212FilterMonth');
+      const bm=document.getElementById('scl212BillingMonth');
+      [fm,bm].forEach(sel=>{if(sel&&(!sel.value||sel.value==='0')&&!sel.dataset.scl260Touched){sel.value=String(CURRENT_MONTH);}});
+    }catch(e){}
+  }
+
+  function decorateAll(){
+    patchHQFilters();
+    patchBillingRender();
+    decorateOverview();
+    decorateBilling();
+    decorateMonthElements(document);
+  }
+
+  const oldRender=typeof scl212Render==='function'?scl212Render:null;
+  if(oldRender&&!oldRender.__scl260){
+    window.scl212Render=function(){const r=oldRender.apply(this,arguments);setTimeout(decorateAll,40);setTimeout(decorateAll,200);return r;};
+    window.scl212Render.__scl260=true;
+  }
+  const oldLoad=typeof scl212Load==='function'?scl212Load:null;
+  if(oldLoad&&!oldLoad.__scl260){
+    window.scl212Load=async function(){const r=await oldLoad.apply(this,arguments);setTimeout(decorateAll,80);return r;};
+    window.scl212Load.__scl260=true;
+  }
+
+  const css=document.createElement('style'); css.id='scl260Css'; css.textContent=`
+    .scl260-time-banner{display:flex;justify-content:space-between;gap:10px;align-items:center;background:#f7fbff;border:1px solid #c9dafd;color:#174dc2;border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:12px}.scl260-time-banner.past{background:#fff8e8;border-color:#f1cf8a;color:#854F0B}.scl260-time-banner.current{background:#eef8f0;border-color:#cfe8d3;color:#2f6b3b}.scl260-time-banner.future{background:#f7fbff;border-color:#c9dafd;color:#174dc2}.scl260-time-banner span{opacity:.82}.scl260-time-banner.billing{margin:8px 0 10px}.scl260-month-current{outline:2px solid rgba(31,102,255,.22);outline-offset:1px}.scl260-month-past{opacity:.74}.scl260-past-disabled{cursor:not-allowed!important;filter:grayscale(.2);opacity:.55!important}.scl260-past-disabled *{pointer-events:none!important}#scl260BillingNowBtn{border:1px solid #c9dafd;background:#edf4ff;color:#174dc2;border-radius:9px;padding:8px 12px;cursor:pointer;font-weight:800;margin-left:8px}#scl260LockToast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#111;color:#fff;border-radius:999px;padding:10px 14px;font-size:12px;font-weight:800;z-index:99999;opacity:0;pointer-events:none;transition:.18s ease}#scl260LockToast.show{opacity:1;transform:translateX(-50%) translateY(0)}@media(max-width:720px){.scl260-time-banner{flex-direction:column;align-items:flex-start}.scl260-time-banner span{font-size:11px}}
+  `; if(!document.getElementById('scl260Css'))document.head.appendChild(css);
+
+  setTimeout(()=>{try{if(window.SCL250&&!window.SCL260.overviewManualOverride)SCL250.overviewMonth=CURRENT_MONTH;ensureCurrentBillingDefault();decorateAll();}catch(e){console.warn('v260 init failed',e);}},500);
+  setTimeout(decorateAll,1500);
+  setInterval(()=>{try{decorateAll();}catch(e){}},2500);
+})();
+</script>
+
 </body>
 </html>
