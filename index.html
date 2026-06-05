@@ -28510,5 +28510,242 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(()=>{ensureDefaultMonth(); if(isChangesActive())renderChanges();},500);
 })();
 </script>
+
+
+<script id="scl264-pharmacy-past-lock-visual-sponsored">
+(function(){
+  if(window.__SCL264_PAST_LOCK_PATCH__)return;
+  window.__SCL264_PAST_LOCK_PATCH__=true;
+
+  function currentInfo(){
+    const d=new Date();
+    return {year:d.getFullYear(), month:d.getMonth()};
+  }
+  function programYear(){
+    try{return Number(state?.programYear)||currentInfo().year;}catch(e){return currentInfo().year;}
+  }
+  function isPastMonth(monthIndex){
+    const ci=currentInfo();
+    const y=programYear();
+    const m=Number(monthIndex);
+    if(!Number.isFinite(m))return false;
+    if(y<ci.year)return true;
+    if(y>ci.year)return false;
+    return m<ci.month;
+  }
+  function isCurrentMonth(monthIndex){
+    const ci=currentInfo();
+    return programYear()===ci.year && Number(monthIndex)===ci.month;
+  }
+  function monthName(monthIndex){
+    try{return MONTHS?.[Number(monthIndex)]||`Μήνας ${Number(monthIndex)+1}`;}catch(e){return `Μήνας ${Number(monthIndex)+1}`;}
+  }
+  function esc2(v){
+    try{return esc(v);}catch(e){return String(v||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  }
+
+  const css=document.createElement('style');
+  css.id='scl264Css';
+  css.textContent=`
+    .scl264-past-row,
+    .scl264-past-card,
+    .scl264-timeline-past{
+      opacity:.38!important;
+      filter:grayscale(.75);
+      background:#f4f4f4!important;
+      color:#777!important;
+    }
+    .scl264-past-row .month-col,
+    .scl264-past-row .theme-col,
+    .scl264-past-row .owner,
+    .scl264-past-row .month-finance-cell,
+    .scl264-past-card,
+    .scl264-timeline-past .main{
+      text-decoration:line-through!important;
+      text-decoration-thickness:1px!important;
+    }
+    .scl264-current-row,
+    .scl264-timeline-current,
+    .scl264-current-card{
+      outline:2px solid rgba(31,102,255,.22)!important;
+      background:#f7fbff!important;
+    }
+    .scl264-past-row .sponsored-btn,
+    .scl264-past-row .sponsored-badge,
+    .scl264-past-card,
+    .scl264-timeline-past .sponsored-badge{
+      cursor:not-allowed!important;
+      pointer-events:none!important;
+    }
+    .scl264-history-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:999px;
+      padding:2px 7px;
+      font-size:8px;
+      font-weight:950;
+      background:#e5e7eb;
+      color:#6b7280;
+      text-decoration:none!important;
+      margin-left:4px;
+      white-space:nowrap;
+    }
+    .scl264-disabled-action{
+      opacity:.45!important;
+      cursor:not-allowed!important;
+      pointer-events:none!important;
+    }
+  `;
+  if(!document.getElementById('scl264Css'))document.head.appendChild(css);
+
+  function segmentParts(seg){
+    const y=programYear();
+    const ci=currentInfo();
+    const start=Number(seg.start)||0;
+    const end=Number(seg.end ?? seg.start)||start;
+    if(y<ci.year)return [{...seg,start,end,span:end-start+1,_time:'past'}];
+    if(y>ci.year)return [{...seg,start,end,span:end-start+1,_time:'future'}];
+    const cur=ci.month;
+    const out=[];
+    if(end<cur){out.push({...seg,start,end,span:end-start+1,_time:'past'});return out;}
+    if(start>cur){out.push({...seg,start,end,span:end-start+1,_time:'future'});return out;}
+    if(start<cur)out.push({...seg,start,end:cur-1,span:cur-start,_time:'past'});
+    out.push({...seg,start:Math.max(start,cur),end,span:end-Math.max(start,cur)+1,_time:'current'});
+    return out;
+  }
+
+  try{
+    if(typeof renderTimelineInto==='function'){
+      const originalTimelineInto=renderTimelineInto;
+      renderTimelineInto=function(grid){
+        try{
+          const rows=['<div class="th">Θέση</div>',...MONTHS.map((m,i)=>`<div class="th ${isCurrentMonth(i)?'scl264-current-card':''}">${esc2(m)}${isCurrentMonth(i)?'<span class="scl264-history-pill">Τώρα</span>':''}</div>`)];
+          state.cards.forEach(card=>{
+            let status=card.type==='hq'?'Κεντρική':(!card.initialPlanLocked?'Αρχικό εκκρεμεί':(negotiationConfirmed(card)?`Deal: ${contiguousLabel(getDealMonths(card))}`:(customBlockCount(card)?'Εξατομίκευση':'Βασικό Πρόγραμμα κλειδωμένο')));
+            rows.push(`<div class="tl">${esc2(card.title)}<span>${esc2(status)}</span></div>`);
+            timelineSegments(card).forEach(seg=>{
+              segmentParts(seg).forEach(s=>{
+                const mode=s.cls==='deal'?'negotiation':(s.cls==='custom'?'simple':'basic');
+                const clickable=card.type!=='hq' && s._time!=='past';
+                const timeCls=s._time==='past'?'scl264-timeline-past':(s._time==='current'?'scl264-timeline-current':'');
+                const hist=s._time==='past'?'<span class="scl264-history-pill">Ιστορικό</span>':(s._time==='current'?'<span class="scl264-history-pill">Τρέχων</span>':'');
+                rows.push(`<div class="tc ${s.cls} ${timeCls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':'Ιστορικό / read-only'}"><div class="main">${esc2(s.label)} ${hist}</div>${preagreementBadgeHtml(card,s.start,s.end)}${s._time==='past'?'':sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls)}</div>`);
+              });
+            });
+          });
+          grid.innerHTML=rows.join('');
+        }catch(err){
+          console.warn('[v264] timeline fallback',err);
+          originalTimelineInto(grid);
+          applyPastVisuals();
+        }
+      };
+    }
+  }catch(e){console.warn('[v264] timeline patch failed',e);}
+
+  try{
+    if(typeof renderΠρογραμματισμόςMonthlyPlan==='function'){
+      const originalMonthly=renderΠρογραμματισμόςMonthlyPlan;
+      renderΠρογραμματισμόςMonthlyPlan=function(card){
+        try{
+          if(!card||!card.initialPlanLocked)return '';
+          const rows=MONTHS.map((m,i)=>{
+            const row=monthStatus(card,i);
+            const finance=segmentFinance(card,{owner:row.owner,start:i,end:i});
+            const canPlanogram=!!planogramInfo(card,i);
+            const past=isPastMonth(i);
+            const current=isCurrentMonth(i);
+            const canSponsored=!past && row.owner!=='deal';
+            const ownerLabel=row.owner==='basic'?'ΒΑΣΙΚΟ':row.owner==='custom'?'ΕΞΑΤΟΜΙΚ.':row.owner==='deal'?'ΣΥΜΦΩΝ.':row.owner;
+            const extraCls=past?'scl264-past-row':(current?'scl264-current-row':'');
+            const hist=past?'<span class="scl264-history-pill">Ιστορικό</span>':(current?'<span class="scl264-history-pill">Τώρα</span>':'');
+            return `<div class="plan-line monthly-plan-line ${extraCls}" data-planner-month="${i}"><div class="month-col">${esc2(m)}${hist}</div><div class="theme-col">${esc2(row.label)}${preagreementBadgeHtml(card,i,i)}${past?'':sponsoredBadgeHtml(card,i,i)}</div><div class="owner ${row.owner}">${ownerLabel}</div><div class="month-planogram-cell"><button class="planogram-btn" ${canPlanogram?`data-open-planogram="${card.id}" data-planogram-month="${i}"`:'disabled'}>${canPlanogram?'Πλανόγραμμα':'—'}</button></div><div class="month-sponsored-cell"><button class="sponsored-btn ${past?'scl264-disabled-action':''}" ${canSponsored?`data-open-sponsored="${card.id}" data-sponsored-month="${i}"`:'disabled'}>${past?'Ιστορικό':(sponsoredForMonth(card,i).length?'Ράφια ✓':'+ Ράφια')}</button></div><div class="month-finance-cell">${financePlanChip(finance,row.owner)}</div></div>`;
+          }).join('');
+          return `${timelineFocusBanner(card)}<div class="planner-monthly-plan"><div class="planner-monthly-head"><div><strong>Πλήρες πλάνο ανά μήνα</strong><br><span class="small">Οι παρελθόντες μήνες είναι ιστορικό/read-only. Το πλάνο φαίνεται, αλλά δεν επιτρέπονται ενέργειες.</span></div><span class="tag">12 μήνες</span></div><div class="plan-lines full-plan-lines">${rows}</div></div>`;
+        }catch(err){
+          console.warn('[v264] monthly plan fallback',err);
+          const html=originalMonthly(card);
+          setTimeout(applyPastVisuals,0);
+          return html;
+        }
+      };
+    }
+  }catch(e){console.warn('[v264] monthly patch failed',e);}
+
+  function applyPastVisuals(){
+    try{
+      document.querySelectorAll('[data-planner-month]').forEach(row=>{
+        const m=Number(row.dataset.plannerMonth);
+        row.classList.toggle('scl264-past-row',isPastMonth(m));
+        row.classList.toggle('scl264-current-row',isCurrentMonth(m));
+        if(isPastMonth(m)){
+          row.querySelectorAll('[data-open-sponsored], [data-save-sponsored], [data-delete-sponsored]').forEach(btn=>{
+            btn.classList.add('scl264-disabled-action');
+            if(btn.tagName==='BUTTON')btn.disabled=true;
+            btn.removeAttribute('data-open-sponsored');
+          });
+          const sponsoredBtn=row.querySelector('.sponsored-btn');
+          if(sponsoredBtn){sponsoredBtn.textContent='Ιστορικό';sponsoredBtn.disabled=true;}
+          if(!row.querySelector('.scl264-history-pill')){
+            row.querySelector('.month-col')?.insertAdjacentHTML('beforeend','<span class="scl264-history-pill">Ιστορικό</span>');
+          }
+        }
+      });
+      document.querySelectorAll('[data-custom-month], [data-neg-month]').forEach(el=>{
+        const m=Number(el.dataset.customMonth ?? el.dataset.negMonth);
+        el.classList.toggle('scl264-past-card',isPastMonth(m));
+        el.classList.toggle('scl264-current-card',isCurrentMonth(m));
+        if(isPastMonth(m)){
+          if(el.tagName==='BUTTON')el.disabled=true;
+          el.setAttribute('aria-disabled','true');
+        }
+      });
+      document.querySelectorAll('[data-open-sponsored], [data-save-sponsored], [data-delete-sponsored]').forEach(el=>{
+        const m=Number(el.dataset.sponsoredMonth);
+        if(isPastMonth(m)){
+          el.classList.add('scl264-disabled-action');
+          if(el.tagName==='BUTTON')el.disabled=true;
+        }
+      });
+    }catch(e){console.warn('[v264] apply visuals failed',e);}
+  }
+  window.scl264ApplyPastVisuals=applyPastVisuals;
+
+  document.addEventListener('click',function(e){
+    const sponsored=e.target.closest?.('[data-open-sponsored], [data-save-sponsored], [data-delete-sponsored]');
+    if(sponsored){
+      const m=Number(sponsored.dataset.sponsoredMonth);
+      if(isPastMonth(m)){
+        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();
+        alert(`${monthName(m)} είναι παρελθόν και παραμένει μόνο για προβολή ιστορικού. Δεν επιτρέπεται ενέργεια σε χορηγούμενα ράφια.`);
+        return false;
+      }
+    }
+    const jump=e.target.closest?.('[data-jump-month]');
+    if(jump){
+      const m=Number(jump.dataset.jumpMonth);
+      if(isPastMonth(m)){
+        e.preventDefault();e.stopPropagation();e.stopImmediatePropagation?.();
+        alert(`${monthName(m)} είναι ιστορικός μήνας. Μπορείς να τον δεις στο πλάνο, αλλά όχι να τον επεξεργαστείς.`);
+        return false;
+      }
+    }
+  },true);
+
+  try{
+    if(typeof refresh==='function'){
+      const oldRefresh=refresh;
+      refresh=function(){
+        const res=oldRefresh.apply(this,arguments);
+        setTimeout(applyPastVisuals,0);
+        return res;
+      };
+    }
+  }catch(e){}
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(applyPastVisuals,400));
+  setTimeout(applyPastVisuals,800);
+})();
+</script>
 </body>
 </html>
