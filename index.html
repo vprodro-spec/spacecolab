@@ -28224,5 +28224,291 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(()=>scheduleLimit(true),700);
 })();
 </script>
+
+
+<script id="scl263-changes-current-month-fast-render">
+/* v263 — Changes Current Month Fast Render
+   Real performance fix for HQ Changes:
+   - default data scope = current month only
+   - filters are applied BEFORE DOM render
+   - renders a limited page of rows, then Load more
+   - skips auto cloud reload while user is working inside Changes tab
+   - Debug/raw plan is not rendered as part of Changes rendering
+*/
+(function(){
+  if(window.__SCL263_CHANGES_CURRENT_MONTH_FAST__)return;
+  window.__SCL263_CHANGES_CURRENT_MONTH_FAST__=true;
+
+  const PAGE_SIZE=120;
+  const state=window.SCL263_CHANGES_STATE={
+    pageSize:PAGE_SIZE,
+    limit:PAGE_SIZE,
+    sort:{col:'month',dir:1},
+    filters:{months:new Set(),types:new Set(),pharmacies:new Set(),orientations:new Set(),themes:new Set(),changes:new Set()},
+    userTouched:false,
+    manualRefresh:false
+  };
+
+  function isHQ(){try{return typeof sclMode==='function' && sclMode()==='hq';}catch(e){return false;}}
+  function dash(){try{return (typeof SCL212!=='undefined')?SCL212:null;}catch(e){return window.SCL212||null;}}
+  function months(){try{if(typeof SCL212_MONTHS!=='undefined')return SCL212_MONTHS;}catch(e){} return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}
+  function currentMonth(){try{if(typeof scl212CurrentMonth==='function')return Number(scl212CurrentMonth());}catch(e){} const d=new Date(); return d.getMonth();}
+  function isChangesActive(){return !!document.getElementById('scl212Page-changes')?.classList.contains('active') || dash()?.tab==='changes';}
+  function esc(v){try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){} return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+  function clean(v){if(v===null||v===undefined)return ''; if(typeof v==='object')return ''; const s=String(v).replace(/\s+/g,' ').trim(); if(!s||s==='[object Object]'||s==='null'||s==='undefined'||s==='—'||s==='-')return ''; return s;}
+  function pill(t,label){try{if(typeof scl212Pill==='function')return scl212Pill(t,label);}catch(e){} return `<span class="scl212-pill ${esc(t||'basic')}">${esc(label||t||'—')}</span>`;}
+  function taskId(r){try{if(typeof scl212TaskId==='function')return scl212TaskId(['change',r.pharmacy_id||r.pharmacy_name,r.position_id||r.position_name,r.month]);}catch(e){} return ['change',r.pharmacy_id||r.pharmacy_name,r.position_id||r.position_name,r.month].filter(Boolean).join('|');}
+  function isDone(id){const d=dash();return !!(d&&d.done&&d.done[id]);}
+  function saveDone(){try{if(typeof scl213SaveDone==='function')scl213SaveDone();}catch(e){}}
+  function isPastMonth(m){return Number(m)<currentMonth();}
+
+  function baseRows(){
+    let rows=[];
+    try{if(typeof scl212VisibleChanges==='function')rows=scl212VisibleChanges()||[];}catch(e){console.warn('v263 visible changes failed',e);}
+    return (rows||[]).filter(r=>r&&r.content_change_required!==false).map(r=>{
+      const theme=clean(r.final_title)||clean(r.deal_theme)||clean(r.custom_theme)||clean(r.basic_theme)||clean(r.title)||'—';
+      const change=clean(r.content_change_reason)||clean(r.change_reason)||'—';
+      const type=clean(r.final_type)||clean(r.type)||'basic';
+      const m=Number(r.month);
+      return Object.assign({},r,{
+        __month:m,
+        __monthLabel:clean(r.month_label)||months()[m]||String(m),
+        __pharmacy:clean(r.pharmacy_name)||clean(r.pharmacy)||'Φαρμακείο',
+        __position:clean(r.position_name)||clean(r.position)||'Θέση',
+        __orientation:clean(r.position_orientation)||clean(r.orientation)||'—',
+        __type:type,
+        __theme:theme,
+        __change:change,
+        __billing:(r.billing_change_applies?'event':'—'),
+        __task:taskId(r),
+        __isPP:String(type).toLowerCase().includes('pharmaplus')||String(r.position_type||'').toLowerCase().includes('pharmaplus')||String(r.position_name||'').toLowerCase().includes('pharmaplus')
+      });
+    }).filter(r=>Number.isFinite(r.__month));
+  }
+
+  function ensureDefaultMonth(){
+    if(state.userTouched)return;
+    const cm=currentMonth();
+    if(!state.filters.months.size)state.filters.months.add(months()[cm]);
+    const sel=document.getElementById('scl212FilterMonth');
+    if(sel && (sel.value==='' || sel.value==null))sel.value=String(cm);
+  }
+
+  function pass(r){
+    const F=state.filters;
+    if(F.months.size && !F.months.has(r.__monthLabel))return false;
+    if(F.types.size && !F.types.has(r.__type))return false;
+    if(F.pharmacies.size && !F.pharmacies.has(r.__pharmacy))return false;
+    if(F.orientations.size && !F.orientations.has(r.__orientation))return false;
+    if(F.themes.size && !F.themes.has(r.__theme))return false;
+    if(F.changes.size && !F.changes.has(r.__change))return false;
+    return true;
+  }
+  function filteredRows(){
+    ensureDefaultMonth();
+    const rows=baseRows().filter(pass);
+    const {col,dir}=state.sort;
+    const val=(r)=>{
+      if(col==='month')return r.__month;
+      if(col==='pharmacy')return r.__pharmacy;
+      if(col==='position')return r.__position;
+      if(col==='orientation')return r.__orientation;
+      if(col==='type')return r.__type;
+      if(col==='theme'||col==='content')return r.__theme;
+      if(col==='change')return r.__change;
+      if(col==='billing')return r.__billing;
+      return r.__month;
+    };
+    rows.sort((a,b)=>{
+      const av=val(a),bv=val(b); let cmp=0;
+      if(typeof av==='number'||typeof bv==='number')cmp=(Number(av)||0)-(Number(bv)||0);
+      else cmp=String(av||'').localeCompare(String(bv||''),'el');
+      if(cmp===0)cmp=a.__pharmacy.localeCompare(b.__pharmacy,'el')||a.__position.localeCompare(b.__position,'el')||a.__theme.localeCompare(b.__theme,'el');
+      return cmp*dir;
+    });
+    return rows;
+  }
+
+  function uniq(arr){return [...new Set(arr.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),'el'));}
+  function allValues(){
+    const rows=baseRows();
+    return {
+      months:months(),
+      types:uniq(rows.map(r=>r.__type)),
+      pharmacies:uniq(rows.map(r=>r.__pharmacy)),
+      orientations:uniq(rows.map(r=>r.__orientation)),
+      themes:uniq(rows.map(r=>r.__theme).filter(x=>x&&x!=='—')),
+      changes:uniq(rows.map(r=>r.__change).filter(x=>x&&x!=='—'))
+    };
+  }
+  function countText(group){const n=state.filters[group].size; return n?`${n} επιλεγμένα`:'Όλα';}
+  function fillList(id,group,values){
+    const el=document.getElementById(id); if(!el)return;
+    el.innerHTML=values.length?values.map(v=>`<label class="scl228-check"><input type="checkbox" data-scl263-group="${group}" data-scl263-value="${esc(v)}" ${state.filters[group].has(v)?'checked':''}><span>${esc(v)}</span></label>`).join(''):'<div class="scl212-sub">Δεν υπάρχουν επιλογές</div>';
+  }
+  function renderFilters(){
+    const v=allValues();
+    // Hide older duplicate filter panels. Keep the compact final filter panel.
+    ['scl217MultiFilters','scl224Filters','scl227DomFilters'].forEach(id=>{const el=document.getElementById(id); if(el)el.style.display='none';});
+    const panel=document.getElementById('scl228Filters'); if(panel){panel.style.display='block'; panel.classList.add('scl263-active-filters');}
+    fillList('scl228Months','months',v.months);
+    fillList('scl228Types','types',v.types);
+    fillList('scl228Pharmacies','pharmacies',v.pharmacies);
+    fillList('scl228Orientations','orientations',v.orientations);
+    fillList('scl228Themes','themes',v.themes);
+    fillList('scl228Changes','changes',v.changes);
+    [['scl228CountMonths','months'],['scl228CountTypes','types'],['scl228CountPharmacies','pharmacies'],['scl228CountOrientations','orientations'],['scl228CountThemes','themes'],['scl228CountChanges','changes']].forEach(([id,g])=>{const el=document.getElementById(id); if(el)el.textContent=countText(g);});
+    document.querySelectorAll('#scl228Filters input[data-scl263-group]').forEach(cb=>{
+      if(cb.dataset.bound263)return;
+      cb.dataset.bound263='1';
+      cb.addEventListener('change',()=>{
+        state.userTouched=true;
+        const g=cb.dataset.scl263Group, val=cb.dataset.scl263Value;
+        if(cb.checked)state.filters[g].add(val); else state.filters[g].delete(val);
+        state.limit=PAGE_SIZE;
+        renderChanges();
+      });
+    });
+    const clear=document.getElementById('scl228Clear');
+    if(clear&&!clear.dataset.bound263){
+      clear.dataset.bound263='1';
+      clear.addEventListener('click',()=>{
+        Object.values(state.filters).forEach(s=>s.clear());
+        state.filters.months.add(months()[currentMonth()]);
+        state.userTouched=false;
+        state.limit=PAGE_SIZE;
+        renderChanges();
+      });
+    }
+    ensureFastControls();
+  }
+
+  function ensureFastControls(){
+    const controls=document.querySelector('#scl212Page-changes .scl212-controls');
+    if(controls && !document.getElementById('scl263PerfNote')){
+      const note=document.createElement('div');
+      note.id='scl263PerfNote';
+      note.className='scl263-note';
+      note.innerHTML='Γρήγορη προβολή: ξεκινά με τον τρέχοντα μήνα. Τα φίλτρα εφαρμόζονται πριν εμφανιστούν οι γραμμές.';
+      controls.insertAdjacentElement('afterend',note);
+    }
+    if(!document.getElementById('scl263AllMonthsBtn')){
+      const clear=document.getElementById('scl228Clear');
+      if(clear){
+        const btn=document.createElement('button');
+        btn.type='button'; btn.id='scl263AllMonthsBtn'; btn.textContent='Προβολή όλων των μηνών';
+        btn.addEventListener('click',()=>{state.userTouched=true; state.filters.months.clear(); state.limit=PAGE_SIZE; renderChanges();});
+        clear.insertAdjacentElement('beforebegin',btn);
+      }
+    }
+  }
+
+  function ensureTable(){
+    const tbody=document.getElementById('scl212Changes'); const table=tbody?.closest('table'); const head=table?.querySelector('thead tr');
+    if(head){
+      head.innerHTML='<th style="width:36px"></th><th class="scl213-sortable" data-sort="month">Μήνας <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="pharmacy">Φαρμακείο <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="position">Θέση <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="orientation">Orientation <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="type">Είδος <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="theme">Θέμα <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="change">Change type <span class="scl213-si">↕</span></th><th class="scl213-sortable" data-sort="billing" style="text-align:right">Χρέωση <span class="scl213-si">↕</span></th>';
+    }
+    document.querySelectorAll('#scl212Page-changes th.scl213-sortable').forEach(th=>{
+      th.onclick=(ev)=>{ev.preventDefault(); ev.stopPropagation(); const col=th.dataset.sort||'month'; if(state.sort.col===col)state.sort.dir*=-1; else {state.sort.col=col; state.sort.dir=1;} state.limit=PAGE_SIZE; renderChanges();};
+    });
+    return tbody;
+  }
+
+  function rowHtml(r){
+    const id=r.__task; const done=isDone(id); const past=isPastMonth(r.__month); const visualDone=done||past;
+    const mat=(typeof scl212NeedsMaterial==='function' && scl212NeedsMaterial(r));
+    const cls=[visualDone?'scl212-done-row':'',mat&&!visualDone?'scl212-need-material':'',past?'scl263-past-row':'',r.__isPP?'scl263-pp-row':''].filter(Boolean).join(' ');
+    return `<tr class="${cls}">
+      <td><input type="checkbox" ${visualDone?'checked':''} ${past?'disabled title="Ιστορικό task — παρελθών μήνας"':''} data-task="${esc(id)}"></td>
+      <td style="color:#666">${esc(r.__monthLabel)}</td>
+      <td><strong>${esc(r.__pharmacy)}</strong></td>
+      <td style="color:#666">${esc(r.__position)}</td>
+      <td style="color:#666">${esc(r.__orientation)}</td>
+      <td>${pill(r.__type,r.__type)}</td>
+      <td class="scl228-theme-cell"><div class="theme">${esc(r.__theme)}</div></td>
+      <td class="scl228-change-cell">${esc(r.__change)}${past?'<span class="scl261-history-chip">Ιστορικό</span>':''}${mat&&!visualDone?'<div style="font-size:11px;color:#854F0B;margin-top:2px">Χρειάζεται έλεγχος υλικού / supplier</div>':''}</td>
+      <td style="text-align:right">${esc(r.__billing)}</td>
+    </tr>`;
+  }
+
+  function renderChanges(){
+    if(!isHQ())return;
+    ensureDefaultMonth();
+    renderFilters();
+    const tbody=ensureTable(); if(!tbody)return;
+    const rows=filteredRows();
+    const shown=rows.slice(0,state.limit);
+    tbody.innerHTML=shown.length?shown.map(rowHtml).join(''):`<tr><td colspan="9" class="scl263-empty">Δεν υπάρχουν αλλαγές με τα τρέχοντα φίλτρα.</td></tr>`;
+    tbody.querySelectorAll('input[data-task]:not(:disabled)').forEach(cb=>{
+      cb.addEventListener('change',()=>{const d=dash(); if(d){d.done=d.done||{}; d.done[cb.dataset.task]=cb.checked; saveDone(); renderChanges();}});
+    });
+    let btn=document.getElementById('scl263LoadMore');
+    const table=tbody.closest('table');
+    if(!btn && table){btn=document.createElement('button'); btn.id='scl263LoadMore'; btn.type='button'; btn.className='scl262-more-btn'; btn.addEventListener('click',()=>{state.limit+=state.pageSize; renderChanges();}); table.insertAdjacentElement('afterend',btn);}
+    if(btn){const rem=Math.max(0,rows.length-shown.length); btn.style.display=rem>0?'inline-flex':'none'; btn.textContent=`Φόρτωση περισσότερων (${rem} ακόμη)`;}
+    const count=document.getElementById('scl212Count'); if(count)count.textContent=`${shown.length}/${rows.length} αλλαγές εμφανίζονται`;
+  }
+
+  function renderFast(){
+    try{if(typeof scl212Bind==='function')scl212Bind();}catch(e){}
+    try{if(typeof scl212RenderStats==='function')scl212RenderStats();}catch(e){}
+    try{if(typeof scl212RenderNotif==='function')scl212RenderNotif();}catch(e){}
+    // Do not render overview/raw/debug while Changes tab is active.
+    renderChanges();
+  }
+
+  const previousRender=typeof scl212Render==='function'?scl212Render:null;
+  window.scl212Render=function(){
+    const d=dash();
+    if(isHQ() && (d?.tab==='changes' || isChangesActive())){renderFast(); return;}
+    return previousRender?previousRender.apply(this,arguments):undefined;
+  };
+  try{scl212Render=window.scl212Render;}catch(e){}
+
+  window.scl212RenderChanges=renderChanges;
+  try{scl212RenderChanges=window.scl212RenderChanges;}catch(e){}
+
+  // Stop auto cloud reload from forcing a full refresh while the user is inside Changes.
+  const previousLoad=typeof scl212Load==='function'?scl212Load:null;
+  window.scl212Load=async function(){
+    if(isHQ() && isChangesActive() && !state.manualRefresh && (dash()?.months||[]).length){
+      const st=document.getElementById('scl213RefreshStatus'); if(st)st.textContent='auto refresh σε παύση στις Αλλαγές';
+      return;
+    }
+    state.manualRefresh=false;
+    return previousLoad?await previousLoad.apply(this,arguments):undefined;
+  };
+  try{scl212Load=window.scl212Load;}catch(e){}
+
+  document.addEventListener('click',e=>{
+    if(e.target?.id==='scl212Refresh')state.manualRefresh=true;
+    if(e.target?.closest?.('.scl212-tab[data-tab="changes"]')){state.limit=PAGE_SIZE; setTimeout(renderChanges,80);}
+  },true);
+  document.addEventListener('change',e=>{
+    if(e.target?.id==='scl212FilterMonth'){
+      state.userTouched=true; state.filters.months.clear();
+      const v=e.target.value; if(v!=='')state.filters.months.add(months()[Number(v)]||v);
+      state.limit=PAGE_SIZE; renderChanges();
+    }
+    if(e.target?.id==='scl212FilterType'){
+      state.userTouched=true; state.filters.types.clear(); if(e.target.value)state.filters.types.add(e.target.value);
+      state.limit=PAGE_SIZE; renderChanges();
+    }
+  },true);
+
+  const css=document.createElement('style'); css.id='scl263Css'; css.textContent=`
+    #scl217MultiFilters,#scl224Filters,#scl227DomFilters{display:none!important}
+    #scl263PerfNote{margin:8px 0 10px;border:1px solid #d9e1ea;background:#fbfcff;border-radius:10px;padding:8px 10px;font-size:11px;color:#637083;font-weight:700}
+    #scl263AllMonthsBtn{margin-right:8px;border:1px solid #d9d9d6;background:#fff;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;color:#1f2937}
+    .scl263-past-row{opacity:.42!important;background:#f4f4f4!important;color:#777!important}
+    .scl263-past-row td,.scl263-past-row strong,.scl263-past-row .theme,.scl263-past-row .scl228-change-cell{text-decoration:line-through!important;text-decoration-thickness:1px!important}
+    .scl263-pp-row .scl212-pill{font-weight:900}
+    .scl263-empty{padding:18px!important;text-align:center;color:#666;background:#fbfcff}
+    #scl212Changes{contain:content}
+  `; if(!document.getElementById('scl263Css'))document.head.appendChild(css);
+
+  setTimeout(()=>{ensureDefaultMonth(); if(isChangesActive())renderChanges();},500);
+})();
+</script>
 </body>
 </html>
