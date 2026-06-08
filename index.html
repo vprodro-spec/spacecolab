@@ -28747,5 +28747,76 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(applyPastVisuals,800);
 })();
 </script>
+
+
+<script id="scl265-changes-material-sponsored-fix">
+(function(){
+  if(window.__SCL265_CHANGES_MATERIAL_SPONSORED_FIX__)return;
+  window.__SCL265_CHANGES_MATERIAL_SPONSORED_FIX__=true;
+
+  function norm(v){return String(v==null?'':v).trim().toLowerCase();}
+  function isSponsoredOperationalRow(row){
+    if(!row)return false;
+    const type=norm(row.final_type||row.type||row.position_type);
+    const reason=norm(row.content_change_reason||row.change_reason||row.reason);
+    const pos=norm(row.position_name||row.position||'');
+    // Separate sponsored rows should not become HQ operational to-dos.
+    // Do not filter normal basic/custom/deal rows that merely carry sponsored shelf metadata.
+    if(type==='sponsored')return true;
+    if(reason.includes('sponsored'))return true;
+    if(pos.includes('sponsored'))return true;
+    return false;
+  }
+  function hasExplicitMaterialTask(row){
+    if(!row)return false;
+    const flags=['hq_material_required','material_required','needs_material','requires_material','supplier_material_required'];
+    for(const f of flags){
+      if(row[f]===true || row[f]==='true' || row[f]===1 || row[f]==='1')return true;
+    }
+    const reason=norm(row.content_change_reason||row.change_reason||'');
+    // Keep material warning for Deal starts because HQ/supplier material check is a real operational task.
+    if(norm(row.final_type||row.type)==='deal')return true;
+    if(reason==='deal_start' || reason==='deal_change')return true;
+    return false;
+  }
+
+  const prevVisible=typeof scl212VisibleChanges==='function'?scl212VisibleChanges:null;
+  window.scl265OriginalVisibleChanges=window.scl265OriginalVisibleChanges||prevVisible;
+  window.scl212VisibleChanges=function(){
+    const rows=prevVisible?prevVisible.apply(this,arguments):[];
+    return (rows||[]).filter(r=>!isSponsoredOperationalRow(r));
+  };
+  try{scl212VisibleChanges=window.scl212VisibleChanges;}catch(e){}
+
+  const prevNeeds=typeof scl212NeedsMaterial==='function'?scl212NeedsMaterial:null;
+  window.scl265OriginalNeedsMaterial=window.scl265OriginalNeedsMaterial||prevNeeds;
+  window.scl212NeedsMaterial=function(row){
+    if(!row)return false;
+    const type=norm(row.final_type||row.type||row.position_type);
+    const reason=norm(row.content_change_reason||row.change_reason||row.reason);
+    // Never show automatic supplier/material check for normal basic/custom/sponsored info.
+    if(type==='basic' || type==='custom' || type==='sponsored')return hasExplicitMaterialTask(row) && type==='deal';
+    if(reason==='basic_month_change' || reason==='initial_basic_setup' || reason==='custom_start' || reason==='return_to_basic_from_custom' || reason==='deal_end_return_to_basic')return false;
+    if(reason.includes('sponsored'))return false;
+    return hasExplicitMaterialTask(row);
+  };
+  try{scl212NeedsMaterial=window.scl212NeedsMaterial;}catch(e){}
+
+  // Clean any already-rendered stale warning text from non-deal rows, then rerender if possible.
+  function rerenderChangesIfActive(){
+    try{
+      const d=(typeof SCL212!=='undefined')?SCL212:null;
+      if(d && d.tab==='changes' && typeof scl212RenderChanges==='function')scl212RenderChanges();
+      else if(typeof scl212Render==='function')scl212Render();
+    }catch(e){console.warn('v265 changes rerender failed',e);}
+  }
+  setTimeout(rerenderChangesIfActive,150);
+  document.addEventListener('click',function(e){
+    if(e.target && e.target.closest && e.target.closest('.scl212-tab[data-tab="changes"]')){
+      setTimeout(rerenderChangesIfActive,120);
+    }
+  },true);
+})();
+</script>
 </body>
 </html>
