@@ -17269,127 +17269,6 @@ document.querySelectorAll('[data-delete-confirmed-deal]').forEach(b=>b.onclick=(
   <span class="muted" id="sclAutosaveStripMeta">Αποθηκεύει αυτόματα κάθε αλλαγή στο φαρμακείο.</span>
 </div>
 
-
-
-<script id="scl266-preagreement-confirm-sync-fix">
-(function(){
-  if(window.__SCL266_PREAGREEMENT_CONFIRM_SYNC_FIX__)return;
-  window.__SCL266_PREAGREEMENT_CONFIRM_SYNC_FIX__=true;
-
-  function log(){try{console.log.apply(console,['[v266]'].concat([].slice.call(arguments)));}catch(e){}}
-  function mode(){try{return typeof sclMode==='function'?sclMode():'';}catch(e){return '';}}
-  function isPharmacy(){return mode()==='pharmacy';}
-  function getState(){try{return (typeof state!=='undefined'&&state)?state:null;}catch(e){return null;}}
-  function isObj(x){return x&&typeof x==='object';}
-  function arr(x){return Array.isArray(x)?x:[];}
-  function clone(x){try{return JSON.parse(JSON.stringify(x));}catch(e){return x;}}
-  function clean(v){return String(v==null?'':v).trim();}
-
-  function normalizeConfirmedDealsInLocalState(){
-    const st=getState();
-    if(!st||!Array.isArray(st.cards))return 0;
-    let moved=0;
-    st.cards.forEach(card=>{
-      if(!isObj(card))return;
-      if(!Array.isArray(card.confirmedDeals))card.confirmedDeals=[];
-      if(Array.isArray(card.preagreements)){
-        const keep=[];
-        card.preagreements.forEach(p=>{
-          if(p&&p.confirmed===true){
-            const id=String(p.id||'');
-            const exists=card.confirmedDeals.some(d=>String(d&&d.id||'')===id && id);
-            if(!exists){
-              const c=clone(p);
-              c.pending=false;
-              c.confirmed=true;
-              card.confirmedDeals.push(c);
-              moved++;
-            }
-          }else keep.push(p);
-        });
-        if(keep.length!==card.preagreements.length)card.preagreements=keep;
-      }
-      // In rare flows the editor's current negotiation is confirmed but was not inserted into confirmedDeals.
-      if(card.negotiation&&card.negotiation.confirmed===true){
-        const n=card.negotiation;
-        const hasContent=clean(n.supplier)||clean(n.brand)||clean(n.subline)||clean(n.products)||arr(n.schedule).some(clean);
-        const id=String(n.id||'');
-        const exists=card.confirmedDeals.some(d=>String(d&&d.id||'')===id && id);
-        if(hasContent&&!exists){
-          const c=clone(n);
-          c.id=c.id||Date.now();
-          c.pending=false;
-          c.confirmed=true;
-          card.confirmedDeals.push(c);
-          moved++;
-        }
-      }
-    });
-    return moved;
-  }
-
-  let syncTimer=null;
-  async function forceContractSync(reason){
-    if(!isPharmacy())return;
-    clearTimeout(syncTimer);
-    syncTimer=setTimeout(async()=>{
-      try{
-        normalizeConfirmedDealsInLocalState();
-        if(typeof saveCurrentYear==='function'){
-          try{saveCurrentYear();}catch(e){}
-        }
-        if(typeof scl206UpsertPlanContracts==='function'){
-          await scl206UpsertPlanContracts();
-          log('contract sync complete', reason||'');
-        }else if(typeof sclQueueSave==='function'){
-          sclQueueSave();
-          log('queued save fallback', reason||'');
-        }
-        if(typeof sclCloudStatus==='function')sclCloudStatus('Συγχρονίστηκε η τελική συμφωνία','ok');
-      }catch(e){
-        console.warn('[v266] preagreement confirm sync failed',e);
-        if(typeof sclCloudStatus==='function')sclCloudStatus('Σφάλμα συγχρονισμού τελικής συμφωνίας: '+(e.message||e),'err');
-      }
-    },250);
-  }
-  window.scl266ForceContractSync=forceContractSync;
-
-  // The original preagreement confirmation handler mutates state and calls refresh(),
-  // but the generic cloud watcher may have already queued a save BEFORE the mutation.
-  // This post-click hook syncs the converted confirmed deal after the mutation is complete.
-  document.addEventListener('click',function(e){
-    const btn=e.target&&e.target.closest&&e.target.closest('[data-confirm-preagreement]');
-    if(!btn)return;
-    setTimeout(()=>forceContractSync('confirm-preagreement'),80);
-  },false);
-
-  // Also sync when editing/saving an already confirmed deal, because these rows feed HQ Changes/Billing.
-  document.addEventListener('click',function(e){
-    const btn=e.target&&e.target.closest&&e.target.closest('[data-save-neg-edit], [data-save-neg-final], [data-confirm-neg], [data-save-negotiation]');
-    if(!btn)return;
-    setTimeout(()=>forceContractSync('save-confirmed-deal'),120);
-  },false);
-
-  // Make the converter tolerant if a confirmed preagreement remains in preagreements by mistake.
-  function wrapBuildDealsPayload(fnName){
-    try{
-      const old=window[fnName] || (typeof globalThis!=='undefined'?globalThis[fnName]:null);
-      if(typeof old!=='function'||old.__scl266Wrapped)return;
-      const wrapped=function(){
-        normalizeConfirmedDealsInLocalState();
-        return old.apply(this,arguments);
-      };
-      wrapped.__scl266Wrapped=true;
-      window[fnName]=wrapped;
-      try{eval(fnName+' = window["'+fnName+'"]');}catch(e){}
-    }catch(e){}
-  }
-  ['scl206BuildDealsPayload','scl207BuildDealsPayload','scl208BuildDealsPayload'].forEach(wrapBuildDealsPayload);
-
-  log('loaded');
-})();
-</script>
-
 </body></html>`);
   w.document.close();w.focus();setTimeout(()=>w.print(),250);
 });document.querySelectorAll('[data-clear-timeline-focus]').forEach(b=>b.onclick=()=>{state.timelineFocus=null;refresh();});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal').forEach(m=>m.onclick=e=>{if(e.target===m)m.classList.remove('open')});document.querySelectorAll('[data-modal-card]').forEach(x=>x.onclick=e=>e.stopPropagation());
@@ -28937,6 +28816,126 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
       setTimeout(rerenderChangesIfActive,120);
     }
   },true);
+})();
+</script>
+
+
+<script id="scl266-preagreement-confirm-sync-fix">
+(function(){
+  if(window.__SCL266_PREAGREEMENT_CONFIRM_SYNC_FIX__)return;
+  window.__SCL266_PREAGREEMENT_CONFIRM_SYNC_FIX__=true;
+
+  function log(){try{console.log.apply(console,['[v266]'].concat([].slice.call(arguments)));}catch(e){}}
+  function mode(){try{return typeof sclMode==='function'?sclMode():'';}catch(e){return '';}}
+  function isPharmacy(){return mode()==='pharmacy';}
+  function getState(){try{return (typeof state!=='undefined'&&state)?state:null;}catch(e){return null;}}
+  function isObj(x){return x&&typeof x==='object';}
+  function arr(x){return Array.isArray(x)?x:[];}
+  function clone(x){try{return JSON.parse(JSON.stringify(x));}catch(e){return x;}}
+  function clean(v){return String(v==null?'':v).trim();}
+
+  function normalizeConfirmedDealsInLocalState(){
+    const st=getState();
+    if(!st||!Array.isArray(st.cards))return 0;
+    let moved=0;
+    st.cards.forEach(card=>{
+      if(!isObj(card))return;
+      if(!Array.isArray(card.confirmedDeals))card.confirmedDeals=[];
+      if(Array.isArray(card.preagreements)){
+        const keep=[];
+        card.preagreements.forEach(p=>{
+          if(p&&p.confirmed===true){
+            const id=String(p.id||'');
+            const exists=card.confirmedDeals.some(d=>String(d&&d.id||'')===id && id);
+            if(!exists){
+              const c=clone(p);
+              c.pending=false;
+              c.confirmed=true;
+              card.confirmedDeals.push(c);
+              moved++;
+            }
+          }else keep.push(p);
+        });
+        if(keep.length!==card.preagreements.length)card.preagreements=keep;
+      }
+      // In rare flows the editor's current negotiation is confirmed but was not inserted into confirmedDeals.
+      if(card.negotiation&&card.negotiation.confirmed===true){
+        const n=card.negotiation;
+        const hasContent=clean(n.supplier)||clean(n.brand)||clean(n.subline)||clean(n.products)||arr(n.schedule).some(clean);
+        const id=String(n.id||'');
+        const exists=card.confirmedDeals.some(d=>String(d&&d.id||'')===id && id);
+        if(hasContent&&!exists){
+          const c=clone(n);
+          c.id=c.id||Date.now();
+          c.pending=false;
+          c.confirmed=true;
+          card.confirmedDeals.push(c);
+          moved++;
+        }
+      }
+    });
+    return moved;
+  }
+
+  let syncTimer=null;
+  async function forceContractSync(reason){
+    if(!isPharmacy())return;
+    clearTimeout(syncTimer);
+    syncTimer=setTimeout(async()=>{
+      try{
+        normalizeConfirmedDealsInLocalState();
+        if(typeof saveCurrentYear==='function'){
+          try{saveCurrentYear();}catch(e){}
+        }
+        if(typeof scl206UpsertPlanContracts==='function'){
+          await scl206UpsertPlanContracts();
+          log('contract sync complete', reason||'');
+        }else if(typeof sclQueueSave==='function'){
+          sclQueueSave();
+          log('queued save fallback', reason||'');
+        }
+        if(typeof sclCloudStatus==='function')sclCloudStatus('Συγχρονίστηκε η τελική συμφωνία','ok');
+      }catch(e){
+        console.warn('[v266] preagreement confirm sync failed',e);
+        if(typeof sclCloudStatus==='function')sclCloudStatus('Σφάλμα συγχρονισμού τελικής συμφωνίας: '+(e.message||e),'err');
+      }
+    },250);
+  }
+  window.scl266ForceContractSync=forceContractSync;
+
+  // The original preagreement confirmation handler mutates state and calls refresh(),
+  // but the generic cloud watcher may have already queued a save BEFORE the mutation.
+  // This post-click hook syncs the converted confirmed deal after the mutation is complete.
+  document.addEventListener('click',function(e){
+    const btn=e.target&&e.target.closest&&e.target.closest('[data-confirm-preagreement]');
+    if(!btn)return;
+    setTimeout(()=>forceContractSync('confirm-preagreement'),80);
+  },false);
+
+  // Also sync when editing/saving an already confirmed deal, because these rows feed HQ Changes/Billing.
+  document.addEventListener('click',function(e){
+    const btn=e.target&&e.target.closest&&e.target.closest('[data-save-neg-edit], [data-save-neg-final], [data-confirm-neg], [data-save-negotiation]');
+    if(!btn)return;
+    setTimeout(()=>forceContractSync('save-confirmed-deal'),120);
+  },false);
+
+  // Make the converter tolerant if a confirmed preagreement remains in preagreements by mistake.
+  function wrapBuildDealsPayload(fnName){
+    try{
+      const old=window[fnName] || (typeof globalThis!=='undefined'?globalThis[fnName]:null);
+      if(typeof old!=='function'||old.__scl266Wrapped)return;
+      const wrapped=function(){
+        normalizeConfirmedDealsInLocalState();
+        return old.apply(this,arguments);
+      };
+      wrapped.__scl266Wrapped=true;
+      window[fnName]=wrapped;
+      try{eval(fnName+' = window["'+fnName+'"]');}catch(e){}
+    }catch(e){}
+  }
+  ['scl206BuildDealsPayload','scl207BuildDealsPayload','scl208BuildDealsPayload'].forEach(wrapBuildDealsPayload);
+
+  log('loaded');
 })();
 </script>
 </body>
