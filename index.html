@@ -9933,7 +9933,7 @@ body.scl-hq #sclHqDashboard{display:none!important}
       <div>
         <div class="scl212-sec">Pharmaplus Campaigns</div>
         <div class="scl231-title">Ετήσιο πρόγραμμα Pharmaplus</div>
-        <div class="scl231-sub">Κύρια ενέργεια, fallback ενέργεια και scope φαρμακείων ανά μήνα. Δεν χρεώνεται διαχείριση στο φαρμακείο.</div>
+        <div class="scl231-sub">Κύρια ενέργεια, μηνιαίο θέμα HQ και scope φαρμακείων ανά μήνα. Δεν χρεώνεται διαχείριση στο φαρμακείο.</div>
       </div>
       <button type="button" id="scl231RefreshCampaigns" class="scl231-btn">Ανανέωση campaigns</button>
     </div>
@@ -9971,12 +9971,12 @@ body.scl-hq #sclHqDashboard{display:none!important}
           <label>Σημειώσεις <textarea id="scl231Notes" rows="3" placeholder="ό,τι άλλο χρειάζεται"></textarea></label>
         </div>
         <div class="scl231-section">
-          <div class="scl231-section-title">Fallback / δευτερεύουσα ενέργεια</div>
-          <div class="scl231-help">Εμφανίζεται αυτόματα στα φαρμακεία που δεν ανήκουν στο scope της κύριας ενέργειας. Αν μείνουν όλα κενά, θα εμφανίζεται “Προσεχώς”.</div>
-          <label>Fallback τίτλος <input id="scl231FallbackTitle" placeholder="π.χ. Γενική Αντηλιακή Προστασία"></label>
-          <label>Fallback περιγραφή <textarea id="scl231FallbackDescription" rows="3"></textarea></label>
-          <label>Fallback κωδικοί / προϊόντα <textarea id="scl231FallbackProducts" rows="3"></textarea></label>
-          <label>Fallback οδηγίες στησίματος <textarea id="scl231FallbackInstructions" rows="3"></textarea></label>
+          <div class="scl231-section-title">HQ μηνιαίο θέμα</div>
+          <div class="scl231-help">Εμφανίζεται όταν το φαρμακείο δεν συμμετέχει στην κύρια ενέργεια ή όταν δεν έχει κλείσει κύριο Pharmaplus πρόγραμμα για τον μήνα. Αν μείνει κενό, εμφανίζεται “Προσεχώς”.</div>
+          <label>Τίτλος μηνιαίου θέματος HQ <input id="scl231FallbackTitle" placeholder="π.χ. Travel Essentials / Ανοσοποιητικό / Αντηλιακή προστασία"></label>
+          <label>Περιγραφή μηνιαίου θέματος <textarea id="scl231FallbackDescription" rows="3"></textarea></label>
+          <label>Κωδικοί / προϊόντα μηνιαίου θέματος <textarea id="scl231FallbackProducts" rows="3"></textarea></label>
+          <label>Οδηγίες στησίματος μηνιαίου θέματος <textarea id="scl231FallbackInstructions" rows="3"></textarea></label>
         </div>
         <div class="scl231-section">
           <div class="scl231-section-title">Scope φαρμακείων</div>
@@ -29556,6 +29556,165 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   window.scl212RenderBilling=renderBilling;window.scl256RenderBilling=renderBilling;window.scl268RenderBilling=renderBilling;window.scl271RenderBilling=renderBilling;
   setTimeout(function(){try{var d=dash();if(d&&d.tab==='billing')renderBilling();}catch(e){console.warn('v271 billing validation init failed',e);}},500);
   console.log('[v271] billing validation fix loaded');
+})();
+</script>
+
+
+<script id="scl272-pharmaplus-monthly-theme">
+/* v272 — Pharmaplus monthly HQ theme instead of annual fallback
+   - No annual fallback concept in UX.
+   - Reuses existing fallback_* storage fields as the per-month HQ default theme, to avoid database/schema changes.
+   - Final display logic: Main if in scope; otherwise HQ monthly theme; if no main exists, HQ monthly theme; if no theme, Προσεχώς.
+   - Pharmaplus remains HQ-only and never billing. */
+(function(){
+  if(window.__SCL272_PHARMAPLUS_MONTHLY_THEME__)return;
+  window.__SCL272_PHARMAPLUS_MONTHLY_THEME__=true;
+
+  function clean(v){
+    if(v===null||v===undefined)return '';
+    if(typeof v==='object')return '';
+    var s=String(v).trim();
+    if(!s||s==='null'||s==='undefined'||s==='[object Object]'||s==='—'||s==='-')return '';
+    return s;
+  }
+  function esc(v){
+    try{if(typeof scl231Esc==='function')return scl231Esc(v);}catch(e){}
+    try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){}
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function months(){try{return scl231Months();}catch(e){} try{return SCL212_MONTHS;}catch(e){} return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}
+  function campaign(month){try{return scl231Campaign(month);}catch(e){} return (window.SCL231&&SCL231.campaigns||[]).find(function(c){return Number(c.month)===Number(month);})||null;}
+  function hasMain(c){return !!(c&&(clean(c.title)||clean(c.supplier)||clean(c.campaign_type)||clean(c.company_benefit)||clean(c.products_text)||clean(c.shelf_instructions)||clean(c.shelf_1)||clean(c.shelf_2)||clean(c.shelf_3)||clean(c.shelf_4)));}
+  function hasTheme(c){return !!(c&&(clean(c.fallback_title)||clean(c.fallback_description)||clean(c.fallback_products_text)||clean(c.fallback_instructions)));}
+  function themeTitle(c){return clean(c&&c.fallback_title)||'HQ μηνιαίο θέμα';}
+  function mainTitle(c){return clean(c&&c.title)||clean(c&&c.supplier)||'Pharmaplus ενέργεια';}
+  function scopeText(c){try{return scl231ScopeText(c);}catch(e){}
+    var mode=c&&c.scope_mode||'all',ids=(c&&c.scope_pharmacy_ids||[]);
+    if(mode==='all')return 'Όλα'; if(mode==='only')return 'Μόνο '+ids.length; if(mode==='except')return 'Όλα εκτός '+ids.length; return 'Όλα';
+  }
+
+  function patchLabels(){
+    try{
+      var title=[].find.call(document.querySelectorAll('.scl231-title'),function(x){return /Ετήσιο πρόγραμμα Pharmaplus/.test(x.textContent||'');});
+      if(title)title.textContent='Μηνιαίο πρόγραμμα Pharmaplus';
+      var sub=[].find.call(document.querySelectorAll('.scl231-sub'),function(x){return /fallback|Fallback|Κύρια ενέργεια/.test(x.textContent||'');});
+      if(sub)sub.textContent='Κύρια ενέργεια, HQ μηνιαίο θέμα και scope φαρμακείων ανά μήνα. Το Pharmaplus δεν χρεώνεται στο φαρμακείο.';
+      document.querySelectorAll('.scl231-section-title').forEach(function(el){if(/Fallback|δευτερεύουσα/.test(el.textContent||''))el.textContent='HQ μηνιαίο θέμα';});
+      document.querySelectorAll('.scl231-help').forEach(function(el){
+        if(/scope της κύριας|fallback|Fallback/.test(el.textContent||''))el.textContent='Εμφανίζεται όταν το φαρμακείο δεν συμμετέχει στην κύρια ενέργεια ή όταν δεν έχει κλείσει κύριο Pharmaplus πρόγραμμα για τον μήνα. Αν μείνει κενό, εμφανίζεται “Προσεχώς”.';
+      });
+      var ids={
+        scl231FallbackTitle:'Τίτλος μηνιαίου θέματος HQ',
+        scl231FallbackDescription:'Περιγραφή μηνιαίου θέματος',
+        scl231FallbackProducts:'Κωδικοί / προϊόντα μηνιαίου θέματος',
+        scl231FallbackInstructions:'Οδηγίες στησίματος μηνιαίου θέματος'
+      };
+      Object.keys(ids).forEach(function(id){var el=document.getElementById(id);var lab=el&&el.closest('label');if(lab&&lab.firstChild)lab.firstChild.textContent=ids[id]+' ';});
+      var inp=document.getElementById('scl231FallbackTitle');if(inp)inp.placeholder='π.χ. Travel Essentials / Ανοσοποιητικό / Αντηλιακή προστασία';
+    }catch(e){}
+  }
+
+  // Override HQ campaign cards to present monthly theme, not fallback.
+  function renderCards272(){
+    var grid=document.getElementById('scl231CampaignGrid');if(!grid)return;
+    var ms=months();
+    grid.innerHTML=ms.map(function(m,i){
+      var c=campaign(i), main=hasMain(c), theme=hasTheme(c), title=main?mainTitle(c):(theme?themeTitle(c):'Προσεχώς');
+      var type=main?(clean(c.campaign_type)||'Main Pharmaplus'):(theme?'HQ θέμα':'Προσεχώς');
+      return '<div class="scl231-month-card '+((window.SCL231&&SCL231.selectedMonth===i)?'active':'')+'" data-month="'+i+'">'+
+        '<div class="scl231-month">'+esc(m)+'</div>'+
+        '<div class="scl231-campaign-title">'+esc(title)+'</div>'+
+        '<div class="scl231-campaign-meta">'+
+          '<span class="scl231-pill '+(main?'main':theme?'theme':'soon')+'">'+esc(type)+'</span>'+
+          (c&&c.supplier?'<span class="scl231-pill">'+esc(c.supplier)+'</span>':'')+
+          (theme?'<span class="scl231-pill theme">HQ μηνιαίο θέμα</span>':'')+
+          '<span class="scl231-pill scope">'+esc(scopeText(c))+'</span>'+
+          '<span class="scl231-pill">0€ billing</span>'+
+        '</div></div>';
+    }).join('');
+    grid.querySelectorAll('[data-month]').forEach(function(card){card.addEventListener('click',function(){try{scl231OpenEditor(Number(card.dataset.month));}catch(e){}});});
+  }
+  window.scl272RenderPharmaplusCards=renderCards272;
+  try{window.scl231RenderCards=renderCards272;scl231RenderCards=renderCards272;}catch(e){}
+
+  // Patch editor subtitle after original open fills fields.
+  function wrapOpen(){
+    try{
+      if(typeof scl231OpenEditor!=='function'||scl231OpenEditor.__scl272)return;
+      var old=scl231OpenEditor;
+      window.scl231OpenEditor=function(month){
+        var r=old.apply(this,arguments);
+        setTimeout(function(){
+          patchLabels();
+          var sub=document.getElementById('scl231EditorSub');
+          if(sub)sub.textContent='Main αν το φαρμακείο συμμετέχει. Αλλιώς εμφανίζεται το HQ μηνιαίο θέμα. Αν δεν υπάρχει θέμα, εμφανίζεται Προσεχώς. Καμία χρέωση.';
+          renderCards272();
+        },0);
+        return r;
+      };
+      window.scl231OpenEditor.__scl272=true;try{scl231OpenEditor=window.scl231OpenEditor;}catch(e){}
+    }catch(e){}
+  }
+
+  // Override preview so the "monthly theme" preview does not say fallback.
+  function wrapPreview(){
+    try{
+      if(typeof scl231RenderPreview!=='function'||scl231RenderPreview.__scl272)return;
+      window.scl231RenderPreview=function(){
+        var p={};try{p=scl231Payload()||{};}catch(e){}
+        var title=clean(p.p_title)||clean(p.p_fallback_title)||'Προσεχώς';
+        var supplier=clean(p.p_supplier)||'PHARMAPLUS';
+        var isTheme=!clean(p.p_title)&&clean(p.p_fallback_title);
+        var summary=[['Τύπος',isTheme?'HQ μηνιαίο θέμα':'Κύρια Pharmaplus ενέργεια'],['Μήνας',clean(p.p_date_range)],['Εταιρεία',clean(p.p_supplier)],['Παροχή εταιρείας',clean(p.p_company_benefit)],['Ημερ. τοποθέτησης',clean(p.p_placement_dates)],['Υλικά in-store',clean(p.p_instore_materials)],['Digital',clean(p.p_digital_support)]].filter(function(x){return x[1];});
+        var sections=isTheme?[
+          ['Περιγραφή',clean(p.p_fallback_description)],['Κωδικοί / προϊόντα',clean(p.p_fallback_products_text)],['Οδηγίες στησίματος',clean(p.p_fallback_instructions)]
+        ]:[['Κωδικοί / προϊόντα',clean(p.p_products_text)],['Οδηγίες στησίματος',clean(p.p_shelf_instructions)],['Σημειώσεις',clean(p.p_notes)]];
+        sections=sections.filter(function(x){return x[1];});
+        var body=document.getElementById('scl231PreviewBody');if(!body)return;
+        body.innerHTML='<div class="scl231-brief-header"><div><div class="scl231-brief-kicker">'+esc(isTheme?'HQ ΜΗΝΙΑΙΟ ΘΕΜΑ':(clean(p.p_campaign_type)||'PHARMAPLUS'))+'</div><div class="scl231-brief-title">'+esc(title)+'</div></div><div class="scl231-brief-title" style="text-align:right">'+esc(supplier)+'</div></div>'+
+          (summary.length?'<div class="scl231-brief-grid">'+summary.map(function(x){return '<div class="scl231-brief-card"><div class="k">'+esc(x[0])+'</div><div class="v">'+esc(x[1])+'</div></div>';}).join('')+'</div>':'')+
+          (sections.length?sections.map(function(x){return '<div class="scl231-brief-section"><h4>'+esc(x[0])+'</h4><div>'+esc(x[1])+'</div></div>';}).join(''):'<div class="scl231-brief-section"><h4>Προσεχώς</h4><div>Η ενέργεια του μήνα θα ανακοινωθεί από τη Pharmaplus.</div></div>');
+        var modal=document.getElementById('scl231PreviewModal');if(modal)modal.style.display='flex';
+      };
+      window.scl231RenderPreview.__scl272=true;try{scl231RenderPreview=window.scl231RenderPreview;}catch(e){}
+    }catch(e){}
+  }
+
+  function normalizeRows(){
+    function norm(r){
+      if(!r)return r;
+      if(r.display_kind==='fallback')r.display_kind='theme';
+      if(String(r.final_type||'').includes('fallback'))r.final_type='pharmaplus_campaign';
+      if(String(r.content_change_reason||'').includes('fallback')){
+        r.content_change_reason=String(r.content_change_reason).replace('pharmaplus_fallback_start','pharmaplus_theme_start').replace('pharmaplus_fallback_applied','pharmaplus_theme_applied').replace('pharmaplus_fallback_change','pharmaplus_theme_change');
+      }
+      if(String(r.final_title||'').toLowerCase().includes('fallback'))r.final_title=String(r.final_title).replace(/fallback/ig,'HQ θέμα');
+      return r;
+    }
+    try{if(window.SCL241&&Array.isArray(SCL241.rows))SCL241.rows=SCL241.rows.map(norm);}catch(e){}
+    try{if(window.SCL245&&Array.isArray(SCL245.rows))SCL245.rows=SCL245.rows.map(norm);}catch(e){}
+    try{if(Array.isArray(window.SCL246_ROWS))window.SCL246_ROWS=window.SCL246_ROWS.map(norm);}catch(e){}
+  }
+
+  // Patch public popup APIs: any fallback result is labelled as HQ monthly theme.
+  function patchPopupApis(){
+    try{
+      if(typeof window.scl234CampaignFor==='function'&&!window.scl234CampaignFor.__scl272){
+        var old234=window.scl234CampaignFor;
+        window.scl234CampaignFor=function(month,pharmacyId){var r=old234.apply(this,arguments);if(r&&r.kind==='fallback'){r.kind='theme';r.title=r.title&&r.title!=='Pharmaplus fallback'?r.title:'HQ μηνιαίο θέμα';}return r;};
+        window.scl234CampaignFor.__scl272=true;
+      }
+    }catch(e){}
+  }
+
+  function install(){patchLabels();wrapOpen();wrapPreview();patchPopupApis();normalizeRows();try{renderCards272();}catch(e){}}
+  install();
+  setTimeout(install,300);setTimeout(install,1200);setTimeout(install,2500);
+  setInterval(function(){patchLabels();normalizeRows();},2000);
+
+  var css=document.createElement('style');css.id='scl272Css';css.textContent='.scl231-pill.theme{background:#E6F1FB;color:#185FA5}.scl231-month-card .scl231-pill.theme{font-weight:700}.scl212-pill.pharmaplus_theme_start,.scl212-pill.pharmaplus_theme_applied,.scl212-pill.pharmaplus_theme_change{background:#E6F1FB;color:#185FA5}';
+  if(!document.getElementById('scl272Css'))document.head.appendChild(css);
+  console.log('[v272] Pharmaplus monthly theme loaded');
 })();
 </script>
 
