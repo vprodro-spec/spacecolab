@@ -11311,19 +11311,37 @@ function financeBadges(finance,opts={}){
   `</div>`;
 }
 
-function financePlanChip(finance,owner){
+function financePlanChip(finance,owner,card,monthIndex){
   if(!finance)return '';
   const cost=Number(finance.cost)||0, charge=Number(finance.charge)||0, profit=Number(finance.profit)||0;
   if(owner==='deal')return `<span class="finance-chip profit" title="Χρέωση ${euro(charge)} • Κόστος ${euro(cost)} • Κέρδος ${euro(profit)}">${euro(profit)} καθαρό</span>`;
-  if(owner==='custom')return `<span class="finance-chip cost" title="Κόστος διαχείρισης ${euro(cost)} • Χρέωση — • Κέρδος ${euro(profit)}">Διαχείριση ${euro(cost)}</span>`;
+  if(owner==='custom'){
+    let label=finance.customLabel||'';
+    let title=finance.customTitle||'';
+    if(card&&Number.isFinite(Number(monthIndex))){
+      const st=customBlockStatusForCard(card,Number(monthIndex));
+      if(st){label=st.label;title=st.title;}
+    }
+    label=label||'Προγραμματισμένη — δεν μετρά ακόμη';
+    return `<span class="finance-chip cost" title="${esc(title||label)}">${esc(label)}</span>`;
+  }
   return '';
 }
-function financeTimelineBadge(finance,cls){
+function financeTimelineBadge(finance,cls,card,seg){
   if(!finance)return '';
   const cost=Number(finance.cost)||0, charge=Number(finance.charge)||0, profit=Number(finance.profit)||0;
   if(cls==='deal')return `<div class="timeline-finance" title="Χρέωση ${euro(charge)} • Κόστος ${euro(cost)} • Κέρδος ${euro(profit)}">${euro(profit)} καθαρό</div>`;
   if(cls==='predeal')return `<div class="timeline-finance predeal" title="Προσυμφωνία — δεν μετράει στα Τρέχοντα">Pending</div>`;
-  if(cls==='custom')return `<div class="timeline-finance cost" title="Κόστος διαχείρισης ${euro(cost)}">Διαχείριση ${euro(cost)}</div>`;
+  if(cls==='custom'){
+    let label=finance.customLabel||'';
+    let title=finance.customTitle||'';
+    if(card&&seg){
+      const st=customBlockStatusForCard(card,Number(seg.start)||0);
+      if(st){label=st.label;title=st.title;}
+    }
+    label=label||'Προγραμματισμένη — δεν μετρά ακόμη';
+    return `<div class="timeline-finance cost" title="${esc(title||label)}">${esc(label)}</div>`;
+  }
   return '';
 }
 function compactFinanceLine(title,cost,charge){
@@ -11331,6 +11349,58 @@ function compactFinanceLine(title,cost,charge){
   return `<div class="compact-finance" title="Χρέωση ${f.charge?euro(f.charge):'—'} • Κόστος ${euro(f.cost)} • Κέρδος ${euro(f.profit)}"><div><strong>${esc(title)}</strong><span>${f.charge?`Χρέωση ${euro(f.charge)}`:'Χωρίς χρέωση supplier'}</span></div><div class="compact-finance-main ${f.profit<0?'loss':''}">${euro(f.profit)}</div></div>`;
 }
 
+function customBillingAsOfDate(){
+  try{
+    const v=localStorage.getItem('scl286BillingAsOf')||window.SCL286_BILLING_AS_OF||'';
+    if(v){const d=new Date(String(v)+'T12:00:00');if(!isNaN(d.getTime()))return d;}
+  }catch(e){}
+  return new Date();
+}
+function customCutoffDate(year,monthIndex){
+  return new Date(Number(year)||state.programYear||new Date().getFullYear(), Number(monthIndex)-1, 15, 23, 59, 59, 999);
+}
+function customBlockStatusForCard(card,monthIndex){
+  if(!card||card.type==='hq')return null;
+  const y=Number(state.programYear)||new Date().getFullYear();
+  const def=PROMO_MECHANISMS[0];
+  const deal=getDealMonths(card);
+  const blocks=[];
+  let cur=null;
+  for(let i=0;i<12;i++){
+    if(deal.has(i)){if(cur){blocks.push(cur);cur=null;}continue;}
+    const base=baseTheme(card,i);
+    const t=card.simpleSchedule?.[i]||base;
+    const mech=card.simpleMechanism?.[i]||def;
+    const is=t!==base||mech!==def;
+    if(!is){if(cur){blocks.push(cur);cur=null;}continue;}
+    const key=`${t}__${mech}`.toLowerCase();
+    if(cur&&cur.key===key&&cur.end===i-1){cur.end=i;}
+    else{if(cur)blocks.push(cur);cur={key,start:i,end:i,theme:t,mechanism:mech};}
+  }
+  if(cur)blocks.push(cur);
+  let confirmedCount=0;
+  const asOf=customBillingAsOfDate();
+  let target=null;
+  blocks.forEach(b=>{
+    b.confirmed=asOf>=customCutoffDate(y,b.start);
+    if(b.confirmed){confirmedCount++;b.confirmedIndex=confirmedCount;}else b.confirmedIndex=null;
+    if(Number(monthIndex)>=b.start&&Number(monthIndex)<=b.end)target=b;
+  });
+  if(!target)return null;
+  let label='', amount=0, title='';
+  if(!target.confirmed){
+    label='Προγραμματισμένη — δεν μετρά ακόμη';
+    title='Δεν έχει περάσει το cutoff. Δεν μετράει ακόμη στις 3 δωρεάν αλλαγές.';
+  }else if(target.confirmedIndex<=3){
+    label=`Δωρεάν αλλαγή ${target.confirmedIndex}/3`;
+    title=`Δωρεάν αλλαγή ${target.confirmedIndex}/3 για τη συγκεκριμένη οθόνη/έτος.`;
+  }else{
+    label='Χρεώσιμη αλλαγή 15€';
+    title='Μετά τις 3 δωρεάν αλλαγές για τη συγκεκριμένη οθόνη/έτος.';
+    amount=COST.customStart;
+  }
+  return {...target,label,amount,title,confirmedCount};
+}
 function segmentFinance(card,seg){
   if(!card||!seg)return null;
   if(seg.cls==='deal'||seg.owner==='deal'){
@@ -11345,7 +11415,13 @@ function segmentFinance(card,seg){
     if(reportMode==='perBlock')cost+=monthly?months*COST.report:(Number(seg.start)===start?COST.report:0);
     return financeSummary(cost,charge);
   }
-  if(seg.cls==='custom'||seg.owner==='custom')return financeSummary(COST.customStart,0);
+  if(seg.cls==='custom'||seg.owner==='custom'){
+    const st=customBlockStatusForCard(card,Number(seg.start)||0);
+    const f=financeSummary(st?st.amount:0,0);
+    f.customLabel=st?st.label:'Προγραμματισμένη — δεν μετρά ακόμη';
+    f.customTitle=st?st.title:'Δεν έχει περάσει το cutoff. Δεν μετράει ακόμη.';
+    return f;
+  }
   return null;
 }
 function displayLabel(theme,mech){return mech&&mech!==PROMO_MECHANISMS[0]?`${theme} • ${mech}`:theme;}
@@ -11611,7 +11687,7 @@ function overviewMonthCard(card,monthIndex,label){
   return `<div class="overview-month-card ${label==='Τρέχει τώρα'?'now':''}">
     <div class="overview-month-top"><span>${esc(label)}</span><strong>${MONTHS[monthIndex]}</strong></div>
     <div class="overview-month-theme">${esc(row.label)}</div>
-    <div class="overview-month-meta"><span class="owner ${row.owner}">${ownerLabel}</span>${financePlanChip(finance,row.owner)}</div>
+    <div class="overview-month-meta"><span class="owner ${row.owner}">${ownerLabel}</span>${financePlanChip(finance,row.owner,card,monthIndex)}</div>
     ${sponsor||pre?`<div class="overview-month-badges">${pre}${sponsor}</div>`:''}
   </div>`;
 }
@@ -11627,7 +11703,7 @@ function renderOverviewLiveRow(card,monthIndex,label,highlight=false){
     <div class="overview-live-month">${MONTHS[monthIndex]}</div>
     <div class="owner ${row.owner}">${overviewStatusLabel(row.owner)}</div>
     <div class="overview-live-theme">${esc(row.label)}${badges?`<div class="overview-live-badges">${badges}</div>`:''}</div>
-    <div class="overview-live-finance">${financePlanChip(finance,row.owner)}</div>
+    <div class="overview-live-finance">${financePlanChip(finance,row.owner,card,monthIndex)}</div>
   </div>`;
 }
 function renderPlanLines(card,limit=4){
@@ -11658,7 +11734,7 @@ function renderΠρογραμματισμόςMonthlyPlan(card){
     const finance=segmentFinance(card,{owner:row.owner,start:i,end:i});
     const canPlanogram=!!planogramInfo(card,i);
     const ownerLabel=row.owner==='basic'?'ΒΑΣΙΚΟ':row.owner==='custom'?'ΕΞΑΤΟΜΙΚ.':row.owner==='deal'?'ΣΥΜΦΩΝ.':row.owner;
-    const isFocus=state.timelineFocus&&state.timelineFocus.cardId===card.id&&Number(state.timelineFocus.month)===i;const canSponsored=sponsoredEligible(card,i);return `<div class="plan-line monthly-plan-line ${isFocus?'timeline-month-focused':''}" data-planner-month="${i}"><div class="month-col">${m}${isFocus?'<span class="focus-dot">Timeline</span>':''}</div><div class="theme-col">${esc(row.label)}${preagreementBadgeHtml(card,i,i)}${sponsoredBadgeHtml(card,i,i)}</div><div class="owner ${row.owner}">${ownerLabel}</div><div class="month-planogram-cell"><button class="planogram-btn" ${canPlanogram?`data-open-planogram="${card.id}" data-planogram-month="${i}"`:'disabled'}>${canPlanogram?'Πλανόγραμμα':'—'}</button></div><div class="month-sponsored-cell"><button class="sponsored-btn" ${canSponsored?`data-open-sponsored="${card.id}" data-sponsored-month="${i}"`:'disabled'}>${sponsoredForMonth(card,i).length?'Ράφια ✓':'+ Ράφια'}</button></div><div class="month-finance-cell">${financePlanChip(finance,row.owner)}</div></div>`;
+    const isFocus=state.timelineFocus&&state.timelineFocus.cardId===card.id&&Number(state.timelineFocus.month)===i;const canSponsored=sponsoredEligible(card,i);return `<div class="plan-line monthly-plan-line ${isFocus?'timeline-month-focused':''}" data-planner-month="${i}"><div class="month-col">${m}${isFocus?'<span class="focus-dot">Timeline</span>':''}</div><div class="theme-col">${esc(row.label)}${preagreementBadgeHtml(card,i,i)}${sponsoredBadgeHtml(card,i,i)}</div><div class="owner ${row.owner}">${ownerLabel}</div><div class="month-planogram-cell"><button class="planogram-btn" ${canPlanogram?`data-open-planogram="${card.id}" data-planogram-month="${i}"`:'disabled'}>${canPlanogram?'Πλανόγραμμα':'—'}</button></div><div class="month-sponsored-cell"><button class="sponsored-btn" ${canSponsored?`data-open-sponsored="${card.id}" data-sponsored-month="${i}"`:'disabled'}>${sponsoredForMonth(card,i).length?'Ράφια ✓':'+ Ράφια'}</button></div><div class="month-finance-cell">${financePlanChip(finance,row.owner,card,i)}</div></div>`;
   }).join('');
   return `${timelineFocusBanner(card)}<div class="planner-monthly-plan"><div class="planner-monthly-head"><div><strong>Πλήρες πλάνο ανά μήνα</strong><br><span class="small">Κάθε γραμμή δείχνει μήνα, θεματολογία, τύπο προγράμματος και διαθέσιμες ενέργειες.</span></div><span class="tag">12 μήνες</span></div><div class="plan-lines full-plan-lines">${rows}</div></div>`;
 }
@@ -11767,7 +11843,7 @@ function renderΠρογραμματισμός(){
 
 function renderΠρογραμματισμόςTimeline(){const el=document.getElementById('plannerTimelineGrid');if(!el)return;renderTimelineInto(el);}
 function renderTimelineInto(grid){const rows=['<div class="th">Θέση</div>',...MONTHS.map(m=>`<div class="th">${m}</div>`)];state.cards.forEach(card=>{let status=card.type==='hq'?'Κεντρική':(!card.initialPlanLocked?'Αρχικό εκκρεμεί':(negotiationConfirmed(card)?`Deal: ${contiguousLabel(getDealMonths(card))}`:(customBlockCount(card)?'Εξατομίκευση':'Βασικό Πρόγραμμα κλειδωμένο')));
-rows.push(`<div class="tl">${esc(card.title)}<span>${esc(status)}</span></div>`);timelineSegments(card).forEach(s=>{const mode=s.cls==='deal'?'negotiation':(s.cls==='custom'?'simple':'basic');const clickable=card.type!=='hq';rows.push(`<div class="tc ${s.cls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':''}"><div class="main">${esc(s.label)}</div>${preagreementBadgeHtml(card,s.start,s.end)}${sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls)}</div>`);});});grid.innerHTML=rows.join('');}
+rows.push(`<div class="tl">${esc(card.title)}<span>${esc(status)}</span></div>`);timelineSegments(card).forEach(s=>{const mode=s.cls==='deal'?'negotiation':(s.cls==='custom'?'simple':'basic');const clickable=card.type!=='hq';rows.push(`<div class="tc ${s.cls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':''}"><div class="main">${esc(s.label)}</div>${preagreementBadgeHtml(card,s.start,s.end)}${sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls,card,s)}</div>`);});});grid.innerHTML=rows.join('');}
 function renderTimeline(){const grid=document.getElementById('timelineGrid');if(grid)renderTimelineInto(grid);}
 function renderSummary(){const el=document.getElementById('summaryCards');if(!el)return;const totalDeals=pharmacyCards().reduce((s,c)=>s+dealRevenue(c),0)+pharmacyCards().reduce((s,c)=>s+sponsoredRevenue(c),0);const costToUs=fixedCosts()+pharmacyCards().reduce((s,c)=>s+dealCost(c)+customCost(c)+sponsoredCost(c),0);const net=totalDeals-costToUs;el.innerHTML=`<div class="summary-card"><div class="k">Χρέωση εταιρειών</div><div class="v">${euro(totalDeals)}</div></div><div class="summary-card"><div class="k">Διαχείριση Pharmaplus</div><div class="v">${euro(costToUs)}</div></div><div class="summary-card"><div class="k">Καθαρό φαρμακείου</div><div class="v">${euro(net)}</div></div>`;}
 
@@ -25022,7 +25098,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
           }else{
             const mode=s.cls==='deal'?'negotiation':(s.cls==='custom'?'simple':'basic');
             const clickable=card.type!=='hq';
-            rows.push(`<div class="tc ${s.cls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':''}"><div class="main">${esc241(s.label)}</div>${preagreementBadgeHtml(card,s.start,s.end)}${sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls)}</div>`);
+            rows.push(`<div class="tc ${s.cls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':''}"><div class="main">${esc241(s.label)}</div>${preagreementBadgeHtml(card,s.start,s.end)}${sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls,card,s)}</div>`);
           }
         });
       });
@@ -27559,7 +27635,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
                 const clickable=card.type!=='hq' && s._time!=='past';
                 const timeCls=s._time==='past'?'scl264-timeline-past':(s._time==='current'?'scl264-timeline-current':'');
                 const hist=s._time==='past'?'<span class="scl264-history-pill">Ιστορικό</span>':(s._time==='current'?'<span class="scl264-history-pill">Τρέχων</span>':'');
-                rows.push(`<div class="tc ${s.cls} ${timeCls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':'Ιστορικό / read-only'}"><div class="main">${esc2(s.label)} ${hist}</div>${preagreementBadgeHtml(card,s.start,s.end)}${s._time==='past'?'':sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls)}</div>`);
+                rows.push(`<div class="tc ${s.cls} ${timeCls} ${clickable?'timeline-clickable':''}" ${clickable?`data-jump-card="${card.id}" data-jump-month="${s.start}" data-jump-mode="${mode}"`:''} style="grid-column:span ${s.span}" title="${clickable?'Άνοιγμα θέσης στον Προγραμματισμός':'Ιστορικό / read-only'}"><div class="main">${esc2(s.label)} ${hist}</div>${preagreementBadgeHtml(card,s.start,s.end)}${s._time==='past'?'':sponsoredBadgeHtml(card,s.start,s.end)}${financeTimelineBadge(s.finance,s.cls,card,s)}</div>`);
               });
             });
           });
@@ -27589,7 +27665,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
             const ownerLabel=row.owner==='basic'?'ΒΑΣΙΚΟ':row.owner==='custom'?'ΕΞΑΤΟΜΙΚ.':row.owner==='deal'?'ΣΥΜΦΩΝ.':row.owner;
             const extraCls=past?'scl264-past-row':(current?'scl264-current-row':'');
             const hist=past?'<span class="scl264-history-pill">Ιστορικό</span>':(current?'<span class="scl264-history-pill">Τώρα</span>':'');
-            return `<div class="plan-line monthly-plan-line ${extraCls}" data-planner-month="${i}"><div class="month-col">${esc2(m)}${hist}</div><div class="theme-col">${esc2(row.label)}${preagreementBadgeHtml(card,i,i)}${past?'':sponsoredBadgeHtml(card,i,i)}</div><div class="owner ${row.owner}">${ownerLabel}</div><div class="month-planogram-cell"><button class="planogram-btn" ${canPlanogram?`data-open-planogram="${card.id}" data-planogram-month="${i}"`:'disabled'}>${canPlanogram?'Πλανόγραμμα':'—'}</button></div><div class="month-sponsored-cell"><button class="sponsored-btn ${past?'scl264-disabled-action':''}" ${canSponsored?`data-open-sponsored="${card.id}" data-sponsored-month="${i}"`:'disabled'}>${past?'Ιστορικό':(sponsoredForMonth(card,i).length?'Ράφια ✓':'+ Ράφια')}</button></div><div class="month-finance-cell">${financePlanChip(finance,row.owner)}</div></div>`;
+            return `<div class="plan-line monthly-plan-line ${extraCls}" data-planner-month="${i}"><div class="month-col">${esc2(m)}${hist}</div><div class="theme-col">${esc2(row.label)}${preagreementBadgeHtml(card,i,i)}${past?'':sponsoredBadgeHtml(card,i,i)}</div><div class="owner ${row.owner}">${ownerLabel}</div><div class="month-planogram-cell"><button class="planogram-btn" ${canPlanogram?`data-open-planogram="${card.id}" data-planogram-month="${i}"`:'disabled'}>${canPlanogram?'Πλανόγραμμα':'—'}</button></div><div class="month-sponsored-cell"><button class="sponsored-btn ${past?'scl264-disabled-action':''}" ${canSponsored?`data-open-sponsored="${card.id}" data-sponsored-month="${i}"`:'disabled'}>${past?'Ιστορικό':(sponsoredForMonth(card,i).length?'Ράφια ✓':'+ Ράφια')}</button></div><div class="month-finance-cell">${financePlanChip(finance,row.owner,card,i)}</div></div>`;
           }).join('');
           return `${timelineFocusBanner(card)}<div class="planner-monthly-plan"><div class="planner-monthly-head"><div><strong>Πλήρες πλάνο ανά μήνα</strong><br><span class="small">Οι παρελθόντες μήνες είναι ιστορικό/read-only. Το πλάνο φαίνεται, αλλά δεν επιτρέπονται ενέργειες.</span></div><span class="tag">12 μήνες</span></div><div class="plan-lines full-plan-lines">${rows}</div></div>`;
         }catch(err){
@@ -31405,6 +31481,81 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(function(){loadStateData(false);patchTimelineLabels();},2200);
   setInterval(function(){try{if(isPharmacy())patchTimelineLabels();}catch(e){}},3000);
   console.log('[v287] custom status consistency fix loaded');
+})();
+</script>
+
+
+<script id="scl288-pharmacy-timeline-label-cleanup">
+/* v288 — Pharmacy timeline label cleanup
+   Scope: UI labels only in pharmacy view. Does not change Billing, Changes, deals, Pharmaplus, setup, tokens, or pricing rules.
+   It aligns visible custom labels in operational cards/timeline with the custom quota/cutoff status already used by Billing. */
+(function(){
+  if(window.__SCL288_TIMELINE_LABEL_CLEANUP__)return;
+  window.__SCL288_TIMELINE_LABEL_CLEANUP__=true;
+  function isPharmacy(){try{return typeof sclMode==='function'&&sclMode()==='pharmacy';}catch(e){return false;}}
+  function norm(v){return String(v==null?'':v).replace(/\s+/g,' ').trim().toLowerCase();}
+  function monthLabels(){try{return Array.isArray(MONTHS)?MONTHS:['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}catch(e){return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}}
+  function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function labelForCardMonth(card,month){
+    try{
+      if(typeof window.scl287CardCustomBlocks==='function'){
+        var blocks=window.scl287CardCustomBlocks(card)||[];
+        var b=blocks.find(function(x){return Number(month)>=Number(x.start)&&Number(month)<=Number(x.end);});
+        if(b){
+          if(!b.confirmed)return 'Προγραμματισμένη — δεν μετρά ακόμη';
+          if(Number(b.confirmedIndex)<=3)return 'Δωρεάν αλλαγή '+b.confirmedIndex+'/3';
+          return 'Χρεώσιμη αλλαγή 15€';
+        }
+      }
+    }catch(e){}
+    return '';
+  }
+  function cards(){try{return (window.state&&Array.isArray(state.cards))?state.cards.filter(function(c){var s=[c.type,c.title,c.name,c.id].map(norm).join('|');return s.indexOf('hq')<0&&s.indexOf('pharmaplus')<0;}):[];}catch(e){return [];}}
+  function aliases(card){return [card&&card.id,card&&card.title,card&&card.name].map(norm).filter(Boolean);}
+  function replaceCustomLabels(){
+    if(!isPharmacy())return;
+    var cs=cards(); if(!cs.length)return;
+    var months=monthLabels();
+    document.querySelectorAll('.timeline').forEach(function(grid){
+      var localIndex=-1,current=null,cellIndex=-1;
+      Array.from(grid.children).forEach(function(el){
+        if(el.classList&&el.classList.contains('tl')){
+          var t=norm(el.textContent); current=null; cellIndex=-1; localIndex+=1;
+          cs.some(function(c){var ok=aliases(c).some(function(a){return t.indexOf(a)>=0||a.indexOf(t)>=0;}); if(ok){current=c;return true;} return false;});
+          if(!current&&cs[localIndex])current=cs[localIndex];
+          return;
+        }
+        if(!current||!(el.classList&&el.classList.contains('tc')))return;
+        cellIndex+=1;
+        if(!el.classList.contains('custom'))return;
+        var lbl=labelForCardMonth(current,cellIndex); if(!lbl)return;
+        var badge=el.querySelector('.timeline-finance.cost,.timeline-finance');
+        if(badge){badge.textContent=lbl;badge.setAttribute('title',lbl);}else{el.insertAdjacentHTML('beforeend','<div class="timeline-finance cost" title="'+escHtml(lbl)+'">'+escHtml(lbl)+'</div>');}
+      });
+    });
+    document.querySelectorAll('.card').forEach(function(cardEl){
+      var head=cardEl.querySelector('.title'); var headText=norm(head?head.textContent:'');
+      var c=cs.find(function(x){return aliases(x).some(function(a){return headText.indexOf(a)>=0||a.indexOf(headText)>=0;});});
+      if(!c)return;
+      cardEl.querySelectorAll('.monthly-plan-line,.plan-line').forEach(function(row){
+        var owner=row.querySelector('.owner.custom'); if(!owner)return;
+        var mtxt=norm((row.querySelector('.month-col')||row.children[0]||{}).textContent||'');
+        var mi=months.findIndex(function(m){return mtxt.indexOf(norm(m))>=0;});
+        if(mi<0)return;
+        var lbl=labelForCardMonth(c,mi); if(!lbl)return;
+        var cell=row.querySelector('.month-finance-cell')||row.lastElementChild; if(!cell)return;
+        var chip=cell.querySelector('.finance-chip')||cell.querySelector('.plan-econ')||cell.firstElementChild;
+        if(chip){chip.textContent=lbl;chip.setAttribute('title',lbl);chip.classList.add('cost');}
+        else cell.innerHTML='<span class="finance-chip cost" title="'+escHtml(lbl)+'">'+escHtml(lbl)+'</span>';
+      });
+    });
+  }
+  window.scl288PatchTimelineLabels=replaceCustomLabels;
+  var oldRefresh=window.refresh;
+  if(typeof oldRefresh==='function'&&!oldRefresh.__scl288){window.refresh=function(){var r=oldRefresh.apply(this,arguments);setTimeout(replaceCustomLabels,0);setTimeout(replaceCustomLabels,300);setTimeout(replaceCustomLabels,1000);return r;};window.refresh.__scl288=true;try{refresh=window.refresh;}catch(e){}}
+  document.addEventListener('click',function(){setTimeout(replaceCustomLabels,80);setTimeout(replaceCustomLabels,400);},true);
+  setTimeout(replaceCustomLabels,700);setTimeout(replaceCustomLabels,1800);setInterval(replaceCustomLabels,2500);
+  console.log('[v288] pharmacy timeline label cleanup loaded');
 })();
 </script>
 </body>
