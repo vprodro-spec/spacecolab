@@ -30713,5 +30713,234 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   console.log('[v283] deal monthly-block billing + billing filter UX fix loaded');
 })();
 </script>
+
+<script id="scl284-demo-billing-free-custom-test">
+/* v284 — Demo pharmacies for billing free-custom quota testing
+   Creates two HQ demo pharmacies:
+   - one with 2 already-confirmed historical custom/library change blocks on Position 1
+   - one with 3 already-confirmed historical custom/library change blocks on Position 1
+   Purpose: test 3rd free change and 4th paid change without editing past months. */
+(function(){
+  if(window.__SCL284_DEMO_BILLING_TEST__)return;
+  window.__SCL284_DEMO_BILLING_TEST__=true;
+
+  function safeEsc(v){
+    try{ if(typeof scl212Esc==='function') return scl212Esc(v); }catch(e){}
+    try{ if(typeof esc==='function') return esc(v); }catch(e){}
+    return String(v??'').replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function mode(){
+    try{ return typeof sclMode==='function' ? sclMode() : ''; }catch(e){ return ''; }
+  }
+  function currentYear(){
+    try{ return typeof sclCurrentYear==='function' ? Number(sclCurrentYear())||new Date().getFullYear() : new Date().getFullYear(); }catch(e){ return new Date().getFullYear(); }
+  }
+  function fileBase(){
+    try{ return typeof sclCurrentFileBase==='function' ? sclCurrentFileBase() : location.href.split('?')[0].split('#')[0]; }catch(e){ return location.href.split('?')[0].split('#')[0]; }
+  }
+  function pharmacyLink(token){
+    try{ return typeof sclBuildPharmacyLink==='function' ? sclBuildPharmacyLink(token) : fileBase()+'?pharmacy='+encodeURIComponent(token); }
+    catch(e){ return fileBase()+'?pharmacy='+encodeURIComponent(token); }
+  }
+  function copy(text,btn){
+    if(!text)return;
+    try{
+      navigator.clipboard.writeText(text).then(function(){
+        if(btn){
+          var old=btn.textContent;
+          btn.textContent='Copied';
+          setTimeout(function(){btn.textContent=old;},1100);
+        }
+      }).catch(function(){ prompt('Copy link:',text); });
+    }catch(e){ prompt('Copy link:',text); }
+  }
+  function monthNames(){
+    try{ if(Array.isArray(MONTHS)) return MONTHS; }catch(e){}
+    return ['Ιαν','Φεβ','Μαρ','Απρ','Μαι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  }
+  function basicSchedule(program){
+    try{ if(typeof schedule==='function') return schedule(program); }catch(e){}
+    return ['Βήχας & Λαιμός','Κρυολόγημα & Αναπνοή','Αλλεργίες','Πέψη','Πόνος','Τσιμπήματα & Ερεθισμοί','Ταξίδι & Στομάχι','Πυρετός & Άμεση Ανακούφιση','Βήχας & Λαιμός','Πέψη','Βήχας & Αναπνοή','Πόνος'];
+  }
+  function mech(){
+    try{ if(typeof mechanisms==='function') return mechanisms(); }catch(e){}
+    return Array.from({length:12},function(){return 'Χωρίς μηχανισμό';});
+  }
+  function altTheme(base,preferred,idx){
+    var pool=['Ρινική Υγιεινή','Πέψη','Πόνος','Αλλεργίες','Ταξίδι & Στομάχι','Τσιμπήματα & Ερεθισμοί','Πυρετός & Άμεση Ανακούφιση','Καθημερινή Υγιεινή'];
+    var p=preferred||pool[idx%pool.length];
+    if(String(p)!==String(base))return p;
+    for(var i=0;i<pool.length;i++){ if(String(pool[i])!==String(base)) return pool[i]; }
+    return 'Demo εξατομίκευση';
+  }
+  function makeHqCard(){
+    return {
+      id:'hq',type:'hq',title:'Pharmaplus',mode:'fixed',defaultProgram:'HQ',screenFormat:'',
+      initialPlanLocked:true,basicSchedule:Array.from({length:12},function(){return 'Pharmaplus';}),
+      simpleSchedule:Array.from({length:12},function(){return 'Pharmaplus';}),
+      pendingSimpleSchedule:Array.from({length:12},function(){return 'Pharmaplus';}),
+      simpleMechanism:mech(),pendingSimpleMechanism:mech(),simpleConfirmed:false,
+      confirmedDeals:[],preagreements:[],sponsoredShelves:[]
+    };
+  }
+  function makeLocalCard(id,title,program,format,customBlocks){
+    var basic=basicSchedule(program), simple=basic.slice(), pending=basic.slice();
+    var used=[];
+    (customBlocks||[]).forEach(function(b,i){
+      var m=Number(b.month);
+      if(m<0||m>11)return;
+      var t=altTheme(basic[m],b.theme,i);
+      simple[m]=t;
+      pending[m]=t;
+      used.push({month:m,theme:t});
+    });
+    return {
+      id:id,type:id.indexOf('extra-')===0?'extra':'base',title:title,mode:'basic',
+      screenFormat:format||'horizontal',pendingScreenFormat:format||'horizontal',
+      initialPlanLocked:true,initialPlanType:'network',defaultProgram:program,
+      basicSchedule:basic.slice(),pendingInitialSchedule:basic.slice(),
+      simpleSchedule:simple,pendingSimpleSchedule:pending,
+      simpleMechanism:mech(),pendingSimpleMechanism:mech(),simpleConfirmed:used.length>0,
+      negotiation:(function(){try{return typeof defaultNegotiation==='function'?defaultNegotiation(program):{confirmed:false,pending:false};}catch(e){return {confirmed:false,pending:false};}})(),
+      preagreements:[],confirmedDeals:[],sponsoredShelves:[],
+      _demoUsedCustomBlocks:used
+    };
+  }
+  function demoPayload(kind){
+    var twoBlocks=[
+      {month:4,theme:'Ρινική Υγιεινή'},   // Μάι
+      {month:6,theme:'Πέψη'}              // Ιουλ
+    ];
+    var threeBlocks=[
+      {month:3,theme:'Ρινική Υγιεινή'},   // Απρ
+      {month:5,theme:'Πόνος'},            // Ιουν
+      {month:7,theme:'Αλλεργίες'}         // Αυγ
+    ];
+    var blocks=kind==='three'?threeBlocks:twoBlocks;
+    return {
+      turnover:500000,
+      totalCounters:3,          // Pharmaplus + 2 local screens
+      setupLocked:true,
+      cards:[
+        makeHqCard(),
+        makeLocalCard('base-1','Θέση Φαρμακείου 1','OTC1','horizontal',blocks),
+        makeLocalCard('base-2','Θέση Φαρμακείου 2','OTC2','horizontal',[])
+      ],
+      selectedCardId:'base-1',
+      savedAt:new Date().toISOString(),
+      _demo_billing_quota_kind:kind,
+      _demo_note: kind==='three'
+        ? 'Demo: Position 1 already has 3 historical confirmed custom/library change blocks. Add current-month custom to test 4th paid change.'
+        : 'Demo: Position 1 already has 2 historical confirmed custom/library change blocks. Add current-month custom to test 3rd free change.'
+    };
+  }
+  function panelHtml(){
+    return '<div id="scl284DemoPanel" class="scl284-demo-panel">'
+      +'<div class="scl284-demo-title">Demo έλεγχος δωρεάν εξατομικεύσεων</div>'
+      +'<div class="scl284-demo-text">Δημιουργεί 2 test φαρμακεία με ιστορικές επιβεβαιωμένες αλλαγές στη Θέση Φαρμακείου 1: ένα με 2/3 χρησιμοποιημένες και ένα με 3/3 χρησιμοποιημένες. Μετά πρόσθεσε αλλαγή στον τρέχοντα μήνα για να ελέγξεις 3η δωρεάν και 4η χρεώσιμη.</div>'
+      +'<button type="button" id="scl284CreateDemoBtn" class="action blue">Δημιουργία 2 demo φαρμακείων</button>'
+      +'<div id="scl284DemoResult" class="scl284-demo-result"></div>'
+      +'</div>';
+  }
+  function injectStyles(){
+    if(document.getElementById('scl284DemoStyles'))return;
+    var st=document.createElement('style');
+    st.id='scl284DemoStyles';
+    st.textContent=[
+      '.scl284-demo-panel{margin:12px 0;padding:12px;border:1px solid #c9dafd;border-radius:14px;background:#f7fbff;color:#14213d}',
+      '.scl284-demo-title{font-weight:950;margin-bottom:5px}',
+      '.scl284-demo-text{font-size:11px;color:#637083;line-height:1.35;margin-bottom:9px;max-width:980px}',
+      '.scl284-demo-result{margin-top:9px;display:grid;gap:6px}',
+      '.scl284-demo-link{padding:8px;border:1px solid #d9e1ea;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}',
+      '.scl284-demo-link code{font-size:10px;color:#40506a;max-width:780px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+      '.scl284-demo-small{font-size:10px;color:#637083}'
+    ].join('\\n');
+    document.head.appendChild(st);
+  }
+  function attachPanel(){
+    if(mode()!=='hq')return;
+    injectStyles();
+    if(document.getElementById('scl284DemoPanel')){
+      bindPanel();
+      return;
+    }
+    var host=document.getElementById('scl212Page-pharmacies') || document.getElementById('sclHqShell') || document.querySelector('.shell') || document.body;
+    if(!host)return;
+    var wrap=document.createElement('div');
+    wrap.innerHTML=panelHtml();
+    var node=wrap.firstElementChild;
+    var target=host.querySelector('.scl-hq-live-card,.section,.scl212-card') || host.firstElementChild;
+    if(target && target.parentNode) target.parentNode.insertBefore(node,target.nextSibling);
+    else host.prepend(node);
+    bindPanel();
+  }
+  function setResult(html){
+    var el=document.getElementById('scl284DemoResult');
+    if(el)el.innerHTML=html;
+  }
+  function bindPanel(){
+    var btn=document.getElementById('scl284CreateDemoBtn');
+    if(!btn || btn.dataset.bound)return;
+    btn.dataset.bound='1';
+    btn.addEventListener('click',createDemoPharmacies);
+  }
+  async function createOne(name,kind,year){
+    var cr=await sb.rpc('create_pharmacy',{p_name:name});
+    if(cr.error)throw cr.error;
+    var row=Array.isArray(cr.data)?cr.data[0]:cr.data;
+    var token=row&& (row.token||row.pharmacy_token||row.p_token||row.new_token);
+    if(!token)throw new Error('Δεν επιστράφηκε token για '+name);
+    var payload=demoPayload(kind);
+    var up=await sb.rpc('upsert_pharmacy_state_by_token',{
+      p_token:token,
+      p_year:year,
+      p_state_json:payload
+    });
+    if(up.error)throw up.error;
+    return {name:(row.name||name),token:token,link:pharmacyLink(token),kind:kind};
+  }
+  async function createDemoPharmacies(){
+    if(!window.sb && typeof sb==='undefined'){alert('Δεν έχει φορτώσει Supabase.');return;}
+    if(mode()!=='hq'){alert('Η δημιουργία demo γίνεται μόνο σε HQ mode.');return;}
+    if(!confirm('Να δημιουργηθούν 2 νέα demo φαρμακεία στο Supabase για έλεγχο billing;'))return;
+    var btn=document.getElementById('scl284CreateDemoBtn');
+    if(btn){btn.disabled=true;btn.textContent='Δημιουργία demo...';}
+    setResult('<div class="scl284-demo-small">Δημιουργία demo φαρμακείων...</div>');
+    var stamp=new Date().toLocaleString('el-GR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/[\\s/:]/g,'-');
+    var year=currentYear();
+    try{
+      var a=await createOne('DEMO 2/3 FREE CUSTOM USED '+stamp,'two',year);
+      var b=await createOne('DEMO 3/3 FREE CUSTOM USED '+stamp,'three',year);
+      var html=[a,b].map(function(x){
+        return '<div class="scl284-demo-link"><div><strong>'+safeEsc(x.name)+'</strong><div class="scl284-demo-small">'
+          +(x.kind==='two'?'Έχει ήδη 2 confirmed custom blocks στη Θέση 1. Πρόσθεσε τρέχον μήνα για 3η δωρεάν.':'Έχει ήδη 3 confirmed custom blocks στη Θέση 1. Πρόσθεσε τρέχον μήνα για 4η χρεώσιμη 15€.')
+          +'</div><code>'+safeEsc(x.link)+'</code></div><button type="button" class="scl-copy-btn" data-scl284-copy="'+safeEsc(x.link)+'">Copy link</button></div>';
+      }).join('');
+      setResult(html);
+      document.querySelectorAll('[data-scl284-copy]').forEach(function(cbtn){
+        if(cbtn.dataset.bound)return;
+        cbtn.dataset.bound='1';
+        cbtn.addEventListener('click',function(){copy(cbtn.dataset.scl284Copy,cbtn);});
+      });
+      if(typeof sclLoadHqShell==='function')setTimeout(function(){sclLoadHqShell();},500);
+    }catch(err){
+      console.error('v284 demo creation failed',err);
+      setResult('<div class="scl284-demo-small" style="color:#b42318">Σφάλμα demo: '+safeEsc(err&&err.message?err.message:String(err))+'</div>');
+      alert('Σφάλμα demo: '+(err&&err.message?err.message:String(err)));
+    }finally{
+      if(btn){btn.disabled=false;btn.textContent='Δημιουργία 2 demo φαρμακείων';}
+    }
+  }
+  function scheduleAttach(){
+    attachPanel();
+    setTimeout(attachPanel,600);
+    setTimeout(attachPanel,1600);
+    setTimeout(attachPanel,3500);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scheduleAttach);
+  else scheduleAttach();
+})();
+</script>
+
 </body>
 </html>
