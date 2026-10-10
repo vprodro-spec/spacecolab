@@ -30944,8 +30944,8 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 
 
 <script id="scl285-custom-quota-sync-fix">
-/* v285 — Custom quota / planned custom sync fix
-   Built on v284. Scope:
+/* v286 — Timeline pricing labels + Billing quota test date
+   Built on v285. Scope:
    - Keep base pricing and deal logic from v283/v284.
    - Read custom/library changes from the same pharmacy state used by the pharmacy timeline.
    - Merge those custom rows into HQ Changes and Billing for ALL local positions.
@@ -31011,11 +31011,13 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   function descFrom(r,kind){var parts=[];['custom_theme','theme','final_title','final_detail','supplier','brand','deal_theme','products_text','product_codes'].forEach(function(k){var v=clean(r&&r[k]);if(v&&parts.indexOf(v)<0)parts.push(v);});return parts.join(' / ')||'Αλλαγή θεματολογίας βιβλιοθήκης';}
   function commercialFrom(r){var vals=[r&&r.commercial_amount,r&&r.supplier_amount,r&&r.supplier_fee,r&&r.soldMonthlyPrice,r&&r.monthly_price,r&&r.price,r&&r.deal_amount,r&&r.deal_value,r&&r.value];for(var i=0;i<vals.length;i++){var n=Number(vals[i]);if(Number.isFinite(n)&&n>0)return money(n);}return '';}
   function cutoffDate(y,m){return new Date(y,m-1,15,23,59,59,999);} // previous month 15, month is 0-index activation
-  function confirmedByCutoff(r){var y=rowYear(r),m=mIdx(r&&r.month),now=new Date();return now>=cutoffDate(y,m);}
+  function asOfDate(){var v='';try{v=window.SCL286_BILLING_AS_OF||localStorage.getItem('scl286BillingAsOf')||'';}catch(e){v=window.SCL286_BILLING_AS_OF||'';}if(v){var d=new Date(String(v)+'T12:00:00');if(!isNaN(d.getTime()))return d;}return new Date();}
+  function asOfLabel(){return asOfDate().toISOString().slice(0,10);}
+  function confirmedByCutoff(r){var y=rowYear(r),m=mIdx(r&&r.month),now=asOfDate();return now>=cutoffDate(y,m);}
   function rowsForCustomCalc(){var stRows=rawCardMonthRows();var stKeys=new Set(stRows.map(function(r){return [r.pharmacy_id,posKey(r),mIdx(r.month)].join('|');}));var dbRows=dataMonths().filter(isCustomChangeRow).filter(function(r){return !stKeys.has([r.pharmacy_id,posKey(r),mIdx(r.month)].join('|'));});return dbRows.concat(stRows);}
   function buildCustomBlocks(){var rows=rowsForCustomCalc().slice().sort(function(a,b){return String(a.pharmacy_id).localeCompare(String(b.pharmacy_id))||String(posKey(a)).localeCompare(String(posKey(b)))||rowYear(a)-rowYear(b)||mIdx(a.month)-mIdx(b.month);});var groups={};rows.forEach(function(r){var k=[r.pharmacy_id,posKey(r),rowYear(r)].join('|');(groups[k]=groups[k]||[]).push(r);});var blocks=[];Object.keys(groups).forEach(function(gk){var ar=groups[gk].sort(function(a,b){return mIdx(a.month)-mIdx(b.month);});var cur=null;ar.forEach(function(r){var m=mIdx(r.month),ck=contentKey(r,'custom');if(cur&&m===cur.endMonth+1&&ck===cur.contentKey){cur.endMonth=m;cur.rows.push(r);cur.confirmed=cur.confirmed||confirmedByCutoff(r);return;}cur={pharmacy_id:r.pharmacy_id,pharmacy_name:phName(r.pharmacy_id,r.pharmacy_name),position_key:posKey(r),position_name:posName(r),year:rowYear(r),startMonth:m,endMonth:m,contentKey:ck,description:descFrom(r,'custom'),commercial:commercialFrom(r),rows:[r],confirmed:confirmedByCutoff(r)};blocks.push(cur);});});var byScreen={};blocks.sort(function(a,b){return String(a.pharmacy_id).localeCompare(String(b.pharmacy_id))||String(a.position_key).localeCompare(String(b.position_key))||a.year-b.year||a.startMonth-b.startMonth;});blocks.forEach(function(b){var key=[b.pharmacy_id,b.position_key,b.year].join('|');if(!byScreen[key])byScreen[key]=0;if(b.confirmed){byScreen[key]+=1;b.confirmedIndex=byScreen[key];}else b.confirmedIndex=null;});window.SCL285.customBlocksCache=blocks;return blocks;}
-  function labelForCustomBlock(b){if(!b)return '';if(!b.confirmed)return 'Προγραμματισμένη';if(b.confirmedIndex<=FREE)return 'Δωρεάν '+b.confirmedIndex+'/'+FREE;return 'Χρέωση 15€';}
-  function customRows(m){var out=[];buildCustomBlocks().forEach(function(b){if(b.startMonth!==m)return;var free=b.confirmed&&b.confirmedIndex<=FREE;var planned=!b.confirmed;var category=planned?'Προγραμματισμένη αλλαγή βιβλιοθήκης':(free?'Δωρεάν αλλαγή βιβλιοθήκης':'Επιπλέον αλλαγή βιβλιοθήκης');var amount=planned||free?0:COSTS.customBlock;var note=planned?'Δεν έχει περάσει το cutoff· δεν μετράει ακόμη.':(free?('Δωρεάν '+b.confirmedIndex+'/'+FREE+' για την οθόνη/έτος'):'Μετά τις 3 δωρεάν αλλαγές για την οθόνη/έτος');out.push(line({monthIdx:m,month:months()[m],pharmacy:b.pharmacy_name,position:b.position_name,category:category,description:b.description+(b.endMonth>b.startMonth?' · block '+months()[b.startMonth]+'–'+months()[b.endMonth]:''),commercial:b.commercial,amount:amount,payer:'Φαρμακείο',source:planned?'custom-planned':(free?'custom-free':'custom-paid'),blockKey:['scl285-custom-block',b.pharmacy_id,b.position_key,b.year,b.startMonth,b.endMonth,b.contentKey].join('|'),note:note}));});return out;}
+  function labelForCustomBlock(b){if(!b)return '';if(!b.confirmed)return 'Προγραμματισμένη — δεν μετρά ακόμη';if(b.confirmedIndex<=FREE)return 'Δωρεάν αλλαγή '+b.confirmedIndex+'/'+FREE;return 'Χρεώσιμη αλλαγή 15€';}
+  function customRows(m){var out=[];buildCustomBlocks().forEach(function(b){if(b.startMonth!==m)return;var free=b.confirmed&&b.confirmedIndex<=FREE;var planned=!b.confirmed;var category=planned?'Προγραμματισμένη αλλαγή βιβλιοθήκης':(free?'Δωρεάν αλλαγή βιβλιοθήκης':'Επιπλέον αλλαγή βιβλιοθήκης');var amount=planned||free?0:COSTS.customBlock;var note=planned?'Δεν έχει περάσει το cutoff με ημερομηνία υπολογισμού '+asOfLabel()+' · δεν μετράει ακόμη.':(free?('Δωρεάν '+b.confirmedIndex+'/'+FREE+' για την οθόνη/έτος'):'Μετά τις 3 δωρεάν αλλαγές για την οθόνη/έτος');out.push(line({monthIdx:m,month:months()[m],pharmacy:b.pharmacy_name,position:b.position_name,category:category,description:b.description+(b.endMonth>b.startMonth?' · block '+months()[b.startMonth]+'–'+months()[b.endMonth]:''),commercial:b.commercial,amount:amount,payer:'Φαρμακείο',source:planned?'custom-planned':(free?'custom-free':'custom-paid'),blockKey:['scl285-custom-block',b.pharmacy_id,b.position_key,b.year,b.startMonth,b.endMonth,b.contentKey].join('|'),note:note}));});return out;}
 
   function raw(d){return (d&&d.raw_json&&typeof d.raw_json==='object')?d.raw_json:{};}
   function pick(d,keys){var r=raw(d);for(var i=0;i<keys.length;i++){var k=keys[i];if(clean(d&&d[k]))return clean(d[k]);if(clean(r&&r[k]))return clean(r[k]);}return '';}
@@ -31046,8 +31048,21 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   function sortRows(rows){var key=window.SCL268.sort||'month',dir=window.SCL268.dir||1;rows.sort(function(a,b){var av=key==='amount'?Number(a.amount)||0:(key==='month'?Number(a.monthIdx)||0:String(a[key]??'').toLowerCase());var bv=key==='amount'?Number(b.amount)||0:(key==='month'?Number(b.monthIdx)||0:String(b[key]??'').toLowerCase());var cmp=0;if(typeof av==='number'||typeof bv==='number')cmp=(Number(av)||0)-(Number(bv)||0);else cmp=String(av).localeCompare(String(bv),'el');if(!cmp)cmp=Number(a.monthIdx)-Number(b.monthIdx)||String(a.pharmacy).localeCompare(String(b.pharmacy),'el')||String(a.category).localeCompare(String(b.category),'el');return cmp*dir;});return rows;}
   function sourceLabel(s){return ({base:'Σταθερές','custom-planned':'Προγραμματισμένη αλλαγή','custom-free':'Δωρεάν αλλαγή','custom-paid':'Χρεώσιμη αλλαγή','deal-object':'Τελική συμφωνία','deal-report':'Report συμφωνίας'}[s]||s||'—');}
   function summary(key,opts){var a=arr(key);if(!a.length)return 'Όλα';if(a.length===1){var o=opts.find(function(x){return String(x.value)===String(a[0]);});return o?o.label:'1 επιλεγμένο';}return a.length+' επιλεγμένα';}
+
+  function addAsOfControl(){
+    var bar=document.getElementById('scl256BillingFilters');if(!bar)return;
+    var box=document.getElementById('scl286BillingAsOfBox');if(!box){box=document.createElement('div');box.id='scl286BillingAsOfBox';bar.appendChild(box);}    
+    var val='';try{val=localStorage.getItem('scl286BillingAsOf')||'';}catch(e){val=window.SCL286_BILLING_AS_OF||'';}
+    box.style.cssText='margin-top:10px;border:1px solid #c9dafd;background:#f7fbff;border-radius:12px;padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12px;color:#40506a';
+    box.innerHTML='<strong style="color:#174dc2">Demo ημερομηνία υπολογισμού</strong><span>Για quota/cutoff test. Κενό = σημερινή ημερομηνία.</span><input id="scl286BillingAsOfInput" type="date" value="'+esc(val)+'" style="height:34px;border:1px solid #c9dafd;border-radius:9px;padding:0 8px;background:#fff"><button type="button" id="scl286ApplyAsOf" class="action blue">Εφαρμογή</button><button type="button" id="scl286ClearAsOf" class="action">Σήμερα</button>';
+    var input=document.getElementById('scl286BillingAsOfInput'),apply=document.getElementById('scl286ApplyAsOf'),clear=document.getElementById('scl286ClearAsOf');
+    function setVal(v){try{if(v)localStorage.setItem('scl286BillingAsOf',v);else localStorage.removeItem('scl286BillingAsOf');}catch(e){}window.SCL286_BILLING_AS_OF=v||'';window.SCL285.customBlocksCache=[];renderBilling();try{if(typeof scl212RenderChanges==='function')scl212RenderChanges();}catch(e){}try{patchTimelineLabels();}catch(e){}}
+    if(apply)apply.addEventListener('click',function(){setVal(input&&input.value?input.value:'');});
+    if(clear)clear.addEventListener('click',function(){setVal('');});
+  }
+
   function ensureShell(base){var page=document.getElementById('scl212Page-billing');if(!page)return;page.classList.add('scl285-billing-page','scl283-billing-page','scl282-billing-page','scl279-billing-page');var sel=document.getElementById('scl212BillingMonth');if(sel){sel.style.display='none';sel.setAttribute('aria-hidden','true');}sanitizeFilters(base);var bar=document.getElementById('scl256BillingFilters');var opts={months:months().map(function(m,i){return {value:String(i),label:m};}),categories:uniq(base,'category').map(function(v){return {value:v,label:v};}),pharmacies:uniq(base,'pharmacy').map(function(v){return {value:v,label:v};}),payers:uniq(base,'payer').map(function(v){return {value:v,label:v};}),sources:uniq(base,'source').map(function(v){return {value:v,label:sourceLabel(v)};})};function fblock(key,title,options){return '<details class="scl283-filter" data-scl283-key="'+esc(key)+'"><summary><span>'+esc(title)+'</span><b>'+esc(summary(key,options))+'</b></summary><div class="scl283-filter-tools"><input type="search" class="scl283-filter-search" placeholder="Αναζήτηση"><div class="scl283-filter-actions"><button type="button" data-act="select-visible">Επιλογή ορατών</button><button type="button" data-act="clear">Καθαρισμός</button><button type="button" data-act="close">Κλείσιμο</button></div></div><div class="scl256-menu">'+(options.map(function(o){return '<label class="scl283-choice"><input type="checkbox" data-scl283-filter="1" data-key="'+esc(key)+'" value="'+esc(o.value)+'" '+(has(key,o.value)?'checked':'')+'> <span>'+esc(o.label)+'</span></label>';}).join('')||'<div class="scl256-empty-filter">Δεν υπάρχουν επιλογές</div>')+'</div></details>';}
-    var html='<div class="scl256-filter-head"><div><strong>Φίλτρα billing</strong><div>Base: 365€ software + 120€ ετήσιος προγραμματισμός έως 2 local οθόνες = 40,42€/μήνα. Extra local οθόνη: 8€/μήνα. Μεταβλητές χρεώσεις μόνο από confirmed blocks.</div></div><button type="button" id="scl285ClearBillingFilters">Καθαρισμός φίλτρων</button></div><div class="scl256-filter-grid">'+fblock('months','Μήνες',opts.months)+fblock('categories','Είδη',opts.categories)+fblock('pharmacies','Φαρμακεία',opts.pharmacies)+fblock('payers','Χρέωση σε',opts.payers)+fblock('sources','Πηγή',opts.sources)+'</div>';if(!bar){bar=document.createElement('div');bar.id='scl256BillingFilters';bar.className='scl256-filterbar';var table0=page.querySelector('table.scl212-table');if(table0&&table0.parentNode)table0.parentNode.insertBefore(bar,table0);else page.prepend(bar);}bar.innerHTML=html;bindBillingFilterUx(bar);
+    var html='<div class="scl256-filter-head"><div><strong>Φίλτρα billing</strong><div>Base: 365€ software + 120€ ετήσιος προγραμματισμός έως 2 local οθόνες = 40,42€/μήνα. Extra local οθόνη: 8€/μήνα. Μεταβλητές χρεώσεις μόνο από confirmed blocks.</div></div><button type="button" id="scl285ClearBillingFilters">Καθαρισμός φίλτρων</button></div><div class="scl256-filter-grid">'+fblock('months','Μήνες',opts.months)+fblock('categories','Είδη',opts.categories)+fblock('pharmacies','Φαρμακεία',opts.pharmacies)+fblock('payers','Χρέωση σε',opts.payers)+fblock('sources','Πηγή',opts.sources)+'</div>';if(!bar){bar=document.createElement('div');bar.id='scl256BillingFilters';bar.className='scl256-filterbar';var table0=page.querySelector('table.scl212-table');if(table0&&table0.parentNode)table0.parentNode.insertBefore(bar,table0);else page.prepend(bar);}bar.innerHTML=html;bindBillingFilterUx(bar);addAsOfControl();
   }
   function bindBillingFilterUx(bar){bar.querySelectorAll('[data-scl283-filter]').forEach(function(cb,idx){cb.addEventListener('change',function(){var key=cb.dataset.key;var vals=Array.from(bar.querySelectorAll('input[data-scl283-filter][data-key="'+key+'"]')).filter(function(x){return x.checked;}).map(function(x){return String(x.value);});window.SCL268.filters[key]=vals;renderBilling();setTimeout(function(){var d=document.querySelector('#scl212Page-billing details.scl283-filter[data-scl283-key="'+key+'"]');if(d)d.open=true;},0);});});bar.querySelectorAll('details.scl283-filter').forEach(function(d){var key=d.dataset.scl283Key, search=d.querySelector('.scl283-filter-search');if(search)search.addEventListener('input',function(){var q=low(search.value);d.querySelectorAll('.scl283-choice').forEach(function(l){l.style.display=!q||low(l.textContent).indexOf(q)>=0?'flex':'none';});});d.querySelectorAll('[data-act]').forEach(function(btn){btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();var act=btn.dataset.act;if(act==='close'){d.open=false;return;}if(act==='clear'){window.SCL268.filters[key]=[];renderBilling();return;}if(act==='select-visible'){window.SCL268.filters[key]=Array.from(d.querySelectorAll('.scl283-choice')).filter(function(l){return l.style.display!=='none';}).map(function(l){return String(l.querySelector('input').value);});renderBilling();setTimeout(function(){d.open=true;},0);}});});});var clear=document.getElementById('scl285ClearBillingFilters');if(clear)clear.addEventListener('click',function(){window.SCL268.filters={months:[],categories:[],pharmacies:[],payers:[],sources:[]};renderBilling();});}
   function bindSort(){var table=document.querySelector('#scl212Page-billing table.scl212-table');if(!table)return;var heads=table.querySelectorAll('thead th');var map=['month','pharmacy','category','description','commercial','payer','amount'];heads.forEach(function(th,i){if(th.__scl285Sort)return;th.__scl285Sort=true;th.style.cursor='pointer';th.addEventListener('click',function(){var k=map[i]||'month';if(window.SCL268.sort===k)window.SCL268.dir*=-1;else{window.SCL268.sort=k;window.SCL268.dir=1;}renderBilling();});});}
@@ -31059,7 +31074,44 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 
   async function loadStateData(force){if(!isHQ()||!window.sb&&!('sb' in window))return null;if(window.SCL285.loading&&!force)return window.SCL285.stateData;var now=Date.now();if(!force&&window.SCL285.stateData&&now-window.SCL285.lastLoad<20000)return window.SCL285.stateData;try{window.SCL285.loading=true;var res=await sb.rpc('hq_get_all_data',{p_hq_key:SCL_ROUTING.hqKey});window.SCL285.loading=false;if(res&&res.data){window.SCL285.stateData=res.data;window.SCL285.lastLoad=Date.now();installChangesPatch();if(window.SCL212&&SCL212.tab==='billing')renderBilling();if(window.SCL212&&SCL212.tab==='changes'&&typeof scl212RenderChanges==='function')scl212RenderChanges();}return window.SCL285.stateData;}catch(e){window.SCL285.loading=false;console.warn('[v285] state data load failed',e);}return window.SCL285.stateData;}
 
-  function patchTimelineLabels(){if(!isPharmacy()||!window.state||!Array.isArray(state.cards))return;var st={cards:state.cards};var fakeRow={pharmacy_id:'local',year:(typeof sclCurrentYear==='function'?sclCurrentYear():new Date().getFullYear()),state_json:st};var oldData=window.SCL285.stateData;window.SCL285.stateData={pharmacy_state:[fakeRow],pharmacies:[{id:'local',name:'local'}]};var blocks=buildCustomBlocks();window.SCL285.stateData=oldData;var map={};blocks.forEach(function(b){for(var m=b.startMonth;m<=b.endMonth;m++){map[[b.position_key,m].join('|')]=labelForCustomBlock(b);}});document.querySelectorAll('.timeline').forEach(function(tl){var currentCardKey='',mi=-1;Array.from(tl.children).forEach(function(el){if(el.classList&&el.classList.contains('tl')){var txt=clean(el.textContent);currentCardKey='';state.cards.forEach(function(c){if(!currentCardKey&&(txt.indexOf(clean(c.title||c.name||''))>=0||clean(c.title||c.name||'').indexOf(txt)>=0))currentCardKey=cardKey(c);});mi=-1;return;}if(el.classList&&el.classList.contains('tc')&&currentCardKey){mi+=1;var key=[currentCardKey,mi].join('|');var lbl=map[key];if(!lbl)return;if(el.textContent.indexOf('Διαχείριση 15€')>=0){var nodes=el.querySelectorAll('*');var done=false;nodes.forEach(function(n){if(!done&&n.childNodes.length===1&&n.textContent.indexOf('Διαχείριση 15€')>=0){n.textContent=n.textContent.replace('Διαχείριση 15€',lbl);done=true;}});if(!done)el.innerHTML=el.innerHTML.replace(/Διαχείριση 15€/g,esc(lbl));}}});});}
+  function patchTimelineLabels(){
+    if(!isPharmacy()||!window.state||!Array.isArray(state.cards))return;
+    var st={cards:state.cards};
+    var fakeRow={pharmacy_id:'local',year:(typeof sclCurrentYear==='function'?sclCurrentYear():new Date().getFullYear()),state_json:st};
+    var oldData=window.SCL285.stateData;
+    window.SCL285.stateData={pharmacy_state:[fakeRow],pharmacies:[{id:'local',name:'local'}]};
+    var blocks=buildCustomBlocks();
+    window.SCL285.stateData=oldData;
+    function alias(v){return low(v).replace(/\s+/g,' ').trim();}
+    var map={};
+    blocks.forEach(function(b){
+      var keys=[b.position_key,b.position_name].map(alias).filter(Boolean);
+      for(var m=b.startMonth;m<=b.endMonth;m++)keys.forEach(function(k){map[k+'|'+m]=labelForCustomBlock(b);});
+    });
+    var localCards=(state.cards||[]).filter(function(c){var s=[c&&c.type,c&&c.position_type,c&&c.title,c&&c.name,c&&c.id].map(low).join('|');return s.indexOf('hq')<0&&s.indexOf('pharmaplus')<0;});
+    document.querySelectorAll('.timeline').forEach(function(tl){
+      var currentAliases=[],mi=-1,localIndex=-1;
+      Array.from(tl.children).forEach(function(el){
+        if(el.classList&&el.classList.contains('tl')){
+          var txt=alias(el.textContent);currentAliases=[];mi=-1;localIndex+=1;
+          localCards.forEach(function(c){var aliases=[cardKey(c),cardName(c),c&&c.title,c&&c.name].map(alias).filter(Boolean);if(!currentAliases.length&&aliases.some(function(a){return txt.indexOf(a)>=0||a.indexOf(txt)>=0;}))currentAliases=aliases;});
+          if(!currentAliases.length&&localCards[localIndex])currentAliases=[cardKey(localCards[localIndex]),cardName(localCards[localIndex]),localCards[localIndex].title,localCards[localIndex].name].map(alias).filter(Boolean);
+          return;
+        }
+        if(!(el.classList&&el.classList.contains('tc'))||!currentAliases.length)return;
+        mi+=1;
+        var lbl='';currentAliases.some(function(a){lbl=map[a+'|'+mi]||'';return !!lbl;});
+        if(!lbl&&el.classList.contains('custom')){
+          var y=(typeof sclCurrentYear==='function'?sclCurrentYear():new Date().getFullYear());
+          if(asOfDate()<cutoffDate(y,mi))lbl='Προγραμματισμένη — δεν μετρά ακόμη';
+        }
+        if(!lbl)return;
+        if(/Διαχείριση\s*15€/.test(el.textContent)||el.classList.contains('custom')){
+          el.innerHTML=el.innerHTML.replace(/Διαχείριση\s*15€/g,esc(lbl));
+        }
+      });
+    });
+  }
 
   ['scl212RenderBilling','scl254RenderBilling','scl255RenderBilling','scl256RenderBilling','scl268RenderBilling','scl271RenderBilling','scl276RenderBilling','scl279RenderBilling','scl280RenderBilling','scl282RenderBilling','scl283RenderBilling'].forEach(function(name){window[name]=renderBilling;try{eval(name+'=window["'+name+'"];');}catch(e){}});
   window.scl285RenderBilling=renderBilling;
@@ -31074,7 +31126,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   setTimeout(function(){loadStateData(true);patchTimelineLabels();if(window.SCL212&&SCL212.tab==='billing')renderBilling();},700);
   setTimeout(function(){loadStateData(false);patchTimelineLabels();},2200);
   setInterval(function(){try{if(isPharmacy())patchTimelineLabels();}catch(e){}},3000);
-  console.log('[v285] custom quota sync loaded: timeline/state custom rows feed Changes and Billing for all local positions');
+  console.log('[v286] timeline labels + billing as-of test date loaded');
 })();
 </script>
 
