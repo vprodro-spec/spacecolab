@@ -31286,15 +31286,138 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     var note=page.querySelector('.scl212-note');if(note)note.innerHTML='Νέο billing model: <strong>20€/μήνα ανά local οθόνη</strong> (εκτός Pharmaplus). Οι πρώτες <strong>3 επιβεβαιωμένες αλλαγές ανά οθόνη/έτος</strong> είναι δωρεάν· μετά χρεώνονται 15€/block. Συμφωνίες 30€/block, reports 60€/block. Sponsored και Pharmaplus εκτός Billing.';}
   function bindSort(){document.querySelectorAll('[data-scl277-bill-sort]').forEach(function(th){if(th.dataset.bound277)return;th.dataset.bound277='1';th.addEventListener('click',function(){var k=th.dataset.scl277BillSort;if(window.SCL277.billingSort===k)window.SCL277.billingDir*=-1;else{window.SCL277.billingSort=k;window.SCL277.billingDir=1;}renderBilling();});});}
   function renderBilling(){if(!isHQ())return;ensureShell();var base=allRows();renderFilterBar(base);var rows=sortRows(filterRows(base));var tbody=document.getElementById('scl212Billing'),foot=document.getElementById('scl251BillingFoot');if(!tbody)return;var total=rows.reduce(function(s,r){return s+(Number(r.amount)||0);},0);var phTot=rows.filter(function(r){return r.payer==='Φαρμακείο';}).reduce(function(s,r){return s+(Number(r.amount)||0);},0);var supTot=rows.filter(function(r){return r.payer==='Supplier';}).reduce(function(s,r){return s+(Number(r.amount)||0);},0);tbody.innerHTML=rows.length?rows.map(function(r){return '<tr><td style="white-space:nowrap;color:#666">'+esc(r.month)+'</td><td><strong>'+esc(r.pharmacy)+'</strong></td><td>'+esc(r.category)+(r.position?'<div class="scl251-sub">'+esc(r.position)+'</div>':'')+'</td><td>'+esc(r.description)+(r.source?'<div class="scl251-sub">'+esc(sourceLabel(r.source))+'</div>':'')+'</td><td><span class="scl251-payer '+(r.payer==='Supplier'?'supplier':'pharmacy')+'">'+esc(r.payer)+'</span></td><td style="text-align:right;font-weight:700;font-variant-numeric:tabular-nums">'+money(r.amount)+'</td></tr>';}).join(''):'<tr><td colspan="6" class="scl251-empty">Δεν υπάρχουν γραμμές billing για τα επιλεγμένα φίλτρα.</td></tr>';var monthText=arr('months').length?(arr('months').length+' μήνες'):'όλοι οι μήνες';if(foot)foot.innerHTML='<tr class="scl251-total-row"><td colspan="3"><strong>Σύνολο · '+esc(monthText)+' · '+rows.length+' γραμμές</strong></td><td colspan="2"><span>Φαρμακείο: '+money(phTot)+'</span><span>Supplier: '+money(supTot)+'</span></td><td style="text-align:right"><strong>'+money(total)+'</strong></td></tr>';bindSort();syncOldIntervalSignature(rows,total);}
-  function syncOldIntervalSignature(rows,total){try{window.SCL256=window.SCL256||{};window.SCL256.filters=window.SCL277.filters;window.SCL256.lastSignature=[JSON.stringify(window.SCL256.filters),dataMonths().length,dataDeals().length].join('|')+'|v277|'+rows.length+'|'+total;}catch(e){}try{if(window.SCL255)window.SCL255.lastSignature='v277';}catch(e){}}
+  function syncOldIntervalSignature(rows,total){
+    try{
+      var legacyMonth=0;
+      try{var sel=document.getElementById('scl212BillingMonth');var mv=Number(sel&&sel.value);if(Number.isFinite(mv)&&mv>=0&&mv<=11)legacyMonth=mv;else legacyMonth=(new Date()).getMonth();}catch(e){legacyMonth=(new Date()).getMonth();}
+      var baseSig=[legacyMonth,dataMonths().length,dataDeals().length].join('|');
+      window.SCL255=window.SCL255||{};
+      window.SCL255.lastMonth=legacyMonth;
+      window.SCL255.lastSignature=baseSig+'|v278|'+rows.length+'|'+total;
+    }catch(e){}
+    try{
+      window.SCL256=window.SCL256||{};
+      window.SCL256.filters=window.SCL277.filters;
+      window.SCL256.lastSignature=[JSON.stringify(window.SCL256.filters),dataMonths().length,dataDeals().length].join('|')+'|v278|'+rows.length+'|'+total;
+    }catch(e){}
+    try{
+      window.SCL268=window.SCL268||{};
+      window.SCL268.filters=window.SCL277.filters;
+      window.SCL268.lastSignature=[JSON.stringify(window.SCL268.filters),dataMonths().length,dataDeals().length].join('|')+'|v278|'+rows.length+'|'+total;
+    }catch(e){}
+  }
 
   var css=document.createElement('style');css.id='scl277BillingCss';css.textContent='.scl277-billing-page .scl251-sort{cursor:pointer}.scl277-billing-page .scl251-sub{font-size:10px;color:#777;margin-top:2px}.scl277-billing-page #scl256BillingFilters{margin:10px 0 12px;background:#f3f3f1;border-radius:12px;padding:14px 16px;border:1px solid #ededed}.scl277-billing-page .scl256-filter-grid{display:grid;grid-template-columns:repeat(5,minmax(150px,1fr));gap:10px}.scl277-billing-page .scl256-filter{position:relative;background:#fff;border:1px solid #dedede;border-radius:10px;min-height:40px}.scl277-billing-page .scl256-filter summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;font-weight:800;color:#666}.scl277-billing-page .scl256-filter summary::-webkit-details-marker{display:none}.scl277-billing-page .scl256-menu{position:absolute;z-index:80;top:44px;left:0;right:0;max-height:280px;overflow:auto;background:#fff;border:1px solid #d7d7d7;border-radius:10px;box-shadow:0 12px 30px rgba(20,30,50,.12);padding:8px;min-width:220px}.scl277-billing-page .scl256-menu label{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:12px}.scl277-billing-page .scl256-filter-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px;color:#333}.scl277-billing-page #scl277ClearBillingFilters{border:1px solid #d8d8d8;background:#fff;border-radius:9px;padding:8px 12px;cursor:pointer;color:#333;font-weight:700}@media(max-width:1100px){.scl277-billing-page .scl256-filter-grid{grid-template-columns:repeat(2,minmax(150px,1fr))}}';if(!document.getElementById('scl277BillingCss'))document.head.appendChild(css);
 
   window.scl212RenderBilling=renderBilling; window.scl256RenderBilling=renderBilling; window.scl271RenderBilling=renderBilling; window.scl268RenderBilling=renderBilling; window.scl277RenderBilling=renderBilling;
   var oldRender=typeof scl212Render==='function'?scl212Render:null;if(oldRender&&!oldRender.__scl277Billing){window.scl212Render=function(){var r=oldRender.apply(this,arguments);try{if(window.SCL212&&SCL212.tab==='billing')setTimeout(renderBilling,140);}catch(e){}return r;};window.scl212Render.__scl277Billing=true;try{scl212Render=window.scl212Render;}catch(e){}}
-  setInterval(function(){try{if(!isHQ())return;var active=(window.SCL212&&SCL212.tab==='billing')||document.getElementById('scl212Page-billing')?.classList.contains('active');if(active)renderBilling();}catch(e){}},1200);
+  /* v278: removed continuous billing render loop; billing renders on tab open, filter/sort changes, and manual refresh. */
   setTimeout(function(){try{var active=(window.SCL212&&SCL212.tab==='billing')||document.getElementById('scl212Page-billing')?.classList.contains('active');if(active)renderBilling();}catch(e){console.warn('[v277] billing init failed',e);}},800);
   console.log('[v277] Billing model rewrite loaded');
+})();
+</script>
+
+
+
+<script id="scl278-billing-refresh-user-pricing-fix">
+/* v278 — Stop Billing render loop + update pharmacy/user-facing pricing copy
+   Built on v277. No billing formulas changed from v277; this fixes continuous table redraw
+   and updates the user-facing guide/economics wording to the new billing model.
+*/
+(function(){
+  if(window.__SCL278_BILLING_REFRESH_USER_PRICING_FIX__)return;
+  window.__SCL278_BILLING_REFRESH_USER_PRICING_FIX__=true;
+
+  function txt(el){return (el&&el.textContent||'').replace(/\s+/g,' ').trim();}
+  function patchPricingGuide(){
+    var sections=Array.from(document.querySelectorAll('details.guide-section'));
+    sections.forEach(function(sec){
+      var summary=txt(sec.querySelector('summary'));
+      var body=sec.querySelector('.guide-section-body');
+      if(!body)return;
+      if(summary.indexOf('Βασικός τιμοκατάλογος')>=0 && !body.dataset.scl278Pricing){
+        body.dataset.scl278Pricing='1';
+        var em=sec.querySelector('summary em'); if(em)em.textContent='20€/μήνα ανά οθόνη, 3 δωρεάν επιβεβαιωμένες αλλαγές, συμφωνίες και reports';
+        body.innerHTML=''+
+          '<div class="guide-table-wrap"><table class="guide-table pricing"><thead><tr><th>Υπηρεσία</th><th>Τι σημαίνει</th><th>Χρέωση</th></tr></thead><tbody>'+
+          '<tr><td><strong>Οθόνη φαρμακείου</strong></td><td>Κάθε local οθόνη/θέση, εκτός Pharmaplus. Περιλαμβάνει το αρχικό/basic ετήσιο πρόγραμμα ή custom ετήσιο πρόγραμμα.</td><td><strong>20€/μήνα ανά οθόνη</strong></td></tr>'+
+          '<tr><td><strong>3 επιβεβαιωμένες αλλαγές</strong></td><td>Ανά local οθόνη και ανά έτος. Μετράνε μόνο αλλαγές που παραμένουν μετά το cutoff.</td><td><strong>Δωρεάν</strong></td></tr>'+
+          '<tr><td><strong>Επιπλέον αλλαγή / εξατομίκευση</strong></td><td>Από την 4η επιβεβαιωμένη αλλαγή και μετά, ανά συνεχόμενο block ίδιου περιεχομένου.</td><td><strong>15€ / block</strong></td></tr>'+
+          '<tr><td><strong>Συμφωνία Προμηθευτή</strong></td><td>Τελική συμφωνία/activation. Ίδιο περιεχόμενο σε συνεχόμενους μήνες μετράει ως ένα block.</td><td><strong>30€ / block</strong></td></tr>'+
+          '<tr><td><strong>Αναφορά Αποτελεσμάτων</strong></td><td>Report για συμφωνία ή block συμφωνίας.</td><td><strong>60€ / block</strong></td></tr>'+
+          '<tr><td><strong>Χορηγούμενα ράφια</strong></td><td>Πληροφορία/εμπορική αξιοποίηση φαρμακείου, χωρίς διαχείριση Pharmaplus.</td><td><strong>0€ Pharmaplus fee</strong></td></tr>'+
+          '<tr><td><strong>Pharmaplus οθόνη</strong></td><td>Κεντρική θέση HQ.</td><td><strong>0€</strong></td></tr>'+
+          '</tbody></table></div>'+
+          '<div class="guide-note"><strong>Cutoff:</strong> αλλαγή για έναν μήνα μπορεί να τροποποιηθεί ή να ακυρωθεί χωρίς να μετρήσει μέχρι τις 15 του προηγούμενου μήνα. Παράδειγμα: αλλαγή Μαΐου → cutoff 15 Απριλίου.</div>';
+      }
+      if(summary.indexOf('Παραδείγματα απόσβεσης')>=0 && !body.dataset.scl278Examples){
+        body.dataset.scl278Examples='1';
+        body.innerHTML=''+
+          '<h3 class="guide-subtitle">Παραδείγματα με το νέο μοντέλο χρέωσης</h3>'+
+          '<div class="guide-table-wrap"><table class="guide-table"><thead><tr><th>Setup</th><th>Μηνιαία χρέωση Pharmaplus</th><th>Ετήσιο κόστος</th><th>Σημείωση</th></tr></thead><tbody>'+
+          '<tr><td><strong>1 local οθόνη + Pharmaplus</strong></td><td><strong>20€</strong></td><td>240€</td><td>Η Pharmaplus οθόνη δεν μετράει.</td></tr>'+
+          '<tr><td><strong>2 local οθόνες + Pharmaplus</strong></td><td><strong>40€</strong></td><td>480€</td><td>Περιλαμβάνονται 3 δωρεάν επιβεβαιωμένες αλλαγές ανά οθόνη.</td></tr>'+
+          '<tr><td><strong>4 local οθόνες + Pharmaplus</strong></td><td><strong>80€</strong></td><td>960€</td><td>Δεν υπάρχει πλέον έννοια extra με +8€/μήνα.</td></tr>'+
+          '</tbody></table></div>'+
+          '<div class="guide-table-wrap"><table class="guide-table"><thead><tr><th>Ενέργεια</th><th>Πώς μετράει</th><th>Χρέωση</th></tr></thead><tbody>'+
+          '<tr><td><strong>Ίδιο custom Μάιος–Ιούνιος</strong></td><td>1 επιβεβαιωμένο change block</td><td>Δωρεάν αν είναι μέσα στα 3, αλλιώς 15€</td></tr>'+
+          '<tr><td><strong>Custom Μάιος–Ιούνιος ίδιο, Ιούλιος άλλο</strong></td><td>2 change blocks</td><td>Ανάλογα με τις 3 δωρεάν αλλαγές της οθόνης</td></tr>'+
+          '<tr><td><strong>Ίδιο deal 3 μήνες</strong></td><td>1 deal block</td><td>30€</td></tr>'+
+          '<tr><td><strong>Deal 2 μήνες ίδιο + 1 μήνας άλλο</strong></td><td>2 deal blocks</td><td>60€</td></tr>'+
+          '<tr><td><strong>Report σε 1 deal block</strong></td><td>1 report block</td><td>60€</td></tr>'+
+          '</tbody></table></div>'+
+          '<div class="guide-warning">Τα ποσά που συμφωνεί το φαρμακείο με προμηθευτή είναι εμπορικά ποσά του φαρμακείου και δεν ταυτίζονται με το Pharmaplus service fee.</div>';
+      }
+    });
+  }
+
+  function patchEconomicsCopy(){
+    var note=document.getElementById('economicsNote');
+    if(note && !note.dataset.scl278Note){
+      note.dataset.scl278Note='1';
+      note.innerHTML='<strong>Νέο μοντέλο κόστους:</strong> 20€/μήνα ανά local οθόνη, εκτός Pharmaplus. Το αρχικό/basic ετήσιο πρόγραμμα περιλαμβάνεται. Οι πρώτες 3 επιβεβαιωμένες αλλαγές ανά οθόνη/έτος είναι δωρεάν· μετά 15€/block. Συμφωνίες 30€/block και reports 60€/block.';
+    }
+    Array.from(document.querySelectorAll('.bi-sub,.black-card .s,.guide-note,.guide-assumptions span')).forEach(function(el){
+      var s=el.innerHTML||''; if(!s)return; var orig=s;
+      s=s.replace(/365€ \+ 120€[^<]*/g,'20€/μήνα ανά local οθόνη · 3 δωρεάν αλλαγές/οθόνη');
+      s=s.replace(/365€ πλατφόρμα \+ 120€ Βασικό Πρόγραμμα[^<]*/g,'20€/μήνα ανά local οθόνη · περιλαμβάνει basic/custom ετήσιο πρόγραμμα');
+      s=s.replace(/Βασικό ετήσιο κόστος 485€/g,'Κόστος: 20€/μήνα ανά local οθόνη');
+      s=s.replace(/Κάλυψη 485€/g,'Κάλυψη μηνιαίας χρέωσης');
+      s=s.replace(/485€/g,'20€/μήνα ανά οθόνη');
+      s=s.replace(/\+ 8€\/μήνα ανά extra θέση/g,'20€/μήνα ανά local οθόνη');
+      if(s!==orig)el.innerHTML=s;
+    });
+  }
+
+  function patchCustomModalCopy(){
+    var modal=document.getElementById('customModal');
+    if(!modal||modal.dataset.scl278CustomNote)return;
+    var panel=modal.querySelector('.editor-panel')||modal.querySelector('.modal-card');
+    if(panel){
+      var div=document.createElement('div');
+      div.className='compact scl278-custom-billing-note';
+      div.style.margin='8px 0 10px';
+      div.innerHTML='<strong>Billing:</strong> Μπορείς να προγραμματίζεις μελλοντικές αλλαγές χωρίς χρέωση μέχρι τις 15 του προηγούμενου μήνα. Κάθε οθόνη έχει 3 δωρεάν επιβεβαιωμένες αλλαγές/έτος· μετά 15€/block.';
+      panel.insertBefore(div,panel.firstChild);
+      modal.dataset.scl278CustomNote='1';
+    }
+  }
+
+  function patchAll(){try{patchPricingGuide();}catch(e){}try{patchEconomicsCopy();}catch(e){}try{patchCustomModalCopy();}catch(e){}}
+
+  var oldRefresh=window.refresh||null;
+  if(typeof oldRefresh==='function'&&!oldRefresh.__scl278Pricing){
+    var wrapped=function(){var r=oldRefresh.apply(this,arguments);setTimeout(patchAll,0);setTimeout(patchAll,120);return r;};
+    wrapped.__scl278Pricing=true; window.refresh=wrapped; try{refresh=wrapped;}catch(e){}
+  }
+  var oldEconomics=null; try{if(typeof renderEconomics==='function')oldEconomics=renderEconomics;}catch(e){}
+  if(typeof oldEconomics==='function'&&!oldEconomics.__scl278Pricing){
+    var econ=function(){var r=oldEconomics.apply(this,arguments);setTimeout(patchAll,0);return r;};
+    econ.__scl278Pricing=true; window.renderEconomics=econ; try{renderEconomics=econ;}catch(e){}
+  }
+  try{new MutationObserver(function(){clearTimeout(window.__scl278PatchTimer);window.__scl278PatchTimer=setTimeout(patchAll,80);}).observe(document.body,{childList:true,subtree:true});}catch(e){}
+  setTimeout(patchAll,0);setTimeout(patchAll,600);setTimeout(patchAll,1800);
+  console.log('[v278] billing refresh loop stopped + user pricing copy patched');
 })();
 </script>
 
