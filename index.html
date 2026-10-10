@@ -30585,5 +30585,295 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   console.log('[v274c] Pharmaplus scope radio/checklist UX loaded');
 })();
 </script>
+
+
+<script id="scl275-delete-validation-cleanup">
+/* v275 — Delete validation / cleanup + pending Changes fixes
+   Built on v274c.
+   Scope:
+   1) Changes tab defaults to current month when opened.
+   2) Pharmaplus participation/scope changes immediately recalculate/re-render Changes rows.
+   3) Delete/mutation cleanup hooks force derived views (Changes, Billing, Pharmaplus cards, counters) to rebuild without browser refresh.
+   4) Adds a small safe button to clear only the HQ monthly theme fields without deleting the whole Main campaign.
+   No Billing formulas, Deal fees, Custom fees, Sponsored rules, or local operational rules are changed here. */
+(function(){
+  if(window.__SCL275_DELETE_VALIDATION_CLEANUP__)return;
+  window.__SCL275_DELETE_VALIDATION_CLEANUP__=true;
+
+  var MONTHS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+  function isHQ(){try{return typeof sclMode==='function'&&sclMode()==='hq';}catch(e){return false;}}
+  function clean(v){if(v===null||v===undefined)return''; if(typeof v==='object')return''; var s=String(v).replace(/\s+/g,' ').trim(); if(!s||s==='[object Object]'||s==='null'||s==='undefined'||s==='—'||s==='-')return''; return s;}
+  function esc(v){try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){} try{if(typeof scl231Esc==='function')return scl231Esc(v);}catch(e){} return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function currentMonth(){try{if(typeof scl212CurrentMonth==='function')return Number(scl212CurrentMonth());}catch(e){} try{if(window.SCL260&&Number.isFinite(Number(SCL260.currentMonth)))return Number(SCL260.currentMonth);}catch(e){} return (new Date()).getMonth();}
+  function getMonths(){try{if(typeof SCL212_MONTHS!=='undefined'&&Array.isArray(SCL212_MONTHS))return SCL212_MONTHS;}catch(e){} return MONTHS;}
+  function activeTab(){try{return window.SCL212&&SCL212.tab?SCL212.tab:'';}catch(e){return'';}}
+  function safe(fn){try{if(typeof fn==='function')return fn();}catch(e){console.warn('[v275]',e);}}
+  function setStatus(msg,type){try{if(typeof sclCloudStatus==='function')sclCloudStatus(msg,type||'ok');}catch(e){} var st=document.getElementById('scl231SaveStatus'); if(st&&msg)st.textContent=msg;}
+
+  function forceChangesDirty(){
+    try{window.__scl270ForceChanges=true;window.__scl270ChangeLastSig='';}catch(e){}
+    try{if(window.SCL263_CHANGES_STATE){SCL263_CHANGES_STATE.limit=SCL263_CHANGES_STATE.pageSize||120;}}catch(e){}
+  }
+
+  function setChangesToCurrentMonth(){
+    var st=window.SCL263_CHANGES_STATE;
+    var m=currentMonth();
+    var label=getMonths()[m]||String(m);
+    if(st&&st.filters&&st.filters.months){
+      Object.values(st.filters).forEach(function(s){ if(s&&typeof s.clear==='function')s.clear(); });
+      st.filters.months.add(label);
+      st.userTouched=false;
+      st.limit=st.pageSize||120;
+    }
+    var sel=document.getElementById('scl212FilterMonth');
+    if(sel){sel.value=String(m);}    
+  }
+
+  function renderChanges(forceCurrent){
+    if(forceCurrent)setChangesToCurrentMonth();
+    forceChangesDirty();
+    if(typeof window.scl270RenderChanges==='function')return safe(function(){return window.scl270RenderChanges();});
+    if(typeof window.scl263RenderChanges==='function')return safe(window.scl263RenderChanges);
+    if(typeof window.scl212RenderChanges==='function')return safe(window.scl212RenderChanges);
+    if(typeof window.scl212Render==='function'&&activeTab()==='changes')return safe(window.scl212Render);
+  }
+  function renderBilling(){
+    if(typeof window.scl271RenderBilling==='function')return safe(window.scl271RenderBilling);
+    if(typeof window.scl268RenderBilling==='function')return safe(window.scl268RenderBilling);
+    if(typeof window.scl256RenderBilling==='function')return safe(window.scl256RenderBilling);
+    if(typeof window.scl212RenderBilling==='function')return safe(window.scl212RenderBilling);
+  }
+  function renderPharmaplus(){
+    safe(typeof scl231RenderCards==='function'?scl231RenderCards:null);
+    if(activeTab()==='pharmaplus')safe(typeof scl212RenderPP==='function'?scl212RenderPP:null);
+  }
+  function renderOverviewBits(){
+    if(activeTab()==='overview'){
+      safe(typeof scl212RenderStats==='function'?scl212RenderStats:null);
+      safe(typeof scl212RenderTodo==='function'?scl212RenderTodo:null);
+      safe(typeof scl212RenderOverview==='function'?scl212RenderOverview:null);
+    }
+  }
+
+  function refreshDerived(opts){
+    opts=opts||{};
+    forceChangesDirty();
+    // Always refresh Pharmaplus cards after campaign/scope/theme mutations.
+    if(opts.pharmaplus!==false)renderPharmaplus();
+    if(activeTab()==='changes'||opts.forceChanges)renderChanges(!!opts.forceCurrentMonth);
+    if(activeTab()==='billing'||opts.forceBilling)renderBilling();
+    renderOverviewBits();
+    // Run a second pass because many older patches rebuild DOM asynchronously.
+    setTimeout(function(){
+      forceChangesDirty();
+      if(opts.pharmaplus!==false)renderPharmaplus();
+      if(activeTab()==='changes'||opts.forceChanges)renderChanges(false);
+      if(activeTab()==='billing'||opts.forceBilling)renderBilling();
+      renderOverviewBits();
+    },180);
+    setTimeout(function(){
+      if(activeTab()==='changes'||opts.forceChanges)renderChanges(false);
+      if(activeTab()==='billing'||opts.forceBilling)renderBilling();
+    },700);
+  }
+  window.scl275RefreshDerived=refreshDerived;
+  window.scl275SetChangesCurrentMonth=setChangesToCurrentMonth;
+
+  function patchChangesOpenDefault(){
+    if(window.__SCL275_CHANGES_OPEN_DEFAULT_BOUND__)return;
+    window.__SCL275_CHANGES_OPEN_DEFAULT_BOUND__=true;
+    document.addEventListener('click',function(e){
+      var btn=e.target&&e.target.closest&&e.target.closest('.scl212-tab[data-tab="changes"], [data-tab="changes"]');
+      if(!btn||!isHQ())return;
+      setChangesToCurrentMonth();
+      setTimeout(function(){renderChanges(true);},30);
+      setTimeout(function(){renderChanges(false);},220);
+    },true);
+    // If the page initially opens on Changes, scope it immediately.
+    setTimeout(function(){if(isHQ()&&(activeTab()==='changes'||document.getElementById('scl212Page-changes')?.classList.contains('active')))renderChanges(true);},600);
+  }
+
+  function patchPharmaplusSaveAndDelete(){
+    if(!window.__SCL275_PP_SAVE_DELETE_PATCHED__){
+      var oldSave=null; try{oldSave=scl231SaveCampaign;}catch(e){}
+      if(typeof oldSave==='function'){
+        var save=function(){
+          var ret=oldSave.apply(this,arguments);
+          return Promise.resolve(ret).then(function(x){refreshDerived({forceChanges:activeTab()==='changes',forceBilling:false,forceCurrentMonth:false});return x;}).catch(function(e){throw e;});
+        };
+        window.scl231SaveCampaign=save; try{scl231SaveCampaign=save;}catch(e){}
+      }
+      var oldLoad=null; try{oldLoad=scl231LoadCampaigns;}catch(e){}
+      if(typeof oldLoad==='function'){
+        var load=function(){
+          var ret=oldLoad.apply(this,arguments);
+          return Promise.resolve(ret).then(function(x){refreshDerived({forceChanges:activeTab()==='changes'});return x;}).catch(function(e){throw e;});
+        };
+        window.scl231LoadCampaigns=load; try{scl231LoadCampaigns=load;}catch(e){}
+      }
+      var oldDel=null; try{oldDel=window.scl232DeleteCampaign||scl232DeleteCampaign;}catch(e){}
+      if(typeof oldDel==='function'){
+        var del=function(){
+          var ret=oldDel.apply(this,arguments);
+          return Promise.resolve(ret).then(function(x){
+            refreshDerived({forceChanges:true,forceBilling:true,forceCurrentMonth:false});
+            return x;
+          }).catch(function(e){throw e;});
+        };
+        window.scl232DeleteCampaign=del; try{scl232DeleteCampaign=del;}catch(e){}
+      }
+      window.__SCL275_PP_SAVE_DELETE_PATCHED__=true;
+    }
+
+    // Ensure editor buttons call the wrapped functions even after older binders.
+    var saveBtn=document.getElementById('scl231SaveCampaign');
+    if(saveBtn&&!saveBtn.dataset.scl275Bound){
+      saveBtn.dataset.scl275Bound='1';
+      saveBtn.addEventListener('click',function(){setTimeout(function(){refreshDerived({forceChanges:activeTab()==='changes'});},550);setTimeout(function(){refreshDerived({forceChanges:activeTab()==='changes'});},1500);},true);
+    }
+    var delBtn=document.getElementById('scl232DeleteCampaign');
+    if(delBtn&&!delBtn.dataset.scl275Bound){
+      delBtn.dataset.scl275Bound='1';
+      delBtn.addEventListener('click',function(){setTimeout(function(){refreshDerived({forceChanges:true,forceBilling:true});},700);setTimeout(function(){refreshDerived({forceChanges:true,forceBilling:true});},1700);},true);
+    }
+
+    // Scope/participation edits: recalc rows immediately in the visible Changes tab.
+    var list=document.getElementById('scl231ScopeList');
+    if(list&&!list.dataset.scl275ScopeBound){
+      list.dataset.scl275ScopeBound='1';
+      list.addEventListener('change',function(){
+        refreshDerived({forceChanges:activeTab()==='changes'});
+      },true);
+    }
+  }
+
+  function clearField(id){var el=document.getElementById(id);if(el)el.value='';}
+  function hasField(id){return !!clean(document.getElementById(id)?.value);}
+  async function saveAfterClearTheme(){
+    if(typeof scl231SaveCampaign==='function'){
+      await scl231SaveCampaign();
+    }else{
+      refreshDerived({forceChanges:true});
+    }
+  }
+  function ensureThemeClearButton(){
+    var deleteBtn=document.getElementById('scl232DeleteCampaign');
+    var saveBtn=document.getElementById('scl231SaveCampaign');
+    if(!saveBtn||!saveBtn.parentElement)return;
+    if(document.getElementById('scl275ClearMonthlyTheme'))return;
+    var b=document.createElement('button');
+    b.type='button'; b.id='scl275ClearMonthlyTheme'; b.className='scl231-btn';
+    b.textContent='Καθαρισμός HQ μηνιαίου θέματος';
+    b.title='Αδειάζει μόνο τα πεδία HQ μηνιαίου θέματος. Δεν διαγράφει την κεντρική Pharmaplus ενέργεια.';
+    b.addEventListener('click',async function(){
+      var any=['scl231FallbackTitle','scl231FallbackDescription','scl231FallbackProducts','scl231FallbackInstructions'].some(hasField);
+      if(!any){alert('Δεν υπάρχει HQ μηνιαίο θέμα για καθάρισμα.');return;}
+      if(!confirm('Να καθαριστεί μόνο το HQ μηνιαίο θέμα αυτού του μήνα; Η κεντρική Pharmaplus ενέργεια, αν υπάρχει, θα μείνει.'))return;
+      ['scl231FallbackTitle','scl231FallbackDescription','scl231FallbackProducts','scl231FallbackInstructions'].forEach(clearField);
+      setStatus('καθαρισμός HQ μηνιαίου θέματος...','');
+      await saveAfterClearTheme();
+      setStatus('Το HQ μηνιαίο θέμα καθαρίστηκε.','ok');
+      refreshDerived({forceChanges:true,forceBilling:true});
+    });
+    (deleteBtn||saveBtn).insertAdjacentElement('beforebegin',b);
+  }
+
+  function patchPharmacyMutations(){
+    if(window.__SCL275_PHARMACY_MUTATIONS_BOUND__)return;
+    window.__SCL275_PHARMACY_MUTATIONS_BOUND__=true;
+
+    function queueSaveAndDerived(){
+      // In pharmacy mode, make sure deletes/cleanup are queued to cloud via existing save pipeline.
+      try{if(typeof scl206QueuePlanSave==='function')scl206QueuePlanSave();}catch(e){}
+      try{if(typeof sclQueueSave==='function')sclQueueSave();}catch(e){}
+      setTimeout(function(){refreshDerived({forceChanges:true,forceBilling:true});},260);
+      setTimeout(function(){refreshDerived({forceChanges:true,forceBilling:true});},1200);
+    }
+
+    var selector=[
+      '[data-delete-confirmed-deal]',
+      '[data-delete-preagreement]',
+      '[data-disable-deal]',
+      '[data-disable-custom]',
+      '[data-delete-sponsored]',
+      '[data-save-neg-edit]',
+      '[data-confirm-preagreement]',
+      '[data-save-preagreement]'
+    ].join(',');
+    document.addEventListener('click',function(e){
+      if(e.target&&e.target.closest&&e.target.closest(selector)){
+        setTimeout(queueSaveAndDerived,120);
+      }
+    },true);
+  }
+
+  function patchPharmacyDelete(){
+    if(window.__SCL275_PHARMACY_DELETE_PATCHED__)return;
+    function wrap(name){
+      var fn=window[name]||(function(){try{return eval(name);}catch(e){return null;}})();
+      if(typeof fn!=='function'||fn.__scl275)return;
+      var wrapped=function(){
+        var ret=fn.apply(this,arguments);
+        return Promise.resolve(ret).then(function(x){
+          // Clean visible HQ state after delete; real database cleanup is handled by hq_delete_pharmacy RPC.
+          try{if(typeof scl212Load==='function')setTimeout(function(){scl212Load();},400);}catch(e){}
+          setTimeout(function(){refreshDerived({forceChanges:true,forceBilling:true});},900);
+          return x;
+        }).catch(function(e){throw e;});
+      };
+      wrapped.__scl275=true;
+      window[name]=wrapped;
+      try{eval(name+'=window[name]');}catch(e){}
+    }
+    ['sclDeletePharmacyV191','sclSimpleDeletePharmacyV193','sclDeletePharmacyFromHqV190'].forEach(wrap);
+    window.__SCL275_PHARMACY_DELETE_PATCHED__=true;
+  }
+
+  function decorateDeleteHints(){
+    // Small non-invasive hints in delete buttons to make behavior clear.
+    document.querySelectorAll('[data-delete-month],#scl232DeleteCampaign').forEach(function(b){
+      if(!b.dataset.scl275Hint){b.dataset.scl275Hint='1';b.title='Διαγράφει την Pharmaplus εγγραφή του μήνα και ξαναχτίζει Αλλαγές / popup / Billing χωρίς refresh.';}
+    });
+    document.querySelectorAll('[data-delete-confirmed-deal]').forEach(function(b){
+      if(!b.dataset.scl275Hint){b.dataset.scl275Hint='1';b.title='Ακύρωση τελικής συμφωνίας: αφαιρεί Αλλαγές και Billing μετά την αποθήκευση.';}
+    });
+    document.querySelectorAll('[data-delete-preagreement]').forEach(function(b){
+      if(!b.dataset.scl275Hint){b.dataset.scl275Hint='1';b.title='Ακύρωση προσυμφωνίας: δεν δημιουργεί operational ή billing εγγραφή.';}
+    });
+  }
+
+  function boot(){
+    patchChangesOpenDefault();
+    patchPharmaplusSaveAndDelete();
+    patchPharmacyMutations();
+    patchPharmacyDelete();
+    ensureThemeClearButton();
+    decorateDeleteHints();
+  }
+
+  // Patch renderers that recreate the Pharmaplus editor/list.
+  var oldOpen=null; try{oldOpen=scl231OpenEditor;}catch(e){}
+  if(typeof oldOpen==='function'&&!oldOpen.__scl275){
+    var open=function(){var r=oldOpen.apply(this,arguments);setTimeout(boot,0);setTimeout(boot,120);return r;};
+    open.__scl275=true; window.scl231OpenEditor=open; try{scl231OpenEditor=open;}catch(e){}
+  }
+  var oldCards=null; try{oldCards=scl231RenderCards;}catch(e){}
+  if(typeof oldCards==='function'&&!oldCards.__scl275){
+    var cards=function(){var r=oldCards.apply(this,arguments);setTimeout(boot,0);return r;};
+    cards.__scl275=true; window.scl231RenderCards=cards; try{scl231RenderCards=cards;}catch(e){}
+  }
+
+  // Lightweight CSS for new cleanup button.
+  var css=document.createElement('style');css.id='scl275Css';css.textContent=`
+    #scl275ClearMonthlyTheme{background:#fff8e8!important;border-color:#f0cf8a!important;color:#7a4b00!important}
+    #scl275ClearMonthlyTheme:hover{background:#ffefd0!important}
+    .scl275-note{font-size:10px;color:#637083;font-weight:800}
+  `;if(!document.getElementById('scl275Css'))document.head.appendChild(css);
+
+  boot();
+  setTimeout(boot,500);setTimeout(boot,1600);setTimeout(boot,3200);
+  console.log('[v275] delete validation / cleanup loaded');
+})();
+</script>
 </body>
 </html>
