@@ -30129,5 +30129,140 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 
 </script>
+
+
+<script id="scl281-cancel-confirmed-deal-fix">
+/* v281 — Cancel confirmed deal fix
+   Built on v280. Fixes the pharmacy-side "Ακύρωση" button for existing/final supplier agreements.
+   The old handler only removed rows from confirmedDeals and failed for legacy confirmed negotiations
+   or deals without stable ids. This handler removes the selected final agreement robustly and queues save. */
+(function(){
+  if(window.__SCL281_CANCEL_CONFIRMED_DEAL_FIX__)return;
+  window.__SCL281_CANCEL_CONFIRMED_DEAL_FIX__=true;
+
+  function arr(v){return Array.isArray(v)?v:[];}
+  function clean(v){
+    if(v===null||v===undefined)return '';
+    if(typeof v==='object')return '';
+    return String(v).replace(/\s+/g,' ').trim();
+  }
+  function cloneSafe(v){
+    try{ if(typeof clone==='function')return clone(v); }catch(e){}
+    try{return JSON.parse(JSON.stringify(v));}catch(e){return v;}
+  }
+  function defaultNeg(card){
+    try{ if(typeof defaultNegotiation==='function')return defaultNegotiation(card&&card.defaultProgram||'OTC1'); }catch(e){}
+    return {pending:false,confirmed:false,startMonth:0,duration:1,schedule:[],mechanisms:[]};
+  }
+  function allConfirmed(card){
+    try{ if(typeof confirmedDealList==='function')return confirmedDealList(card)||[]; }catch(e){}
+    var list=arr(card&&card.confirmedDeals).filter(function(x){return x&&x.confirmed;});
+    if(card&&card.negotiation&&card.negotiation.confirmed&&!list.length)list.push(card.negotiation);
+    return list;
+  }
+  function monthSet(d){
+    try{ if(typeof selectedDealMonths==='function')return Array.from(selectedDealMonths(d)||[]).map(Number).sort(function(a,b){return a-b;}); }catch(e){}
+    try{ if(typeof monthsForNegotiation==='function')return Array.from(monthsForNegotiation(d)||[]).map(Number).sort(function(a,b){return a-b;}); }catch(e){}
+    var start=Number(d&&d.startMonth)||0, dur=Math.max(1,Number(d&&d.duration)||1), out=[];
+    for(var i=start;i<Math.min(12,start+dur);i++)out.push(i);
+    return out;
+  }
+  function sameDeal(a,b){
+    if(!a||!b)return false;
+    var aid=clean(a.id), bid=clean(b.id);
+    if(aid&&bid&&aid===bid)return true;
+    var ma=monthSet(a).join(','), mb=monthSet(b).join(',');
+    var ba=clean(a.brand)||clean(a.supplier)||clean(a.title)||clean(a.name);
+    var bb=clean(b.brand)||clean(b.supplier)||clean(b.title)||clean(b.name);
+    var pa=clean(a.position)||clean(a.position_name)||clean(a.cardId)||clean(a.card_id);
+    var pb=clean(b.position)||clean(b.position_name)||clean(b.cardId)||clean(b.card_id);
+    if(ma&&mb&&ma===mb&&ba&&bb&&ba===bb)return true;
+    if(ma&&mb&&ma===mb&&pa&&pb&&pa===pb)return true;
+    return false;
+  }
+  function removeTarget(card,target,idx){
+    if(!card||!target)return false;
+    var removed=false;
+    var targetId=clean(target.id);
+
+    if(!Array.isArray(card.confirmedDeals))card.confirmedDeals=[];
+    var before=card.confirmedDeals.length;
+    if(targetId){
+      card.confirmedDeals=card.confirmedDeals.filter(function(d){return clean(d&&d.id)!==targetId;});
+      removed = removed || card.confirmedDeals.length!==before;
+    }
+    if(!removed){
+      var pos=card.confirmedDeals.findIndex(function(d){return d===target || sameDeal(d,target);});
+      if(pos<0 && idx>=0 && idx<card.confirmedDeals.length)pos=idx;
+      if(pos>=0){card.confirmedDeals.splice(pos,1);removed=true;}
+    }
+
+    // Legacy storage: older finalized agreements can live as card.negotiation.confirmed.
+    if(card.negotiation&&card.negotiation.confirmed){
+      var legacyMatch = (!targetId && !before) || (targetId && clean(card.negotiation.id)===targetId) || sameDeal(card.negotiation,target);
+      if(legacyMatch){card.negotiation=defaultNeg(card);removed=true;}
+    }
+
+    // Safety: remove any wrongly retained confirmed copy from preagreements.
+    if(Array.isArray(card.preagreements)){
+      var pBefore=card.preagreements.length;
+      card.preagreements=card.preagreements.filter(function(p){
+        if(!p)return false;
+        if(!p.confirmed)return true;
+        if(targetId&&clean(p.id)===targetId)return false;
+        return !sameDeal(p,target);
+      });
+      removed = removed || card.preagreements.length!==pBefore;
+    }
+    return removed;
+  }
+  function afterMutation(){
+    try{ if(window.state)state.editingNegotiation=null; }catch(e){}
+    try{ if(typeof refresh==='function')refresh(); }catch(e){}
+    // Queue persistence explicitly because this capture handler stops the old click path.
+    setTimeout(function(){try{if(typeof scl206QueuePlanSave==='function')scl206QueuePlanSave();}catch(e){}},60);
+    setTimeout(function(){try{if(typeof sclQueueSave==='function')sclQueueSave();}catch(e){}},120);
+    setTimeout(function(){try{if(typeof hardRefreshViews==='function')hardRefreshViews({forceChanges:true,forceBilling:true,reloadDashboard:true});}catch(e){}},550);
+    setTimeout(function(){try{if(typeof hardRefreshViews==='function')hardRefreshViews({forceChanges:true,forceBilling:true,reloadDashboard:true});}catch(e){}},1500);
+  }
+  function findCard(id){
+    try{return (state.cards||[]).find(function(c){return String(c.id)===String(id);});}catch(e){return null;}
+  }
+  document.addEventListener('click',function(e){
+    var btn=e.target&&e.target.closest&&e.target.closest('[data-delete-confirmed-deal]');
+    if(!btn)return;
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+
+    var card=findCard(btn.dataset.deleteConfirmedDeal);
+    if(!card){alert('Δεν βρέθηκε η θέση της συμφωνίας.');return;}
+    var idx=Number(btn.dataset.confirmedIndex)||0;
+    var list=allConfirmed(card);
+    var target=list[idx];
+    if(!target){alert('Δεν βρέθηκε η τελική συμφωνία για ακύρωση.');return;}
+    var label=clean(target.brand)||clean(target.supplier)||clean(target.title)||'τελική συμφωνία';
+    if(!confirm('Να ακυρωθεί η συμφωνία "'+label+'";'))return;
+    var ok=removeTarget(card,target,idx);
+    if(!ok){alert('Δεν έγινε αλλαγή. Η συμφωνία δεν βρέθηκε στα αποθηκευμένα δεδομένα.');return;}
+    afterMutation();
+  },true);
+
+  // Also make the broader "disable deal" action robust for legacy confirmed negotiation storage.
+  document.addEventListener('click',function(e){
+    var btn=e.target&&e.target.closest&&e.target.closest('[data-disable-deal]');
+    if(!btn)return;
+    var card=findCard(btn.dataset.disableDeal);
+    if(!card)return;
+    // Let the original handler run, then make sure legacy state is cleared and persisted.
+    setTimeout(function(){
+      try{card.confirmedDeals=[];card.negotiation=defaultNeg(card);}catch(err){}
+      afterMutation();
+    },30);
+  },true);
+
+  console.log('[v281] cancel confirmed deal fix loaded');
+})();
+</script>
 </body>
 </html>
