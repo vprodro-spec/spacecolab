@@ -30221,5 +30221,92 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 })();
 </script>
 
+
+
+<script id="scl274b-filter-menu-visibility-fix">
+/* v274b — Filter menu visibility fix
+   Built on v274. No logic changes.
+   The v274 dropdown enhancement put search/actions inside an absolutely positioned menu,
+   which could cover or clip the options. This makes opened filter menus inline/expanded
+   in the filter bar, so options remain visible and readable. */
+(function(){
+  if(window.__SCL274B_FILTER_MENU_VISIBILITY_FIX__)return;
+  window.__SCL274B_FILTER_MENU_VISIBILITY_FIX__=true;
+  var css=document.createElement('style');
+  css.id='scl274bCss';
+  css.textContent=`
+    /* Keep filter areas above the table and prevent clipping */
+    #scl228Filters,
+    #scl228Filters .scl228-panel,
+    #scl228Filters .scl228-filter-row{
+      overflow:visible!important;
+      position:relative!important;
+      z-index:50!important;
+    }
+    #scl228Filters details.scl228-dd{
+      overflow:visible!important;
+      align-self:flex-start!important;
+    }
+    #scl228Filters details.scl228-dd[open]{
+      z-index:5000!important;
+      min-width:320px!important;
+      max-width:min(420px,96vw)!important;
+      box-shadow:0 8px 24px rgba(20,33,61,.12)!important;
+    }
+    /* In v274 these were mixed with absolute-positioned list. Keep them in normal flow. */
+    #scl228Filters details.scl228-dd[open] .scl274-filter-tools{
+      position:static!important;
+      top:auto!important;
+      z-index:auto!important;
+      border-top:1px solid #edf1f6!important;
+      border-bottom:1px solid #edf1f6!important;
+      margin-top:2px!important;
+      background:#fbfcff!important;
+    }
+    #scl228Filters details.scl228-dd[open] .scl228-list{
+      position:static!important;
+      left:auto!important;
+      top:auto!important;
+      width:auto!important;
+      min-width:0!important;
+      max-height:330px!important;
+      overflow:auto!important;
+      border:0!important;
+      border-radius:0 0 8px 8px!important;
+      box-shadow:none!important;
+      padding:7px!important;
+      background:#fff!important;
+    }
+    #scl228Filters details.scl228-dd[open] summary{
+      border-bottom:0!important;
+      background:#fff!important;
+      border-radius:8px 8px 0 0!important;
+    }
+    #scl228Filters details.scl228-dd[open] .scl228-check{
+      display:flex!important;
+      min-height:28px!important;
+      align-items:center!important;
+    }
+    #scl228Filters .scl274-filter-actions button{
+      white-space:nowrap!important;
+    }
+    #scl228Filters .scl274-filter-search{
+      box-sizing:border-box!important;
+    }
+    @media(max-width:700px){
+      #scl228Filters details.scl228-dd[open]{
+        min-width:100%!important;
+        max-width:100%!important;
+        flex-basis:100%!important;
+      }
+    }
+    /* Same defensive fix for the billing-style filter blocks if/when they are enhanced/open. */
+    .scl256-filter[open]{z-index:4000!important;overflow:visible!important;position:relative!important}
+    .scl256-filter[open] .scl256-menu{z-index:4001!important;max-height:330px!important;overflow:auto!important}
+  `;
+  if(!document.getElementById('scl274bCss'))document.head.appendChild(css);
+  console.log('[v274b] filter menu visibility fix loaded');
+})();
+</script>
 </body>
 </html>
