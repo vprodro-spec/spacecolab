@@ -30308,5 +30308,282 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   console.log('[v274b] filter menu visibility fix loaded');
 })();
 </script>
+
+<script id="scl274c-pharmaplus-scope-radio-ux">
+/* v274c — Pharmaplus scope UX simplification
+   Built on v274b. No business logic changes outside Pharmaplus scope UI/payload normalization.
+   UI principle:
+   - checked pharmacy = participates in central Pharmaplus campaign
+   - unchecked pharmacy = shows HQ monthly theme
+   - legacy except mode is translated internally and never shown in the UI. */
+(function(){
+  if(window.__SCL274C_PHARMAPLUS_SCOPE_RADIO_UX__)return;
+  window.__SCL274C_PHARMAPLUS_SCOPE_RADIO_UX__=true;
+
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});}
+  function byId(id){return document.getElementById(id);}
+  function boxes(){return Array.from(document.querySelectorAll('#scl231ScopeList input[type="checkbox"][data-pharmacy-id]'));}
+  function allIds(){return boxes().map(function(b){return String(b.dataset.pharmacyId||'');}).filter(Boolean);}
+  function checkedIds(){return boxes().filter(function(b){return b.checked;}).map(function(b){return String(b.dataset.pharmacyId||'');}).filter(Boolean);}
+  function setChecked(ids){var set=new Set((ids||[]).map(String));boxes().forEach(function(b){b.checked=set.has(String(b.dataset.pharmacyId||''));});}
+  function selectedRadio(){return document.querySelector('input[name="scl274cScopeModeRadio"]:checked')?.value || 'all';}
+  function hasMainCampaignInEditor(){
+    var ids=['scl231Type','scl231Title','scl231Supplier','scl231Benefit','scl231Products','scl231ShelfInstructions','scl231Materials'];
+    return ids.some(function(id){var el=byId(id);return !!(el&&String(el.value||'').trim());});
+  }
+  function section(){return byId('scl231ScopeList')?.closest?.('.scl231-section')||null;}
+
+  function ensureUi(){
+    var sec=section(); var list=byId('scl231ScopeList'); var sel=byId('scl231ScopeMode');
+    if(!sec||!list||!sel)return;
+
+    var title=sec.querySelector('.scl231-section-title');
+    if(title)title.textContent='Συμμετοχή στην κεντρική Pharmaplus ενέργεια';
+
+    // Hide old technical select but keep it as the storage bridge for the existing save logic.
+    var oldLabel=sel.closest('label');
+    if(oldLabel){oldLabel.classList.add('scl274c-hidden-legacy-scope'); oldLabel.style.display='none';}
+    sel.setAttribute('aria-hidden','true');
+    sel.tabIndex=-1;
+
+    // Remove/hide old v274 hint if present; it refers to the old dropdown behavior.
+    var oldHint=byId('scl274ScopeHint');
+    if(oldHint)oldHint.style.display='none';
+
+    var help=sec.querySelector(':scope > .scl231-help');
+    if(help){
+      help.innerHTML='<strong>Τα επιλεγμένα φαρμακεία συμμετέχουν στην κεντρική Pharmaplus ενέργεια.</strong><br>Όσα δεν είναι επιλεγμένα θα εμφανίσουν το HQ μηνιαίο θέμα του μήνα.';
+    }
+
+    var ui=byId('scl274cScopeUI');
+    if(!ui){
+      ui=document.createElement('div');
+      ui.id='scl274cScopeUI';
+      ui.className='scl274c-scope-ui';
+      ui.innerHTML=''+
+        '<label class="scl274c-scope-card" data-scope-card="all">'+
+          '<input type="radio" name="scl274cScopeModeRadio" value="all">'+
+          '<span><strong>Όλα τα φαρμακεία συμμετέχουν</strong><small>Όλα θα εμφανίσουν την κεντρική Pharmaplus ενέργεια.</small></span>'+
+        '</label>'+
+        '<label class="scl274c-scope-card" data-scope-card="custom">'+
+          '<input type="radio" name="scl274cScopeModeRadio" value="custom">'+
+          '<span><strong>Προσαρμογή συμμετοχής ανά φαρμακείο</strong><small>Όλα είναι αρχικά επιλεγμένα. Ξετίκαρε μόνο όσα δεν θα συμμετέχουν· αυτά θα εμφανίσουν το HQ μηνιαίο θέμα.</small></span>'+
+        '</label>'+
+        '<div id="scl274cScopeChecklistHead" class="scl274c-checklist-head">'+
+          '<div><strong>Συμμετέχοντα φαρμακεία</strong><span>Checked = κεντρική ενέργεια · Unchecked = HQ μηνιαίο θέμα</span></div>'+
+          '<div class="scl274c-actions"><button type="button" id="scl274cSelectAll">Επιλογή όλων</button><button type="button" id="scl274cClearAll">Καμία συμμετοχή</button></div>'+
+        '</div>'+
+        '<div id="scl274cScopeSummary" class="scl274c-summary"></div>';
+      list.parentNode.insertBefore(ui,list);
+
+      ui.addEventListener('change',function(e){
+        if(e.target&&e.target.name==='scl274cScopeModeRadio'){
+          if(e.target.value==='all')applyMode('all');
+          else applyMode('custom', {defaultAll:true});
+        }
+      });
+      ui.querySelector('#scl274cSelectAll')?.addEventListener('click',function(){setChecked(allIds());applyMode('custom');});
+      ui.querySelector('#scl274cClearAll')?.addEventListener('click',function(){setChecked([]);applyMode('custom');});
+    }
+
+    if(!list.dataset.scl274cBound){
+      list.dataset.scl274cBound='1';
+      list.addEventListener('change',function(e){
+        if(e.target&&e.target.matches('input[type="checkbox"][data-pharmacy-id]')){
+          applyMode('custom');
+        }
+      });
+    }
+  }
+
+  function translateLegacyInitialState(){
+    var sel=byId('scl231ScopeMode'); if(!sel)return;
+    var mode=sel.value||'all';
+    var ids=checkedIds(); var all=allIds();
+    if(mode==='except'){
+      // Old data means checked ids were excluded. New UI means checked ids participate.
+      var excluded=new Set(ids.map(String));
+      var participants=all.filter(function(id){return !excluded.has(String(id));});
+      setChecked(participants);
+      sel.value='only';
+      sel.dataset.scl274cWasLegacyExcept='1';
+    }
+  }
+
+  function applyMode(mode, opts){
+    ensureUi();
+    var sel=byId('scl231ScopeMode'); var list=byId('scl231ScopeList'); var head=byId('scl274cScopeChecklistHead');
+    if(!sel||!list)return;
+    if(mode==='all'){
+      sel.value='all';
+      var r= document.querySelector('input[name="scl274cScopeModeRadio"][value="all"]'); if(r)r.checked=true;
+      setChecked(allIds());
+      list.classList.add('scl274c-hidden-list');
+      if(head)head.style.display='none';
+    }else{
+      sel.value='only';
+      var r2= document.querySelector('input[name="scl274cScopeModeRadio"][value="custom"]'); if(r2)r2.checked=true;
+      if(opts&&opts.defaultAll&&checkedIds().length===0)setChecked(allIds());
+      list.classList.remove('scl274c-hidden-list');
+      if(head)head.style.display='flex';
+    }
+    updateCards();
+    updateSummary();
+  }
+
+  function syncFromHidden(){
+    ensureUi();
+    var sel=byId('scl231ScopeMode'); if(!sel)return;
+    translateLegacyInitialState();
+    var mode=sel.value||'all';
+    if(mode==='all')applyMode('all');
+    else applyMode('custom');
+  }
+
+  function updateCards(){
+    var mode=selectedRadio();
+    document.querySelectorAll('.scl274c-scope-card').forEach(function(card){
+      card.classList.toggle('active', card.getAttribute('data-scope-card')===mode);
+    });
+  }
+
+  function updateSummary(){
+    var host=byId('scl274cScopeSummary'); if(!host)return;
+    var total=allIds().length; var chosen=checkedIds().length; var mode=selectedRadio();
+    var hasMain=hasMainCampaignInEditor();
+    var hqTheme=Math.max(0,total-chosen);
+    if(!hasMain){
+      host.innerHTML='<strong>Δεν έχει οριστεί κεντρική ενέργεια ακόμη.</strong> Αν μείνει έτσι, τα φαρμακεία θα εμφανίσουν το HQ μηνιαίο θέμα ή “Προσεχώς”.';
+      return;
+    }
+    if(mode==='all'){
+      host.innerHTML='<strong>Συμμετέχουν στην κεντρική ενέργεια:</strong> '+total+'/'+total+' <span>· HQ μηνιαίο θέμα: 0/'+total+'</span>';
+    }else{
+      host.innerHTML='<strong>Συμμετέχουν στην κεντρική ενέργεια:</strong> '+chosen+'/'+total+' <span>· HQ μηνιαίο θέμα: '+hqTheme+'/'+total+'</span>';
+    }
+  }
+
+  function patchScopeText(){
+    if(window.__SCL274C_SCOPE_TEXT_PATCHED__)return;
+    window.__SCL274C_SCOPE_TEXT_PATCHED__=true;
+    var old = null;
+    try{ old = scl231ScopeText; }catch(e){}
+    var fn=function(c){
+      var mode=(c&&c.scope_mode)||'all';
+      var ids=Array.isArray(c&&c.scope_pharmacy_ids)?c.scope_pharmacy_ids:[];
+      var total=0; try{ total=scl231Pharmacies().length||0; }catch(e){}
+      if(mode==='all')return 'Όλα συμμετέχουν';
+      if(mode==='only')return 'Συμμετέχουν '+ids.length+(total?'/'+total:'');
+      if(mode==='except'){
+        var n=total?Math.max(0,total-ids.length):ids.length;
+        return 'Συμμετέχουν '+n+(total?'/'+total:'');
+      }
+      return old?old(c):'Όλα συμμετέχουν';
+    };
+    window.scl231ScopeText=fn;
+    try{scl231ScopeText=fn;}catch(e){}
+  }
+
+  function patchPayload(){
+    if(window.__SCL274C_PAYLOAD_PATCHED__)return;
+    var old=null; try{old=scl231Payload;}catch(e){}
+    if(typeof old!=='function')return;
+    window.__SCL274C_PAYLOAD_PATCHED__=true;
+    var fn=function(){
+      var p=old.apply(this,arguments)||{};
+      var mode=selectedRadio();
+      if(mode==='all'){
+        p.p_scope_mode='all';
+        p.p_scope_pharmacy_ids=[];
+      }else{
+        p.p_scope_mode='only';
+        p.p_scope_pharmacy_ids=checkedIds();
+      }
+      return p;
+    };
+    window.scl231Payload=fn;
+    try{scl231Payload=fn;}catch(e){}
+  }
+
+  function patchRenderScopeList(){
+    if(window.__SCL274C_RENDER_SCOPE_LIST_PATCHED__)return;
+    var old=null; try{old=scl231RenderScopeList;}catch(e){}
+    if(typeof old!=='function')return;
+    window.__SCL274C_RENDER_SCOPE_LIST_PATCHED__=true;
+    var fn=function(){
+      var r=old.apply(this,arguments);
+      setTimeout(syncFromHidden,0);
+      setTimeout(updateSummary,30);
+      return r;
+    };
+    window.scl231RenderScopeList=fn;
+    try{scl231RenderScopeList=fn;}catch(e){}
+  }
+
+  function patchOpenEditor(){
+    if(window.__SCL274C_OPEN_EDITOR_PATCHED__)return;
+    var old=null; try{old=scl231OpenEditor;}catch(e){}
+    if(typeof old!=='function')return;
+    window.__SCL274C_OPEN_EDITOR_PATCHED__=true;
+    var fn=function(){
+      var r=old.apply(this,arguments);
+      setTimeout(syncFromHidden,40);
+      setTimeout(syncFromHidden,160);
+      return r;
+    };
+    window.scl231OpenEditor=fn;
+    try{scl231OpenEditor=fn;}catch(e){}
+  }
+
+  function patchInputsForSummary(){
+    if(document.body.dataset.scl274cSummaryBound)return;
+    document.body.dataset.scl274cSummaryBound='1';
+    document.addEventListener('input',function(e){
+      if(e.target&&/^scl231(Type|Title|Supplier|Benefit|Products|ShelfInstructions|Materials)$/.test(e.target.id||'')){
+        setTimeout(updateSummary,0);
+      }
+    },true);
+  }
+
+  function boot(){
+    patchScopeText();
+    patchPayload();
+    patchRenderScopeList();
+    patchOpenEditor();
+    ensureUi();
+    syncFromHidden();
+    patchInputsForSummary();
+  }
+
+  var css=document.createElement('style');
+  css.id='scl274cCss';
+  css.textContent=`
+    .scl274c-hidden-legacy-scope{display:none!important}
+    .scl274c-scope-ui{display:grid;gap:8px;margin:10px 0 8px}
+    .scl274c-scope-card{display:flex;gap:10px;align-items:flex-start;border:1px solid #d9e1ea;background:#fff;border-radius:12px;padding:10px 11px;cursor:pointer;line-height:1.25}
+    .scl274c-scope-card.active{border-color:#1f66ff;background:#edf4ff;box-shadow:0 2px 8px rgba(31,102,255,.08)}
+    .scl274c-scope-card input{margin-top:3px;transform:scale(1.05)}
+    .scl274c-scope-card strong{display:block;color:#14213d;font-size:13px;margin-bottom:3px}
+    .scl274c-scope-card small{display:block;color:#637083;font-size:11px;font-weight:750}
+    .scl274c-checklist-head{display:none;align-items:center;justify-content:space-between;gap:8px;border:1px dashed #c8ddff;background:#fbfcff;border-radius:10px;padding:9px 10px;margin:2px 0 0}
+    .scl274c-checklist-head span{display:block;color:#637083;font-size:10px;margin-top:2px;font-weight:700}
+    .scl274c-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+    .scl274c-actions button{border:1px solid #c9dafd;background:#edf4ff;color:#174dc2;border-radius:999px;padding:5px 8px;font-size:10px;font-weight:900;cursor:pointer}
+    #scl231ScopeList.scl274c-hidden-list{display:none!important}
+    #scl231ScopeList{margin-top:8px}
+    #scl231ScopeList .scl231-scope-item{border-radius:9px;padding:7px 8px}
+    #scl231ScopeList .scl231-scope-item input{transform:scale(1.08)}
+    .scl274c-summary{border:1px solid #e4eaf2;background:#fff;border-radius:10px;padding:9px 10px;color:#40506a;font-size:11px;font-weight:800;margin-top:3px}
+    .scl274c-summary strong{color:#14213d}.scl274c-summary span{color:#637083}
+  `;
+  if(!document.getElementById('scl274cCss'))document.head.appendChild(css);
+
+  boot();
+  setTimeout(boot,300);
+  setTimeout(boot,900);
+  setTimeout(boot,2000);
+  console.log('[v274c] Pharmaplus scope radio/checklist UX loaded');
+})();
+</script>
 </body>
 </html>
