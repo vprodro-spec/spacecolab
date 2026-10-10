@@ -30875,5 +30875,288 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   console.log('[v275] delete validation / cleanup loaded');
 })();
 </script>
+
+<script id="scl276-live-changes-billing-dedupe-fix">
+/* v276 — live Changes refresh + billing raw-deal dedupe
+   Built on v275.
+   - Pharmaplus rows in Changes are rebuilt from the current SCL231 campaign state only, not stale operational rows.
+   - While editing/saving Pharmaplus scope, a temporary overlay is used so old/new rows do not coexist until browser refresh.
+   - Billing table is post-validated: raw-deal rows are removed when a matching deal-object row exists, and duplicate deal rows are collapsed.
+   No fee formulas or local operational logic changed. */
+(function(){
+  if(window.__SCL276_LIVE_CHANGES_BILLING_FIX__)return;
+  window.__SCL276_LIVE_CHANGES_BILLING_FIX__=true;
+
+  function clean(v){
+    if(v===null||v===undefined)return '';
+    if(typeof v==='object')return '';
+    var s=String(v).replace(/\s+/g,' ').trim();
+    if(!s||s==='[object Object]'||s==='null'||s==='undefined'||s==='—'||s==='-')return '';
+    return s;
+  }
+  function low(v){return clean(v).toLowerCase();}
+  function isHQ(){try{return typeof sclMode==='function'&&sclMode()==='hq';}catch(e){return false;}}
+  function months(){try{if(typeof SCL212_MONTHS!=='undefined'&&Array.isArray(SCL212_MONTHS))return SCL212_MONTHS;}catch(e){} return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}
+  function phs(){try{if(typeof scl212Pharmacies==='function')return scl212Pharmacies()||[];}catch(e){} try{return (window.SCL212&&SCL212.pharmacies)||[];}catch(e){} return [];}
+  function setupFor(id){
+    var sid=String(id||''), arr=[];
+    try{arr=(window.SCL212&&Array.isArray(SCL212.setup))?SCL212.setup:[];}catch(e){}
+    return arr.find(function(s){return String(s.pharmacy_id||s.id||'')===sid;})||null;
+  }
+  function isLockedPharmacy(p){
+    if(!p)return false;
+    var s=p.setup||setupFor(p.id||p.pharmacy_id);
+    if(s&&Object.prototype.hasOwnProperty.call(s,'setup_locked'))return !!s.setup_locked;
+    return true;
+  }
+  function phId(p){return String(p&&((p.id!==undefined?p.id:p.pharmacy_id)||p.pharmacyId||''));}
+  function phName(p){return clean(p&&p.name)||clean(p&&p.pharmacy_name)||'Φαρμακείο';}
+  function hasMain(c){return !!(c&&(clean(c.title)||clean(c.supplier)||clean(c.campaign_type)||clean(c.company_benefit)||clean(c.products_text)||clean(c.shelf_instructions)||clean(c.shelf_1)||clean(c.shelf_2)||clean(c.shelf_3)||clean(c.shelf_4)));}
+  function hasTheme(c){return !!(c&&(clean(c.fallback_title)||clean(c.fallback_description)||clean(c.fallback_products_text)||clean(c.fallback_instructions)||clean(c.display_kind)==='theme'));}
+  function mainTitle(c){return clean(c&&c.title)||clean(c&&c.supplier)||clean(c&&c.display_title)||'Κεντρική Pharmaplus ενέργεια';}
+  function themeTitle(c){return clean(c&&c.fallback_title)||clean(c&&c.display_title)||'HQ μηνιαίο θέμα';}
+  function pharmacyInScope(c,pharmacyId){
+    var mode=clean(c&&c.scope_mode)||'all';
+    var ids=(c&&Array.isArray(c.scope_pharmacy_ids)?c.scope_pharmacy_ids:[]).map(String);
+    if(mode==='all')return true;
+    if(mode==='only')return ids.includes(String(pharmacyId));
+    if(mode==='except')return !ids.includes(String(pharmacyId));
+    return true;
+  }
+  function payloadToCampaign(p){
+    if(!p)return null;
+    var m=Number(p.p_month);
+    if(!Number.isFinite(m))return null;
+    return {
+      __scl276_overlay:true,
+      month:m,
+      campaign_type:p.p_campaign_type,
+      title:p.p_title,
+      supplier:p.p_supplier,
+      company_benefit:p.p_company_benefit,
+      products_text:p.p_products_text,
+      shelf_instructions:p.p_shelf_instructions,
+      shelf_1:p.p_shelf_1,
+      shelf_2:p.p_shelf_2,
+      shelf_3:p.p_shelf_3,
+      shelf_4:p.p_shelf_4,
+      fallback_title:p.p_fallback_title,
+      fallback_description:p.p_fallback_description,
+      fallback_products_text:p.p_fallback_products_text,
+      fallback_instructions:p.p_fallback_instructions,
+      scope_mode:p.p_scope_mode||'all',
+      scope_pharmacy_ids:Array.isArray(p.p_scope_pharmacy_ids)?p.p_scope_pharmacy_ids:[]
+    };
+  }
+  function currentPayloadCampaign(){
+    try{if(typeof scl231Payload==='function')return payloadToCampaign(scl231Payload());}catch(e){}
+    return null;
+  }
+  function campaignList(){
+    var arr=[];
+    try{if(typeof SCL231!=='undefined'&&Array.isArray(SCL231.campaigns))arr=SCL231.campaigns.slice();}catch(e){}
+    // During a save/scope edit, overlay the editor month so stale saved rows do not coexist with the new scope.
+    var overlay=window.SCL276_PENDING_PP_CAMPAIGN||null;
+    if(overlay&&Number.isFinite(Number(overlay.month))){
+      arr=arr.filter(function(c){return Number(c&&c.month)!==Number(overlay.month);});
+      arr.push(overlay);
+    }
+    // One campaign record per month. Last wins, and no stale derived operational rows are used here.
+    var byMonth={};
+    arr.forEach(function(c){var m=Number(c&&c.month);if(Number.isFinite(m)&&m>=0&&m<=11)byMonth[m]=c;});
+    return Object.keys(byMonth).map(function(k){return byMonth[k];});
+  }
+  function isPPRow(r){
+    var s=[r&&r.position_id,r&&r.position_name,r&&r.position_type,r&&r.final_type,r&&r.type,r&&r.content_change_reason,r&&r.change_reason].map(low).join('|');
+    return s.indexOf('pharmaplus')>=0 || String(r&&r.__scl273_exception)==='true' || String(r&&r.__scl274_pharmaplus)==='true' || String(r&&r.__scl276_pharmaplus)==='true';
+  }
+  function ppRows(){
+    var out=[], ml=months(), list=phs().filter(isLockedPharmacy);
+    campaignList().forEach(function(c){
+      var m=Number(c.month); if(!Number.isFinite(m)||m<0||m>11)return;
+      var main=hasMain(c), theme=hasTheme(c);
+      if(!main&&!theme)return;
+      list.forEach(function(p){
+        var pid=phId(p); if(!pid)return;
+        var inMain=main&&pharmacyInScope(c,pid);
+        var reason='',title='',note='';
+        if(inMain){
+          reason='pharmaplus_main_campaign';
+          title=mainTitle(c);
+          note='Το φαρμακείο συμμετέχει στην κεντρικά συμφωνημένη Pharmaplus ενέργεια: '+title+'.';
+        }else if(theme){
+          reason='pharmaplus_hq_monthly_theme';
+          title=themeTitle(c);
+          note=main?('Δεν συμμετέχει στην κεντρικά συμφωνημένη ενέργεια «'+mainTitle(c)+'». Στήνουμε HQ μηνιαίο θέμα: '+title+'.'):
+                    ('Δεν υπάρχει κεντρική Pharmaplus ενέργεια για τον μήνα. Στήνουμε HQ μηνιαίο θέμα: '+title+'.');
+        }else{return;}
+        out.push({
+          __scl276_pharmaplus:true,
+          pharmacy_id:pid,
+          pharmacy_name:phName(p),
+          month:m,
+          month_label:ml[m],
+          position_id:'pharmaplus',
+          position_name:'Pharmaplus',
+          position_type:'pharmaplus',
+          position_orientation:'HQ',
+          final_type:'pharmaplus',
+          final_title:title,
+          content_change_required:true,
+          content_change_reason:reason,
+          billing_change_applies:false,
+          billing_reason:'Pharmaplus · no billing',
+          note:note
+        });
+      });
+    });
+    return out;
+  }
+  function rowKey(r){return [r&&r.pharmacy_id||r&&r.pharmacy_name,r&&r.position_id||r&&r.position_name,Number(r&&r.month),r&&r.content_change_reason,r&&r.final_title].join('|').toLowerCase();}
+
+  var baseVisible=window.scl212VisibleChanges;
+  window.scl212VisibleChanges=function(){
+    var base=[];
+    try{base=typeof baseVisible==='function'?(baseVisible.apply(this,arguments)||[]):[];}catch(e){base=[];}
+    base=base.filter(function(r){return !isPPRow(r);});
+    var out=base.slice(), seen=new Set(out.map(rowKey));
+    ppRows().forEach(function(r){var k=rowKey(r);if(!seen.has(k)){seen.add(k);out.push(r);}});
+    return out;
+  };
+  try{scl212VisibleChanges=window.scl212VisibleChanges;}catch(e){}
+
+  function markChangesDirty(){
+    try{window.__scl270ForceChanges=true;window.__scl270ChangeLastSig='';}catch(e){}
+    try{if(window.SCL263_CHANGES_STATE){SCL263_CHANGES_STATE.limit=SCL263_CHANGES_STATE.pageSize||120;}}catch(e){}
+  }
+  function changesActive(){try{return (window.SCL212&&SCL212.tab==='changes')||document.getElementById('scl212Page-changes')?.classList.contains('active');}catch(e){return false;}}
+  function renderChanges(){
+    markChangesDirty();
+    try{if(changesActive()&&typeof window.scl270RenderChanges==='function')return window.scl270RenderChanges();}catch(e){}
+    try{if(changesActive()&&typeof window.scl212RenderChanges==='function')return window.scl212RenderChanges();}catch(e){}
+  }
+  async function reloadCampaigns(){try{if(typeof scl231LoadCampaigns==='function')await scl231LoadCampaigns();}catch(e){console.warn('[v276] reload campaigns failed',e);}}
+  async function reloadDashboard(){
+    try{
+      if(window.SCL263_CHANGES_STATE)SCL263_CHANGES_STATE.manualRefresh=true;
+      if(typeof scl212Load==='function')await scl212Load();
+    }catch(e){console.warn('[v276] reload dashboard failed',e);}
+    finally{try{if(window.SCL263_CHANGES_STATE)SCL263_CHANGES_STATE.manualRefresh=false;}catch(e){}}
+  }
+  async function hardRefreshViews(opts){
+    opts=opts||{};
+    if(opts.reloadCampaigns)await reloadCampaigns();
+    if(opts.reloadDashboard)await reloadDashboard();
+    renderChanges();
+    try{if(typeof window.scl271RenderBilling==='function')window.scl271RenderBilling();}catch(e){}
+    setTimeout(renderChanges,80);
+    setTimeout(function(){try{if(typeof window.scl271RenderBilling==='function')window.scl271RenderBilling();}catch(e){}},120);
+  }
+  window.scl276HardRefreshViews=hardRefreshViews;
+
+  function bindPharmaplusEditor(){
+    var save=document.getElementById('scl231SaveCampaign');
+    if(save&&!save.dataset.scl276Bound){
+      save.dataset.scl276Bound='1';
+      save.addEventListener('click',function(){
+        window.SCL276_PENDING_PP_CAMPAIGN=currentPayloadCampaign();
+        renderChanges();
+        setTimeout(function(){hardRefreshViews({reloadCampaigns:true});},700);
+        setTimeout(function(){hardRefreshViews({reloadCampaigns:true});window.SCL276_PENDING_PP_CAMPAIGN=null;renderChanges();},1700);
+      },true);
+    }
+    var list=document.getElementById('scl231ScopeList');
+    if(list&&!list.dataset.scl276Bound){
+      list.dataset.scl276Bound='1';
+      list.addEventListener('change',function(){
+        window.SCL276_PENDING_PP_CAMPAIGN=currentPayloadCampaign();
+        renderChanges();
+      },true);
+    }
+    var del=document.getElementById('scl232DeleteCampaign');
+    if(del&&!del.dataset.scl276Bound){
+      del.dataset.scl276Bound='1';
+      del.addEventListener('click',function(){
+        window.SCL276_PENDING_PP_CAMPAIGN=null;
+        setTimeout(function(){hardRefreshViews({reloadCampaigns:true,reloadDashboard:true});},900);
+        setTimeout(function(){hardRefreshViews({reloadCampaigns:true,reloadDashboard:true});},2000);
+      },true);
+    }
+  }
+
+  function parseMoney(txt){
+    var s=String(txt||'').replace(/[^0-9,.-]/g,'').replace(/\./g,'').replace(',', '.');
+    var n=Number(s);return Number.isFinite(n)?n:0;
+  }
+  function rowInfo(tr){
+    var tds=Array.from(tr.children||[]);
+    if(tds.length<7)return null;
+    var catCell=tds[2], descCell=tds[3];
+    var pos=clean(catCell.querySelector('.scl251-sub')?.textContent||'');
+    var cat=clean((catCell.childNodes[0]&&catCell.childNodes[0].textContent)||catCell.textContent||'');
+    var source=clean(descCell.querySelector('.scl251-sub')?.textContent||'');
+    var desc=clean((descCell.childNodes[0]&&descCell.childNodes[0].textContent)||descCell.textContent||'');
+    return {tr:tr,month:clean(tds[0].textContent).replace('Ιστορικό','').trim(),pharmacy:clean(tds[1].textContent),category:cat,position:pos,description:desc,source:source,payer:clean(tds[5].textContent),amount:parseMoney(tds[6].textContent)};
+  }
+  function recomputeBillingFoot(){
+    var tbody=document.getElementById('scl212Billing'),foot=document.getElementById('scl251BillingFoot');if(!tbody||!foot)return;
+    var rows=Array.from(tbody.querySelectorAll('tr')).map(rowInfo).filter(Boolean);
+    var total=0,ph=0,sup=0;
+    rows.forEach(function(r){total+=r.amount;if(r.payer.indexOf('Supplier')>=0)sup+=r.amount;else ph+=r.amount;});
+    var money=function(x){return (Number(x)||0).toLocaleString('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2})+'€';};
+    var monthCount=0;try{monthCount=(window.SCL268&&SCL268.filters&&Array.isArray(SCL268.filters.months)&&SCL268.filters.months.length)||0;}catch(e){}
+    foot.innerHTML='<tr class="scl251-total-row"><td colspan="3"><strong>Σύνολο · '+(monthCount?monthCount+' μήνες':'όλοι οι μήνες')+' · '+rows.length+' γραμμές</strong></td><td colspan="3"><span>Φαρμακείο: '+money(ph)+'</span><span>Supplier: '+money(sup)+'</span></td><td style="text-align:right"><strong>'+money(total)+'</strong></td></tr>';
+  }
+  function cleanupBillingDeals(){
+    var tbody=document.getElementById('scl212Billing');if(!tbody)return;
+    var rows=Array.from(tbody.querySelectorAll('tr')).map(rowInfo).filter(Boolean);
+    var dealObjs=rows.filter(function(r){return r.source==='Deal object'&&/Deal/i.test(r.category);});
+    rows.forEach(function(r){
+      if(r.source!=='Raw deal')return;
+      var match=dealObjs.some(function(d){
+        if(d.month!==r.month||d.pharmacy!==r.pharmacy)return false;
+        if(d.position&&r.position&&d.position===r.position)return true;
+        if(d.description&&r.description&&d.description===r.description)return true;
+        return true; // confirmed Deal object is source of truth for that pharmacy/month.
+      });
+      if(match)r.tr.remove();
+    });
+    var seen={};
+    Array.from(tbody.querySelectorAll('tr')).map(rowInfo).filter(Boolean).forEach(function(r){
+      var k=[r.month,r.pharmacy,r.position,r.category,r.description,r.source,r.amount].join('|').toLowerCase();
+      if(seen[k])r.tr.remove();else seen[k]=1;
+    });
+    recomputeBillingFoot();
+  }
+  function wrapBillingRenderer(name){
+    var fn=window[name];
+    if(typeof fn!=='function'||fn.__scl276)return;
+    var wrapped=function(){var r=fn.apply(this,arguments);setTimeout(cleanupBillingDeals,0);setTimeout(cleanupBillingDeals,150);return r;};
+    wrapped.__scl276=true;window[name]=wrapped;try{eval(name+'=window[name]');}catch(e){}
+  }
+  ['scl271RenderBilling','scl268RenderBilling','scl256RenderBilling','scl212RenderBilling'].forEach(wrapBillingRenderer);
+
+  function bindGenericMutationRefresh(){
+    if(document.body.dataset.scl276MutationBound)return;
+    document.body.dataset.scl276MutationBound='1';
+    var selector='[data-delete-confirmed-deal],[data-confirm-preagreement],[data-save-neg-edit],[data-disable-deal],[data-disable-custom],[data-save-preagreement]';
+    document.addEventListener('click',function(e){
+      if(e.target&&e.target.closest&&e.target.closest(selector)){
+        setTimeout(function(){hardRefreshViews({reloadDashboard:true});},1000);
+        setTimeout(function(){hardRefreshViews({reloadDashboard:true});},2200);
+      }
+    },true);
+  }
+  function boot(){bindPharmaplusEditor();bindGenericMutationRefresh();cleanupBillingDeals();}
+  var oldOpen=null;try{oldOpen=scl231OpenEditor;}catch(e){}
+  if(typeof oldOpen==='function'&&!oldOpen.__scl276){
+    var open=function(){var r=oldOpen.apply(this,arguments);setTimeout(boot,0);setTimeout(boot,120);return r;};
+    open.__scl276=true;window.scl231OpenEditor=open;try{scl231OpenEditor=open;}catch(e){}
+  }
+  boot();setTimeout(boot,500);setTimeout(boot,1500);setTimeout(boot,3000);
+  console.log('[v276] live changes refresh + billing raw-deal dedupe loaded');
+})();
+</script>
+
 </body>
 </html>
