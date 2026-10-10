@@ -29747,7 +29747,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   function pharmacies(){try{if(typeof scl212Pharmacies==='function')return scl212Pharmacies()||[];}catch(e){} try{return (window.SCL212&&SCL212.pharmacies)||[];}catch(e){} return [];}
   function campaignRows(){
     var a=[];
-    try{if(window.SCL231&&Array.isArray(SCL231.campaigns))a=a.concat(SCL231.campaigns);}catch(e){}
+    try{if(typeof SCL231!=='undefined'&&Array.isArray(SCL231.campaigns))a=a.concat(SCL231.campaigns);}catch(e){}
     try{if(window.SCL234_CAMPAIGNS&&Array.isArray(SCL234_CAMPAIGNS))a=a.concat(SCL234_CAMPAIGNS);}catch(e){}
     try{if(window.SCL241&&Array.isArray(SCL241.rows))a=a.concat(SCL241.rows);}catch(e){}
     var seen=new Set(), out=[];
@@ -29913,6 +29913,311 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   var css=document.createElement('style');css.id='scl273Css';css.textContent='.scl273-notice{background:#fff7e6;border:.5px solid #f0cf8a;color:#6f4600;border-radius:10px;padding:10px 12px;margin:10px 0 12px;font-size:12px;font-weight:700;line-height:1.35}.scl212-pill.pharmaplus_theme_instead_of_main{background:#FCEBEB;color:#A32D2D}.scl263-pp-row .scl228-theme-cell .theme:after{content:" · HQ";color:#A32D2D;font-size:10px;margin-left:4px}';
   if(!document.getElementById('scl273Css'))document.head.appendChild(css);
   console.log('[v273] Pharmaplus theme popup + changes exception rows loaded');
+})();
+</script>
+
+
+
+<script id="scl274-pharmaplus-changes-filter-ux">
+/* v274 — Pharmaplus scope wording + full Pharmaplus monthly change types + filter UX
+   Built on v273. No billing changes.
+   - Scope wording clarifies that selected pharmacies participate in the central Pharmaplus campaign.
+   - Changes tab gets monthly Pharmaplus operational rows for BOTH central campaign and HQ monthly theme.
+   - Changes filters get better multi-select behavior: search, select visible, clear, close, outside-click/Esc close, basic shift-range support.
+*/
+(function(){
+  if(window.__SCL274_PHARMAPLUS_CHANGES_FILTER_UX__)return;
+  window.__SCL274_PHARMAPLUS_CHANGES_FILTER_UX__=true;
+
+  function clean(v){
+    if(v===null||v===undefined)return '';
+    if(typeof v==='object')return '';
+    var s=String(v).replace(/\s+/g,' ').trim();
+    if(!s||s==='[object Object]'||s==='null'||s==='undefined'||s==='—'||s==='-')return '';
+    return s;
+  }
+  function low(v){return clean(v).toLowerCase();}
+  function esc(v){
+    try{if(typeof scl212Esc==='function')return scl212Esc(v);}catch(e){}
+    try{if(typeof scl231Esc==='function')return scl231Esc(v);}catch(e){}
+    return String(v==null?'':v).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];});
+  }
+  function months(){try{if(typeof SCL212_MONTHS!=='undefined')return SCL212_MONTHS;}catch(e){} try{return scl231Months();}catch(e){} return ['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];}
+  function pharmacies(){try{if(typeof scl212Pharmacies==='function')return scl212Pharmacies()||[];}catch(e){} try{return (window.SCL212&&SCL212.pharmacies)||[];}catch(e){} return [];}
+  function setupFor(id){
+    var sid=String(id||'');
+    var arr=[]; try{arr=(window.SCL212&&Array.isArray(SCL212.setup))?SCL212.setup:[];}catch(e){}
+    return arr.find(function(s){return String(s.pharmacy_id||s.id||'')===sid;})||null;
+  }
+  function hasSetupLockField(s){return !!(s&&Object.prototype.hasOwnProperty.call(s,'setup_locked'));}
+  function isLockedPharmacy(p){
+    if(!p)return false;
+    if(p.setup&&hasSetupLockField(p.setup))return !!p.setup.setup_locked;
+    var s=setupFor(p.id||p.pharmacy_id);
+    if(hasSetupLockField(s))return !!s.setup_locked;
+    // If no explicit setup-lock field exists in older/test data, keep pharmacy visible.
+    return true;
+  }
+
+  function campaignRows(){
+    var a=[];
+    try{if(typeof SCL231!=='undefined'&&Array.isArray(SCL231.campaigns))a=a.concat(SCL231.campaigns);}catch(e){}
+    try{if(window.SCL234_CAMPAIGNS&&Array.isArray(SCL234_CAMPAIGNS))a=a.concat(SCL234_CAMPAIGNS);}catch(e){}
+    try{if(window.SCL241&&Array.isArray(SCL241.rows))a=a.concat(SCL241.rows);}catch(e){}
+    var seen=new Set(),out=[];
+    a.forEach(function(c){
+      if(!c)return;
+      var key=[Number(c.month),clean(c.id||c.campaign_id),clean(c.title),clean(c.fallback_title),clean(c.supplier),clean(c.display_kind)].join('|');
+      if(seen.has(key))return; seen.add(key); out.push(c);
+    });
+    return out;
+  }
+  function hasMain(c){return !!(c&&(clean(c.title)||clean(c.supplier)||clean(c.campaign_type)||clean(c.company_benefit)||clean(c.products_text)||clean(c.shelf_instructions)||clean(c.shelf_1)||clean(c.shelf_2)||clean(c.shelf_3)||clean(c.shelf_4)));}
+  function hasTheme(c){return !!(c&&(clean(c.fallback_title)||clean(c.fallback_description)||clean(c.fallback_products_text)||clean(c.fallback_instructions)||clean(c.display_kind)==='theme'));}
+  function mainTitle(c){return clean(c&&c.title)||clean(c&&c.supplier)||clean(c&&c.display_title)||'Κεντρική Pharmaplus ενέργεια';}
+  function themeTitle(c){return clean(c&&c.fallback_title)||clean(c&&c.display_title)||'HQ μηνιαίο θέμα';}
+  function pharmacyInScope(c,pharmacyId){
+    var mode=clean(c&&c.scope_mode)||'all';
+    var ids=(c&&Array.isArray(c.scope_pharmacy_ids)?c.scope_pharmacy_ids:[]).map(String);
+    if(mode==='all')return true;
+    if(mode==='only')return ids.includes(String(pharmacyId));
+    if(mode==='except')return !ids.includes(String(pharmacyId));
+    return true;
+  }
+  function phId(p){return String(p&&((p.id!==undefined?p.id:p.pharmacy_id)||p.pharmacyId||''));}
+  function phName(p){return clean(p&&p.name)||clean(p&&p.pharmacy_name)||'Φαρμακείο';}
+  function isPharmaplusRow(r){
+    var s=[r&&r.position_id,r&&r.position_name,r&&r.position_type,r&&r.final_type,r&&r.type,r&&r.content_change_reason,r&&r.change_reason].map(low).join('|');
+    return s.includes('pharmaplus') || String(r&&r.__scl273_exception)==='true' || String(r&&r.__scl274_pharmaplus)==='true';
+  }
+  function ppRows(){
+    var out=[];
+    var phs=pharmacies().filter(isLockedPharmacy);
+    var ml=months();
+    campaignRows().forEach(function(c){
+      var m=Number(c.month); if(!Number.isFinite(m)||m<0||m>11)return;
+      var main=hasMain(c), theme=hasTheme(c);
+      if(!main&&!theme)return; // Προσεχώς is a planning gap, not an operational change.
+      phs.forEach(function(p){
+        var pid=phId(p); if(!pid)return;
+        var inMain=main&&pharmacyInScope(c,pid);
+        var reason='',title='',note='';
+        if(inMain){
+          reason='pharmaplus_main_campaign';
+          title=mainTitle(c);
+          note='Το φαρμακείο συμμετέχει στην κεντρικά συμφωνημένη Pharmaplus ενέργεια: '+title+'.';
+        }else if(theme){
+          reason='pharmaplus_hq_monthly_theme';
+          title=themeTitle(c);
+          note=main?('Δεν συμμετέχει στην κεντρικά συμφωνημένη ενέργεια «'+mainTitle(c)+'». Στήνουμε HQ μηνιαίο θέμα: '+title+'.'):
+                    ('Δεν υπάρχει κεντρική Pharmaplus ενέργεια για τον μήνα. Στήνουμε HQ μηνιαίο θέμα: '+title+'.');
+        }else{
+          return;
+        }
+        out.push({
+          __scl274_pharmaplus:true,
+          pharmacy_id:pid,
+          pharmacy_name:phName(p),
+          month:m,
+          month_label:ml[m],
+          position_id:'pharmaplus',
+          position_name:'Pharmaplus',
+          position_type:'pharmaplus',
+          position_orientation:'HQ',
+          final_type:'pharmaplus',
+          final_title:title,
+          content_change_required:true,
+          content_change_reason:reason,
+          billing_change_applies:false,
+          billing_reason:'Pharmaplus · no billing',
+          note:note
+        });
+      });
+    });
+    return out;
+  }
+  function rowKey(r){return [r&&r.pharmacy_id||r&&r.pharmacy_name,r&&r.position_id||r&&r.position_name,Number(r&&r.month),r&&r.content_change_reason,r&&r.final_title].join('|').toLowerCase();}
+
+  const prevVisible=typeof scl212VisibleChanges==='function'?scl212VisibleChanges:null;
+  if(prevVisible&&!prevVisible.__scl274){
+    window.scl274OriginalVisibleChanges=prevVisible;
+    window.scl212VisibleChanges=function(){
+      var base=[]; try{base=prevVisible.apply(this,arguments)||[];}catch(e){base=[];}
+      // Rebuild Pharmaplus operational rows centrally so v273 exception-only rows do not duplicate or conflict.
+      base=base.filter(function(r){return !isPharmaplusRow(r);});
+      var out=base.slice();
+      var seen=new Set(out.map(rowKey));
+      ppRows().forEach(function(r){var k=rowKey(r); if(!seen.has(k)){seen.add(k); out.push(r);}});
+      return out;
+    };
+    window.scl212VisibleChanges.__scl274=true;
+    try{scl212VisibleChanges=window.scl212VisibleChanges;}catch(e){}
+  }
+
+  // Make the Pharmaplus scope editor clear: selected pharmacies participate in the central campaign.
+  function patchScopeWording(){
+    var section=document.getElementById('scl231ScopeList')?.closest?.('.scl231-section');
+    if(section){
+      var title=section.querySelector('.scl231-section-title');
+      if(title)title.textContent='Συμμετοχή φαρμακείων στην κεντρική Pharmaplus ενέργεια';
+      var help=section.querySelector('.scl231-help');
+      if(help)help.innerHTML='<strong>Τα επιλεγμένα φαρμακεία συμμετέχουν στην κεντρική Pharmaplus ενέργεια.</strong><br>Όσα δεν συμμετέχουν θα εμφανίσουν το HQ μηνιαίο θέμα του μήνα και δεν θα εμφανίσουν την κεντρική ενέργεια.';
+      var label=section.querySelector('label');
+      if(label&&label.childNodes&&label.childNodes[0])label.childNodes[0].nodeValue='Ποιοι συμμετέχουν: ';
+    }
+    var sel=document.getElementById('scl231ScopeMode');
+    if(sel){
+      var labels={
+        all:'Όλα τα φαρμακεία συμμετέχουν',
+        only:'Συμμετέχουν μόνο τα επιλεγμένα',
+        except:'Legacy: όλα συμμετέχουν εκτός από τα επιλεγμένα'
+      };
+      Array.from(sel.options).forEach(function(o){if(labels[o.value])o.textContent=labels[o.value];});
+      var legacy=sel.querySelector('option[value="except"]');
+      if(legacy)legacy.title='Παλαιό mode εξαίρεσης. Προτίμησε “Συμμετέχουν μόνο τα επιλεγμένα” για καθαρότερη διαχείριση.';
+    }
+    var host=document.getElementById('scl231ScopeList');
+    if(host&&!document.getElementById('scl274ScopeHint')){
+      var hint=document.createElement('div');
+      hint.id='scl274ScopeHint';
+      hint.className='scl231-help scl274-scope-hint';
+      hint.innerHTML='Τα checkbox σημαίνουν <strong>συμμετέχει στην κεντρική ενέργεια</strong>. Όσα φαρμακεία δεν συμμετέχουν θα πάρουν HQ μηνιαίο θέμα.';
+      host.insertAdjacentElement('beforebegin',hint);
+    }
+  }
+  try{
+    if(typeof scl231ScopeText==='function'){
+      window.scl274OriginalScopeText=scl231ScopeText;
+      window.scl231ScopeText=function(c){
+        var mode=c&&c.scope_mode||'all',ids=(c&&c.scope_pharmacy_ids)||[];
+        if(mode==='all')return 'Όλα συμμετέχουν';
+        if(mode==='only')return 'Συμμετέχουν '+ids.length;
+        if(mode==='except')return 'Εξαιρούνται '+ids.length;
+        return 'Όλα συμμετέχουν';
+      };
+      try{scl231ScopeText=window.scl231ScopeText;}catch(e){}
+    }
+  }catch(e){}
+  ['scl231OpenEditor','scl231RenderCards'].forEach(function(fn){
+    var old=window[fn];
+    if(typeof old==='function'&&!old.__scl274){
+      window[fn]=function(){var r=old.apply(this,arguments); setTimeout(patchScopeWording,0); setTimeout(patchScopeWording,80); return r;};
+      window[fn].__scl274=true;
+      try{eval(fn+'=window[fn]');}catch(e){}
+    }
+  });
+
+  // Better multi-select filter UX for Changes filters.
+  const groupByList={scl228Months:'months',scl228Types:'types',scl228Pharmacies:'pharmacies',scl228Orientations:'orientations',scl228Themes:'themes',scl228Changes:'changes'};
+  const labelByGroup={months:'Μήνες',types:'Είδη',pharmacies:'Φαρμακεία',orientations:'Orientation',themes:'Θέμα',changes:'Change type'};
+  function filterState(){return window.SCL263_CHANGES_STATE||null;}
+  function closeAllFilters(except){
+    document.querySelectorAll('#scl228Filters details.scl228-dd,.scl256-filter').forEach(function(d){if(d!==except)d.open=false;});
+  }
+  function visibleCheckboxes(list){return Array.from(list.querySelectorAll('label.scl228-check')).filter(function(l){return l.style.display!=='none';}).map(function(l){return l.querySelector('input[data-scl263-group]');}).filter(Boolean);}
+  function applyGroup(group,values,mode){
+    var st=filterState(); if(!st||!st.filters||!st.filters[group])return;
+    st.userTouched=true;
+    if(mode==='clear')st.filters[group].clear();
+    if(mode==='set'){st.filters[group].clear(); values.forEach(function(v){st.filters[group].add(v);});}
+    if(mode==='add')values.forEach(function(v){st.filters[group].add(v);});
+    st.limit=st.pageSize||120;
+    if(typeof window.scl212RenderChanges==='function')window.scl212RenderChanges();
+  }
+  function enhanceOneDetails(details){
+    if(!details||details.dataset.scl274Enhanced)return;
+    details.dataset.scl274Enhanced='1';
+    var list=details.querySelector('.scl228-list'); if(!list)return;
+    var group=groupByList[list.id]; if(!group)return;
+    var tools=document.createElement('div');
+    tools.className='scl274-filter-tools';
+    tools.innerHTML='<input type="search" class="scl274-filter-search" placeholder="Αναζήτηση '+esc(labelByGroup[group]||'')+'"><div class="scl274-filter-actions"><button type="button" data-act="select">Επιλογή ορατών</button><button type="button" data-act="clear">Καθαρισμός</button><button type="button" data-act="close">Κλείσιμο</button></div>';
+    details.insertBefore(tools,list);
+    var search=tools.querySelector('.scl274-filter-search');
+    search.addEventListener('input',function(){
+      var q=low(search.value);
+      Array.from(list.querySelectorAll('label.scl228-check')).forEach(function(l){
+        var txt=low(l.textContent); l.style.display=(!q||txt.includes(q))?'flex':'none';
+      });
+    });
+    tools.addEventListener('click',function(e){
+      var btn=e.target.closest('button[data-act]'); if(!btn)return;
+      e.preventDefault(); e.stopPropagation();
+      var act=btn.dataset.act;
+      if(act==='close'){details.open=false;return;}
+      if(act==='clear'){applyGroup(group,[], 'clear');return;}
+      if(act==='select'){
+        var vals=visibleCheckboxes(list).map(function(cb){return cb.dataset.scl263Value;}).filter(Boolean);
+        applyGroup(group,vals,'set');
+      }
+    });
+  }
+  function enhanceFilters(){
+    document.querySelectorAll('#scl228Filters details.scl228-dd').forEach(enhanceOneDetails);
+  }
+  const previousRenderChanges=typeof scl212RenderChanges==='function'?scl212RenderChanges:null;
+  if(previousRenderChanges&&!previousRenderChanges.__scl274){
+    window.scl274OriginalRenderChanges=previousRenderChanges;
+    window.scl212RenderChanges=function(){
+      var openIds=Array.from(document.querySelectorAll('#scl228Filters details.scl228-dd[open] .scl228-list')).map(function(x){return x.id;});
+      var searches={};
+      document.querySelectorAll('#scl228Filters details.scl228-dd .scl228-list').forEach(function(list){
+        var s=list.parentElement&&list.parentElement.querySelector('.scl274-filter-search'); if(s)searches[list.id]=s.value;
+      });
+      var r=previousRenderChanges.apply(this,arguments);
+      setTimeout(function(){
+        enhanceFilters();
+        openIds.forEach(function(id){var list=document.getElementById(id); if(list&&list.closest('details'))list.closest('details').open=true;});
+        Object.keys(searches).forEach(function(id){var list=document.getElementById(id); if(list){var s=list.closest('details')?.querySelector('.scl274-filter-search'); if(s){s.value=searches[id]; s.dispatchEvent(new Event('input'));}}});
+      },0);
+      return r;
+    };
+    window.scl212RenderChanges.__scl274=true;
+    try{scl212RenderChanges=window.scl212RenderChanges;}catch(e){}
+  }
+  document.addEventListener('click',function(e){
+    var details=e.target.closest&&e.target.closest('#scl228Filters details.scl228-dd');
+    if(details&&e.target.tagName==='SUMMARY')setTimeout(function(){ if(details.open)closeAllFilters(details); },0);
+    if(!e.target.closest||(!e.target.closest('#scl228Filters')&&!e.target.closest('.scl256-filter')))closeAllFilters(null);
+  },true);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeAllFilters(null);},true);
+  var lastByGroup={};
+  document.addEventListener('click',function(e){
+    var cb=e.target&&e.target.matches&&e.target.matches('#scl228Filters input[data-scl263-group]')?e.target:null;
+    if(!cb)return;
+    var group=cb.dataset.scl263Group;
+    if(e.shiftKey&&lastByGroup[group]&&lastByGroup[group]!==cb){
+      var list=cb.closest('.scl228-list');
+      var boxes=visibleCheckboxes(list);
+      var a=boxes.indexOf(lastByGroup[group]),b=boxes.indexOf(cb);
+      if(a>-1&&b>-1){
+        setTimeout(function(){
+          var checked=cb.checked;
+          var vals=[];
+          boxes.slice(Math.min(a,b),Math.max(a,b)+1).forEach(function(x){x.checked=checked; vals.push(x.dataset.scl263Value);});
+          var st=filterState(); if(st&&st.filters&&st.filters[group]){
+            st.userTouched=true;
+            vals.forEach(function(v){ if(checked)st.filters[group].add(v); else st.filters[group].delete(v); });
+            st.limit=st.pageSize||120;
+            if(typeof window.scl212RenderChanges==='function')window.scl212RenderChanges();
+          }
+        },0);
+      }
+    }
+    lastByGroup[group]=cb;
+  },true);
+
+  const css=document.createElement('style'); css.id='scl274Css'; css.textContent=`
+    .scl274-scope-hint{background:#eef7ff;border:1px solid #c8ddff;border-radius:8px;padding:8px 10px;margin:7px 0 8px;color:#174d8f!important}
+    #scl231ScopeMode option[value="except"]{color:#8a5b00}
+    .scl212-pill.pharmaplus_main_campaign{background:#EAF3DE;color:#3B6D11}.scl212-pill.pharmaplus_hq_monthly_theme{background:#FAEEDA;color:#854F0B}
+    .scl274-filter-tools{border-bottom:1px solid #eee;padding:7px;background:#fbfcff;position:sticky;top:0;z-index:2}.scl274-filter-search{width:100%;border:1px solid #ddd;border-radius:8px;padding:7px 8px;font-size:12px;margin-bottom:6px}.scl274-filter-actions{display:flex;gap:5px;flex-wrap:wrap}.scl274-filter-actions button{border:1px solid #ddd;background:#fff;border-radius:8px;padding:5px 7px;font-size:11px;font-weight:800;cursor:pointer;color:#333}.scl274-filter-actions button:hover{background:#f5f5f3}.scl228-dd[open] .scl228-list{max-height:300px;overflow:auto}.scl228-dd[open]{z-index:20}.scl228-check{display:flex!important}
+  `;
+  if(!document.getElementById('scl274Css'))document.head.appendChild(css);
+
+  setTimeout(function(){patchScopeWording(); enhanceFilters(); if(typeof window.scl212RenderChanges==='function')window.scl212RenderChanges();},600);
+  setTimeout(function(){patchScopeWording(); enhanceFilters();},1800);
+  console.log('[v274] Pharmaplus full monthly changes + scope wording + filter UX loaded');
 })();
 </script>
 
