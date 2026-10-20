@@ -105,6 +105,10 @@ const C={
 
 
 
+
+
+
+
 <!-- v293 library integration -->
 
 
@@ -31898,7 +31902,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   }
   function showProgramme(r){
     const cfg=configFor(r.pharmacy_id);if(!cfg)return installDialog(r.id);
-    const y=scl212Year(),rows=R.hq.months.filter(x=>x.pharmacy_id===r.pharmacy_id&&Number(x.year)===y);
+    const y=scl212Year(),rows=(SCL212.months||R.hq.months).filter(x=>x.pharmacy_id===r.pharmacy_id&&Number(x.year||y)===y);
     const d=dialog('Πρόγραμμα — '+r.name,'<p>Έτος '+y+'</p>'+cfg.positions.filter(p=>!p.startsOn||p.startsOn.slice(0,4)<=String(y)).map(p=>'<section class="scl294-screen"><strong>'+html(C.title(p.ordinal))+'</strong> <code>'+html(p.playerCode)+'</code><div class="scl294-programme">'+Array.from({length:12},(_,m)=>{const row=rows.find(x=>(x.position_id===p.id||(p.id==='hq'&&x.position_id==='pharmaplus'))&&Number(x.month)===m);const label=!C.active(p,y,m)?(p.stopsOn&&p.stopsOn.slice(0,7)<=y+'-'+String(m+1).padStart(2,'0')?'Η θέση έχει παύσει':'Πριν την εγκατάσταση'):row?(root.scl293Title?.(row.final_title||row.basic_theme)||row.final_title||row.basic_theme||'Εκκρεμεί πρόγραμμα'):'Εκκρεμεί πρόγραμμα';return '<div><span>'+html(MONTHS[m])+'</span><strong>'+html(label)+'</strong></div>';}).join('')+'</div></section>').join(''),'programme');d.record=r;
   }
   function deactivateDialog(id){
@@ -31955,7 +31959,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     if(cfg){el('scl290DetailInstall')?.remove();const box=document.createElement('div');box.id='scl290DetailInstall';box.className='scl290-detail-install';box.innerHTML='<strong>Εγκατάσταση & αντιστοίχιση PRODUCT.ME</strong><div class="scl290-install-list">'+cfg.positions.map(p=>'<div><b>'+html(C.title(p.ordinal))+'</b><code>'+html(p.playerCode)+'</code><span>'+html(p.screenFormat==='vertical'?'Κάθετο · P':'Οριζόντιο · L')+(p.startsOn?' · από '+html(p.startsOn.slice(0,7)):'')+'</span></div>').join('')+'</div>';host.prepend(box);}return result;};
   R.renderRegistry=renderRegistry;R.installDialog=installDialog;R.exportPlayers=exportPlayers;R.refreshHQ=refreshHQ;
   const css=document.createElement('style');css.textContent=`
-.scl294-pharmacy{border:1px solid #d7e2dc;border-radius:10px;padding:18px;background:#fff;margin:12px 0}.scl294-pharmacy-info{display:flex;gap:12px;align-items:start}.scl294-pharmacy-info strong{font-size:16px}.scl294-pharmacy-info small{display:block;color:#53655b;margin-top:6px}.scl294-pharmacy .scl290-actions{margin-top:14px}.scl294-select input{width:18px!important;height:18px;margin-top:3px}.scl294-summary{margin:10px 0 6px}.scl294-state{display:inline-block;font-size:12px;color:#225a40;background:#edf5ef;padding:5px 9px;border-radius:5px}.scl294-screen{padding:16px;border:1px solid #d7e2dc;border-radius:9px;margin:14px 0}.scl294-screen-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}.scl294-screen code{overflow-wrap:anywhere}.scl294-old-directory{display:none!important}.scl294-danger{color:#9b2626!important;border-color:#c68e8e!important}.scl294-programme{margin-top:12px}.scl294-programme>div{display:grid;grid-template-columns:140px 1fr;gap:10px;border-top:1px solid #edf0ee;padding:8px}.scl294-programme strong{font-size:13px}.scl294-open{display:inline-block;padding:9px;text-decoration:none}.scl290-dialog details{margin-top:18px}.scl290-dialog summary{cursor:pointer}.scl290-dialog{max-height:90vh;overflow:auto}.scl290-fields input,.scl290-fields select{min-width:0;width:100%;box-sizing:border-box}#scl290RegistryRoot h2{margin:0;font-size:20px}@media(max-width:680px){.scl294-programme>div{grid-template-columns:95px 1fr}.scl294-pharmacy{padding:12px}.scl290-fields{grid-template-columns:1fr!important}.scl290-dialog{width:94vw!important}.scl290-toolbar input{width:100%}}
+.scl294-pharmacy{border:1px solid #d7e2dc;border-radius:10px;padding:18px;background:#fff;margin:12px 0}.scl294-pharmacy-info{display:flex;gap:12px;align-items:start}.scl294-pharmacy-info strong{font-size:16px}.scl294-pharmacy-info small{display:block;color:#53655b;margin-top:6px}.scl294-pharmacy .scl290-actions{margin-top:14px}.scl294-select input{width:18px!important;height:18px;margin-top:3px}.scl294-summary{margin:10px 0 6px}.scl294-state{display:inline-block;font-size:12px;color:#225a40;background:#edf5ef;padding:5px 9px;border-radius:5px}.scl294-screen{padding:16px;border:1px solid #d7e2dc;border-radius:9px;margin:14px 0}.scl294-screen-head{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}.scl294-screen code{overflow-wrap:anywhere}.scl294-old-directory,#scl284DemoPanel,#scl212Page-pharmacies>.scl212-sec,#scl212Page-pharmacies>#scl212Detail{display:none!important}.scl294-danger{color:#9b2626!important;border-color:#c68e8e!important}.scl294-programme{margin-top:12px}.scl294-programme>div{display:grid;grid-template-columns:140px 1fr;gap:10px;border-top:1px solid #edf0ee;padding:8px}.scl294-programme strong{font-size:13px}.scl294-open{display:inline-block;padding:9px;text-decoration:none}.scl290-dialog details{margin-top:18px}.scl290-dialog summary{cursor:pointer}.scl290-dialog{max-height:90vh;overflow:auto}.scl290-fields input,.scl290-fields select{min-width:0;width:100%;box-sizing:border-box}#scl290RegistryRoot h2{margin:0;font-size:20px}@media(max-width:680px){.scl294-programme>div{grid-template-columns:95px 1fr}.scl294-pharmacy{padding:12px}.scl290-fields{grid-template-columns:1fr!important}.scl290-dialog{width:94vw!important}.scl290-toolbar input{width:100%}}
 `;document.head.append(css);
   function boot(){if(isHQ())loadHQ(true).then(()=>{renderRegistry();return scl212Load();}).catch(()=>{});if(isPh())pharmacyUI();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
@@ -31963,6 +31967,8 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 
 
 </script>
+
+
 
 
 
