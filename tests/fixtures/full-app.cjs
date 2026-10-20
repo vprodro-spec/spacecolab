@@ -9,6 +9,7 @@ async function smoke(html,mode,fixtureState=null){
  const client={rpc:async(name,args)=>{calls.push(name);let data=[];
  if(name==='hq_get_all_data')data={pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]};
  if(name==='scl290_hq_data')data={api_version:290,setup:[],months:[],deals:[],registry:[],installations:[],snapshots:[],base:{pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]}};
+ if(name==='scl293_library')data={...JSON.parse(fs.readFileSync(root+'/data/library-seed.json','utf8')),media_events:[]};
  if(name==='scl292_finance')data={year:args.p_year,rows:[],requests:[],history:[]};
  if(name==='get_pharmacy_by_token')data=[{id:'fixture-pharmacy',name:'Fixture',token:'fixture-token'}];
  if(name==='scl290_get_pharmacy')data={pharmacy_id:'fixture-pharmacy',pharmacy_name:'Fixture',registry:{legacy:false},installation:{version:1,service_from:'2026-10-01',positions:[{id:'hq',ordinal:0,type:'hq',screenFormat:'vertical',startsOn:'2026-10-01'},{id:'base-1',ordinal:1,type:'base',title:'Θέση 1',screenFormat:'vertical',startsOn:'2026-10-01'}]},state_json:fixtureState,snapshot_revision:fixtureState?1:0,available_years:[2026]};

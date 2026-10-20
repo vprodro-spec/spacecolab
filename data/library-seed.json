@@ -1,0 +1,2316 @@
+{
+  "themes": [
+    {
+      "id": "theme-59727cc233724694",
+      "key": "Βήχας & Λαιμός",
+      "title": "Βήχας & Λαιμός",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Aboca Grintuss",
+              "topBrand": "Aboca Grintuss",
+              "products": [
+                "ABOCA GRINTUSS AD POLIRESIN SYRUP 180GR",
+                "ABOCA GRINTUSS PED POLIRESIN SYR 180GR",
+                "ABOCA GRINTUSS ADULT POLIRESIN 20TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Aboca Grintuss",
+              "topBrand": "Aboca Grintuss",
+              "products": [
+                "APIVITA PROPOLIS ΒΙΟΛΟΓ.SPRAY ΛΑΙΜΟΥ",
+                "PHYTOBISOLVON COMPLETE SYROP 180GR",
+                "APIVITA PASTILLES BLACKBERRY 45GR",
+                "VOX LYSOPAINE LEMON 18TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "ABOCA GRINTUSS AD POLIRESIN SYRUP 180GR",
+                "ABOCA GRINTUSS PED POLIRESIN SYR 180GR",
+                "APIVITA PROPOLIS ΒΙΟΛΟΓ.SPRAY ΛΑΙΜΟΥ",
+                "PHYTOBISOLVON COMPLETE SYROP 180GR",
+                "OCTONION SIROP ADULT 200ML",
+                "APIVITA PASTILLES BLACKBERRY 45GR",
+                "VOX LYSOPAINE LEMON 18TAB",
+                "PHARYNDOL SPRAY 30ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 0,
+          "variant": "variant-1"
+        },
+        {
+          "program": "OTC1",
+          "month": 8,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-c1c1c225d0672e51",
+      "key": "Κρυολόγημα & Αναπνοή",
+      "title": "Κρυολόγημα & Αναπνοή",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Otrivin",
+              "topBrand": "Otrivin",
+              "products": [
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "OTRIVIN PRESER NAS.SPR.0,05% 10ML+ΑΝΤ",
+                "OTRIVIN MOISTURISING Drops 0,05% 10ml",
+                "OTRIVIN MOISTURISING Drops 0,1% 10ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Otrivin",
+              "topBrand": "Otrivin",
+              "products": [
+                "MUCOSOLVAN SYR. 30MG/5ML ADULTS 200ML",
+                "SINECOD Sirop 200ml 7.5mg/5ml",
+                "PANADOL COLD&FLU (500+30)mg X18 F.C.Tabl",
+                "COMTREX COLD 20 F.C.TAB (500+30+2)MG"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "RONAL Nasal Spray 10ml",
+                "OTRIVIN PRESER NAS.SPR.0,05% 10ML+ΑΝΤ",
+                "NASASYN NASPR.SOL (0,1+5,0)% BTx1x10ML",
+                "MUCOSOLVAN SYR. 30MG/5ML ADULTS 200ML",
+                "SINECOD Sirop 200ml 7.5mg/5ml",
+                "PANADOL COLD&FLU (500+30)mg X18 F.C.Tabl",
+                "COMTREX COLD 20 F.C.TAB (500+30+2)MG"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 1,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-d90c069b889e1e97",
+      "key": "Αλλεργίες",
+      "title": "Αλλεργίες",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Kestine",
+              "topBrand": "Kestine",
+              "products": [
+                "KESTINE F.C.TAB 20MG/TAB ΒΤ x 10 (1x10)",
+                "KESTINE 30 F.C.TAB 20MG (3BLISTx10TAB)",
+                "KESTINE FLASH LING.TAB 10MG BTx30(3x10)"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Kestine",
+              "topBrand": "Kestine",
+              "products": [
+                "ZIRTEK 20 Tabl. 10mg",
+                "LIVOSTIN Coll. 4ml 0.5mg",
+                "SEPTOBORE Coll. 10ml",
+                "ALLEGRA F.C.TAB 120MG/TAB BTx20"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "ZIRTEK 20 Tabl. 10mg",
+                "KESTINE F.C.TAB 20MG/TAB ΒΤ x 10 (1x10)",
+                "KESTINE FLASH LING.TAB 10MG BTx30(3x10)",
+                "LIVOSTIN Coll. 4ml 0.5mg",
+                "LIVOSTIN Nasal Spray 10ml 0.05%",
+                "SEPTOBORE Coll. 10ml",
+                "VISPRING ADVANCE 0,5MG/ML BTx1x15ML",
+                "ALLEGRA F.C.TAB 120MG/TAB BTx20"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 2,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-e8e6d6c51dae1da9",
+      "key": "Πέψη",
+      "title": "Πέψη",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Gaviscon",
+              "topBrand": "Gaviscon",
+              "products": [
+                "GAVISCON DOUBLE(250+106,5+187,5)MG BTx24",
+                "GAVISCON DOUB (500+213+325)M 10ML 1x300M",
+                "GAVISCON DOUBLE (500+213+325)/10ML BTx12",
+                "GAVISCON ORAL (250+133,5) FLx500ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Gaviscon",
+              "topBrand": "Gaviscon",
+              "products": [
+                "MAALOX PLUS TAB (200+200+25)MG BTx30",
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "ALMORA PLUS 12SACHETS NEW",
+                "TASECTAN 15CAPS"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "MAALOX PLUS TAB (200+200+25)MG BTx30",
+                "GAVISCON DOUBLE(250+106,5+187,5)MG BTx24",
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "DULCOLAX 40 S.C. Tabl. 5mg",
+                "ALMORA PLUS 12SACHETS NEW",
+                "TASECTAN 15CAPS",
+                "LACTO LEVURE 10CAP",
+                "DULCOSOFT LIQUID 250ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 3,
+          "variant": "variant-1"
+        },
+        {
+          "program": "OTC1",
+          "month": 9,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-37a6d483b2870645",
+      "key": "Πόνος",
+      "title": "Πόνος",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Depon",
+              "topBrand": "Depon",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "DEPON MAXIMUM F.C.TAB 1000MG BTx8",
+                "DEPON ODIS 16 Disp. Tabl. 500mg"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Depon",
+              "topBrand": "Depon",
+              "products": [
+                "PANADOL EXTRA 16 Eff. Tabl. (500+65)mg",
+                "NUROFEN C.TAB 512MG/TAB BTx12(BLIST PVC)",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "ASPIRIN 20 Tabl. 500mg"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "PANADOL EXTRA F.C.TAB (500+65)MG BTx24",
+                "NUROFEN C.TAB 512MG/TAB BTx12(BLIST PVC)",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "NUROFEN CAP.SOFT400MG/CAP BTx10",
+                "ASPIRIN 20 Tabl. 500mg",
+                "DEPON Sirop 150 ml 120mg/5ml"
+              ]
+            }
+          }
+        },
+        {
+          "id": "variant-2",
+          "label": "Στήσιμο 2",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Depon",
+              "topBrand": "Depon",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "DEPON MAXIMUM F.C.TAB 1000MG BTx8",
+                "DEPON ODIS 16 Disp. Tabl. 500mg"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Depon",
+              "topBrand": "Depon",
+              "products": [
+                "PANADOL EXTRA F.C.TAB (500+65)MG BTx24",
+                "NUROFEN C.TAB 512MG/TAB BTx12",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "ASPIRIN 20 Tabl. 500mg"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "PANADOL EXTRA F.C.TAB (500+65)MG BTx24",
+                "NUROFEN C.TAB 512MG/TAB BTx12",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "NUROFEN CAP.SOFT400MG/CAP BTx10",
+                "ASPIRIN 20 Tabl. 500mg",
+                "DEPON Sirop 150 ml 120mg/5ml"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 4,
+          "variant": "variant-1"
+        },
+        {
+          "program": "OTC1",
+          "month": 11,
+          "variant": "variant-2"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-6d60523f9b527b06",
+      "key": "Τσιμπήματα & Ερεθισμοί",
+      "title": "Τσιμπήματα & Ερεθισμοί",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Fenistil",
+              "topBrand": "Fenistil",
+              "products": [
+                "FENISTIL Gel 30gr 0.1%",
+                "FENISTIL Roll-on stick Emul.8ml",
+                "FENISTIL GEL.EXT.US 0,1% ΤΒx50 G"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Fenistil",
+              "topBrand": "Fenistil",
+              "products": [
+                "APIVITA BEE SUN SAFE ΔΡΟΣΙΣ&ΚΑΤΑΠΡ 200ML",
+                "KORRE ΓΙΑΟΥΡΤΙ AFTER SUN 150ML",
+                "FREZYDERM ICY AFTER SUN 200ML",
+                "UNIBURN AFTER SUN 2 IN 1 GEL 50GR"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "FENISTIL Gel 30gr 0.1%",
+                "FENISTIL Roll-on stick Emul.8ml",
+                "FENISTIL GEL.EXT.US 0,1% ΤΒx50 G",
+                "KORRE ΓΙΑΟΥΡΤΙ AFTER SUN 150ML",
+                "FREZYDERM ICY AFTER SUN 200ML",
+                "APIVITA BEE SUN SAFE ΔΡΟΣΙΣ&ΚΑΤΑΠΡ 200ML",
+                "VICHY CAPIT SOLEIL AFTER SUN LAIT 300ML",
+                "UNIBURN AFTER SUN 2 IN 1 GEL 50GR"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 5,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-735ebde2b54e2591",
+      "key": "Ταξίδι & Στομάχι",
+      "title": "Ταξίδι & Στομάχι",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "ALMORA PLUS 12SACHETS NEW",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ALMORA PLUS NORMOBOWELL 30TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "TASECTAN 15CAPS",
+                "TRAVELGUM 10 Chew. Gum 20mg",
+                "IMODIUM INSTANT LING. TAB 2MG BLIST 1x6"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "IMODIUM INSTANT LING. TAB 2MG BLIST 1x6",
+                "ALMORA PLUS 12SACHETS NEW",
+                "TASECTAN 15CAPS",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "TRAVELGUM 10 Chew. Gum 20mg",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ABOCA LENODIAR ADULT 20CAP"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 6,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-0ebbfc0ab6b7ab4b",
+      "key": "Πυρετός & Άμεση Ανακούφιση",
+      "title": "Πυρετός & Άμεση Ανακούφιση",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Depon",
+              "topBrand": "Depon",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "DEPON Sirop 150 ml 120mg/5ml",
+                "DEPON 10 Tabl. Efferv. 500mg"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Depon",
+              "topBrand": "Depon",
+              "products": [
+                "PANADOL EXTRA F.C.TAB (500+65)MG BTx24",
+                "NUROFEN C.TAB 512MG/TAB BTx12",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "ASPIRIN 20 Tabl. 500mg"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "DEPON MAXIMUM 8 Tabl. Eff. 1000mg",
+                "DEPON 20 Tabl. 500mg",
+                "PANADOL EXTRA F.C.TAB (500+65)MG BTx24",
+                "PANADOL ADVANCE F.C.TAB 500MG BTx24",
+                "NUROFEN C.TAB 512MG/TAB BTx12",
+                "ALGOFREN 20 F.C. Tabl. 400mg",
+                "DEPON Sirop 150 ml 120mg/5ml",
+                "ASPIRIN 20 Tabl. 500mg"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 7,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-003fc5de084974ab",
+      "key": "Βήχας & Αναπνοή",
+      "title": "Βήχας & Αναπνοή",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Otrivin",
+              "topBrand": "Otrivin",
+              "products": [
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "OTRIVIN PRESER NAS.SPR.0,05% 10ML+ΑΝΤ",
+                "OTRIVIN MOISTURISING Drops 0,05% 10ml",
+                "OTRIVIN MOISTURISING Drops 0,1% 10ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Otrivin",
+              "topBrand": "Otrivin",
+              "products": [
+                "MUCOSOLVAN SYR. 30MG/5ML ADULTS 200ML",
+                "SINECOD Sirop 200ml 7.5mg/5ml",
+                "PANADOL COLD&FLU (500+30)mg X18 F.C.Tabl",
+                "ABOCA GRINTUSS AD POLIRESIN SYRUP 180GR"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "MUCOSOLVAN SYR. 30MG/5ML ADULTS 200ML",
+                "SINECOD Sirop 200ml 7.5mg/5ml",
+                "ABOCA GRINTUSS AD POLIRESIN SYRUP 180GR",
+                "PHYTOBISOLVON COMPLETE SYROP 180GR",
+                "PANADOL COLD&FLU (500+30)mg X18 F.C.Tabl",
+                "COMTREX COLD 20 F.C.TAB (500+30+2)MG",
+                "APIVITA PROPOLIS ΒΙΟΛΟΓ.SPRAY ΛΑΙΜΟΥ"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC1",
+          "month": 10,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-674d278a285d5592",
+      "key": "Ρινική Υγιεινή",
+      "title": "Ρινική Υγιεινή",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Clinofar",
+              "topBrand": "Clinofar",
+              "products": [
+                "CLINOFAR PROMO ΑΜΠΟΥΛΕΣ 5X40ΤΕΜ+20ΔΩΡΟ",
+                "CLINOFAR 30AMP",
+                "CLINOFAR 15AMP",
+                "CLINOFAR ΡΙΝΙΚΟΣ ΑΠΟΦΡΑΚΤΗΡΑΣ NEW"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Clinofar",
+              "topBrand": "Clinofar",
+              "products": [
+                "PHYSIOMER NORMAL SPRAY 135ML NEW",
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "RONAL Nasal Spray 10ml",
+                "OTRISALIN ASPIRAT REFILS SOFT NASAL 20T"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "CLINOFAR PROMO ΑΜΠΟΥΛΕΣ 5X40ΤΕΜ+20ΔΩΡΟ",
+                "PHYSIOMER NORMAL SPRAY 135ML NEW",
+                "PHYSIOMER HYPERTONIC 135ML NEW",
+                "OTRIVIN PRES NAS.SPR.SOL 0,1% 10ML+ΑΝΤΛΙ",
+                "RONAL Nasal Spray 10ml",
+                "OTRIVIN PRESER NAS.SPR.0,05% 10ML+ΑΝΤ",
+                "OTRISALIN NASAL ASPIRATOR SOFT",
+                "OTRISALIN ASPIRAT REFILS SOFT NASAL 20T"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 0,
+          "variant": "variant-1"
+        },
+        {
+          "program": "OTC2",
+          "month": 9,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-7c2ec56c7376e846",
+      "key": "Στοματική Φροντίδα",
+      "title": "Στοματική Φροντίδα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Chlorhexil",
+              "topBrand": "Chlorhexil",
+              "products": [
+                "CHLORHEXIL MOUTHWASH 0.20% 250ML",
+                "CHLORHEXIL MOUTHWASH 0.12% 250ML",
+                "CHLORHEXIL GEL 0.20% 30ML",
+                "CHLORHEXIL F TOOTHPASTE 100ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Chlorhexil",
+              "topBrand": "Chlorhexil",
+              "products": [
+                "UNISEPT BUCCAL MOUTHWASH 250ML NEO",
+                "FREZYDERM MOUTHWASH OXYGEN PRO 250ML",
+                "FREZYDERM MOUTHWASH GINGIVITIS 250ML",
+                "ELUDRIL EXTRA 0,20% 300ML"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "UNISEPT BUCCAL MOUTHWASH 250ML NEO",
+                "CHLORHEXIL MOUTHWASH 0.20% 250ML",
+                "CHLORHEXIL MOUTHW 0,12% LONG USE 250ML",
+                "FREZYDERM MOUTHWASH OXYGEN PRO 250ML",
+                "FREZYDERM MOUTHWASH GINGIVITIS 250ML",
+                "UNISEPT DENTAL CLEANSER 250ML",
+                "CHLORHEXIL GEL 0.20% 30ML",
+                "ELUDRIL EXTRA 0,20% 300ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 1,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-0ab47b33793601f8",
+      "key": "Καθημερινή Υγιεινή",
+      "title": "Καθημερινή Υγιεινή",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Betadine",
+              "topBrand": "Betadine",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "BETADINE Sol. 240ml 10%",
+                "BETADINE Surgical Scrub 100ml",
+                "BETADINE Surgical Scrub 1000ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Betadine",
+              "topBrand": "Betadine",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "ΟΙΝΟΠΝΕΥΜΑ ΦΑΡΜΑΚΕΥΤΙΚΟ 300ml 70ο",
+                "UNISEPT BUCCAL MOUTHWASH 250ML NEO",
+                "CHLORHEXIL MOUTHWASH 0.20% 250ML"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "OCTENISEPT Sol.50ml",
+                "UNISEPT BUCCAL MOUTHWASH 250ML NEO",
+                "CHLORHEXIL MOUTHWASH 0.20% 250ML",
+                "CHLORHEXIL MOUTHW 0,12% LONG USE 250ML",
+                "FREZYDERM MOUTHWASH OXYGEN PRO 250ML",
+                "ΟΙΝΟΠΝΕΥΜΑ ΦΑΡΜΑΚΕΥΤΙΚΟ 300ml 70ο",
+                "STERILLIUM/MANUSEPT GEL ΑΝΤΛ BODE 475ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 2,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-31e7bb3ab4edb2b2",
+      "key": "First Aid",
+      "title": "First Aid",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Octenisept",
+              "topBrand": "Octenisept",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "OCTENISEPT Sol. 250ml",
+                "OCTENISEPT WOUND GEL 20ML",
+                "OCTENISEPT Sol. 1000ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Octenisept",
+              "topBrand": "Octenisept",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "MASTER AID DROP MED ΓΑΖΕΣ 5X7 5ΤΕΜ.",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "BETADINE Sol. 30ml 10%",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "HANSAPLAST 45906 20STRΙPS ΚΑΣΕΤΙΝΑ",
+                "MASTER AID DROP MED ΓΑΖΕΣ 5X7 5ΤΕΜ.",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ",
+                "STERILLIUM/MANUSEPT GEL ΑΝΤΛ BODE 475ML",
+                "BETADINE Surgical Scrub 100ml"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 3,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-3d7fe5ec05b0f1bc",
+      "key": "Καθημερινή Αντηλιακή Φροντίδα",
+      "title": "Καθημερινή Αντηλιακή Φροντίδα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Frezyderm Sun",
+              "topBrand": "Frezyderm Sun",
+              "products": [
+                "FREZYDERM SUNSCREEN VEL COLOR SPF50+",
+                "FREZYDERM SUNSCREEN VELVET FACE 50+ 50ML",
+                "FREZYDERM SUN SCREEN VELV COL FAC SPF30",
+                "FREZYDERM SUNSCREEN VELVET FACE 30 50ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Frezyderm Sun",
+              "topBrand": "Frezyderm Sun",
+              "products": [
+                "LIERAC SUNISSIME FLUIDE SPF50+ 40ML",
+                "LRP ANTHELIOS AGE CORRECT SPF50 50ML",
+                "CAUDALIE VINOSUN PROT INV ST SPF50 15GR",
+                "APIVITA BEE SUN SAFE ΚΡ ΠΑΝ&ΡΥΤ ΧΡ SPF50"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "FREZYDERM SUNSCREEN VEL COLOR SPF50+",
+                "FREZYDERM SUNSCREEN VELVET FACE 50+ 50ML",
+                "LIERAC SUNISSIME FLUIDE SPF50+ 40ML",
+                "CAUDALIE VINOSUN PROT INV ST SPF50 15GR",
+                "LRP ANTHELIOS AGE CORRECT SPF50 50ML",
+                "APIVITA BEE SUN SAFE ΚΡ ΠΑΝ&ΡΥΤ ΧΡ SPF50",
+                "APIVITA BEE SUN SAFE ΕΝΥΔ GEL ΧΡΩΜ SPF50",
+                "LRP ANTHELIOS XL BRUME VISAG SPF50+ 75ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 4,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-038e487e33b74efa",
+      "key": "Αντηλιακή Προστασία",
+      "title": "Αντηλιακή Προστασία",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Frezyderm Sun",
+              "topBrand": "Frezyderm Sun",
+              "products": [
+                "FREZYDERM SUNSCREEN VEL COLOR SPF50+",
+                "FREZYDERM SEA SIDE DRY MIST SPF50+ 300ML",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "FREZYDERM SUN SCREEN INVISIBL SPR SPF50+"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Frezyderm Sun",
+              "topBrand": "Frezyderm Sun",
+              "products": [
+                "LRP ANTHELIOS FAMILY SPRAY SPF50+ 300ML",
+                "APIVITA BEE SUN SAFE SPR ΠΡΟΣ&ΣΩΜ SPF50",
+                "CAUDALIE VINOSUN PROT INV ST SPF50 15GR",
+                "LIERAC SUNISSIME FLUIDE SPF50+ 40ML"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "FREZYDERM SUNSCREEN VEL COLOR SPF50+",
+                "FREZYDERM SEA SIDE DRY MIST SPF50+ 300ML",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "LRP ANTHELIOS FAMILY SPRAY SPF50+ 300ML",
+                "APIVITA BEE SUN SAFE SPR ΠΡΟΣ&ΣΩΜ SPF50",
+                "APIVITA BEE SUN SAFE ΓΑΛΑKT ΠΡ&ΣΩΜ SPF50",
+                "LRP ANTHELIOS AGE CORRECT SPF50 50ML",
+                "CAUDALIE VINOSUN PROT INV ST SPF50 15GR"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 5,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-ac22723c711acacb",
+      "key": "Καλοκαιρινή Φροντίδα",
+      "title": "Καλοκαιρινή Φροντίδα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Apivita Bee Sun",
+              "topBrand": "Apivita Bee Sun",
+              "products": [
+                "APIVITA BEE SUN SAFE SPR ΠΡΟΣ&ΣΩΜ SPF50",
+                "APIVITA BEE SUN SAFE ΓΑΛΑKT ΠΡ&ΣΩΜ SPF50",
+                "APIVITA BEE SUN SAFE ΔΡΟΣΙΣ&ΚΑΤΑΠΡ 200ML",
+                "APIVITA BEE SUN SAFE OIL SPF30 200ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Apivita Bee Sun",
+              "topBrand": "Apivita Bee Sun",
+              "products": [
+                "FREZYDERM ICY AFTER SUN 200ML",
+                "KORRE ΓΙΑΟΥΡΤΙ AFTER SUN 150ML",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "FENISTIL Roll-on stick Emul.8ml"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "APIVITA BEE SUN SAFE SPR ΠΡΟΣ&ΣΩΜ SPF50",
+                "APIVITA BEE SUN SAFE ΓΑΛΑKT ΠΡ&ΣΩΜ SPF50",
+                "APIVITA BEE SUN SAFE ΔΡΟΣΙΣ&ΚΑΤΑΠΡ 200ML",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "FREZYDERM ICY AFTER SUN 200ML",
+                "KORRE ΓΙΑΟΥΡΤΙ AFTER SUN 150ML",
+                "FENISTIL Roll-on stick Emul.8ml",
+                "LRP ANTHELIOS FAMILY SPRAY SPF50+ 300ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 6,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-5cf3a052f0c3ead0",
+      "key": "Παιδική Φροντίδα",
+      "title": "Παιδική Φροντίδα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Frezyderm Baby",
+              "topBrand": "Frezyderm Baby",
+              "products": [
+                "FREZYDERM BABY CREAM 175ML",
+                "FREZYDERM BABY BATH 300ML",
+                "FREZYDERM BABY HYDRA MILK 200ML",
+                "FREZYDERM BABY SHAMPOO 300ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Frezyderm Baby",
+              "topBrand": "Frezyderm Baby",
+              "products": [
+                "SUDOCREM CREAM 125GR",
+                "BEPANTHOL NAPPY 5% OINT TUF 100GR",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "MOLLER'S GUMMIES 36 ΖΕΛΕΔ ΦΡΑΟΥΛΑ"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "SUDOCREM CREAM 250GR",
+                "SUDOCREM CREAM 125GR",
+                "FREZYDERM BABY CREAM 175ML",
+                "BEPANTHOL NAPPY 5% OINT TUF 100GR",
+                "FREZYDERM BABY BATH 300ML",
+                "FREZYDERM BABY SHAMPOO 300ML",
+                "FREZYDERM SUN KID'S SPRAY SPF50+ 275ML",
+                "MOLLER'S GUMMIES 36 ΖΕΛΕΔ ΦΡΑΟΥΛΑ"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 7,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-b1f57f0690e88cf7",
+      "key": "Προστασία στο Σπίτι",
+      "title": "Προστασία στο Σπίτι",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Betadine",
+              "topBrand": "Betadine",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "BETADINE Sol. 240ml 10%",
+                "BETADINE Surgical Scrub 100ml",
+                "BETADINE Surgical Scrub 1000ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Betadine",
+              "topBrand": "Betadine",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "ΟΙΝΟΠΝΕΥΜΑ ΦΑΡΜΑΚΕΥΤΙΚΟ 300ml 70ο",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "OCTENISEPT Sol.50ml",
+                "ΟΙΝΟΠΝΕΥΜΑ ΦΑΡΜΑΚΕΥΤΙΚΟ 300ml 70ο",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "HANSAPLAST 45906 20STRΙPS ΚΑΣΕΤΙΝΑ",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ",
+                "MASTER AID DROP MED ΓΑΖΕΣ 5X7 5ΤΕΜ.",
+                "STERILLIUM/MANUSEPT GEL ΑΝΤΛ BODE 475ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 8,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-871a2e3bee0cd6cb",
+      "key": "Οικογενειακή Φροντίδα",
+      "title": "Οικογενειακή Φροντίδα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Sudocrem",
+              "topBrand": "Sudocrem",
+              "products": [
+                "SUDOCREM CREAM 250GR",
+                "SUDOCREM CREAM 125GR",
+                "SUDOCREM CREAM 400GR",
+                "SUDOCREM MY LITTLE 22GR"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Sudocrem",
+              "topBrand": "Sudocrem",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "FREZYDERM BABY CREAM 175ML",
+                "BEPANTHOL NAPPY 5% OINT TUF 100GR",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "SUDOCREM CREAM 250GR",
+                "SUDOCREM CREAM 125GR",
+                "BETADINE Sol. 30ml 10%",
+                "OCTENISEPT Sol.50ml",
+                "FREZYDERM BABY CREAM 175ML",
+                "BEPANTHOL NAPPY 5% OINT TUF 100GR",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 10,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-414dba2c3a1fcb0c",
+      "key": "Home Pharmacy Βασικό Πρόγραμμαs",
+      "title": "Home Pharmacy Βασικό Πρόγραμμαs",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Octenisept",
+              "topBrand": "Octenisept",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "OCTENISEPT Sol. 250ml",
+                "OCTENISEPT WOUND GEL 20ML",
+                "OCTENISEPT Sol. 1000ml"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Octenisept",
+              "topBrand": "Octenisept",
+              "products": [
+                "BETADINE Sol. 30ml 10%",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "MASTER AID DROP MED ΓΑΖΕΣ 5X7 5ΤΕΜ.",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "OCTENISEPT Sol.50ml",
+                "BETADINE Sol. 30ml 10%",
+                "HANSAPLAST 45907 40STRIPS ΚΑΣΕΤΙΝΑ",
+                "HANSAPLAST 45906 20STRΙPS ΚΑΣΕΤΙΝΑ",
+                "MASTER AID DROP MED ΓΑΖΕΣ 5X7 5ΤΕΜ.",
+                "ALFASHIELD ΑΠΟΣΤ. ΓΑΖΕΣ 36Χ40CM 10ΤΕΜ",
+                "STERILLIUM/MANUSEPT GEL ΑΝΤΛ BODE 475ML",
+                "BETADINE Surgical Scrub 100ml"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC2",
+          "month": 11,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-8e1860b2d27e17f2",
+      "key": "Διακοπή Καπνίσματος",
+      "title": "Διακοπή Καπνίσματος",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Nicorette",
+              "topBrand": "Nicorette",
+              "products": [
+                "NICORETTE ICEMINT CHEW.TAB 2MG/TABx105",
+                "NICORETTE QUICKSPRAY 1MG 1x1x13,2ML",
+                "NICORETTE FRESHFRUIT 2mg x 105 ChewTabl.",
+                "NICORETTE CLEAR PATCH 7TTS 25MG"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Nicorette",
+              "topBrand": "Nicorette",
+              "products": [
+                "TOKOVYS F.C.TAB 1.5MG/TAB BTx100",
+                "NICORETTE QUICKSPRAY BERRY 1MGx13,2ML",
+                "NICORETTE Inhaler 42 units 10mg/unit",
+                "NICORETTE ICEMINT CHEW.TAB.2MG/TAB x30"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "TOKOVYS F.C.TAB 1.5MG/TAB BTx100",
+                "NICORETTE ICEMINT CHEW.TAB 2MG/TABx105",
+                "NICORETTE QUICKSPRAY 1MG 1x1x13,2ML",
+                "NICORETTE FRESHFRUIT 2mg x 105 ChewTabl.",
+                "NICORETTE QUICKSPRAY BERRY 1MGx13,2ML",
+                "NICORETTE Inhaler 42 units 10mg/unit",
+                "NICORETTE ICEMINT CHEW.TAB.4MG/TAB x105",
+                "NICORETTE CLEAR PATCH 7TTS 25MG"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 0,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-af05caee0c7004e9",
+      "key": "Άμυνα & Βιταμίνες",
+      "title": "Άμυνα & Βιταμίνες",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "D3 Fix",
+              "topBrand": "D3 Fix",
+              "products": [
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "D3 FIX 1200IU 60TABS",
+                "D3 FIX DROPS 200IU WITH PUMP 30ML",
+                "D3 FIX DROPS 1000IU WITH PUMP 30ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: D3 Fix",
+              "topBrand": "D3 Fix",
+              "products": [
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED",
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "PHARMATON GERIATRIC 30TAB",
+                "SUPRADYN IMMUNITY BOOST 30TABEFFS"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "D3 FIX 1200IU 60TABS",
+                "D3-FIX MAX 4000IU 60TAB",
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED",
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "SUPRADYN IMMUNITY BOOST 30TABEFFS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 1,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-d9110944428406aa",
+      "key": "Βιταμίνες & Μέταλλα",
+      "title": "Βιταμίνες & Μέταλλα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Lamberts",
+              "topBrand": "Lamberts",
+              "products": [
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "LAMBERTS MULTI GUARD ADR 120TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "LAMBERTS MAGNESIUM 375 180TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Lamberts",
+              "topBrand": "Lamberts",
+              "products": [
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "SOLGAR CITRATE MAGNESIUM 200MG 60TAB",
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "SOLGAR CITRATE MAGNESIUM 200MG 60TAB",
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED",
+                "EVIOL MULTIVITAMIN 30CAPS",
+                "PHARMATON GERIATRIC 30TAB"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 2,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-35ad4f53a243c63b",
+      "key": "Προβιοτικά & Ισορροπία",
+      "title": "Προβιοτικά & Ισορροπία",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Lacto Levure",
+              "topBrand": "Lacto Levure",
+              "products": [
+                "LACTO LEVURE 10CAP",
+                "LACTO LEVURE IBS 30 STICKS",
+                "LACTO LEVURE CRAN 20 STICKS",
+                "LACTO LEVURE PROBIO MOOD 20STICKS"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Lacto Levure",
+              "topBrand": "Lacto Levure",
+              "products": [
+                "PROLIFE AMPOULES 7X8ML",
+                "BACTEFLORA PLUS 10/30 30CAPS",
+                "QUEST PROBIOTIX GOLD 15CAP",
+                "BIFOLAC RESTORE PROBIOTICS 30CAPS"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "LACTO LEVURE 10CAP",
+                "PROLIFE AMPOULES 7X8ML",
+                "BACTEFLORA PLUS 10/30 30CAPS",
+                "BIOGAIA PROTECTIS BABY DROPS 5ML",
+                "QUEST PROBIOTIX GOLD 15CAP",
+                "BIFOLAC RESTORE PROBIOTICS 30CAPS",
+                "PROTEXIN BIO KULT 15CAP",
+                "BACTEFLORA DAILY 4/7 30CAPS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 3,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-80de3b25180d7f26",
+      "key": "Μαγνήσιο & Ενέργεια",
+      "title": "Μαγνήσιο & Ενέργεια",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Lamberts Magnesium",
+              "topBrand": "Lamberts Magnesium",
+              "products": [
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "LAMBERTS MAGNESIUM 375 180TAB",
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "LAMBERTS MULTI GUARD ADR 120TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Lamberts",
+              "topBrand": "Lamberts",
+              "products": [
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "POWER CLAS PLAT MAGNESIUM PREMIUM 5 60C",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "PHARMATON GERIATRIC 30TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "POWER CLAS PLAT MAGNESIUM PREMIUM 5 60C",
+                "SOLGAR CITRATE MAGNESIUM 200MG 60TAB",
+                "SOLGAR MAGNESIUM+B6 100TAB",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "ALTION TONOVIT 40 SOFTCAPS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 4,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-997e851baee01b43",
+      "key": "Ηλεκτρολύτες & Ενυδάτωση",
+      "title": "Ηλεκτρολύτες & Ενυδάτωση",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "ALMORA PLUS 12SACHETS NEW",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ALMORA PLUS ENERGY EFF BTX25 TABS"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "TASECTAN 15CAPS",
+                "LANES EFF ELECTROLYTES ORANGE 20TAB",
+                "POWER PR HYDROLYTES STEVIA 20T&20T",
+                "SUSTENIUM MAG &POT 14SACHETS"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "ALMORA PLUS 12SACHETS NEW",
+                "TASECTAN 15CAPS",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "LANES EFF ELECTROLYTES ORANGE 20TAB",
+                "POWER PR HYDROLYTES STEVIA 20T&20T",
+                "SUPRADYN ACTIVE POWDER 24SACHETS",
+                "SUSTENIUM MAG &POT 14SACHETS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 5,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-1cf8c18ccb6b82bf",
+      "key": "Καλοκαιρινή Υποστήριξη",
+      "title": "Καλοκαιρινή Υποστήριξη",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ALMORA PLUS ENERGY EFF BTX25 TABS",
+                "ALMORA PLUS 12SACHETS NEW"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "LANES EFF ELECTROLYTES ORANGE 20TAB",
+                "POWER PR HYDROLYTES STEVIA 20T&20T",
+                "SUPRADYN ACTIVE POWDER 24SACHETS",
+                "DEXTROLYTE PLUS ORANGE 20TABEF"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ALMORA PLUS ENERGY EFF BTX25 TABS",
+                "LANES EFF ELECTROLYTES ORANGE 20TAB",
+                "POWER PR HYDROLYTES STEVIA 20T&20T",
+                "SUSTENIUM MAG &POT 14SACHETS",
+                "SUPRADYN ACTIVE POWDER 24SACHETS",
+                "DEXTROLYTE PLUS ORANGE 20TABEF"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 6,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-5ebff34602367314",
+      "key": "Travel Support",
+      "title": "Travel Support",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "ALMORA PLUS 12SACHETS NEW",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "ALMORA PLUS ENERGY EFF BTX25 TABS"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Almora Plus",
+              "topBrand": "Almora Plus",
+              "products": [
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "TRAVELGUM 10 Chew. Gum 20mg",
+                "TASECTAN 15CAPS",
+                "LANES EFF ELECTROLYTES ORANGE 20TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "IMODIUM ORIGINAL 2MG/CAP ΒΤx6 BLIST 1x6",
+                "TRAVELGUM 10 Chew. Gum 20mg",
+                "ALMORA PLUS 12SACHETS NEW",
+                "TASECTAN 15CAPS",
+                "ALMORA PLUS SPORT 20 TABEFF",
+                "ALMORA PLUS HYDRO EFFERVESCENT 20TABS",
+                "LANES EFF ELECTROLYTES ORANGE 20TAB",
+                "POWER PR HYDROLYTES STEVIA 20T&20T"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 7,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-8a19c15d82fe4d82",
+      "key": "Πολυβιταμίνες",
+      "title": "Πολυβιταμίνες",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Lamberts Multi Guard",
+              "topBrand": "Lamberts Multi Guard",
+              "products": [
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "LAMBERTS MULTI GUARD ADR 120TAB",
+                "LAMBERTS MULTI GUARD ADVANCE 60TAB",
+                "LAMBERTS MULTI GUARD 90TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Lamberts Multi Guard",
+              "topBrand": "Lamberts Multi Guard",
+              "products": [
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "EVIOL MULTIVITAMIN 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "SOLGAR VM 2000 60TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "EVIOL MULTIVITAMIN 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "SOLGAR VM 2000 60TAB",
+                "SOLGAR VM 2000 30TAB",
+                "ALTION TONOVIT 40 SOFTCAPS",
+                "POWER SALUS HAUS EPRESAT MULTIVIT. 250ML"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 8,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-2b5447c3d326e2e3",
+      "key": "Ενέργεια & Τόνωση",
+      "title": "Ενέργεια & Τόνωση",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "B12 Fix",
+              "topBrand": "B12 Fix",
+              "products": [
+                "B 12 FIX 30TAB"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: B12 Fix",
+              "topBrand": "B12 Fix",
+              "products": [
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "PHARMATON GERIATRIC 30TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "B 12 FIX 30TAB",
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "POWER CLAS PLAT MAGNESIUM PREMIUM 5 60C",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "SOLGAR B12 1000MCG NUGGETS 100CAP",
+                "ALTION TONOVIT 40 SOFTCAPS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 9,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-4317c24cae52bde5",
+      "key": "Χειμερινή Ενίσχυση",
+      "title": "Χειμερινή Ενίσχυση",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "D3 Fix",
+              "topBrand": "D3 Fix",
+              "products": [
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "D3 FIX 1200IU 60TABS",
+                "D3-FIX +K2 2000IU 60TAB",
+                "D3 FIX DROPS 200IU WITH PUMP 30ML"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: D3 Fix",
+              "topBrand": "D3 Fix",
+              "products": [
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED",
+                "SUPRADYN IMMUNITY BOOST 30TABEFFS",
+                "PHARMATON GERIATRIC 30TAB",
+                "LAMBERTS MULTI GUARD ADR 60TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "D3 FIX EXTRA 2000IU 60TABS",
+                "D3 FIX 1200IU 60TABS",
+                "D3-FIX +K2 2000IU 60TAB",
+                "LANES EFF VIT C 1000MG ORANGE 20TAB RED",
+                "SUPRADYN IMMUNITY BOOST 30TABEFFS",
+                "LAMBERTS MULTI GUARD ADR 60TAB",
+                "PHARMATON GERIATRIC 30TAB",
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 10,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-2ae81bdc7c94e2cf",
+      "key": "Τόνωση & Ευεξία",
+      "title": "Τόνωση & Ευεξία",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "Eviol",
+              "topBrand": "Eviol",
+              "products": [
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "EVIOL MULTIVITAMIN 30CAPS",
+                "EVIOL 20 Caps 100mg"
+              ]
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "Top Brand: Eviol",
+              "topBrand": "Eviol",
+              "products": [
+                "PHARMATON GERIATRIC 30TAB",
+                "ALTION TONOVIT 40 SOFTCAPS",
+                "B 12 FIX 30TAB",
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB"
+              ]
+            },
+            "Μικτό Στήσιμο": {
+              "title": "έως 8 διαφορετικοί κωδικοί",
+              "topBrand": "",
+              "products": [
+                "EVIOL MULTIVITAMIN ENERGY PLUS 30CAPS",
+                "EVIOL MULTIVITAMIN 30CAPS",
+                "PHARMATON GERIATRIC 30TAB",
+                "ALTION TONOVIT 40 SOFTCAPS",
+                "B 12 FIX 30TAB",
+                "HEALTH AID MAGNESIUM BISGLYCINATE 60TAB",
+                "LAMBERTS MAGNESIUM 375 60TAB",
+                "SOLGAR B12 1000MCG NUGGETS 100CAP"
+              ]
+            }
+          }
+        }
+      ],
+      "legacySlots": [
+        {
+          "program": "OTC3",
+          "month": 11,
+          "variant": "variant-1"
+        }
+      ],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-4e6b8f6a7f14abf9",
+      "key": "Bazaar",
+      "title": "Bazaar",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-7734c55f06ddc772",
+      "key": "Νέα προϊόντα",
+      "title": "Νέα προϊόντα",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-64492869c38a1b76",
+      "key": "Καλύτερες τιμές",
+      "title": "Καλύτερες τιμές",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-f96dd77abe46a719",
+      "key": "Best sellers",
+      "title": "Best sellers",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-fea9d336623266f3",
+      "key": "Limited offer",
+      "title": "Limited offer",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    },
+    {
+      "id": "theme-127facf0c4394b33",
+      "key": "Seasonal promo",
+      "title": "Seasonal promo",
+      "status": "available",
+      "variants": [
+        {
+          "id": "variant-1",
+          "label": "Στήσιμο 1",
+          "setups": {
+            "Στήσιμο Μάρκας": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Υβριδικό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            },
+            "Μικτό Στήσιμο": {
+              "title": "",
+              "topBrand": "",
+              "products": []
+            }
+          }
+        }
+      ],
+      "legacySlots": [],
+      "files": {
+        "vertical": "",
+        "horizontal": ""
+      }
+    }
+  ],
+  "programs": [
+    {
+      "id": "OTC1",
+      "title": "Plus Relief",
+      "status": "available",
+      "months": [
+        {
+          "theme": "theme-59727cc233724694",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-c1c1c225d0672e51",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-d90c069b889e1e97",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-e8e6d6c51dae1da9",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-37a6d483b2870645",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-6d60523f9b527b06",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-735ebde2b54e2591",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-0ebbfc0ab6b7ab4b",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-59727cc233724694",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-e8e6d6c51dae1da9",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-003fc5de084974ab",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-37a6d483b2870645",
+          "variant": "variant-2"
+        }
+      ]
+    },
+    {
+      "id": "OTC2",
+      "title": "Plus Care",
+      "status": "available",
+      "months": [
+        {
+          "theme": "theme-674d278a285d5592",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-7c2ec56c7376e846",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-0ab47b33793601f8",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-31e7bb3ab4edb2b2",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-3d7fe5ec05b0f1bc",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-038e487e33b74efa",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-ac22723c711acacb",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-5cf3a052f0c3ead0",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-b1f57f0690e88cf7",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-674d278a285d5592",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-871a2e3bee0cd6cb",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-414dba2c3a1fcb0c",
+          "variant": "variant-1"
+        }
+      ]
+    },
+    {
+      "id": "OTC3",
+      "title": "Plus Extra",
+      "status": "available",
+      "months": [
+        {
+          "theme": "theme-8e1860b2d27e17f2",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-af05caee0c7004e9",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-d9110944428406aa",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-35ad4f53a243c63b",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-80de3b25180d7f26",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-997e851baee01b43",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-1cf8c18ccb6b82bf",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-5ebff34602367314",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-8a19c15d82fe4d82",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-2b5447c3d326e2e3",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-4317c24cae52bde5",
+          "variant": "variant-1"
+        },
+        {
+          "theme": "theme-2ae81bdc7c94e2cf",
+          "variant": "variant-1"
+        }
+      ]
+    }
+  ]
+}

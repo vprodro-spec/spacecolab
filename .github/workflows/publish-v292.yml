@@ -1,10 +1,12 @@
-name: Build and publish v292
+name: Build and publish SpaceCoLab
 
 on:
   push:
     branches: [main]
     paths:
-      - 'src/scl292-*.js'
+      - 'src/scl29*-*.js'
+      - 'data/library-seed.json'
+      - 'scripts/build-v293.py'
       - 'scripts/build-v292.py'
       - '.github/workflows/publish-v292.yml'
   workflow_dispatch:
@@ -35,5 +37,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git commit -m 'Publish verified v292 application'
+          git commit -m 'Publish verified application'
           git push origin HEAD:main
