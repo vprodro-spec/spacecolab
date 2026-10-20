@@ -29,11 +29,11 @@ test('switching local positions keeps customization scoped and explains deadline
  const {click,run,text}=controls(x);assert.deepEqual(x.errors,[]);
  for(const id of ['base-1','base-2']){
   await click('[data-scl295="position"][data-card="'+id+'"]');await click('[data-scl295="custom"]');
-  assert.equal(run('SCL293.customCard'),id);assert.equal(run('state.customEditorMonth'),11);
-  assert.equal(x.document.querySelectorAll('#customModal [data-custom-month]').length,3);
-  await click('[data-custom-month="10"]');assert.match(text('customModalBody'),/15\/10\/2026/);assert.ok([...x.document.querySelectorAll('[data-scl293="custom-select"]')].every(b=>b.disabled));
-  await click('[data-custom-month="11"]');assert.ok([...x.document.querySelectorAll('[data-scl293="custom-select"]')].every(b=>!b.disabled));
-  const candidate=[...x.document.querySelectorAll('[data-scl293="custom-select"]')].find(b=>b.getAttribute('aria-pressed')!=='true');await x.click(candidate);await tick();
+  assert.equal(run('SCL297.draft.card'),id);assert.equal(run('SCL297.draft.focus'),11);
+  assert.equal(x.document.querySelectorAll('#customModal [data-scl297-month]').length,3);
+  await click('[data-scl297="custom-focus"][data-month="10"]');assert.match(text('customModalBody'),/15\/10\/2026/);assert.ok([...x.document.querySelectorAll('[data-scl293="actions-select"]')].every(b=>b.disabled));
+  await click('[data-scl297="custom-focus"][data-month="11"]');assert.ok([...x.document.querySelectorAll('[data-scl293="actions-select"]')].every(b=>!b.disabled));
+  const candidate=[...x.document.querySelectorAll('[data-scl293="actions-select"]')].find(b=>b.getAttribute('aria-pressed')!=='true');await x.click(candidate);await tick();
   run('window.confirm=()=>true');run("closeModal('customModal')");assert.equal(run("JSON.stringify(state.cards.find(c=>c.id==='"+id+"').pendingSimpleSchedule)"),run("JSON.stringify(state.cards.find(c=>c.id==='"+id+"').basicSchedule)"));
  }
  run("state.cards.find(c=>c.id==='base-2').confirmedDeals=[{id:'d',confirmed:true,startMonth:11,duration:1}];refresh(false)");

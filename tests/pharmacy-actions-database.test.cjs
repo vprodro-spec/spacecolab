@@ -1,0 +1,55 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const {PGlite}=require('@electric-sql/pglite');
+const {bootstrap}=require('./fixtures/database-bootstrap.cjs');
+const {smoke}=require('./fixtures/full-app.cjs');
+const C=require('../src/scl297-actions-core.js'),A=require('../src/scl292-core.js');
+test('pharmacy form saves run through PostgreSQL: charges match preview, sponsorship is local, history survives replacement',async()=>{
+ const db=new PGlite();await db.exec(bootstrap);
+ await db.exec(`
+ ALTER TABLE scl290_registry ADD PRIMARY KEY(id),ADD UNIQUE(pharmacy_id),ADD UNIQUE(billing_code),ADD COLUMN player_prefix text,ADD COLUMN revision bigint DEFAULT 1,ADD COLUMN updated_at timestamptz DEFAULT now();
+ ALTER TABLE scl290_registry ALTER COLUMN legacy SET DEFAULT false,ADD FOREIGN KEY(pharmacy_id) REFERENCES pharmacies(id) ON DELETE SET NULL;
+ ALTER TABLE scl290_installations ADD FOREIGN KEY(pharmacy_id) REFERENCES pharmacies(id) ON DELETE CASCADE;
+ ALTER TABLE scl290_snapshots ADD FOREIGN KEY(pharmacy_id) REFERENCES pharmacies(id) ON DELETE CASCADE;
+ ALTER TABLE pharmacy_state ADD FOREIGN KEY(pharmacy_id) REFERENCES pharmacies(id) ON DELETE CASCADE;
+ CREATE FUNCTION create_pharmacy(p_name text) RETURNS SETOF pharmacies LANGUAGE sql AS $$INSERT INTO pharmacies(name,token) VALUES(p_name,gen_random_uuid()::text) RETURNING *$$;
+ CREATE FUNCTION hq_get_position_months(k text) RETURNS TABLE(pharmacy_id uuid,year integer) LANGUAGE sql AS $$SELECT NULL::uuid,NULL::int WHERE false$$;
+ CREATE FUNCTION hq_get_deals(k text) RETURNS TABLE(pharmacy_id uuid,year integer) LANGUAGE sql AS $$SELECT NULL::uuid,NULL::int WHERE false$$;
+ CREATE FUNCTION hq_delete_pharmacy(k text,p uuid) RETURNS void LANGUAGE plpgsql AS $$BEGIN PERFORM public.scl290_assert_hq(k);DELETE FROM public.pharmacies WHERE id=p;END$$;
+ `);
+ for(const f of ['tests/fixtures/v290-normalization.sql','tests/fixtures/v290-registry.sql',...['20261020165150_programme_finance_history.sql','20261020174619_certification_guards.sql','20261020190310_hq_registry_screens.sql','20261020191752_paused_position_sponsorship_guard.sql','20261020195653_pharmacy_onboarding_guard.sql'].map(f=>'supabase/migrations/'+f)])await db.exec(fs.readFileSync(f,'utf8'));
+ await db.exec(`CREATE OR REPLACE FUNCTION scl_private.today() RETURNS date LANGUAGE sql STABLE SET search_path='' AS $$SELECT date '2026-09-10'$$`);
+ const pid=(await db.query("INSERT INTO pharmacies(name,token) VALUES('Fixture','fixture-token') RETURNING id")).rows[0].id;
+ await db.query("INSERT INTO scl290_registry(pharmacy_id,name,billing_code) VALUES($1,'Fixture','F001')",[pid]);
+ const positions=[{id:'hq',ordinal:0,title:'Pharmaplus',type:'hq',startsOn:'2026-01-01',screenFormat:'vertical',playerCode:'FIXTURE_ADV0_P'},{id:'base-1',ordinal:1,title:'Θέση 1',type:'base',startsOn:'2026-01-01',screenFormat:'vertical',playerCode:'FIXTURE_ADV1_P'}];
+ await db.query("INSERT INTO scl290_installations(pharmacy_id,service_from,positions) VALUES($1,'2026-01-01',$2)",[pid,JSON.stringify(positions)]);
+ const seed=JSON.parse(fs.readFileSync('data/library-seed.json','utf8')),themes=seed.themes.filter(t=>t.status==='available'),theme=themes[0].key,other=themes[1].key;
+ const c={id:'base-1',type:'base',title:'Θέση 1',screenFormat:'vertical',initialPlanLocked:true,simpleConfirmed:true,basicSchedule:Array(12).fill(theme),simpleSchedule:Array(12).fill(theme),simpleMechanism:Array(12).fill('Χωρίς μηχανισμό'),confirmedDeals:[],preagreements:[],sponsoredShelves:[]};
+ [0,2,4,6].forEach(m=>c.simpleSchedule[m]=other);
+ await db.query('INSERT INTO scl290_snapshots(pharmacy_id,year,state_json) VALUES($1,2026,scl290_merge_state($1,2026,$2))',[pid,JSON.stringify({turnover:500000,cards:[c]})]);
+ const finance=async()=>(await db.query("SELECT scl292_finance(2026,'fixture-token',null) d")).rows[0].d;
+ let writes=0;
+ const x=await smoke(fs.readFileSync('index.html','utf8'),'pharmacy',null,async(n,a)=>{
+  if(n==='scl290_get_pharmacy')return {data:(await db.query('SELECT scl290_get_pharmacy($1,$2) d',[a.p_token,a.p_year])).rows[0].d,error:null};
+  if(n==='scl292_finance')return {data:await finance(),error:null};
+  if(n==='scl290_save_program'){writes++;try{return {data:(await db.query('SELECT scl290_save_program($1,$2,$3,$4,$5,$6,$7) d',[a.p_token,a.p_year,a.p_installation_version,a.p_snapshot_revision,JSON.stringify(a.p_state),JSON.stringify(a.p_months),JSON.stringify(a.p_deals)])).rows[0].d,error:null};}catch(e){return {data:null,error:{message:e.message}};}}
+ },{now:'2026-09-10T12:00:00Z'});
+ assert.deepEqual(x.errors,[]);const run=s=>vm.runInContext(s,x.ctx),tick=async()=>{for(let i=0;i<30;i++)await new Promise(r=>setImmediate(r));};
+ const click=async selector=>{const el=x.document.querySelector(selector);assert.ok(el,selector);await x.click(el);await tick();assert.equal(x.document.getElementById('scl297Error')?.textContent||'','');};
+ const field=(k,v)=>{const el=x.document.querySelector('[data-scl297-field="'+k+'"]');Object.defineProperty(el,'value',{value:String(v),writable:true,configurable:true});el.dispatchEvent(new x.ctx.Event(el.tagName==='SELECT'?'change':'input',{bubbles:true}));};
+ run("SCL297.openCustom('base-1')");await tick();
+ const check=x.document.querySelector('[data-scl297-month="10"]');check.checked=true;check.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));
+ await click('[data-scl293="actions-select"][data-theme="'+themes[1].id+'"]');await click('[data-scl297="review-custom"]');assert.match(x.document.getElementById('customModalBody').textContent,/15€/);
+ const preview=JSON.parse(run('JSON.stringify(SCL297.review.result.card)'));const projected=C.forecast(preview,2026,(await finance()).rows,A.active);
+ await click('[data-scl297="commit"]');assert.equal(writes,1);
+ const f1=await finance(),projectedSum=A.total(projected.filter(r=>r.status==='planned')),actualSum=A.total(f1.rows.filter(r=>r.status==='planned'&&r.category==='custom'));assert.equal(projectedSum,15);assert.equal(actualSum,projectedSum);assert.equal(A.total(f1.rows.filter(r=>r.category==='custom'&&r.status==='finalized')),15);
+ run("SCL297.openShelf('base-1',9)");field('brand','Shelf');field('duration',2);field('price',38);await click('[data-scl297="review-shelf"]');await click('[data-scl297="commit"]');
+ const f2=await finance();assert.deepEqual(f1.rows,f2.rows);
+ run("SCL297.openDeal('base-1')");field('supplier','Supplier');field('brand','Brand');field('duration',2);field('monthlyContentChanges','monthly');field('monthlyProducts.9','A');field('monthlyProducts.10','B');await click('[data-scl297="review-deal"]');
+ const dealPreview=JSON.parse(run('JSON.stringify(SCL297.review.result.card)'));assert.equal(A.total(C.forecast(dealPreview,2026,f2.rows,A.active).filter(r=>r.status==='planned')),60);
+ await click('[data-scl297="commit"]');assert.equal(writes,3);
+ const f3=await finance();assert.equal(A.total(f3.rows.filter(r=>r.category==='deal')),60);assert.equal(A.total(f3.rows.filter(r=>r.category==='custom'&&r.status==='finalized')),15);assert.equal(f3.rows.filter(r=>r.category==='custom'&&r.status==='planned').length,0);
+ const stored=(await db.query('SELECT * FROM scl290_snapshots WHERE pharmacy_id=$1',[pid])).rows[0];assert.equal(stored.state_json.cards.find(c=>c.id==='base-1').sponsoredShelves.length,0);assert.equal(stored.state_json.cards.find(c=>c.id==='base-1').confirmedDeals[0].materialRequests.length,2);
+ assert.equal(stored.months_json.filter(r=>r.position_id==='base-1'&&r.final_type==='deal').length,2);
+ const history=(await db.query('SELECT state_json FROM scl292_program_history WHERE pharmacy_id=$1',[pid])).rows;assert.ok(history.some(h=>h.state_json.cards.find(c=>c.id==='base-1')?.sponsoredShelves?.length===2));
+ await db.close();
+});
