@@ -30,7 +30,7 @@ const C={
    const groups=new Map(),t=C.theme(lib,e.theme_id);if(!t)continue;
    for(const r of all){
     const date=String(year)+'-'+String(Number(r.month)+1).padStart(2,'0')+'-01';
-    if(date.slice(0,7)<String(today).slice(0,7)||date.slice(0,7)<e.created_at.slice(0,7)||r.final_type==='deal'||r.position_orientation!==e.orientation||![t.key,t.title,...(t.aliases||[])].includes(r.final_title))continue;
+    if(date.slice(0,7)<e.created_at.slice(0,7)||r.final_type==='deal'||r.position_orientation!==e.orientation||![t.key,t.title,...(t.aliases||[])].includes(r.final_title))continue;
     const k=[r.pharmacy_id,r.position_id].join('|');if(!groups.has(k)||Number(r.month)<Number(groups.get(k).month))groups.set(k,r);
    }
    for(const r of groups.values()){
@@ -46,7 +46,6 @@ const C={
 
 </script>
 
-<!-- v293 library integration -->
 <script id="scl292-core">
 /* Shared, deterministic presentation helpers. Actual charges come from Supabase. */
 (function(root){
@@ -99,6 +98,11 @@ const C={
 })(typeof window!=='undefined'?window:globalThis);
 
 </script>
+
+
+
+<!-- v293 library integration -->
+
 
 
 
@@ -31900,6 +31904,8 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
 
 
 
+
+
 <script id="scl292-ui">
 (function(root){
  'use strict';
@@ -32156,6 +32162,8 @@ renderInitialPlanModal=function(id){
 const oldCustom=renderCustomModal;renderCustomModal=function(id){
  const result=oldCustom.apply(this,arguments),c=state.cards.find(x=>x.id===id),panel=$('customModalBody')?.querySelector('.editor-panel');if(!c||!panel)return result;
  if(!L.data){panel.innerHTML='<p>Φόρτωση βιβλιοθήκης…</p>';L.load().then(()=>renderCustomModal(id)).catch(e=>note(e.message));return;}
+ document.querySelector('#customModal .small').textContent='Οι αλλαγές αποθηκεύονται μόνο με επιβεβαίωση. Οι μήνες με Συμφωνία προμηθευτή παραμένουν κλειδωμένοι.';
+ $('customModalBody').querySelectorAll('.mini-badge').forEach(x=>{if(x.textContent==='Locked')x.textContent='Κλειδωμένος';});const reset=$('customModalBody').querySelector('[data-reset-custom]');if(reset)reset.textContent='Επαναφορά επιλογών';
  const m=state.customEditorMonth||0,locked=isCustomReadOnlyMonth(c,m),current=c.pendingSimpleSchedule?.[m]||c.simpleSchedule?.[m]||baseTheme(c,m);
  panel.innerHTML='<h4>'+MONTHS[m]+' — Εξατομίκευση</h4><p>Βασικό πρόγραμμα: '+E(title(baseTheme(c,m)))+'<br>Τρέχουσα επιλογή: '+E(title(c.simpleSchedule?.[m]||baseTheme(c,m)))+'</p>'+(locked?'<p>Ο μήνας δεν επιδέχεται Εξατομίκευση.</p>':'')+L.picker('custom',L.customQuery||'',C.theme(L.data,current)?.id,c.screenFormat,locked);L.customCard=id;return result;
 };
