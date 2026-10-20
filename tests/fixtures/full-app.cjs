@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),cp=require('child_process');
 const root=require('node:path').resolve(__dirname,'../..');
 const {parseHTML}=require(root+'/node_modules/linkedom');
-async function smoke(html,mode,fixtureState=null){
+async function smoke(html,mode,fixtureState=null,fixtureRpc=null){
  const {document,HTMLElement,Event}=parseHTML(html);Object.defineProperty(document,'readyState',{value:'loading',writable:true});
  const errors=[],timers=[],calls=[],map=new Map();
  const storage={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,String(v)),removeItem:k=>map.delete(k)};
@@ -13,6 +13,7 @@ async function smoke(html,mode,fixtureState=null){
  if(name==='scl292_finance')data={year:args.p_year,rows:[],requests:[],history:[]};
  if(name==='get_pharmacy_by_token')data=[{id:'fixture-pharmacy',name:'Fixture',token:'fixture-token'}];
  if(name==='scl290_get_pharmacy')data={pharmacy_id:'fixture-pharmacy',pharmacy_name:'Fixture',registry:{legacy:false},installation:{version:1,service_from:'2026-10-01',positions:[{id:'hq',ordinal:0,type:'hq',screenFormat:'vertical',startsOn:'2026-10-01'},{id:'base-1',ordinal:1,type:'base',title:'Θέση 1',screenFormat:'vertical',startsOn:'2026-10-01'}]},state_json:fixtureState,snapshot_revision:fixtureState?1:0,available_years:[2026]};
+ if(fixtureRpc){const response=await fixtureRpc(name,args);if(response!==undefined)return response;}
  return{data,error:null};}};
  class Clock extends Date { constructor(...args){super(...(args.length?args:['2026-10-20T12:00:00Z']));} static now(){return new Date('2026-10-20T12:00:00Z').valueOf();} }
  const ctx={document,HTMLElement,Event,Date:Clock,Intl,URL,URLSearchParams,Blob,Map,Set,Promise,JSON,Array,Object,Number,String,Math,RegExp,console:{log:()=>{},warn:()=>{},error:()=>{}},location:loc,localStorage:storage,sessionStorage:storage,

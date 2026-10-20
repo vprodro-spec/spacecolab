@@ -99,7 +99,7 @@ L.initialPicker=function(){
 };
 L.picker=function(context,q,current,format,disabled=false){return '<input data-scl293-search="'+context+'" value="'+E(q)+'" placeholder="Αναζήτηση θεματικής ή προϊόντος…" aria-label="Αναζήτηση βιβλιοθήκης"><div class="scl293-themes">'+C.available(L.data).filter(t=>(t.title+' '+t.variants.flatMap(v=>C.styles.flatMap(n=>v.setups[n].products)).join(' ')).toLocaleLowerCase('el').includes(q.toLocaleLowerCase('el'))).map(t=>'<article><strong>'+E(t.title)+'</strong><small>'+E([...new Set(t.variants.flatMap(v=>C.styles.flatMap(n=>v.setups[n].products)))].slice(0,4).join(' · ')||'Δεν έχουν οριστεί προϊόντα')+'</small><div class="scl293-actions">'+btn(current===t.id?'Επιλεγμένη':'Επιλογή',context+'-select','data-theme="'+t.id+'" '+(disabled?'disabled':'')+' aria-pressed="'+(current===t.id)+'"')+btn('Πλανόγραμμα','preview','data-theme="'+t.id+'" data-format="'+format+'"')+'</div></article>').join('')+'</div>';};
 renderInitialPlanModal=function(id){
- const c=state.cards.find(x=>x.id===id);if(!c?.screenFormat){note('Η οθόνη χρειάζεται ρύθμιση από τα κεντρικά.');return;}
+ const c=state.cards.find(x=>x.id===id);if(!c?.screenFormat){note('Η οθόνη χρειάζεται ρύθμιση από τα κεντρικά.');return;}if(!Array.from({length:12},(_,m)=>m).some(m=>SCL292Core.active(c,state.programYear,m))){note('Δεν απαιτείται πρόγραμμα: η θέση δεν λειτουργεί στο επιλεγμένο έτος.');return;}
  if(!L.data){L.load().then(()=>renderInitialPlanModal(id)).catch(e=>note(e.message));return;}
  const from=c._scl292Reset?SCL292Core.resetFrom(c._scl292Reset,state.programYear):0;
  const m=Array.from({length:12},(_,i)=>i).find(i=>i>=from&&SCL292Core.active(c,state.programYear,i));if(m===undefined){note('Δεν υπάρχουν μήνες λειτουργίας για προγραμματισμό.');return;}

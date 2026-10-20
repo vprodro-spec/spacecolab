@@ -2,7 +2,7 @@
   "name": "spacecolab",
   "private": true,
   "scripts": {
-    "build": "python scripts/build-v292.py && python scripts/build-v293.py",
+    "build": "python scripts/build-v292.py && python scripts/build-v293.py && python scripts/build-v294.py",
     "test": "node --test tests/*.test.cjs"
   },
   "devDependencies": {
