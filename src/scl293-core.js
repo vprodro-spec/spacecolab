@@ -26,7 +26,7 @@ const C={
    const groups=new Map(),t=C.theme(lib,e.theme_id);if(!t)continue;
    for(const r of all){
     const date=String(year)+'-'+String(Number(r.month)+1).padStart(2,'0')+'-01';
-    if(date.slice(0,7)<String(today).slice(0,7)||date.slice(0,7)<e.created_at.slice(0,7)||r.final_type==='deal'||r.position_orientation!==e.orientation||![t.key,t.title,...(t.aliases||[])].includes(r.final_title))continue;
+    if(date.slice(0,7)<e.created_at.slice(0,7)||r.final_type==='deal'||r.position_orientation!==e.orientation||![t.key,t.title,...(t.aliases||[])].includes(r.final_title))continue;
     const k=[r.pharmacy_id,r.position_id].join('|');if(!groups.has(k)||Number(r.month)<Number(groups.get(k).month))groups.set(k,r);
    }
    for(const r of groups.values()){

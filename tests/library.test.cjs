@@ -16,7 +16,7 @@ test('filename corrections and shelf edits create no task; actual material repla
  const lib=C.clone(seed),t=lib.themes[0],r={pharmacy_id:'p',position_id:'base-1',month:10,year:2026,final_title:t.key,final_type:'basic',position_orientation:'vertical',content_change_required:false};
  t.files.vertical='A.mp4';assert.deepEqual(C.mediaRows(lib,[r],[],2026,'2026-10-20'),[]);
  lib.media_events=[{id:'revision-1',theme_id:t.id,orientation:'vertical',created_at:'2026-10-20T12:00:00Z'}];
- const rows=C.mediaRows(lib,[r,{...r,month:11},{...r,position_id:'landscape',position_orientation:'horizontal'},{...r,position_id:'deal',final_type:'deal'}],[],2026,'2026-10-20');assert.equal(rows.length,1);assert.equal(rows[0].month,10);assert.equal(rows[0].billing_change_applies,false);assert.equal(rows[0].content_revision,'library:revision-1');
+ const rows=C.mediaRows(lib,[r,{...r,month:11},{...r,position_id:'landscape',position_orientation:'horizontal'},{...r,position_id:'deal',final_type:'deal'}],[],2026,'2026-10-20');assert.equal(rows.length,1);assert.equal(rows[0].month,10);assert.equal(rows[0].billing_change_applies,false);assert.equal(rows[0].content_revision,'library:revision-1');assert.deepEqual(C.mediaRows(lib,[r,{...r,month:11}],[],2026,'2026-12-01'),rows);
 });
 test('library database enforces access, revisions, publication rules and retains pharmacy state',async t=>{
  const db=new PGlite();await db.exec(bootstrap);await db.exec(fs.readFileSync('supabase/migrations/'+fs.readdirSync('supabase/migrations').find(x=>x.endsWith('_shared_library.sql')),'utf8'));
