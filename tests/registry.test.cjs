@@ -17,7 +17,7 @@ test('HQ registry lifecycle: activation, installation, pause, correction and ful
  `);
  await db.exec(fs.readFileSync('tests/fixtures/v290-normalization.sql','utf8'));
  await db.exec(fs.readFileSync('tests/fixtures/v290-registry.sql','utf8'));
- for(const f of ['20261020165150_programme_finance_history.sql','20261020174619_certification_guards.sql','20261020190310_hq_registry_screens.sql'])await db.exec(fs.readFileSync('supabase/migrations/'+f,'utf8'));
+ for(const f of ['20261020165150_programme_finance_history.sql','20261020174619_certification_guards.sql','20261020190310_hq_registry_screens.sql','20261020191752_paused_position_sponsorship_guard.sql'])await db.exec(fs.readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(`CREATE OR REPLACE FUNCTION scl_private.today() RETURNS date LANGUAGE sql STABLE SET search_path='' AS $$SELECT date '2026-10-20'$$`);
  const rpc=async(name,params)=>(await db.query(`SELECT ${name}(${params.map((_,i)=>'$'+(i+1)).join(',')}) d`,params)).rows[0].d;
  let reg,ph,cfg;
@@ -53,6 +53,7 @@ test('HQ registry lifecycle: activation, installation, pause, correction and ful
   const f=await rpc('scl292_finance',[2026,ph.token,null]);assert.ok(f.rows.some(x=>x.event_key==='history-charge'&&Number(x.amount)===15));assert.equal(f.rows.some(x=>x.category==='deal'&&x.status==='planned'),false);assert.equal(f.rows.some(x=>x.category==='extra'&&x.month===11),false);
   await assert.rejects(rpc('scl290_save_program',[ph.token,2026,1,before.snapshot_revision,before.state_json,[],[]]),/INSTALLATION_CHANGED/);
   const bad=structuredClone(cfg.positions);bad[2].stopsOn='2026-09-01';await assert.rejects(rpc('scl290_hq_install',['test-hq',reg.id,cfg.version,2026,'PAPADOPOULOS','2026-09-01',bad]),/μελλοντικό/);
+  const shelfState=structuredClone(after.state_json);shelfState.cards[3].sponsoredShelves=[{month:11,price:80,brand:'Test'}];await assert.rejects(rpc('scl290_save_program',[ph.token,2026,cfg.version,after.snapshot_revision,shelfState,[],[]]),/POSITION_PAUSED/);
   after.state_json.cards[3].confirmedDeals[0].brand='Changed';await assert.rejects(rpc('scl290_save_program',[ph.token,2026,cfg.version,after.snapshot_revision,after.state_json,[],[]]),/POSITION_PAUSED/);
  });
  await t.test('adding after a pause uses the next ordinal and leaves old position intact',async()=>{

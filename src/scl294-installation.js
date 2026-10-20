@@ -162,6 +162,7 @@
   function pharmacyUI(){
     if(!isPh())return;const ready=installed()||!!R.context?.registry.legacy;
     document.querySelectorAll('[data-counters],#countersMinus,#countersPlus,[data-toggle-setup],[data-select-format]').forEach(x=>{x.disabled=true;x.hidden=true;});
+    document.querySelectorAll('[data-open-sponsored],[data-save-sponsored],[data-delete-sponsored]').forEach(b=>{const id=b.dataset.openSponsored||b.dataset.saveSponsored||b.dataset.deleteSponsored,c=state.cards.find(c=>c.id===id);if(c&&!C.active(c,year(),Number(b.dataset.sponsoredMonth))){b.disabled=true;b.title='Η θέση δεν λειτουργεί σε αυτόν τον μήνα';}});
     const status=el('setupStatus');if(status)status.innerHTML='<div class="scl290-setup"><div><strong>'+(ready?'Θέσεις ορισμένες από τα κεντρικά':'Αναμονή εγκατάστασης')+'</strong><div>'+html(String(state.cards.filter(c=>c.type!=='hq').length))+' θέσεις φαρμακείου · PharmaPlus ADV0</div></div><button type="button" data-scl290="refresh-install">Ανανέωση θέσεων</button><button type="button" data-scl290="turnover">'+(R.turnoverEdit?'Ολοκλήρωση τζίρου':'Ενημέρωση τζίρου')+'</button></div>';
     const ctr=el('setupControls');if(ctr)ctr.classList.toggle('hidden',!R.turnoverEdit);
     document.querySelectorAll('[data-turnover],#turnoverMinus,#turnoverPlus').forEach(b=>{b.disabled=!R.turnoverEdit;b.onclick=()=>{if(!R.turnoverEdit)return;state.turnover=b.dataset.turnover?Number(b.dataset.turnover):Math.max(0,(Number(state.turnover)||0)+(b.id==='turnoverPlus'?100000:-100000));refresh();};});
@@ -274,7 +275,8 @@
   });
   // Capture obsolete controls before existing listeners, including setup-unlock shortcuts.
   document.addEventListener('click',e=>{if(!isPh())return;const b=e.target.closest?.('[data-counters],#countersMinus,#countersPlus,[data-toggle-setup],[data-select-format]');if(b){e.preventDefault();e.stopImmediatePropagation();return;}
-    const deal=e.target.closest?.('[data-confirm-neg],[data-save-preagreement],[data-save-neg-edit]');if(deal){const id=deal.dataset.confirmNeg||deal.dataset.savePreagreement||deal.dataset.saveNegEdit;const c=state.cards.find(c=>c.id===id);if(c&&!C.active(c,year(),Number(c.negotiation?.startMonth)||0)){e.preventDefault();e.stopImmediatePropagation();notice('Η συμφωνία πρέπει να ξεκινά από τον μήνα εγκατάστασης της θέσης ή αργότερα.',true);}}
+    const shelf=e.target.closest?.('[data-open-sponsored],[data-save-sponsored],[data-delete-sponsored]');if(shelf){const c=state.cards.find(c=>c.id===(shelf.dataset.openSponsored||shelf.dataset.saveSponsored||shelf.dataset.deleteSponsored));if(c&&!C.active(c,year(),Number(shelf.dataset.sponsoredMonth))){e.preventDefault();e.stopImmediatePropagation();notice('Η θέση δεν λειτουργεί σε αυτόν τον μήνα.',true);return;}}
+    const deal=e.target.closest?.('[data-confirm-neg],[data-save-preagreement],[data-save-neg-edit]');if(deal){const id=deal.dataset.confirmNeg||deal.dataset.savePreagreement||deal.dataset.saveNegEdit;const c=state.cards.find(c=>c.id===id);if(c&&Array.from({length:Math.max(1,Number(c.negotiation?.duration)||1)},(_,i)=>(Number(c.negotiation?.startMonth)||0)+i).some(m=>m>11||!C.active(c,year(),m))){e.preventDefault();e.stopImmediatePropagation();notice('Όλοι οι μήνες της συμφωνίας πρέπει να βρίσκονται μέσα στην περίοδο λειτουργίας της θέσης.',true);}}
   },true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDialog();});
   root.addEventListener('beforeunload',e=>{if(R.dirty){e.preventDefault();e.returnValue='';}});
