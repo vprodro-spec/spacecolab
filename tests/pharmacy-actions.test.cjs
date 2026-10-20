@@ -30,7 +30,9 @@ test('custom multi-month draft, lost sponsorship warning, explicit confirmation 
 });
 
 test('shelf exploration is unsaved, below-reference prices and four shelves work, multi-month persistence has no video tasks',async()=>{
- const x=await app();x.run("SCL297.openShelf('base-1',9)");await tick();const before=x.state();
+ const x=await app();await x.click('[data-scl295="position"][data-card="base-1"]');
+ await x.click('[data-scl295="planogram"][data-month="9"]');assert.ok(x.document.querySelector('#planogramModal.open'));await x.click('[data-close="planogramModal"]');assert.equal(x.document.querySelector('#planogramModal.open'),null);
+ await x.click('[data-scl295="shelf"][data-month="9"]');assert.ok(x.document.querySelector('#sponsoredModal.open'));await tick();const before=x.state();
  await x.field('brand','Shelf Brand');await x.field('products','Product');await x.field('price',35.5);await x.field('duration',2);await x.field('shelves','4 ράφια από πάνω');
  assert.deepEqual(x.state(),before);assert.equal(x.writes.length,0);assert.doesNotMatch(x.text('sponsoredModalBody'),/Σημειώσεις|Μηχανισμός προβολής/);
  await x.click('[data-scl297="review-shelf"]');assert.match(x.text('sponsoredModalBody'),/35,5€/);await x.click('[data-scl297="commit"]');assert.equal(x.writes.length,1);

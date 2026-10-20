@@ -186,8 +186,9 @@ const oldClose=closeModal;closeModal=function(id){if(F.draft&&id===modal()){if(F
 const oldBind=bindEvents;bindEvents=function(){const result=oldBind.apply(this,arguments);for(const id of ['customModal','negotiationModal','sponsoredModal'])if($(id))$(id).onclick=e=>{if(e.target===$(id))closeModal(id);};return result;};
 renderCustomModal=F.openCustom;renderNegotiationModal=function(id){const edit=state.editingNegotiation;return F.openDeal(id,edit?.type,edit?.index||0);};renderSponsoredModal=F.openShelf;
 document.addEventListener('click',async e=>{
- const pick=e.target.closest?.('[data-scl297],[data-scl293="actions-select"],[data-edit-preagreement],[data-edit-confirmed-deal]');if(!pick||!ph())return;e.preventDefault();e.stopImmediatePropagation();if(pick.disabled||F.busy)return;
+ const pick=e.target.closest?.('[data-scl297],[data-scl293="actions-select"],[data-edit-preagreement],[data-edit-confirmed-deal],[data-close]');if(!pick||!ph())return;e.preventDefault();e.stopImmediatePropagation();if(pick.disabled||F.busy)return;
  try{
+  if(pick.dataset.close){closeModal(pick.dataset.close);return;}
   if(pick.dataset.scl293==='actions-select'){const d=F.draft,c=card(d?.card),t=SCL293Core.theme(L.data,pick.dataset.theme);if(d?.kind!=='custom'||t?.status!=='available'||SCL295.customReason(c,d.focus))return;for(const m of d.selected||[])if(!SCL295.customReason(c,m))d.data.schedule[m]=t.key;render();}
   else if(pick.hasAttribute('data-edit-preagreement'))F.openDeal(pick.dataset.editPreagreement,'preagreement',Number(pick.dataset.preagreementIndex)||0);
   else if(pick.hasAttribute('data-edit-confirmed-deal'))F.openDeal(pick.dataset.editConfirmedDeal,'confirmed',Number(pick.dataset.confirmedIndex)||0);

@@ -6,6 +6,8 @@ The next-year shortcut targets the next calendar year, reopens an existing progr
 
 Forms reuse the existing action buttons, numbered agreement sections, black position context and green financial summary. No replacement design system or full redesign is introduced. Visual checks are part of this release, with final cross-application refinements still pending.
 
+Live browser checks also exposed the old direct-binding path for shelf sponsorship and planogram buttons. Position actions and modal close buttons now use the current delegated handlers; their click entry points are covered by the interaction tests. The build emits dependent UI modules in a canonical order.
+
 Validation: 69 automated tests pass, including a PostgreSQL-backed January–February 2027 workflow, one €30 charge for continuous fixed content, year reopening without duplicate years, preservation of prior-year charges, server failure with retained draft, double confirmation while another save is pending, and successful persistence despite a subsequent rendering error.
 
 The live v297 investigation confirmed that the test agreement was stored and the editor closed, then a supplier-document modal opened automatically. That controlled test entry was removed through the normal versioned save, preserving history. Live v298 browser verification is performed after deployment. HQ access security and the remaining HQ feature packages are not part of this fix.
