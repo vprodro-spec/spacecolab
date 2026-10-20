@@ -13,7 +13,7 @@ function fixture(mode='pharmacy',response={rows:[],requests:[],history:[]}){
   sclMode:()=>mode,dealRevenue:()=>200,sponsoredRevenue:()=>55,suggestedPrice:()=>150,customCost:()=>0,dealCost:()=>0,
   refresh:()=>{},scl212Render:()=>{},scl212RenderChanges:()=>{},scl212Load:async()=>{},sclSaveNow:async()=>{calls.push({name:'save'});},
   clone:x=>JSON.parse(JSON.stringify(x)),mechanisms:()=>Array(12).fill(''),defaultNegotiation:()=>({}),
-  setTimeout:()=>0,alert:m=>alerts.push(m),confirm:()=>true,prompt:()=>prompts.shift()??null,sclResetCurrentPharmacyYearV190:()=>{},
+  setTimeout:()=>0,addEventListener:()=>{},ResizeObserver:class{observe(){}},alert:m=>alerts.push(m),confirm:()=>true,prompt:()=>prompts.shift()??null,sclResetCurrentPharmacyYearV190:()=>{},
   loadYear:async()=>{},renderInitialPlanModal:()=>{}
  };env.window=env;const ctx=vm.createContext(env);
  const originalLock=html.match(/function lockInitialPlan\(card,type,program,sched\)\{[\s\S]*?\n\}\nfunction renderInitialPlanModal/)[0].replace(/\nfunction renderInitialPlanModal$/,'');

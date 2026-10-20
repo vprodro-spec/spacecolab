@@ -41,6 +41,16 @@ if '<!-- v292 central completion -->' not in s:
     s=s.replace('<head>','<head>\n<!-- v292 central completion -->',1)
 s=s.replace('Κλείδωμα 5 μέρες πριν ξεκινήσει κάθε μήνας.','Αλλαγές έως και τις 15 του προηγούμενου μήνα.')
 s=s.replace('Έχει περάσει το cut-off των 5 ημερών.','Έχει περάσει η προθεσμία της 15ης του προηγούμενου μήνα.')
+# Retire the periodic legacy HQ rewrite, which also changed live selector values.
+s=re.sub(r'function sclForceHqYearTextV191\(\)\{.*?\n\}',
+         'function sclForceHqYearTextV191(){\n  // The selected year is authoritative; never rewrite years in rendered content.\n}',
+         s,count=1,flags=re.S)
+s=re.sub(r"    const ys=document.getElementById\('sclHqProgramYear'\);\n    if\(ys && Array.from\(ys.options\).*?\n    \}", '',s,count=1,flags=re.S)
+# A response for an earlier selection must not populate the current campaign year.
+s=s.replace("p_year:scl231Year()});if(error){if(status)status.textContent='SQL λείπει ή σφάλμα: '",
+            "p_year:requestedYear});if(requestedYear!==scl231Year())return;if(error){if(status)status.textContent='SQL λείπει ή σφάλμα: '")
+s=s.replace("async function scl231LoadCampaigns(){if(!sb||!SCL_ROUTING?.hqKey)return;const status=",
+            "async function scl231LoadCampaigns(){if(!sb||!SCL_ROUTING?.hqKey)return;const requestedYear=scl231Year();const status=")
 core='<script id="scl292-core">\n'+(root/'src/scl292-core.js').read_text()+'\n</script>\n'
 ui='<script id="scl292-ui">\n'+(root/'src/scl292-ui.js').read_text()+'\n</script>\n'
 s=s.replace('<head>','<head>\n'+core,1)

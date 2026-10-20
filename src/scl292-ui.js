@@ -118,6 +118,25 @@
  document.addEventListener('click',e=>{const cb=e.target.closest?.('input[data-task]');if(cb&&cb.dataset.task.startsWith('v292|')&&!cb.checked&&!confirm('Αναίρεση ολοκλήρωσης; Η προηγούμενη ενέργεια θα παραμείνει στο ιστορικό.')){e.preventDefault();e.stopImmediatePropagation();}},true);
  const yearSelect=el('scl212Year');if(yearSelect){const now=C.year(null),ys=new Set([...yearSelect.options].map(x=>Number(x.value)));for(let y=now-1;y<=now+2;y++)ys.add(y);let chosen=now;try{const saved=localStorage.getItem('scl292.hqYear');if(saved)chosen=C.year(saved);}catch(e){}ys.add(chosen);yearSelect.innerHTML=[...ys].filter(y=>y>=2026).sort().map(y=>'<option value="'+y+'" '+(y===chosen?'selected':'')+'>'+y+'</option>').join('');yearSelect.addEventListener('change',()=>{try{localStorage.setItem('scl292.hqYear',yearSelect.value);}catch(e){}});}
  document.querySelectorAll('.scl212-tab[data-tab="billing"]').forEach(b=>b.textContent='Χρεώσεις');
+ // The old fixed header used a hard-coded spacer smaller than the actual header.
+ const nav=document.querySelector('.sticky-nav');
+ if(nav&&isPh()){
+  const measure=()=>{const h=Math.ceil(nav.getBoundingClientRect().height);if(h)document.documentElement.style.setProperty('--scl292-nav-height',h+'px');};
+  if(typeof ResizeObserver==='function')new ResizeObserver(measure).observe(nav);
+  else root.addEventListener('resize',measure);
+  measure();
+ }
+ const visualStyle=document.createElement('style');visualStyle.id='scl292-visual-fixes';
+ visualStyle.textContent='body.scl-pharmacy .shell{padding-top:var(--scl292-nav-height,310px)!important}#scl212Page-changes .scl290-player-label{white-space:nowrap;overflow-wrap:normal;word-break:normal;font-size:12px}';
+ document.head.appendChild(visualStyle);
+ R.reloadCampaignYear=async function(){
+  if(!isHQ()||typeof scl231LoadCampaigns!=='function')return;
+  SCL231.campaigns=[];SCL231.selectedMonth=null;
+  const panel=el('scl231EditorPanel');if(panel)panel.style.display='none';
+  scl231RenderCards();
+  await scl231LoadCampaigns();
+ };
+ if(yearSelect)yearSelect.addEventListener('change',()=>R.reloadCampaignYear().catch(e=>notice('Δεν φορτώθηκαν οι καμπάνιες: '+e.message)));
  const oldHQLoad=scl212Load;scl212Load=async function(){const x=await oldHQLoad.apply(this,arguments);if(isHQ()){await Promise.all([R.loadFinance(true),R.loadDone()]);}return x;};
  setTimeout(()=>{R.loadFinance().catch(()=>{});R.loadDone().catch(e=>notice(e.message));},1200);
 })(window);
