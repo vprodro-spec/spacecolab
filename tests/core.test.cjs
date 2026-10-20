@@ -42,6 +42,10 @@ test('approved reopening preserves past selections, agreements and past sponsors
  assert.equal(card.confirmedDeals[0].id,'keep');assert.equal(card.sponsoredShelves.length,1);assert.equal(card._scl292ResetApplied,'req');
 });
 test('every inline script compiles; old year enforcement is removed',()=>{
+ const ids=['scl290-installation','scl292-ui','scl293-ui','scl295-pharmacy','scl297-actions-core','scl297-actions-ui'];
+ const built=fs.readFileSync('index.html','utf8');
+ const offsets=ids.map(id=>{const marker='<script id="'+id+'">';assert.equal(built.split(marker).length-1,1,id);return built.indexOf(marker);});
+ assert.deepEqual(offsets,[...offsets].sort((a,b)=>a-b),'UI dependencies must precede their consumers in every build');
  const html=fs.readFileSync('index.html','utf8');let count=0;
  for(const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){
   if(/\bsrc\s*=|application\/json/.test(m[1]))continue;

@@ -26,11 +26,11 @@ test('pharmacy form saves run through PostgreSQL: charges match preview, sponsor
  const c={id:'base-1',type:'base',title:'Θέση 1',screenFormat:'vertical',initialPlanLocked:true,simpleConfirmed:true,basicSchedule:Array(12).fill(theme),simpleSchedule:Array(12).fill(theme),simpleMechanism:Array(12).fill('Χωρίς μηχανισμό'),confirmedDeals:[],preagreements:[],sponsoredShelves:[]};
  [0,2,4,6].forEach(m=>c.simpleSchedule[m]=other);
  await db.query('INSERT INTO scl290_snapshots(pharmacy_id,year,state_json) VALUES($1,2026,scl290_merge_state($1,2026,$2))',[pid,JSON.stringify({turnover:500000,cards:[c]})]);
- const finance=async()=>(await db.query("SELECT scl292_finance(2026,'fixture-token',null) d")).rows[0].d;
+ const finance=async(year=2026)=>(await db.query("SELECT scl292_finance($1,'fixture-token',null) d",[year])).rows[0].d;
  let writes=0;
  const x=await smoke(fs.readFileSync('index.html','utf8'),'pharmacy',null,async(n,a)=>{
   if(n==='scl290_get_pharmacy')return {data:(await db.query('SELECT scl290_get_pharmacy($1,$2) d',[a.p_token,a.p_year])).rows[0].d,error:null};
-  if(n==='scl292_finance')return {data:await finance(),error:null};
+  if(n==='scl292_finance')return {data:await finance(a.p_year),error:null};
   if(n==='scl290_save_program'){writes++;try{return {data:(await db.query('SELECT scl290_save_program($1,$2,$3,$4,$5,$6,$7) d',[a.p_token,a.p_year,a.p_installation_version,a.p_snapshot_revision,JSON.stringify(a.p_state),JSON.stringify(a.p_months),JSON.stringify(a.p_deals)])).rows[0].d,error:null};}catch(e){return {data:null,error:{message:e.message}};}}
  },{now:'2026-09-10T12:00:00Z'});
  assert.deepEqual(x.errors,[]);const run=s=>vm.runInContext(s,x.ctx),tick=async()=>{for(let i=0;i<30;i++)await new Promise(r=>setImmediate(r));};
@@ -51,5 +51,19 @@ test('pharmacy form saves run through PostgreSQL: charges match preview, sponsor
  const stored=(await db.query('SELECT * FROM scl290_snapshots WHERE pharmacy_id=$1',[pid])).rows[0];assert.equal(stored.state_json.cards.find(c=>c.id==='base-1').sponsoredShelves.length,0);assert.equal(stored.state_json.cards.find(c=>c.id==='base-1').confirmedDeals[0].materialRequests.length,2);
  assert.equal(stored.months_json.filter(r=>r.position_id==='base-1'&&r.final_type==='deal').length,2);
  const history=(await db.query('SELECT state_json FROM scl292_program_history WHERE pharmacy_id=$1',[pid])).rows;assert.ok(history.some(h=>h.state_json.cards.find(c=>c.id==='base-1')?.sponsoredShelves?.length===2));
+ // A real two-month next-year workflow, with the real current-year deadline rules intact.
+ await click('[data-scl295="new-year"]');assert.equal(run('state.programYear'),2027);assert.equal(run("state.cards.find(c=>c.id==='base-1').initialPlanLocked"),false);
+ run("renderInitialPlanModal('base-1')");await tick();
+ run('SCL293.initial.refs=JSON.parse(JSON.stringify(SCL293.data.programs[0].months));SCL293.initialPicker()');
+ await click('[data-scl293="initial-lock"]');assert.equal(run("state.cards.find(c=>c.id==='base-1').initialPlanLocked"),true);
+ run("SCL297.openDeal('base-1')");field('supplier','Next Year Supplier');field('brand','January February');field('duration',2);field('soldMonthlyPrice',175);
+ await click('[data-scl297="review-deal"]');assert.match(x.document.getElementById('negotiationModalBody').textContent,/Ιαν–Φεβ 2027/);await click('[data-scl297="commit"]');
+ assert.equal(x.document.querySelector('.modal.open'),null);
+ const nextStored=(await db.query('SELECT state_json FROM scl290_snapshots WHERE pharmacy_id=$1 AND year=2027',[pid])).rows[0].state_json;
+ assert.equal(nextStored.cards.find(c=>c.id==='base-1').confirmedDeals[0].duration,2);assert.equal(A.total((await finance(2027)).rows.filter(r=>r.category==='deal')),30);
+ const beforeReturn=JSON.stringify(nextStored);await click('[data-scl295="current-year"]');await click('[data-scl295="new-year"]');assert.equal(run('state.programYear'),2027);
+ assert.equal(JSON.stringify((await db.query('SELECT state_json FROM scl290_snapshots WHERE pharmacy_id=$1 AND year=2027',[pid])).rows[0].state_json),beforeReturn);
+ assert.equal((await db.query('SELECT count(*) n FROM scl290_snapshots WHERE pharmacy_id=$1 AND year>2027',[pid])).rows[0].n,0);
+ assert.equal(A.total((await finance()).rows.filter(r=>r.category==='custom'&&r.status==='finalized')),15);
  await db.close();
 });

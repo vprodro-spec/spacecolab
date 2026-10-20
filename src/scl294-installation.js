@@ -156,10 +156,10 @@
   loadYear=async function(y){if(!isPh()||!R.context)return oldLoadYear(y);try{if(installed())await flushManaged();else if(R.dirty)await sclSaveNow();await loadPharmacy(Number(y));}catch(e){failure(e);}};
   const oldCreateYear=createNextProgramYear;
   createNextProgramYear=async function(){if(!isPh()||!installed())return oldCreateYear();try{
-    await flushManaged();const next=Math.max(...(state.availableYears||[year()]))+1;
+    await flushManaged();const next=Number(SCL292Core.today().slice(0,4))+1;
     const template=yearSnapshot();template.cards=template.cards.map(resetYearOperationalData);
     await loadPharmacy(next);if(!R.context.snapshot_revision&&!R.context.had_saved_state){sclApplyStatePayload(template);applyInstallation();R.dirty=true;refresh(false);await saveManaged();}
-  }catch(e){failure(e);}};
+  }catch(e){failure(e);throw e;}};
   function pharmacyUI(){
     if(!isPh())return;const ready=installed()||!!R.context?.registry.legacy;
     document.querySelectorAll('[data-counters],#countersMinus,#countersPlus,[data-toggle-setup],[data-select-format]').forEach(x=>{x.disabled=true;x.hidden=true;});

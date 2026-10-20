@@ -67,7 +67,7 @@ function mount(){
  if(V.mounted)return;const shell=document.querySelector('.shell'),nav=document.querySelector('.sticky-nav');if(!shell||!nav)return;
  V.mounted=true;document.body.classList.add('scl295-pharmacy');
  const logo=nav.querySelector('.hero-logo')?.outerHTML||'<strong>SpaceCoLab</strong>';
- nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v297</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
+ nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v298</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
  const econ=$('economicsGrid'),econNote=$('economicsNote');
  $('overviewPage').innerHTML='<section class="scl295-section"><h1>Το φαρμακείο μου</h1><div id="scl295Profile"></div></section><section class="scl295-section"><h2>Οι οθόνες μου</h2><div id="scl295Installation"></div></section><div id="setupStatus" hidden></div><section class="scl295-section" id="scl295RequestHost"></section>';
  $('plannerPage').innerHTML='<section class="scl295-section"><div class="scl295-section-head"><h1>Προγραμματισμός</h1><span id="scl295ProgramYear"></span></div><div id="scl295Pending"></div><div id="cards" class="scl295-cards"></div></section><section id="scl295PositionSection" class="scl295-section" hidden><div id="plannerRoot"></div></section><section class="scl295-section"><h2>Ετήσιο πρόγραμμα</h2><div id="timelineGrid" class="scl295-timeline"></div></section>';
@@ -78,7 +78,7 @@ function mount(){
  for(const id of ['overviewPage','plannerPage','guidePage'])shell.appendChild($(id));
  const n=document.createElement('div');n.id='scl295Notice';n.hidden=true;n.setAttribute('role','status');shell.prepend(n);
 }
-function renderYears(){if(!V.mounted)return;const years=[...new Set([...(state.availableYears||[]),y()])].sort((a,b)=>a-b);$('yearControls').innerHTML='<div class="scl295-years"><label>Έτος προγράμματος <select id="scl295Year">'+years.map(yr=>'<option value="'+yr+'" '+(yr===y()?'selected':'')+'>'+yr+'</option>').join('')+'</select></label>'+button('Πρόγραμμα '+(Math.max(...years)+1),'new-year')+(y()<now().year?'<span>Ιστορικό · μόνο προβολή</span>':'')+'</div>';document.querySelectorAll('[data-scl295-year]').forEach(e=>e.textContent=y());}
+function renderYears(){if(!V.mounted)return;const current=now().year,years=[...new Set([...(state.availableYears||[]),y()])].sort((a,b)=>a-b);$('yearControls').innerHTML='<div class="scl295-years"><label>Έτος προγράμματος <select id="scl295Year">'+years.map(yr=>'<option value="'+yr+'" '+(yr===y()?'selected':'')+'>'+yr+'</option>').join('')+'</select></label>'+(y()!==current+1?button('Πρόγραμμα '+(current+1),'new-year'):button('Τρέχον έτος · '+current,'current-year'))+(y()<current?'<span>Ιστορικό · μόνο προβολή</span>':y()>current?'<span>Προγραμματισμός επόμενου έτους · '+y()+'</span>':'')+'</div>';document.querySelectorAll('[data-scl295-year]').forEach(e=>e.textContent=y());}
 function renderNavigation(){if(!V.mounted)return;for(const p of ['planner','overview','economics','estimate','guide'])$(p+'Page')?.classList.toggle('active',V.page===p);document.querySelectorAll('[data-page-value]').forEach(b=>{b.classList.toggle('active',b.dataset.pageValue===V.page);b.setAttribute('aria-current',b.dataset.pageValue===V.page?'page':'false');});state.currentPage=V.page;}
 function renderProfile(){
  if(!V.mounted)return;const ctx=SCL290.context,r=ctx?.registry||{},cfg=ctx?.installation;
@@ -158,7 +158,8 @@ async function action(b){
  else if(a==='cancel-turnover'){V.turnoverEditing=false;V.turnoverDraft=null;renderProfile();}
  else if(a==='save-turnover'){
   if(!(V.turnoverDraft>0)||!configured())return;const old=state.turnover;V.busy=true;renderProfile();state.turnover=V.turnoverDraft;SCL290.dirty=true;
-  try{await sclSaveNow();V.turnoverEditing=false;V.turnoverDraft=null;V.page='planner';refresh(false);notice('Ο τζίρος αποθηκεύτηκε.');}catch(e){state.turnover=old;throw e;}finally{V.busy=false;renderProfile();}
+  try{await sclSaveNow();}catch(e){state.turnover=old;V.busy=false;renderProfile();throw e;}finally{V.busy=false;}
+  V.turnoverEditing=false;V.turnoverDraft=null;V.page='planner';try{refresh(false);}catch(e){notice('Ο τζίρος αποθηκεύτηκε. Ανανέωσε τη σελίδα για να εμφανιστεί.');return;}notice('Ο τζίρος αποθηκεύτηκε.');
  }
  else if(a==='initial'){if(turnoverReady()&&c&&pharmacyOnly(c))renderInitialPlanModal(c.id);}
  else if(a==='custom'){if(!c||!pharmacyOnly(c))return;if(root.SCL297)return root.SCL297.openCustom(c.id);const first=customMonthsAvailable(c)[0];if(first===undefined){notice(customSummary(c));return;}c.pendingSimpleSchedule=clone(c.simpleConfirmed?c.simpleSchedule:c.basicSchedule);c.pendingSimpleMechanism=clone(c.simpleMechanism||mechanisms());L.customQuery='';state.customEditorMonth=first;renderCustomModal(c.id);}
@@ -171,20 +172,25 @@ async function action(b){
  }
  else if(a==='close-dialog')$('scl295Dialog')?.remove();
  else if(a==='new-year'){await createNextProgramYear();V.selected=null;V.contexts={};refresh(false);}
+ else if(a==='current-year'){await loadYear(now().year);V.selected=null;V.contexts={};refresh(false);}
 }
 V.confirmInitial=async function(){
  const d=L.initial,c=state.cards.find(c=>c.id===d?.card);if(!c||V.busy||!pharmacyOnly(c))return;
  const sched=d.refs.map(r=>LC.theme(L.data,r?.theme)?.key||''),from=c._scl292Reset?C.resetFrom(c._scl292Reset,y()):0;
  const missing=Array.from({length:12},(_,m)=>m).filter(m=>m>=from&&active(c,m)&&!sched[m]);
- const error=t=>{let n=$('scl295InitialError');if(!n){n=document.createElement('p');n.id='scl295InitialError';n.setAttribute('role','alert');$('programModalBody').prepend(n);}n.textContent=t;};
+ const error=t=>{let n=$('scl295InitialError');if(!n){n=document.createElement('p');n.id='scl295InitialError';n.setAttribute('role','alert');$('programModalBody').prepend(n);}n.textContent=t;n.scrollIntoView?.({block:'nearest'});};
  if(!turnoverReady()){error('Συμπλήρωσε πρώτα τον ετήσιο τζίρο.');return;}if(y()<now().year){error('Το προηγούμενο έτος παραμένει μόνο για προβολή.');return;}
  if(missing.length){error('Συμπλήρωσε τους μήνες: '+missing.map(m=>MONTHS[m]).join(', ')+'.');return;}
  const prior=clone(state.cards),dirty=SCL290.dirty;
  if(!lockInitialPlan(c,d.program?'network':'manual',d.program||'MANUAL',sched))return;
- V.busy=true;SCL290.dirty=true;document.querySelectorAll('#programModal button').forEach(b=>b.disabled=true);
- try{await sclSaveNow();L.initial=null;V.initialBaseline=null;closeModal('programModal');V.selected=c.id;refresh(false);notice('Το πρόγραμμα της '+name(c)+' οριστικοποιήθηκε.');}
- catch(e){state.cards=prior;SCL290.dirty=dirty;error('Δεν οριστικοποιήθηκε: '+e.message);}
- finally{V.busy=false;document.querySelectorAll('#programModal button').forEach(b=>b.disabled=false);}
+ const buttons=[...document.querySelectorAll('#programModal button')].map(b=>({b,disabled:b.disabled,text:b.textContent}));
+ V.busy=true;SCL290.dirty=true;$('programModal').setAttribute('aria-busy','true');buttons.forEach(({b})=>{b.disabled=true;if(b.dataset.scl293==='initial-lock')b.textContent='Αποθήκευση…';});
+ try{await sclSaveNow();}
+ catch(e){state.cards=prior;SCL290.dirty=dirty;error('Δεν οριστικοποιήθηκε: '+e.message+' Οι επιλογές σου παραμένουν στη φόρμα.');return;}
+ finally{V.busy=false;$('programModal').setAttribute('aria-busy','false');buttons.forEach(({b,disabled,text})=>{b.disabled=disabled;b.textContent=text;});}
+ L.initial=null;V.initialBaseline=null;closeModal('programModal');V.selected=c.id;
+ try{refresh(false);}catch(e){notice('Το πρόγραμμα αποθηκεύτηκε. Ανανέωσε τη σελίδα για να εμφανιστεί.');return;}
+ notice('Το πρόγραμμα της '+name(c)+' οριστικοποιήθηκε.');
 };
 const previousApply=applyYearSnapshot;applyYearSnapshot=function(data){const r=previousApply.apply(this,arguments);if(data)state.turnover=Math.max(0,Number(data.turnover)||0);return r;};
 const previousRefresh=refresh;refresh=function(){mount();const r=previousRefresh.apply(this,arguments);enter();return r;};

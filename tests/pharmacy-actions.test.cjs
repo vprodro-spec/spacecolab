@@ -45,6 +45,8 @@ test('preagreement save stays preagreement; final confirmation replaces customiz
  x.run("SCL297.openDeal('base-1','preagreement',0)");await x.field('products','Product');await x.click('[data-scl297="save-pre"]');assert.equal(x.state().preagreements.length,1);assert.equal(x.state().confirmedDeals.length,0);
  x.run("SCL297.openDeal('base-1','preagreement',0)");await x.click('[data-scl297="review-deal"]');assert.match(x.text('negotiationModalBody'),/Χορηγίες ραφιών/);assert.match(x.text('negotiationModalBody'),/30€/);assert.equal(x.writes.length,2);
  await x.click('[data-scl297="commit"]');const s=x.state();assert.equal(x.writes.length,3);assert.equal(s.preagreements.length,0);assert.equal(s.confirmedDeals.length,1);assert.equal(s.sponsoredShelves.length,0);assert.equal(s.simpleSchedule[9],theme);assert.equal(s.confirmedDeals[0].soldMonthlyPrice,175);
+ assert.equal(x.document.querySelector('.modal.open'),null);assert.match(x.text('scl295Notice'),/Η συμφωνία αποθηκεύτηκε/);
+ await x.click('[data-scl297="document"][data-pre="false"]');
  assert.match(x.text('briefModalBody'),/emitropoulou@pharmaplus.gr/);assert.match(x.text('briefModalBody'),/17\/09\/2026/);assert.doesNotMatch(x.text('briefModalBody'),/Αναφορά Αποτελεσμάτων|5 εργάσιμες/);
  assert.equal(s.confirmedDeals[0].materialRequests[0].status,'awaiting');
 });
@@ -61,7 +63,22 @@ test('discard, server error and double confirmation preserve saved state and pre
  const x=await app(base(),{fail:true});const before=x.state();x.run("SCL297.openShelf('base-1',9)");await x.field('brand','Draft');
  x.run("closeModal('sponsoredModal')");assert.ok(x.run('SCL297.draft'));x.run('window.confirm=()=>true');x.run("closeModal('sponsoredModal')");assert.equal(x.run('SCL297.draft'),null);assert.deepEqual(x.state(),before);
  x.run("SCL297.openShelf('base-1',9)");await x.field('brand','Draft');await x.click('[data-scl297="review-shelf"]');const b=x.document.querySelector('[data-scl297="commit"]');await Promise.all([x.click(b),x.click(b)]);await tick();
- assert.equal(x.writes.length,1);assert.deepEqual(x.state(),before);assert.match(x.text('scl297Error'),/Δεν αποθηκεύτηκε: Offline/);assert.equal(x.run('SCL290.dirty'),false);assert.ok(x.run('SCL297.draft'));
+ assert.equal(x.writes.length,1);assert.deepEqual(x.state(),before);assert.match(x.text('scl297Error'),/Δεν αποθηκεύτηκε: Offline/);assert.equal(x.run('SCL290.dirty'),false);assert.ok(x.run('SCL297.draft'));assert.equal(x.run('SCL297.busy'),false);assert.equal(x.document.querySelector('[data-scl297="commit"]').disabled,false);
+});
+
+test('a post-save rendering failure cannot undo the saved action or leave its modal open',async()=>{
+ const x=await app();x.run("SCL297.openShelf('base-1',9)");await x.field('brand','Saved Brand');await x.click('[data-scl297="review-shelf"]');
+ x.run("refresh=()=>{throw Error('Render failure')}");await x.click('[data-scl297="commit"]');
+ assert.equal(x.writes.length,1);assert.equal(x.state().sponsoredShelves[0].brand,'Saved Brand');assert.equal(x.run('SCL297.draft'),null);assert.equal(x.document.querySelector('.modal.open'),null);assert.match(x.text('scl295Notice'),/αποθηκεύτηκε/);
+});
+
+test('confirmation while another save is pending is visibly busy and cannot submit twice',async()=>{
+ const x=await app();x.run("SCL297.openShelf('base-1',9)");await x.field('brand','Saved once');await x.click('[data-scl297="review-shelf"]');
+ x.run('SCL290.saving=new Promise(resolve=>window.releasePendingSave=()=>{SCL290.saving=null;resolve()})');
+ const b=x.document.querySelector('[data-scl297="commit"]'),pending=x.click(b);await tick();
+ assert.equal(x.run('SCL297.busy'),true);assert.match(x.text('scl297Status'),/Αποθήκευση/);assert.equal(b.disabled,true);
+ await x.click(b);assert.equal(x.writes.length,0);x.run('releasePendingSave()');await pending;
+ assert.equal(x.writes.length,1);assert.equal(x.document.querySelector('.modal.open'),null);
 });
 
 test('monthly supplier content, file dates and planned custom quota agree with continuous-block rules',async()=>{
