@@ -1,18 +1,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs');
 const {PGlite}=require('@electric-sql/pglite');
 const Core=require('../src/scl292-core.js');
-const bootstrap=`
-CREATE ROLE anon;CREATE ROLE authenticated;
-CREATE TABLE pharmacies(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),name text,token text);
-CREATE TABLE scl290_registry(id uuid DEFAULT gen_random_uuid(),pharmacy_id uuid,name text,billing_code text,address text,area text,source_key text,legacy boolean);
-CREATE TABLE scl290_installations(pharmacy_id uuid PRIMARY KEY,version bigint DEFAULT 1,service_from date,positions jsonb,updated_at timestamptz DEFAULT now());
-CREATE TABLE scl290_snapshots(pharmacy_id uuid,year integer,revision bigint DEFAULT 1,state_json jsonb,months_json jsonb DEFAULT '[]',deals_json jsonb DEFAULT '[]',updated_at timestamptz DEFAULT now(),PRIMARY KEY(pharmacy_id,year));
-CREATE TABLE pharmacy_state(pharmacy_id uuid,year integer,state_json jsonb,PRIMARY KEY(pharmacy_id,year));
-CREATE TABLE hq_changes_done(id uuid DEFAULT gen_random_uuid(),change_key text PRIMARY KEY,done boolean,updated_at timestamptz DEFAULT now());
-CREATE FUNCTION scl290_assert_hq(k text) RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF k IS DISTINCT FROM 'test-hq' THEN RAISE EXCEPTION 'Unauthorized HQ';END IF;END $$;
-CREATE FUNCTION scl290_token_id(t text) RETURNS uuid LANGUAGE plpgsql AS $$ DECLARE p uuid;BEGIN SELECT id INTO p FROM public.pharmacies WHERE token=t;IF p IS NULL THEN RAISE EXCEPTION 'Invalid token';END IF;RETURN p;END $$;
-CREATE FUNCTION upsert_pharmacy_state_by_token(t text,y integer,s jsonb) RETURNS void LANGUAGE sql AS $$INSERT INTO public.pharmacy_state VALUES(public.scl290_token_id(t),y,s) ON CONFLICT(pharmacy_id,year) DO UPDATE SET state_json=excluded.state_json$$;
-`;
+const {bootstrap}=require('./fixtures/database-bootstrap.cjs');
 test('database migration: real PostgreSQL rules, history, approval, quota and shared finance',async t=>{
  const db=new PGlite();await db.exec(bootstrap);await db.exec(fs.readFileSync('tests/fixtures/v290-normalization.sql','utf8'));
  const legacy='00000000-0000-4000-8000-000000000001';
@@ -20,6 +9,7 @@ test('database migration: real PostgreSQL rules, history, approval, quota and sh
  await db.query('INSERT INTO scl290_snapshots(pharmacy_id,year,state_json) VALUES($1,2020,$2)',[legacy,JSON.stringify({cards:[{id:'base-1',type:'base',title:'Legacy',initialPlanLocked:true,basicSchedule:Array(12).fill('A'),confirmedDeals:[{id:'old-report',confirmed:true,startMonth:2,duration:2,reportMode:'perBlock',monthlyContentChanges:true}]}]})]);
  const migration=fs.readFileSync('supabase/migrations/20261020165150_programme_finance_history.sql','utf8');
  try{await db.exec(migration);}catch(e){throw new Error([e.message,e.where,'position '+e.position].filter(Boolean).join(' | '));}
+ await db.exec(fs.readFileSync('supabase/migrations/20261020174619_certification_guards.sql','utf8'));
  await db.exec(`CREATE OR REPLACE FUNCTION scl_private.today() RETURNS date LANGUAGE sql STABLE SET search_path='' AS $$SELECT date '2026-10-20'$$`);
  await t.test('retired report charges are retained from existing confirmed history',async()=>{const r=(await db.query("SELECT sum(amount)::numeric total FROM scl292_charge_events WHERE pharmacy_id=$1 AND category='report'",[legacy])).rows[0];assert.equal(Number(r.total),120);});
  const pid=(await db.query("INSERT INTO pharmacies(name,token) VALUES('Test','test-token') RETURNING id")).rows[0].id;

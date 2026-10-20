@@ -29,6 +29,11 @@ test('task identity distinguishes January, year and content, independent of done
  assert.notEqual(C.taskKey(row),C.taskKey({...row,final_title:'B'}));
  assert.equal(C.taskKey(row),C.taskKey({...row,done:true}));
 });
+test('aged approval only reopens still-editable months; expired approval offers no month',()=>{
+ assert.equal(C.resetFrom({fromMonth:10},2026,new Date('2026-10-15T12:00:00Z')),10);
+ assert.equal(C.resetFrom({fromMonth:10},2026,new Date('2026-10-16T12:00:00Z')),11);
+ assert.equal(C.resetFrom({fromMonth:10},2026,new Date('2026-11-16T12:00:00Z')),-1);
+});
 test('approved reopening preserves past selections, agreements and past sponsorship',()=>{
  const card={basicSchedule:Array(12).fill('A'),simpleSchedule:Array(12).fill('C'),pendingSimpleSchedule:Array(12).fill('C'),simpleMechanism:Array(12).fill('x'),pendingSimpleMechanism:Array(12).fill('x'),confirmedDeals:[{id:'keep'}],preagreements:[{id:'pre'}],negotiation:{confirmed:true},simpleConfirmed:true,sponsoredShelves:[{month:8},{month:11}],_scl292Reset:{id:'req',fromMonth:11}};
  const lock=(c,t,p,s)=>{Object.assign(c,{basicSchedule:[...s],simpleSchedule:[...s],pendingSimpleSchedule:[...s],simpleMechanism:Array(12).fill(''),pendingSimpleMechanism:Array(12).fill('')});return true;};

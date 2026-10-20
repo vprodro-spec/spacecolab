@@ -20,7 +20,8 @@
       }
       return out;
     },
-    taskKey(r) { return ['v292',r.pharmacy_id,r.position_id,Core.year(r.year),Number(r.month),r.final_type||'',r.final_title||'',r.deal_id||'',r.content_change_reason||'',r.content_code||r.player_code||'',r.content_revision||''].map(x=>encodeURIComponent(String(x??''))).join('|'); },
+    taskKey(r) { return ['v292',r.pharmacy_id,r.position_id,Core.year(r.year),Number(r.month),r.final_type||'',r.final_title||'',r.deal_id||'',r.content_change_reason||'',r.content_code||r.player_code||'',r.content_revision||'',r.final_detail||'',r.supplier||'',r.brand||'',r.products_text||r.product_codes||'',r.position_orientation||'',r.file_name||r.content_filename||''].map(x=>encodeURIComponent(String(x??''))).join('|'); },
+    resetFrom(approval,year,now=new Date()) { return Array.from({length:12},(_,m)=>m).find(m=>m>=Number(approval.fromMonth)&&Core.editable(year,m,now))??-1; },
     total(rows) {return Math.round((rows||[]).reduce((s,r)=>s+Number(r.amount||0),0)*100)/100;},
     category: {base:'Πάγιο υπηρεσίας',extra:'Επιπλέον οθόνες',custom:'Εξατομίκευση',deal:'Συμφωνία προμηθευτή',report:'Αναφορά αποτελεσμάτων — ιστορικό'},
     status: {planned:'Προγραμματισμένη',finalized:'Οριστικοποιημένη',cancelled:'Ακυρωμένη'},

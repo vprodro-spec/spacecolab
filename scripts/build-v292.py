@@ -39,6 +39,8 @@ if '<!-- v292 central completion -->' not in s:
     s=s.replace('${past?\'disabled title="Ιστορικό task — παρελθών μήνας"\':\'\'}','')
     s=re.sub(r"function asOfDate\(\)\{var v='';.*?return new Date\(\);\}", 'function asOfDate(){return new Date();}',s)
     s=s.replace('<head>','<head>\n<!-- v292 central completion -->',1)
+s=s.replace('Κλείδωμα 5 μέρες πριν ξεκινήσει κάθε μήνας.','Αλλαγές έως και τις 15 του προηγούμενου μήνα.')
+s=s.replace('Έχει περάσει το cut-off των 5 ημερών.','Έχει περάσει η προθεσμία της 15ης του προηγούμενου μήνα.')
 core='<script id="scl292-core">\n'+(root/'src/scl292-core.js').read_text()+'\n</script>\n'
 ui='<script id="scl292-ui">\n'+(root/'src/scl292-ui.js').read_text()+'\n</script>\n'
 s=s.replace('<head>','<head>\n'+core,1)

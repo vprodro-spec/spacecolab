@@ -5,6 +5,17 @@
  const isHQ=()=>typeof sclMode==='function'&&sclMode()==='hq';
  const isPh=()=>typeof sclMode==='function'&&sclMode()==='pharmacy';
  const currentYear=()=>C.year(isHQ()?el('scl212Year')?.value:state.programYear);
+ // Final override of the older five-day/current-month editing rules.
+ root.operationalMonthEditable=m=>C.editable(currentYear(),Number(m));
+ if(typeof operationalMonthEditable==='function')operationalMonthEditable=root.operationalMonthEditable;
+ if(typeof isCustomReadOnlyMonth==='function'){
+  root.isCustomReadOnlyMonth=(c,m)=>getDealMonths(c).has(Number(m))||!C.active(c,currentYear(),Number(m))||!C.editable(currentYear(),Number(m));
+  isCustomReadOnlyMonth=root.isCustomReadOnlyMonth;
+ }
+ if(typeof firstAvailableDealStart==='function'){
+  root.firstAvailableDealStart=c=>Array.from({length:12},(_,m)=>m).find(m=>C.active(c,currentYear(),m)&&C.editable(currentYear(),m)&&!getDealMonths(c).has(m))??-1;
+  firstAvailableDealStart=root.firstAvailableDealStart;
+ }
  const money=n=>new Intl.NumberFormat('el-GR',{style:'currency',currency:'EUR'}).format(Number(n)||0);
  const label=m=>MONTHS[Number(m)]||'';
  const api=async(name,args)=>{const result=await sb.rpc(name,args);if(result.error)throw Error(result.error.message);return result.data;};
@@ -63,7 +74,7 @@
   let box=el('scl292Requests');if(!box){box=document.createElement('div');box.id='scl292Requests';box.className='scl292-panel';host.appendChild(box);}
   const reqs=R.data.requests||[];
   box.innerHTML='<b>Αιτήματα επαναφοράς προγράμματος</b>'+(!isHQ()?'<p><button type="button" data-scl292-request>Νέο αίτημα επαναφοράς</button></p>':'')+
-   (reqs.length?reqs.map(q=>'<div class="scl292-request"><strong>'+escape(q.pharmacy_name)+' · '+escape(q.position_id)+'</strong><div>'+label(q.from_month)+'–Δεκέμβριος '+q.year+' · '+escape({pending:'Αναμονή HQ',approved:'Εγκρίθηκε — αναμονή νέου προγράμματος',rejected:'Απορρίφθηκε',applied:'Ολοκληρώθηκε'}[q.status])+'</div><p>'+escape(q.reason)+'</p>'+(q.hq_note?'<p>'+escape(q.hq_note)+'</p>':'')+(isHQ()&&q.status==='pending'?'<button type="button" data-scl292-decision="approve" data-id="'+q.id+'">Έγκριση</button> <button type="button" data-scl292-decision="reject" data-id="'+q.id+'">Απόρριψη</button>':'')+(!isHQ()&&q.status==='approved'?'<button type="button" data-scl292-reopen="'+escape(q.position_id)+'">Σύνθεση νέου προγράμματος</button>':'')+'</div>').join(''):'<p>Δεν υπάρχουν αιτήματα.</p>')+
+   (reqs.length?reqs.map(q=>'<div class="scl292-request"><strong>'+escape(q.pharmacy_name)+' · '+escape(q.position_id)+'</strong><div>'+label(q.from_month)+'–Δεκέμβριος '+q.year+' · '+escape({pending:'Αναμονή HQ',approved:'Εγκρίθηκε — αναμονή νέου προγράμματος',rejected:'Απορρίφθηκε',applied:'Ολοκληρώθηκε'}[q.status])+'</div><p>'+escape(q.reason)+'</p>'+(q.hq_note?'<p>'+escape(q.hq_note)+'</p>':'')+(isHQ()&&q.status==='pending'?'<button type="button" data-scl292-decision="approve" data-id="'+q.id+'">Έγκριση</button> <button type="button" data-scl292-decision="reject" data-id="'+q.id+'">Απόρριψη</button>':'')+(q.status==='approved'?(C.resetFrom({fromMonth:q.from_month},q.year)<0?'<p>Η προθεσμία για νέα οριστικοποίηση έληξε. Το υπάρχον πρόγραμμα διατηρείται.</p>':(!isHQ()?'<button type="button" data-scl292-reopen="'+escape(q.position_id)+'">Σύνθεση νέου προγράμματος</button>':'')):'')+'</div>').join(''):'<p>Δεν υπάρχουν αιτήματα.</p>')+
    '<details><summary>Ιστορικό αποθηκεύσεων ('+(R.data.history||[]).length+')</summary>'+(R.data.history||[]).map(h=>'<p>'+escape(new Date(h.created_at).toLocaleString('el-GR'))+' · '+escape(h.pharmacy_name)+' · '+escape(h.reason)+'</p>').join('')+'</details>';
  };
  R.requestReset=async function(){
@@ -79,10 +90,12 @@
  try{sclResetCurrentPharmacyYearV190=R.requestReset;}catch(e){}
  const oldLock=lockInitialPlan;
  lockInitialPlan=function(c,type,program,sched){
-  const from=c._scl292Reset?.fromMonth??0;
+  const from=c._scl292Reset?C.resetFrom(c._scl292Reset,currentYear()):0;
+  if(from<0){alert('Η προθεσμία για νέα οριστικοποίηση έληξε. Το υπάρχον πρόγραμμα διατηρείται.');return false;}
   const missing=Array.from({length:12},(_,m)=>m).filter(m=>m>=from&&C.active(c,currentYear(),m)&&!String(sched?.[m]||'').trim());
   if(missing.length){alert('Συμπληρώστε: '+missing.map(label).join(', '));return false;}
   if(c._scl292Reset&&!confirm('Νέο Βασικό πρόγραμμα από '+label(from)+' '+currentYear()+'. Οι προηγούμενοι μήνες, οι Συμφωνίες και οι προηγούμενες χρεώσεις διατηρούνται. Εξατομικεύσεις των επόμενων μηνών αντικαθίστανται και χορηγίες μηνών με αλλαγή θεματικής αφαιρούνται. Συνέχεια;'))return false;
+  if(c._scl292Reset)c._scl292Reset.fromMonth=from;
   return C.applyReset(c,type,program,sched,oldLock);
  };
  document.addEventListener('change',e=>{const field=e.target.dataset?.scl292Filter;if(field){R.filters[field]=e.target.value;R.renderBilling();}});
@@ -91,7 +104,7 @@
   if(!b)return;e.preventDefault();e.stopImmediatePropagation();b.disabled=true;
   try{
    if(b.matches('[data-scl292-request],#sclResetPharmacyYearBtn,[data-reset-year-data]'))await R.requestReset();
-   else if(b.dataset.scl292Reopen){await loadYear(currentYear());const c=state.cards.find(c=>c.id===b.dataset.scl292Reopen);if(!c?._scl292Reset)throw Error('Η έγκριση δεν είναι πλέον διαθέσιμη.');c.pendingInitialSchedule=clone(c.basicSchedule);state.initialEditorMonth=c._scl292Reset.fromMonth;renderInitialPlanModal(c.id);}
+   else if(b.dataset.scl292Reopen){await loadYear(currentYear());const c=state.cards.find(c=>c.id===b.dataset.scl292Reopen);if(!c?._scl292Reset)throw Error('Η έγκριση δεν είναι πλέον διαθέσιμη.');const from=C.resetFrom(c._scl292Reset,currentYear());if(from<0)throw Error('Η προθεσμία για νέα οριστικοποίηση έληξε.');c._scl292Reset.fromMonth=from;c.pendingInitialSchedule=clone(c.basicSchedule);state.initialEditorMonth=from;renderInitialPlanModal(c.id);}
    else if(b.dataset.scl292Decision){const q=R.data.requests.find(q=>q.id===b.dataset.id),approve=b.dataset.scl292Decision==='approve';if(!confirm((approve?'Έγκριση':'Απόρριψη')+' αιτήματος για '+q.pharmacy_name+'; Το πρόγραμμα παραμένει μέχρι νέα οριστικοποίηση.'))return;const note=prompt('Σημείωση HQ (προαιρετικά):','');if(note===null)return;await api('scl292_decide_reset',{p_hq_key:SCL_ROUTING.hqKey,p_request_id:q.id,p_approve:approve,p_note:note});await R.loadFinance(true);}
    else if(b.hasAttribute('data-scl292-export')){const rs=filterRows().filter(r=>r.status==='finalized'),by=new Map();for(const r of rs){const k=r.billing_code||r.pharmacy_id;by.set(k,{code:r.billing_code||'',name:r.pharmacy_name,amount:(by.get(k)?.amount||0)+Number(r.amount)});}const csv=[['Σύνοψη ανά κωδικό τιμολόγησης'],['Κωδικός','Φαρμακείο','Ποσό'],...[...by.values()].map(x=>[x.code,x.name,C.total([x]).toFixed(2)]),[],['Έτος','Μήνας','Φαρμακείο','Κωδικός τιμολόγησης','Θέση','Είδος','Αιτιολογία','Ποσό'],...rs.map(r=>[r.year,r.month+1,r.pharmacy_name,r.billing_code,r.position_name,C.category[r.category],detail(r),Number(r.amount).toFixed(2)])];const a=document.createElement('a'),url=URL.createObjectURL(new Blob([SCL290Core.csv(csv)],{type:'text/csv;charset=utf-8'}));a.href=url;a.download='Pharmaplus_charges_'+currentYear()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   }catch(err){notice(err.message);}finally{b.disabled=false;}
