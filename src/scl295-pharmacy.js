@@ -173,8 +173,8 @@ async function action(b){
   const r=row(c,m),d=r.source||{};readDialog(r.type||'Pharmaplus', '<h3>'+E(r.label)+'</h3><p>'+period(m)+'</p>'+[['Προμηθευτής',d.display_kind==='main'?d.supplier:''],['Παροχή προς το φαρμακείο',d.display_kind==='main'?d.company_benefit:''],['Προϊόντα καμπάνιας',d.display_kind==='main'?d.products_text:''],...([1,2,3,4].map(n=>['Ράφι '+n,d.display_kind==='main'?d['shelf_'+n]:'']))].filter(x=>x[1]).map(([k,v])=>'<h4>'+E(k)+'</h4><p class="scl295-multiline">'+E(v)+'</p>').join(''));
  }
  else if(a==='close-dialog')$('scl295Dialog')?.remove();
- else if(a==='new-year'){await createNextProgramYear();V.selected=null;V.contexts={};refresh(false);}
- else if(a==='current-year'){await loadYear(now().year);V.selected=null;V.contexts={};refresh(false);}
+ else if(a==='new-year'){V.selected=null;V.contexts={};await createNextProgramYear();refresh(false);}
+ else if(a==='current-year'){V.selected=null;V.contexts={};await loadYear(now().year);refresh(false);}
 }
 V.confirmInitial=async function(){
  const d=L.initial,c=state.cards.find(c=>c.id===d?.card);if(!c||V.busy||!pharmacyOnly(c))return;
@@ -211,7 +211,7 @@ for(const fn of ['renderProgramModal','renderNegotiationModal','renderSponsoredM
 root.isCustomReadOnlyMonth=isCustomReadOnlyMonth=(c,m)=>!!customReason(c,Number(m));
 const previousPlanogram=renderPlanogramModal;renderPlanogramModal=function(id,m,setup){const c=state.cards.find(c=>c.id===id);if(c&&active(c,Number(m))){const info=planogramInfo(c,Number(m)),found=LC.resolve(L.data,c,Number(m),c.simpleConfirmed?c.simpleSchedule?.[m]||c.basicSchedule?.[m]:c.basicSchedule?.[m]);if(info&&found){const historical=SCL290Core.at(c,y(),Number(m));return L.previewTheme(found.theme,found.variant.id,historical.screenFormat,setup||LC.styles[0]);}}return previousPlanogram.apply(this,arguments);};
 document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-scl295]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();if(b.disabled)return;b.disabled=true;try{await action(b);}catch(err){notice(err.message,true);}finally{b.disabled=false;}},true);
-document.addEventListener('change',async e=>{if(e.target.id!=='scl295Year')return;try{await loadYear(Number(e.target.value));V.selected=null;V.contexts={};refresh(false);}catch(err){notice(err.message,true);}});
+document.addEventListener('change',async e=>{if(e.target.id!=='scl295Year')return;try{V.selected=null;V.contexts={};await loadYear(Number(e.target.value));refresh(false);}catch(err){notice(err.message,true);}});
 const style=document.createElement('style');style.id='scl295-style';style.textContent=`
 body.scl295-pharmacy{background:var(--bg);color:var(--text);font:12px/1.4 Inter,Arial,sans-serif;padding:14px}
 body.scl295-pharmacy .shell{width:100%!important;max-width:none!important;margin:0!important;padding:14px!important;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:18px;box-shadow:none!important;overflow:visible!important}
