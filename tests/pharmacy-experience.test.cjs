@@ -6,6 +6,45 @@ const card=(id='base-1')=>({id,type:'base',title:'Θέση 1',initialPlanLocked:
 const tick=async()=>{for(let i=0;i<16;i++)await new Promise(r=>setImmediate(r));};
 function controls(x){return {run:s=>vm.runInContext(s,x.ctx),click:async sel=>{const e=x.document.querySelector(sel);assert.ok(e,sel);await x.click(e);await tick();},text:id=>x.document.getElementById(id)?.textContent||''};}
 
+test('Pharmaplus is view-only even through legacy editor entry points',async()=>{
+ let writes=0;const x=await smoke(html,'pharmacy',{turnover:500000,cards:[card()]},async n=>{if(n==='scl290_save_program')writes++;});
+ const {click,run,text}=controls(x);
+ const pp=x.document.querySelector('[data-scl295="pp-programme"]');assert.equal(pp.textContent,'Προβολή προγράμματος');
+ await click('[data-scl295="pp-programme"]');assert.match(text('plannerRoot'),/ορίζεται από τα HQ/);
+ assert.equal(x.document.querySelector('#plannerRoot [data-scl295="initial"]'),null);assert.equal(x.document.querySelector('#plannerRoot [data-scl295="custom"]'),null);assert.equal(x.document.querySelector('#plannerRoot [data-scl295="new-deal"]'),null);
+ run("state.cards.find(c=>c.id==='hq').initialPlanLocked=false");
+ const before=run("JSON.stringify(state.cards.find(c=>c.id==='hq'))");
+ for(const name of ['renderInitialPlanModal','renderProgramModal','renderCustomModal','renderNegotiationModal','renderSponsoredModal'])run(name+"('hq',11)");
+ assert.equal(run("lockInitialPlan(state.cards.find(c=>c.id==='hq'),'manual','MANUAL',Array(12).fill('test'))"),false);
+ assert.equal(run("JSON.stringify(state.cards.find(c=>c.id==='hq'))"),before);
+ assert.match(text('scl295Notice'),/αποκλειστικά από τα HQ/);assert.equal(x.document.querySelector('.modal.open'),null);assert.equal(writes,0);
+});
+
+test('switching local positions keeps customization scoped and explains deadline, agreement and initial-lock restrictions',async()=>{
+ const one=card(),two={...card('base-2'),title:'Θέση 2'};let writes=0;
+ const x=await smoke(html,'pharmacy',{turnover:500000,cards:[one,two]},async(n,a)=>{
+  if(n==='scl290_save_program')writes++;
+  if(n==='scl290_get_pharmacy')return {data:{pharmacy_id:'fixture-pharmacy',pharmacy_name:'Fixture',registry:{legacy:false},installation:{version:1,service_from:'2026-10-01',positions:['hq','base-1','base-2'].map((id,i)=>({id,ordinal:i,type:i?'base':'hq',title:'Θέση '+i,screenFormat:'vertical',startsOn:'2026-10-01'}))},state_json:{turnover:500000,cards:[one,two]},snapshot_revision:1,available_years:[2026]},error:null};
+ });
+ const {click,run,text}=controls(x);assert.deepEqual(x.errors,[]);
+ for(const id of ['base-1','base-2']){
+  await click('[data-scl295="position"][data-card="'+id+'"]');await click('[data-scl295="custom"]');
+  assert.equal(run('SCL293.customCard'),id);assert.equal(run('state.customEditorMonth'),11);
+  assert.equal(x.document.querySelectorAll('#customModal [data-custom-month]').length,3);
+  await click('[data-custom-month="10"]');assert.match(text('customModalBody'),/15\/10\/2026/);assert.ok([...x.document.querySelectorAll('[data-scl293="custom-select"]')].every(b=>b.disabled));
+  await click('[data-custom-month="11"]');assert.ok([...x.document.querySelectorAll('[data-scl293="custom-select"]')].every(b=>!b.disabled));
+  const candidate=[...x.document.querySelectorAll('[data-scl293="custom-select"]')].find(b=>b.getAttribute('aria-pressed')!=='true');await x.click(candidate);await tick();
+  run('window.confirm=()=>true');run("closeModal('customModal')");assert.equal(run("JSON.stringify(state.cards.find(c=>c.id==='"+id+"').pendingSimpleSchedule)"),run("JSON.stringify(state.cards.find(c=>c.id==='"+id+"').basicSchedule)"));
+ }
+ run("state.cards.find(c=>c.id==='base-2').confirmedDeals=[{id:'d',confirmed:true,startMonth:11,duration:1}];refresh(false)");
+ await click('[data-scl295="position"][data-card="base-2"]');assert.equal(x.document.querySelector('[data-scl295="custom"]').disabled,true);assert.match(text('plannerRoot'),/Υπάρχει Συμφωνία προμηθευτή/);
+ await click('[data-scl295="position"][data-card="base-1"]');assert.equal(x.document.querySelector('[data-scl295="custom"]').disabled,false);
+ run("state.cards.find(c=>c.id==='base-2').initialPlanLocked=false;renderCustomModal('base-2')");assert.match(text('scl295Notice'),/Οριστικοποίησε πρώτα/);
+ assert.equal(x.document.querySelectorAll('[role="columnheader"]').length,13);
+ for(const id of ['plannerPage','overviewPage','guidePage','economicsPage'])assert.ok(x.document.getElementById(id).closest('.shell'));
+ assert.equal(writes,0);
+});
+
 test('local HTML onboarding requires a selected turnover; selection is unsaved and saved amounts survive later edits',async()=>{
  const writes=[];let saved=null;
  const x=await smoke(html,'pharmacy',{turnover:0,cards:[]},async(n,a)=>{if(n==='scl290_save_program'){writes.push(structuredClone(a));saved=a.p_state;return {data:{snapshot_revision:writes.length},error:null};}}, {baseUrl:'file:///C:/Users/Test/Downloads/SpaceCoLab_v295.html'});
