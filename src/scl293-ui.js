@@ -103,7 +103,8 @@ renderInitialPlanModal=function(id){
  if(!L.data){L.load().then(()=>renderInitialPlanModal(id)).catch(e=>note(e.message));return;}
  const from=c._scl292Reset?SCL292Core.resetFrom(c._scl292Reset,state.programYear):0;
  const m=Array.from({length:12},(_,i)=>i).find(i=>i>=from&&SCL292Core.active(c,state.programYear,i));if(m===undefined){note('Δεν υπάρχουν μήνες λειτουργίας για προγραμματισμό.');return;}
- L.initial={card:id,month:m,program:'',refs:Array.from({length:12},(_,i)=>C.clone(c.libraryRefs?.[i]||C.ref(L.data,c.basicSchedule?.[i],c.defaultProgram,i))),query:''};L.initialPicker();
+ const saved=root.SCL290?.context?.state_json?.cards?.find(x=>x.id===id),proposal=c._scl292Reset?c.basicSchedule:(saved?.pendingInitialSchedule||[]);
+ L.initial={card:id,month:m,program:'',refs:Array.from({length:12},(_,i)=>proposal[i]?C.clone(c.libraryRefs?.[i]||C.ref(L.data,proposal[i],c.defaultProgram,i)):null),query:''};if(root.SCL295)root.SCL295.initialBaseline=null;L.initialPicker();
 };
 const oldCustom=renderCustomModal;renderCustomModal=function(id){
  const result=oldCustom.apply(this,arguments),c=state.cards.find(x=>x.id===id),panel=$('customModalBody')?.querySelector('.editor-panel');if(!c||!panel)return result;
@@ -132,7 +133,7 @@ async function action(b){
  else if(a==='initial-blank'){L.initial.refs=Array(12).fill(null);L.initial.program='';L.initialPicker();}
  else if(a==='initial-month'){L.initial.month=Number(b.dataset.value);L.initialPicker();}
  else if(a==='initial-select'){const t=C.theme(L.data,b.dataset.theme);L.initial.refs[L.initial.month]={theme:t.id,variant:t.variants[0].id};L.initial.program='';L.initialPicker();}
- else if(a==='initial-lock'){const d=L.initial,c=state.cards.find(x=>x.id===d.card),sched=d.refs.map(r=>C.theme(L.data,r?.theme)?.key||'');if(lockInitialPlan(c,d.program?'network':'manual',d.program||'MANUAL',sched)){closeModal('programModal');L.initial=null;refresh();}}
+ else if(a==='initial-lock'){if(root.SCL295?.confirmInitial)return root.SCL295.confirmInitial();const d=L.initial,c=state.cards.find(x=>x.id===d.card),sched=d.refs.map(r=>C.theme(L.data,r?.theme)?.key||'');if(lockInitialPlan(c,d.program?'network':'manual',d.program||'MANUAL',sched)){closeModal('programModal');L.initial=null;refresh();}}
  else if(a==='custom-select'){const c=state.cards.find(x=>x.id===L.customCard),m=state.customEditorMonth||0;if(isCustomReadOnlyMonth(c,m))return;c.pendingSimpleSchedule[m]=C.theme(L.data,b.dataset.theme).key;renderCustomModal(c.id);}
 }
 document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-scl293]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();b.disabled=true;try{await action(b);}catch(err){if($('scl293FormError'))$('scl293FormError').textContent=err.message;else note(err.message);}finally{b.disabled=false;}},true);

@@ -81,10 +81,11 @@
     if(R.saving)return R.saving;
     if(!installed()||R.loading||!SCL_ROUTING.ready)return;
     const y=year(),revision=R.snapshots[y]||0;let succeeded=false;applyInstallation();
+    const months=scl206BuildPositionMonthsPayload(),deals=scl206BuildDealsPayload();
     const payload=sclStatePayload();const fingerprint=JSON.stringify(payload.cards)+String(payload.turnover);
     R.saving=api('scl290_save_program',{p_token:SCL_ROUTING.pharmacyToken,p_year:y,
       p_installation_version:R.context.installation.version,p_snapshot_revision:revision,
-      p_state:payload,p_months:scl206BuildPositionMonthsPayload(),p_deals:scl206BuildDealsPayload()}).then(result=>{
+      p_state:payload,p_months:months,p_deals:deals}).then(result=>{
       R.snapshots[y]=result.snapshot_revision;succeeded=true;
       state.cards.forEach(c=>{if(c._scl292ResetApplied){delete c._scl292ResetApplied;delete c._scl292Reset;}});
       if(root.SCL292){root.SCL292.invalidate();root.SCL292.loadFinance(true).catch(()=>{});}

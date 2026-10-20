@@ -17,7 +17,7 @@ test('HQ registry lifecycle: activation, installation, pause, correction and ful
  `);
  await db.exec(fs.readFileSync('tests/fixtures/v290-normalization.sql','utf8'));
  await db.exec(fs.readFileSync('tests/fixtures/v290-registry.sql','utf8'));
- for(const f of ['20261020165150_programme_finance_history.sql','20261020174619_certification_guards.sql','20261020190310_hq_registry_screens.sql','20261020191752_paused_position_sponsorship_guard.sql'])await db.exec(fs.readFileSync('supabase/migrations/'+f,'utf8'));
+ for(const f of ['20261020165150_programme_finance_history.sql','20261020174619_certification_guards.sql','20261020190310_hq_registry_screens.sql','20261020191752_paused_position_sponsorship_guard.sql','20261020195653_pharmacy_onboarding_guard.sql'])await db.exec(fs.readFileSync('supabase/migrations/'+f,'utf8'));
  await db.exec(`CREATE OR REPLACE FUNCTION scl_private.today() RETURNS date LANGUAGE sql STABLE SET search_path='' AS $$SELECT date '2026-10-20'$$`);
  const rpc=async(name,params)=>(await db.query(`SELECT ${name}(${params.map((_,i)=>'$'+(i+1)).join(',')}) d`,params)).rows[0].d;
  let reg,ph,cfg;
@@ -37,6 +37,8 @@ test('HQ registry lifecycle: activation, installation, pause, correction and ful
   let ctx=await rpc('scl290_get_pharmacy',[ph.token,2026]);
   ctx.state_json.cards.forEach(c=>{c.initialPlanLocked=true;c.basicSchedule=Array(12).fill('A');c.simpleSchedule=Array(12).fill('A');c.screenFormat='horizontal';});
   const extra=ctx.state_json.cards.find(c=>c.id==='extra-1');extra.confirmedDeals=[{id:'future',confirmed:true,startMonth:11,duration:1,supplier:'Test',brand:'Brand',soldMonthlyPrice:150,monthlyContentChanges:false}];
+  await assert.rejects(rpc('scl290_save_program',[ph.token,2026,cfg.version,ctx.snapshot_revision,ctx.state_json,[],[]]),/TURNOVER_REQUIRED/);
+  ctx.state_json.turnover=500000;
   const rows=cfg.positions.flatMap(p=>[8,9,10,11].map(month=>({position_id:p.id,month,final_title:'A',final_type:'basic'})));
   await rpc('scl290_save_program',[ph.token,2026,cfg.version,ctx.snapshot_revision,ctx.state_json,rows,[]]);
   ctx=await rpc('scl290_get_pharmacy',[ph.token,2026]);assert.equal(ctx.state_json.cards[0].screenFormat,'vertical');

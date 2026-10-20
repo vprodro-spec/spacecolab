@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/scl29*-*.js'
       - 'data/library-seed.json'
+      - 'scripts/build-v295.py'
       - 'scripts/build-v294.py'
       - 'scripts/build-v293.py'
       - 'scripts/build-v292.py'

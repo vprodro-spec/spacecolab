@@ -51,6 +51,6 @@ test('full application integrates HQ library, editor, initial programme and prev
  const x=await smoke(html,'hq');assert.deepEqual(x.errors,[]);assert.ok(x.document.querySelector('[data-tab="library"]'));
  await vm.runInContext('SCL293.load()',x.ctx);vm.runInContext("scl212SetTab('library')",x.ctx);assert.match(x.document.getElementById('scl212Page-library').textContent,/Βιβλιοθήκη/);
  await vm.runInContext('SCL293.edit(SCL293.data.themes[0].id)',x.ctx);assert.ok(x.document.getElementById('scl293Editor'));assert.equal(x.document.querySelectorAll('[data-setup]').length,3);
- const ph=await smoke(html,'pharmacy');await vm.runInContext('SCL293.load()',ph.ctx);vm.runInContext("renderInitialPlanModal('base-1')",ph.ctx);assert.match(ph.document.getElementById('programModalBody').textContent,/Από την αρχή/);
+ const ph=await smoke(html,'pharmacy',{turnover:500000,cards:[]});await vm.runInContext('SCL293.load()',ph.ctx);vm.runInContext("renderInitialPlanModal('base-1')",ph.ctx);assert.match(ph.document.getElementById('programModalBody').textContent,/Από την αρχή/);
  const before=vm.runInContext('JSON.stringify(state.cards)',ph.ctx);vm.runInContext("SCL293.previewTheme(SCL293.data.themes[0],null,'vertical')",ph.ctx);assert.ok(ph.document.querySelector('#planogramModal .screen-device.vertical'));vm.runInContext("SCL293.previewTheme(SCL293.data.themes[0],null,'horizontal')",ph.ctx);assert.ok(ph.document.querySelector('#planogramModal .screen-device.horizontal'));assert.equal(vm.runInContext('JSON.stringify(state.cards)',ph.ctx),before);
 });

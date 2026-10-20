@@ -1,11 +1,16 @@
 const fs=require('fs'),vm=require('vm'),cp=require('child_process');
 const root=require('node:path').resolve(__dirname,'../..');
 const {parseHTML}=require(root+'/node_modules/linkedom');
-async function smoke(html,mode,fixtureState=null,fixtureRpc=null){
+async function smoke(html,mode,fixtureState=null,fixtureRpc=null,options={}){
  const {document,HTMLElement,Event}=parseHTML(html);Object.defineProperty(document,'readyState',{value:'loading',writable:true});
  const errors=[],timers=[],calls=[],map=new Map();
+ // LinkeDOM does not implement capture ordering. Reproduce document capture for interaction tests.
+ const captures=[],nativeAdd=document.addEventListener.bind(document);let dispatching=false;
+ document.addEventListener=function(type,fn,options){if(type==='click'&&(options===true||options?.capture)){captures.push(fn);return nativeAdd(type,e=>{if(!dispatching)return fn(e);},options);}return nativeAdd(type,fn,options);};
+ async function click(element){let stopped=false,immediate=false,prevented=false;const event={target:element,type:'click',preventDefault(){prevented=true;},stopPropagation(){stopped=true;},stopImmediatePropagation(){stopped=true;immediate=true;},get defaultPrevented(){return prevented;}};const pending=[];for(const fn of captures){const r=fn(event);if(r?.then)pending.push(r);if(immediate)break;}if(!stopped){dispatching=true;try{element.dispatchEvent(new Event('click',{bubbles:true}));}finally{dispatching=false;}}await Promise.all(pending);}
+
  const storage={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,String(v)),removeItem:k=>map.delete(k)};
- const loc=new URL('https://example.test/'+(mode==='hq'?'?hq=fixture-hq':mode==='pharmacy'?'?pharmacy=fixture-token':''));
+ const loc=new URL((options.baseUrl||'https://example.test/')+(mode==='hq'?'?hq=fixture-hq':mode==='pharmacy'?'?pharmacy=fixture-token':''));
  const client={rpc:async(name,args)=>{calls.push(name);let data=[];
  if(name==='hq_get_all_data')data={pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]};
  if(name==='scl290_hq_data')data={api_version:290,setup:[],months:[],deals:[],registry:[],installations:[],snapshots:[],base:{pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]}};
@@ -15,7 +20,7 @@ async function smoke(html,mode,fixtureState=null,fixtureRpc=null){
  if(name==='scl290_get_pharmacy')data={pharmacy_id:'fixture-pharmacy',pharmacy_name:'Fixture',registry:{legacy:false},installation:{version:1,service_from:'2026-10-01',positions:[{id:'hq',ordinal:0,type:'hq',screenFormat:'vertical',startsOn:'2026-10-01'},{id:'base-1',ordinal:1,type:'base',title:'Θέση 1',screenFormat:'vertical',startsOn:'2026-10-01'}]},state_json:fixtureState,snapshot_revision:fixtureState?1:0,available_years:[2026]};
  if(fixtureRpc){const response=await fixtureRpc(name,args);if(response!==undefined)return response;}
  return{data,error:null};}};
- class Clock extends Date { constructor(...args){super(...(args.length?args:['2026-10-20T12:00:00Z']));} static now(){return new Date('2026-10-20T12:00:00Z').valueOf();} }
+ class Clock extends Date { constructor(...args){super(...(args.length?args:[options.now||'2026-10-20T12:00:00Z']));} static now(){return new Date(options.now||'2026-10-20T12:00:00Z').valueOf();} }
  const ctx={document,HTMLElement,Event,Date:Clock,Intl,URL,URLSearchParams,Blob,Map,Set,Promise,JSON,Array,Object,Number,String,Math,RegExp,console:{log:()=>{},warn:()=>{},error:()=>{}},location:loc,localStorage:storage,sessionStorage:storage,
  navigator:{clipboard:{writeText:async()=>{}},userAgent:'test'},supabase:{createClient:()=>client},setTimeout:(fn,ms,...args)=>{timers.push({fn,args,ms});return timers.length;},clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},requestAnimationFrame:()=>0,cancelAnimationFrame:()=>{},
  addEventListener:()=>{},removeEventListener:()=>{},innerWidth:1280,innerHeight:900,getComputedStyle:()=>({display:'block',visibility:'visible',getPropertyValue:()=>''}),MutationObserver:class{observe(){}disconnect(){}},ResizeObserver:class{observe(){}disconnect(){}},
@@ -26,6 +31,6 @@ async function smoke(html,mode,fixtureState=null,fixtureRpc=null){
  await new Promise(r=>setImmediate(r));
  try{if(mode==='hq')await vm.runInContext('scl212Load()',c);if(ctx.SCL292&&mode!=='locked')await ctx.SCL292.loadFinance(true);}catch(e){errors.push({phase:'load',error:e.message});}
  let state;try{state=vm.runInContext("({year:state.programYear,ready:!!window.SCL292,cloudReady:SCL_ROUTING.ready,financeLoaded:!!window.SCL292?.data,mode:sclMode()})",c);}catch(e){}
- return{ctx:c,document,mode,errors,state,notice:document.getElementById('scl290Notice')?.textContent,calls:[...new Set(calls)]};
+ return{ctx:c,document,mode,errors,state,click,notice:document.getElementById('scl290Notice')?.textContent,calls:[...new Set(calls)]};
 }
 module.exports={smoke};
