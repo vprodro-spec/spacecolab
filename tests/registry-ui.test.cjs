@@ -6,6 +6,7 @@ test('HQ interface: activation opens screens, progress excludes PP, selected exp
  const calls=[];
  const x=await smoke(html,'hq',null,async(name,args)=>{
   calls.push({name,args});
+  if(name==='pharmacy_get_pharmaplus_campaigns')return{data:[{month:9,display_title:'Shared PP campaign',display_kind:'main'}],error:null};
   if(name==='scl290_hq_data')return{data:structuredClone(dataset),error:null};
   if(name==='scl290_hq_activate'){dataset.registry[0].pharmacy_id='ph-a';dataset.registry[0].token='fixture-token-a';return{data:{id:'ph-a'},error:null};}
  });assert.deepEqual(x.errors,[]);
@@ -20,6 +21,7 @@ test('HQ interface: activation opens screens, progress excludes PP, selected exp
  await vm.runInContext('SCL290.refreshHQ()',x.ctx);
  assert.match(x.document.getElementById('scl290RegistryRows').textContent,/0\/1 θέσεις με αρχικό πρόγραμμα/);
  click('[data-scl290="install"]');assert.ok(x.document.querySelector('[data-pos-format="1"]').hasAttribute('disabled'));assert.ok(x.document.querySelector('[data-pos-stop="1"]'));click('[data-scl290="correct"]');assert.ok(x.document.getElementById('scl294CorrectionForm'));assert.match(x.document.getElementById('scl290Dialog').textContent,/χειροκίνητη διόρθωση στο Product Me/);click('[data-scl290="close"]');
+ click('[data-scl290="programme"]');for(let i=0;i<3;i++)await new Promise(r=>setImmediate(r));assert.match(x.document.getElementById('scl290Dialog').textContent,/Shared PP campaign/);assert.match(x.document.getElementById('scl290Dialog').textContent,/Ιαν–Σεπ/);click('[data-scl290="close"]');
  click('[data-scl290="link"]');assert.ok(x.document.querySelector('#scl290Dialog details input'));click('[data-scl290="close"]');
  dataset.registry.push({id:'registry-b',pharmacy_id:'ph-b',name:'Unselected',billing_code:'B001'});dataset.installations.push({pharmacy_id:'ph-b',positions:[{ordinal:0,type:'hq',playerCode:'UNSELECTED_ADV0_P'}]});
  await vm.runInContext('SCL290.refreshHQ()',x.ctx);
