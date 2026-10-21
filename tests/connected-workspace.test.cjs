@@ -8,6 +8,7 @@ const fixture=()=>({api_version:290,registry:[{id:'ra',pharmacy_id:'a',name:'Alp
 const tick=async()=>{for(let i=0;i<6;i++)await new Promise(r=>setImmediate(r));};
 test('one pharmacy/period context crosses overview, changes and charges without copying status or losing empty selection',async()=>{
  const x=await smoke(html,'hq',null,async n=>n==='scl290_hq_data'?{data:fixture(),error:null}:n==='scl304_materials'?{data:{items:[]},error:null}:undefined);assert.deepEqual(x.errors,[]);
+ assert.ok(x.document.querySelector('#scl303Changes [data-scl304="materials"]'));
  const u=x.ctx.SCL303;u.overview.pharmacies=['a'];u.overview.months=[10,11];u.changes.status='done';
  vm.runInContext("scl212SetTab('billing')",x.ctx);assert.deepEqual([...u.billing.months],[10,11]);assert.deepEqual([...u.billing.pharmacies],['a']);assert.equal(u.billing.status,'');
  vm.runInContext("scl212SetTab('library');scl212SetTab('changes')",x.ctx);assert.deepEqual([...u.changes.months],[10,11]);assert.equal(u.changes.status,'done');
@@ -45,4 +46,9 @@ test('overview keeps multiple month selection open and registry exposes the shar
  assert.deepEqual([...u.common.months],[10,11]);assert.equal(x.document.querySelector('#scl302Overview [data-key="months"]').open,true);assert.equal(x.document.querySelectorAll('#scl302Overview .scl303-pp-summary').length,2);
  vm.runInContext("scl212SetTab('pharmacies')",x.ctx);assert.equal(x.document.querySelectorAll('#scl290RegistryRows article').length,1);assert.match(x.document.getElementById('scl304RegistryFilters').textContent,/Alpha/);
  vm.runInContext("scl212SetTab('stats')",x.ctx);assert.equal(x.document.querySelectorAll('#scl212Page-stats tbody tr').length,2);assert.match(x.document.getElementById('scl212Page-stats').textContent,/Alpha/);
+});
+test('approved reset uses the stable position identifier while displaying its Greek name',async()=>{
+ const st={turnover:500000,cards:[card]};const x=await smoke(html,'pharmacy',st,async(n,a)=>n==='scl292_finance'?{data:{year:a.p_year,rows:[],history:[],requests:[{id:'request',position_id:'base-1',pharmacy_name:'Alpha',year:2026,from_month:11,status:'approved',reason:'Reset'}]},error:null}:undefined);
+ assert.deepEqual(x.errors,[]);const b=x.document.querySelector('[data-scl292-reopen]');assert.ok(b);assert.equal(b.dataset.scl292Reopen,'base-1');assert.match(x.document.getElementById('scl292Requests').textContent,/Θέση 1/);
+ assert.doesNotMatch(x.document.getElementById('scl292Requests').textContent,/Ιστορικό αποθηκεύσεων/);
 });

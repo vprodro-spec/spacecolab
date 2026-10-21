@@ -49,6 +49,7 @@ new = 'function renderChanges(){\n    if(window.SCL303?.installed)return window.
 s = s.replace(old, new)
 # Preserve the hidden legacy target until its obsolete renderer is removed.
 s = s.replace('<summary>Debug / Raw plan</summary>', '<summary>Αρχείο συμβατότητας</summary>')
+s = s.replace("'Cloud OK'","'Συνδεδεμένο'").replace("'Cloud error'","'Σφάλμα σύνδεσης'").replace("'Cloud'}</strong>","'Σύνδεση'}</strong>").replace('HQ φορτώθηκε.','Τα στοιχεία των κεντρικών ενημερώθηκαν.').replace('Σφάλμα Supabase save: ','Σφάλμα αποθήκευσης: ').replace('σφάλμα save','σφάλμα αποθήκευσης')
 s = s.replace('SpaceCoLab — HQ Mode','SpaceCoLab · Κεντρικά Pharmaplus').replace('Ανανέωση από cloud','Ανανέωση').replace('>auto 30s<','>Αυτόματη ενημέρωση<')
 s = s.replace("function formatMeta(fmt){const f=SCREEN_FORMATS[fmt]||null;return f?`${f.label} • ${f.tag} • ${f.shelves}`:'Δεν έχει οριστεί format';}", "function formatMeta(fmt){return fmt==='vertical'?'portrait':fmt==='horizontal'?'landscape':'Δεν έχει οριστεί προσανατολισμός';}")
 s = s.replace('Οριζόντια οθόνη • 16:9 • 1920×1080','landscape • 16:9 • 1920×1080').replace('Κάθετη οθόνη • 9:16 • 1080×1920','portrait • 9:16 • 1080×1920')

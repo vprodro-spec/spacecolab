@@ -13,6 +13,7 @@ const oldRefresh=refresh;refresh=function(){const r=oldRefresh.apply(this,argume
 Object.keys(descriptions).forEach(tidyModal);
 const style=document.createElement('style');style.id='scl304-presentation';style.textContent=`
 .scl304{--scl-ink:#20344c;--scl-muted:#52677d;--scl-line:#dce5ed;--scl-accent:#145b95;--scl-soft:#f5f8fb;--scl-radius:12px}
+.scl304 .scl212-hq-badge{display:none!important}
 .scl304 body{color:var(--scl-ink);line-height:1.55}
 .scl304 :is(#scl212Dashboard,.scl295-shell,.modal-card,.scl290-dialog,.scl300-overlay>section,.scl295-overlay>section){font-size:14px;line-height:1.55;color:var(--scl-ink)}
 .scl304 :is(button,input,select,textarea){font-family:inherit}.scl304 button{font-weight:600;line-height:1.4;white-space:normal;cursor:pointer}.scl304 button:disabled{cursor:default;opacity:.65}
@@ -34,6 +35,8 @@ const style=document.createElement('style');style.id='scl304-presentation';style
 .scl304 .scl294-pharmacy{padding:18px;margin:12px 0;align-items:flex-start;gap:20px}.scl304 .scl294-pharmacy-info{min-width:0;flex:1}.scl304 .scl294-pharmacy .scl290-actions{max-width:400px;justify-content:flex-start;gap:7px}.scl304 .scl294-summary{font-size:13px!important;line-height:1.6}
 .scl304 :is(.scl295-position-card h2,.scl300-month h3){font-size:17px!important}.scl304 :is(.scl295-position-card code,.scl295-installations code,.scl303-copy code){display:block;font-size:12px;overflow-wrap:anywhere;word-break:break-word}
 .scl304 .scl295-position-card{padding:18px}.scl304 .scl295-position-card header{gap:10px;flex-wrap:wrap}.scl304 .scl295-position-card header span{font-size:12px}.scl304 .scl296-timeline-scroll{max-width:100%;overflow:auto}.scl304 .scl296-position-label{background:#fff;z-index:2}.scl304 .scl296-timeline-row{font-size:13px}.scl304 .scl295-position-month{gap:16px;line-height:1.6}.scl304 .scl295-position-month small{font-size:12px;color:var(--scl-muted)}
+.scl304 :is(#economicsNote,.scl292-card small,.scl295-now-next small,.scl295-now-next>span){font-size:12px!important;line-height:1.6!important;color:var(--scl-muted)}
+.scl304 :is(.scl297-month small,.scl297-month label,.scl295-type,.scl296-badge){font-size:12px!important;line-height:1.5}
 .scl304 .scl303-table{font-size:13px}.scl304 .scl303-table th{font-size:12px;padding:12px}.scl304 .scl303-table td{padding:16px 12px}.scl304 .scl303-table small{font-size:12px}.scl304 .scl303-copy .scl303-btn{font-size:11px!important;padding:5px 8px!important;min-height:29px}.scl304 .scl303-state{font-size:12px}.scl304 .scl303-table .scl303-completion .scl303-btn{font-size:12px!important}.scl304 .scl303-amount strong{font-size:25px}.scl304 .scl303-multi summary strong{height:auto;min-height:42px;overflow-wrap:anywhere}
 .scl304 :is(.scl290-overlay,.scl300-overlay,.scl295-overlay,.modal){background:#15283e80;padding:24px;box-sizing:border-box}
 .scl304 :is(.scl290-dialog,.scl300-overlay>section,.scl295-overlay>section,.modal-card){width:min(1040px,100%)!important;max-height:calc(100dvh - 48px)!important;border:1px solid var(--scl-line);border-radius:14px!important;box-shadow:0 20px 60px #14243b30!important;box-sizing:border-box;overflow:auto}
