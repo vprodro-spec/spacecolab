@@ -47,7 +47,7 @@ test('preagreement save stays preagreement; final confirmation replaces customiz
  x.run("SCL297.openDeal('base-1','preagreement',0)");await x.field('products','Product');await x.click('[data-scl297="save-pre"]');assert.equal(x.state().preagreements.length,1);assert.equal(x.state().confirmedDeals.length,0);
  x.run("SCL297.openDeal('base-1','preagreement',0)");await x.click('[data-scl297="review-deal"]');assert.match(x.text('negotiationModalBody'),/Χορηγίες ραφιών/);assert.match(x.text('negotiationModalBody'),/30€/);assert.equal(x.writes.length,2);
  await x.click('[data-scl297="commit"]');const s=x.state();assert.equal(x.writes.length,3);assert.equal(s.preagreements.length,0);assert.equal(s.confirmedDeals.length,1);assert.equal(s.sponsoredShelves.length,0);assert.equal(s.simpleSchedule[9],theme);assert.equal(s.confirmedDeals[0].soldMonthlyPrice,175);
- assert.equal(x.document.querySelector('.modal.open'),null);assert.match(x.text('scl295Notice'),/Η συμφωνία αποθηκεύτηκε/);
+ assert.equal(x.document.querySelector('.modal.open'),null);assert.match(x.text('scl295Notice'),/Η οριστική συμφωνία καταχωρίστηκε/);
  await x.click('[data-scl297="document"][data-pre="false"]');
  assert.match(x.text('briefModalBody'),/emitropoulou@pharmaplus.gr/);assert.match(x.text('briefModalBody'),/17\/09\/2026/);assert.doesNotMatch(x.text('briefModalBody'),/Αναφορά Αποτελεσμάτων|5 εργάσιμες/);
  assert.equal(s.confirmedDeals[0].materialRequests[0].status,'awaiting');
@@ -86,7 +86,7 @@ test('confirmation while another save is pending is visibly busy and cannot subm
 test('monthly supplier content, file dates and planned custom quota agree with continuous-block rules',async()=>{
  const c=base();c.confirmedDeals=[{id:'d',confirmed:true,supplier:'S',brand:'B',subline:'',products:'',startMonth:9,duration:3,monthlyContentChanges:true,schedule:Array(12).fill(''),monthlySublines:Array(12).fill('Same'),monthlyProducts:Array(12).fill('P')}];
  assert.equal(C.blocks(c,2026,A.active).filter(b=>b.category==='deal').length,1);c.confirmedDeals[0].monthlyProducts[11]='Different';assert.equal(C.blocks(c,2026,A.active).filter(b=>b.category==='deal').length,2);
- const files=C.files(c,c.confirmedDeals[0],2026);assert.equal(files.length,3);assert.match(files[1].file,/_2026-11_ΚΑΘΕΤΟ.mp4$/);assert.equal(files[1].deadline,'2026-10-18');
+ const files=C.files(c,c.confirmedDeals[0],2026);assert.equal(files.length,2);assert.equal(files[0].end,10);assert.match(files[1].file,/_2026-12_ΚΑΘΕΤΟ.mp4$/);assert.equal(files[1].deadline,'2026-11-17');
  c.confirmedDeals=[];c.simpleConfirmed=true;c.simpleSchedule[9]=other;c.simpleSchedule[10]=other;
  const rows=[1,2,3].map((q,i)=>({position_id:c.id,year:2026,category:'custom',month:i,quota_index:q,status:'finalized',amount:0}));
  const predicted=C.forecast(c,2026,rows,A.active);assert.equal(predicted.length,1);assert.equal(predicted[0].quota,4);assert.equal(predicted[0].amount,15);

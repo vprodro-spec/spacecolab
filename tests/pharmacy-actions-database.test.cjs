@@ -65,5 +65,15 @@ test('pharmacy form saves run through PostgreSQL: charges match preview, sponsor
  assert.equal(JSON.stringify((await db.query('SELECT state_json FROM scl290_snapshots WHERE pharmacy_id=$1 AND year=2027',[pid])).rows[0].state_json),beforeReturn);
  assert.equal((await db.query('SELECT count(*) n FROM scl290_snapshots WHERE pharmacy_id=$1 AND year>2027',[pid])).rows[0].n,0);
  assert.equal(A.total((await finance()).rows.filter(r=>r.category==='custom'&&r.status==='finalized')),15);
+ // Real PostgreSQL grouping must agree with UI grouping for monthly A/A/A, A/B/A and A/A/B.
+ const probe=structuredClone(nextStored.cards.find(c=>c.id==='base-1'));
+ probe.confirmedDeals[0].duration=3;probe.confirmedDeals[0].monthlyContentChanges=true;
+ for(const pattern of [['A','A','A'],['A','B','A'],['A','A','B']]){
+  probe.confirmedDeals[0].monthlySublines=Array(12).fill('');probe.confirmedDeals[0].monthlySublines.splice(0,3,...pattern);
+  const sql=(await db.query('SELECT * FROM scl_private.blocks(2027,$1)',[JSON.stringify({cards:[probe]})])).rows.filter(r=>r.category==='deal');
+  const ui=C.blocks(probe,2027,A.active).filter(r=>r.category==='deal');
+  assert.deepEqual(sql.map(r=>[r.start_month,r.end_month]),ui.map(r=>[r.start,r.end]));
+  assert.deepEqual(C.operationalRows(probe,2027,[],A.active).filter(r=>r.final_type==='deal'&&r.content_change_required).map(r=>r.month),sql.map(r=>r.start_month));
+ }
  await db.close();
 });
