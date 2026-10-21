@@ -14,7 +14,7 @@
 - Build and 115 automated tests passed, including PostgreSQL corrections, expiry/idempotency, same HQ/pharmacy totals, retained programme/completion, exports, one-month/multiple-month interaction, both orientations and letter output.
 - Supabase migration `charge_adjustments` applied on 2026-10-21 (remote version 20261021184514).
 - New correction table uses RLS with no direct anon/authenticated grants. The RPC retains the existing HQ authorization guard and an empty search path.
-- Live desktop visual review follows deployment. Phone viewport is not yet visually verified.
+- Live desktop visual review: pharmacy economics and amount drilldown, annual estimate, supplier proposal/confirmation, one-month agreement fields and HQ charge correction forms. No live business records were modified. A legacy CSS rule hiding the estimate explanations was found and corrected. Phone viewport is not yet visually verified.
 
 ## Deferred by agreement
 
