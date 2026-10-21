@@ -161,6 +161,10 @@ const C={
 
 
 
+
+
+
+
 <!-- v293 library integration -->
 
 
@@ -18594,7 +18598,7 @@ setInterval(sclBindV191,3000);
 
 /* v193 — simple guaranteed HQ pharmacy list */
 function sclSimpleBuildPharmacyLinkV193(token){
-  return location.href.split('?')[0].split('#')[0] + '?pharmacy=' + encodeURIComponent(token);
+  return sclBuildPharmacyLink(token);
 }
 function sclSimpleStateSummaryV193(pharmacyId, states){
   const s=(states||[]).filter(x=>x.pharmacy_id===pharmacyId);
@@ -18863,7 +18867,7 @@ function sclRealOverviewRowsV195(data){
     const saved=latest ? `${latest.year} saved` : 'no state yet';
     const updated=latest?.updated_at ? new Date(latest.updated_at).toLocaleDateString('el-GR') : '—';
     const token=p.token||'';
-    const link=token ? (location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token)) : '';
+    const link=token ? (sclBuildPharmacyLink(token)) : '';
     return `<tr>
       <td><strong>${esc(p.name||'Φαρμακείο')}</strong><div class="sub-info">${esc(updated)}</div></td>
       <td>${ps.length}</td>
@@ -18984,7 +18988,7 @@ function sclV196LatestStateFor(pharmacyId,states){
   return arr[0]||null;
 }
 function sclV196Link(token){
-  return location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token);
+  return sclBuildPharmacyLink(token);
 }
 function sclV196Pill(type){
   try{ if(typeof pillHtml==='function')return pillHtml(type); }catch(e){}
@@ -19244,7 +19248,7 @@ function sclV197RenderOverview(data){
     const ps=states.filter(s=>s.pharmacy_id===p.id).sort((a,b)=>Number(b.year||0)-Number(a.year||0))[0];
     const a=sclV197Analyze(ps);
     const token=p.token||'';
-    const link=token?(location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token)):'';
+    const link=token?(sclBuildPharmacyLink(token)):'';
     const current=ps?(a.types.length?a.types.map(t=>`<span class="pill ${t==='Custom'?'custom':t==='Deal'?'deal':t==='Sponsored'?'sponsored':t==='Pharmaplus'?'pharmaplus':'basic'}">${t}</span>`).join(' '):'<span class="pill pending">χωρίς τρέχουσες</span>'):'<span class="pill pending">no state</span>';
     const status=ps?`<span class="pill basic">${ps.year} saved</span><div class="sub-info">${(ps.updated_at||'').slice(0,10)}</div>`:'<span class="pill pending">κενό</span>';
     return `<tr><td><strong>${esc(p.name||'Φαρμακείο')}</strong><div class="sub-info">${token?`<button data-v197-open="${esc(link)}">Open</button> <button data-v197-copy="${esc(link)}">Copy</button>`:''}</div></td><td>${a.positions}</td><td>${current}</td><td>${esc(a.next)}</td><td>${status}</td></tr>`;
@@ -19806,7 +19810,7 @@ function sclHqLiveEscV202(v){
   return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 function sclHqLiveBuildLinkV202(token){
-  return location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token);
+  return sclBuildPharmacyLink(token);
 }
 function sclHqLiveLatestStateV202(pharmacyId,states){
   return (states||[]).filter(s=>s.pharmacy_id===pharmacyId).sort((a,b)=>Number(b.year||0)-Number(a.year||0))[0]||null;
@@ -20142,7 +20146,7 @@ function scl203RenderMainOverview(data){
       : (ps?'<span class="pill pending">χωρίς τρέχουσες</span>':'<span class="pill pending">no state</span>');
     const next=actions.find(a=>a.monthIdx>=currentMonth)?.month || '—';
     const token=p.token||'';
-    const link=token?(location.href.split('?')[0].split('#')[0]+'?pharmacy='+encodeURIComponent(token)):'';
+    const link=token?(sclBuildPharmacyLink(token)):'';
     return `<tr>
       <td><strong>${scl203Esc(p.name||'Φαρμακείο')}</strong><div class="sub-info">${token?`<button data-203-open="${scl203Esc(link)}">Open</button> <button data-203-copy="${scl203Esc(link)}">Copy</button>`:''}</div></td>
       <td>${ps?.state_json?.cards?.length || 0}</td>
