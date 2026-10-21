@@ -191,6 +191,10 @@ const C={
 
 
 
+
+
+
+
 <!-- v293 library integration -->
 
 
@@ -33568,7 +33572,7 @@ async function programmeHistory(id){const res=await sb.rpc('scl304_program_histo
 }
 async function action(b){const a=b.dataset.scl304;
  if(a==='file')return W.openFile(row(b.dataset.id));
- if(a==='return'){if(SCL293.editing){if(!confirm('Επιστροφή χωρίς αποθήκευση των αλλαγών;'))return;SCL293.editing=null;}return returnToOrigin();}
+ if(a==='return'){if(SCL293.editing){if(!confirm('Επιστροφή χωρίς αποθήκευση των αλλαγών;'))return;SCL293.editing=null;SCL293.render();}return returnToOrigin();}
  if(a==='close'){if(W.busy)return;$('scl304Dialog')?.remove();return;}
  if(a==='copy')return navigator.clipboard.writeText(b.dataset.copy||'');
  if(a==='instructions')return navigator.clipboard.writeText(instructions(W.editing.row,W.editing.item));
