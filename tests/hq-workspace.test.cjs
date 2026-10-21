@@ -46,4 +46,5 @@ test('explicit completion saves once, undo can be cancelled, successful undo pre
  await x.click(x.document.querySelector('#scl303Changes [data-scl303="undo"]'));await x.click(x.document.querySelector('#scl303Dialog [data-scl303="confirm-undo"]'));assert.equal(writes.length,2);assert.equal(writes[1].a.p_done,false);assert.equal(u.visibleChanges()[0].complete,false);
  assert.equal(JSON.stringify(data),before);assert.equal(run('SCL292.data.rows.length'),0);assert.equal(u.exportChangesRows().length,2);
  const cb=x.document.querySelector('[data-scl303-multi="months"][value="9"]');cb.checked=false;cb.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));assert.equal(u.visibleChanges().length,0);assert.equal(u.exportChangesRows().length,1);
+ const menu=x.document.querySelector('.scl303-multi[data-scope="changes"][data-key="months"]');assert.equal(menu.open,true);u.renderChanges();assert.equal(x.document.querySelector('.scl303-multi[data-scope="changes"][data-key="months"]').open,true);
 });
