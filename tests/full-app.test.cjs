@@ -35,13 +35,13 @@ test('changing HQ year clears the old campaign editor and loads the selected yea
  const x=await smoke(html,'hq');
  const select=x.document.getElementById('scl212Year');
  Object.defineProperty(select,'value',{value:'2027',writable:true,configurable:true});
- const panel=x.document.getElementById('scl231EditorPanel');panel.style.display='block';
+ await vm.runInContext("SCL300.start('create','2027-01-01')",x.ctx);assert.ok(x.document.getElementById('scl300Dialog')); 
  vm.runInContext(`
   SCL231.campaigns=[{month:0,title:'Old campaign'}];SCL231.selectedMonth=0;
   window.campaignYears=[];window.campaignRequests=[];
   const originalTestRpc=sb.rpc;
   sb.rpc=async function(name,args){
-   if(name==='hq_get_pharmaplus_campaigns'){
+   if(name==='scl300_pp_hq'){
     campaignYears.push(args.p_year);
     return new Promise(resolve=>campaignRequests.push(resolve));
    }
@@ -50,12 +50,12 @@ test('changing HQ year clears the old campaign editor and loads the selected yea
  `,x.ctx);
  const first=vm.runInContext('SCL292.reloadCampaignYear()',x.ctx);
  assert.equal(vm.runInContext('SCL231.campaigns.length',x.ctx),0);
- assert.equal(panel.style.display,'none');
+ assert.equal(x.document.getElementById('scl300Dialog'),null);
  assert.equal(vm.runInContext('SCL231.selectedMonth',x.ctx),null);
  select.value='2028';
  const second=vm.runInContext('SCL292.reloadCampaignYear()',x.ctx);
- vm.runInContext("campaignRequests[1]({data:[{year:2028,month:0,title:'2028 campaign'}],error:null})",x.ctx);await second;
- vm.runInContext("campaignRequests[0]({data:[{year:2027,month:0,title:'Late 2027 campaign'}],error:null})",x.ctx);await first;
+ vm.runInContext("campaignRequests[1]({data:{year:2028,records:[{month_on:'2028-01-01',campaign_id:'c',campaign:{title:'2028 campaign'},thematic:{}}],pharmacies:[],history:[],today:'2026-10-20'},error:null})",x.ctx);await second;
+ vm.runInContext("campaignRequests[0]({data:{year:2027,records:[{month_on:'2027-01-01',campaign_id:'c',campaign:{title:'Late 2027 campaign'},thematic:{}}],pharmacies:[],history:[],today:'2026-10-20'},error:null})",x.ctx);await first;
  assert.deepEqual(Array.from(vm.runInContext('campaignYears',x.ctx)),[2027,2028]);
  assert.equal(vm.runInContext('SCL231.campaigns[0].title',x.ctx),'2028 campaign');
 });

@@ -6,7 +6,7 @@ test('HQ interface: activation opens screens, progress excludes PP, selected exp
  const calls=[];
  const x=await smoke(html,'hq',null,async(name,args)=>{
   calls.push({name,args});
-  if(name==='pharmacy_get_pharmaplus_campaigns')return{data:[{month:9,display_title:'Shared PP campaign',display_kind:'main'}],error:null};
+  if(name==='scl300_pp_pharmacy')return{data:[{month:9,display_title:'Shared PP campaign',display_kind:'main'}],error:null};
   if(name==='scl290_hq_data')return{data:structuredClone(dataset),error:null};
   if(name==='scl290_hq_activate'){dataset.registry[0].pharmacy_id='ph-a';dataset.registry[0].token='fixture-token-a';return{data:{id:'ph-a'},error:null};}
  });assert.deepEqual(x.errors,[]);

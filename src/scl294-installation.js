@@ -235,7 +235,7 @@
     const cfg=configFor(r.pharmacy_id);if(!cfg)return installDialog(r.id);
     const y=scl212Year(),d=dialog('Πρόγραμμα — '+r.name,'<p>Φόρτωση προγράμματος…</p>','programme');d.record=r;
     // Reuse the pharmacy's own campaign resolver, including participation rules.
-    const pp=await api('pharmacy_get_pharmaplus_campaigns',{p_pharmacy_token:r.token,p_year:y});
+    const pp=await api('scl300_pp_pharmacy',{p_pharmacy_token:r.token,p_year:y});
     if(R.dialog!==d)return;
     const rows=(SCL212.months||R.hq.months).filter(x=>x.pharmacy_id===r.pharmacy_id&&Number(x.year||y)===y);
     const kinds={basic:'Βασικό πρόγραμμα',custom:'Εξατομίκευση',deal:'Συμφωνία προμηθευτή',supplier:'Συμφωνία προμηθευτή'};

@@ -88,7 +88,7 @@ test('cards use real current and next year; annual view distinguishes agreements
  let writes=0;const x=await smoke(html,'pharmacy',{turnover:500000,cards:[c]},async(n,a)=>{
   if(n==='scl290_save_program')writes++;
   if(n==='scl290_get_pharmacy'&&a.p_year===2027)return{data:{state_json:{cards:[{...c,initialPlanLocked:false}]}},error:null};
-  if(n==='pharmacy_get_pharmaplus_campaigns')return {data:[{month:a.p_year===2027?0:11,display_kind:'fallback',display_title:'PP '+a.p_year}],error:null};
+  if(n==='scl300_pp_pharmacy')return {data:[{month:a.p_year===2027?0:11,display_kind:'fallback',display_title:'PP '+a.p_year}],error:null};
  },{now:'2026-12-20T12:00:00Z'});
  const {click,run,text}=controls(x);await tick();assert.deepEqual(x.errors,[]);assert.match(text('cards'),/Δεκ 2026/);assert.match(text('cards'),/Ιαν 2027/);assert.match(text('cards'),/PP 2027/);assert.match(text('cards'),/Εκκρεμεί αρχικό πρόγραμμα/);
  assert.match(text('timelineGrid'),/Προσυμφωνία · Pre Brand/);assert.match(text('timelineGrid'),/Χορηγία ραφιών · Shelf Brand/);assert.doesNotMatch(text('cards'),/Fixed|Pending|Ζωντανή|Συμφων\./);
