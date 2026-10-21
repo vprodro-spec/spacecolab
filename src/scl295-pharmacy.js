@@ -9,7 +9,7 @@ const next=()=>{const d=now();return {year:d.year+(d.month===11?1:0),month:(d.mo
 const configured=()=>!!SCL290.context?.installation,loaded=()=>!!SCL_ROUTING.ready&&!!SCL290.context;
 const turnoverReady=()=>Number(state.turnover)>0;
 const name=c=>c.type==='hq'?'Pharmaplus':SCL290Core.title(SCL290Core.ordinal(c.id)??0);
-const fmt=f=>f==='vertical'?'Κάθετη οθόνη':f==='horizontal'?'Οριζόντια οθόνη':'Αναμονή προσανατολισμού';
+const fmt=f=>f==='vertical'?'Προσανατολισμός: portrait':f==='horizontal'?'Προσανατολισμός: landscape':'Αναμονή προσανατολισμού';
 const period=(m,yr=y())=>MONTHS[m]+' '+yr;
 const dateLabel=s=>s?period(Number(s.slice(5,7))-1,Number(s.slice(0,4))):'Υπάρχουσα εγκατάσταση';
 const button=(text,a,attrs='')=>'<button type="button" data-scl295="'+a+'" '+attrs+'>'+E(text)+'</button>';
@@ -67,7 +67,7 @@ function mount(){
  if(V.mounted)return;const shell=document.querySelector('.shell'),nav=document.querySelector('.sticky-nav');if(!shell||!nav)return;
  V.mounted=true;document.body.classList.add('scl295-pharmacy');
  const logo=nav.querySelector('.hero-logo')?.outerHTML||'<strong>SpaceCoLab</strong>';
- nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v302</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
+ nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v303</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
  const econ=$('economicsGrid'),econNote=$('economicsNote');
  $('overviewPage').innerHTML='<section class="scl295-section"><h1>Το φαρμακείο μου</h1><div id="scl295Profile"></div></section><section class="scl295-section"><h2>Οι οθόνες μου</h2><div id="scl295Installation"></div></section><div id="setupStatus" hidden></div><section class="scl295-section" id="scl295RequestHost"></section>';
  $('plannerPage').innerHTML='<section class="scl295-section"><div class="scl295-section-head"><h1>Προγραμματισμός</h1><span id="scl295ProgramYear"></span></div><div id="scl295Pending"></div><div id="cards" class="scl295-cards"></div></section><section id="scl295PositionSection" class="scl295-section" hidden><div id="plannerRoot"></div></section><section class="scl295-section"><h2>Ετήσιο πρόγραμμα</h2><div id="timelineGrid" class="scl295-timeline"></div></section>';

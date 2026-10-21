@@ -53,5 +53,5 @@ test('billing shows one amount for a full continuous period and filters by charg
  const x=await smoke(html,'hq',null,async(n)=>n==='scl292_finance'?{data:{year:2026,rows:[row],history:[],requests:[]},error:null}:undefined);
  assert.deepEqual(x.errors,[]);const run=s=>vm.runInContext(s,x.ctx);run('SCL292.renderBilling()');
  const page=x.document.getElementById('scl212Page-billing');assert.match(page.textContent,/Προβολή: Οκτ–Δεκ 2026/);assert.equal(page.querySelectorAll('tbody tr').length,1);
- assert.match(page.textContent,/Μήνας χρέωσης/);run("SCL292.filters.month='10';SCL292.renderBilling()");assert.equal(page.querySelectorAll('tbody tr').length,0);
+ assert.match(page.textContent,/Μήνας χρέωσης/);run("SCL303.billing.months=[10];SCL292.renderBilling()");assert.equal(page.querySelectorAll('tbody tr').length,0);
 });

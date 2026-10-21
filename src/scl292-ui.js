@@ -1,7 +1,7 @@
 (function(root){
  'use strict';
  const C=root.SCL292Core,el=id=>document.getElementById(id),escape=esc;
- const R=root.SCL292={data:null,key:'',promise:null,error:'',last:0,done:{},doneSaving:null,filters:{month:'',pharmacy:'',category:'',status:''}};
+ const R=root.SCL292={data:null,key:'',promise:null,error:'',last:0,done:{},doneMeta:{},doneSaving:null,filters:{month:'',pharmacy:'',category:'',status:''}};
  const isHQ=()=>typeof sclMode==='function'&&sclMode()==='hq';
  const isPh=()=>typeof sclMode==='function'&&sclMode()==='pharmacy';
  const currentYear=()=>C.year(isHQ()?el('scl212Year')?.value:state.programYear);
@@ -21,10 +21,10 @@
  const api=async(name,args)=>{const result=await sb.rpc(name,args);if(result.error)throw Error(result.error.message);return result.data;};
  const notice=t=>{let n=el('scl292Status');if(!n){n=document.createElement('div');n.id='scl292Status';n.className='scl290-notice';document.body.prepend(n);}n.textContent=t;n.hidden=!t;};
  R.invalidate=()=>{R.last=0;};
- R.loadDone=async function(){if(!isHQ()||!SCL_ROUTING?.hqKey)return;const data=await api('scl292_get_done',{p_hq_key:SCL_ROUTING.hqKey});if(R.doneSaving)return;R.done=Object.fromEntries(data.map(x=>[x.change_key,x.done]));SCL212.done={...R.done};if(typeof scl212RenderChanges==='function')scl212RenderChanges();};
+ R.loadDone=async function(){if(!isHQ()||!SCL_ROUTING?.hqKey)return;const data=await api('scl292_get_done',{p_hq_key:SCL_ROUTING.hqKey});if(R.doneSaving)return;R.doneMeta=Object.fromEntries(data.map(x=>[x.change_key,x]));R.done=Object.fromEntries(data.map(x=>[x.change_key,x.done]));SCL212.done={...R.done};if(typeof scl212RenderChanges==='function')scl212RenderChanges();};
  R.saveDone=function(){
   if(R.doneSaving)return R.doneSaving;
-  R.doneSaving=Promise.resolve().then(async()=>{try{while(true){const pending=Object.entries(SCL212.done||{}).find(([key,value])=>key.startsWith('v292|')&&!!R.done[key]!==!!value);if(!pending)break;const [key,value]=pending;await api('scl292_set_done',{p_hq_key:SCL_ROUTING.hqKey,p_change_key:key,p_done:!!value});R.done[key]=!!value;}}catch(e){SCL212.done={...R.done};notice('Δεν αποθηκεύτηκε η ολοκλήρωση: '+e.message);if(typeof scl212RenderChanges==='function')scl212RenderChanges();}finally{R.doneSaving=null;}});
+  R.doneSaving=Promise.resolve().then(async()=>{try{while(true){const pending=Object.entries(SCL212.done||{}).find(([key,value])=>key.startsWith('v292|')&&!!R.done[key]!==!!value);if(!pending)break;const [key,value]=pending;const saved=await api('scl292_set_done',{p_hq_key:SCL_ROUTING.hqKey,p_change_key:key,p_done:!!value});R.done[key]=!!value;R.doneMeta[key]={change_key:key,done:!!value,updated_at:saved?.updated_at||new Date().toISOString()};}}catch(e){SCL212.done={...R.done};notice('Δεν αποθηκεύτηκε η ολοκλήρωση: '+e.message);if(typeof scl212RenderChanges==='function')scl212RenderChanges();}finally{R.doneSaving=null;}});
   return R.doneSaving;
  };
  R.loadFinance=async function(force=false){

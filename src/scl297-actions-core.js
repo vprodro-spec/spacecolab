@@ -119,7 +119,7 @@ function shelf(c,draft,groupId,remove=false){
 function deadline(year,month){const d=new Date(Date.UTC(year,month,1));d.setUTCDate(d.getUTCDate()-14);return d.toISOString().slice(0,10);}
 function files(c,d,year){
  const safe=s=>String(s||'').trim().replace(/\s+/g,'_').replace(/[^\wΑ-Ωα-ωΆ-ώ0-9_-]/g,'');
- const name=safe([d.supplier,d.brand,d.subline].filter(Boolean).join('_'))||'ΣΥΜΦΩΝΙΑ',format=c.screenFormat==='vertical'?'ΚΑΘΕΤΟ':'ΟΡΙΖΟΝΤΙΟ',ms=months(d);
+ const name=safe([d.supplier,d.brand,d.subline].filter(Boolean).join('_'))||'ΣΥΜΦΩΝΙΑ',format=c.screenFormat==='vertical'?'PORTRAIT':'LANDSCAPE',ms=months(d);
  const groups=[];for(const m of ms){const key=dealKey(d,m),p=groups.at(-1);if(p&&p.key===key&&p.end===m-1)p.end=m;else groups.push({month:m,end:m,key});}
  return groups.map(({month:m,end})=>({month:m,end,file:name+(d.monthlyContentChanges===false?'':'_'+year+'-'+String(m+1).padStart(2,'0'))+'_'+format+'.mp4',deadline:deadline(year,m),subline:d.monthlyContentChanges===false?d.subline:d.monthlySublines?.[m]||d.subline,products:d.monthlyContentChanges===false?d.products:d.monthlyProducts?.[m]||d.products,content:d.schedule?.[m]||''}));
 }

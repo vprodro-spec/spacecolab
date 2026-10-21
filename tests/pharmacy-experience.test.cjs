@@ -67,7 +67,7 @@ test('initial programme discards drafts, names missing months, previews HQ forma
  assert.equal(run('SCL293.initial.refs.filter(Boolean).length'),0);assert.match(text('programModalBody'),/Ιαν–Σεπ/);
  await click('[data-scl293="initial-lock"]');assert.match(text('scl295InitialError'),/Οκτ, Νοε, Δεκ/);assert.equal(writes.length,0);
  await click('[data-scl293="initial-select"]');const draft=run('SCL293.initial.refs[9].theme');assert.ok(draft);assert.equal(writes.length,0);
- await click('[data-scl293="preview"]');assert.match(text('planogramModalBody'),/Κάθετη οθόνη/);assert.equal(x.document.querySelectorAll('[data-scl293="preview-setup"]').length,3);
+ await click('[data-scl293="preview"]');assert.match(text('planogramModalBody'),/Προσανατολισμός: portrait/);assert.equal(x.document.querySelectorAll('[data-scl293="preview-setup"]').length,3);
  run("closeModal('planogramModal')");run('window.confirm=()=>false');run("closeModal('programModal')");assert.ok(run('SCL293.initial'));
  run('window.confirm=()=>true');run("closeModal('programModal')");assert.equal(run('SCL293.initial'),null);assert.equal(writes.length,0);
  run("renderInitialPlanModal('base-1')");await tick();assert.equal(run('SCL293.initial.refs.filter(Boolean).length'),0);

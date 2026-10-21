@@ -37,7 +37,7 @@ B.rowsForYear=function(hq,year,old=[]){
     return {...r,pharmacy_id:pid,pharmacy_name:reg?.name||source[0]?.pharmacy_name||'',position_orientation:p.screenFormat||c.screenFormat,player_code:p.playerCode,content_code:p.contentCode};
    });
    all.push(...rs);
-   result.push(...rs.filter(r=>r.content_change_required&&!(scl212OpsMode()==='preprogrammed_basic'&&['initial_basic_setup','basic_month_change'].includes(r.content_change_reason))));
+   result.push(...rs.filter(r=>r.content_change_required));
   }
  }
  result.push(...old.filter(r=>!covered.has(r.pharmacy_id+'|'+r.position_id)));

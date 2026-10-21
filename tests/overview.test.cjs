@@ -26,13 +26,13 @@ test('overview links filters to exact rows, shares completion with Changes and r
  const run=s=>vm.runInContext(s,x.ctx),host=()=>x.document.getElementById('scl302Overview');
  assert.doesNotMatch(host().textContent,/Reports|setup|Open to-dos|Fallback|Supplier|gaps/);
  assert.match(host().textContent,/Θεματική Pharmaplus/);assert.doesNotMatch(host().textContent,/χωρίς εφαρμόσιμο περιεχόμενο/);
- await x.click(host().querySelector('[data-filter="local"]'));assert.equal(run('SCL302.filter'),'local');
+ await x.click(host().querySelector('[data-filter="local"]'));assert.equal(run('SCL303.changes.area'),'local');assert.equal(run('SCL212.tab'),'changes');
  const row=run("SCL302.model.changes.find(t=>t.kind==='local')");assert.ok(row);assert.equal(row.material,true);
- await x.click(host().querySelector('[data-id="'+row.id+'"]'));assert.match(x.document.getElementById('scl302Dialog').textContent,/TEST_ADV1_P/);
- const cb=x.document.getElementById('scl302Done');cb.checked=true;cb.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));for(let i=0;i<8;i++)await new Promise(r=>setImmediate(r));
+ run('SCL302.showTask('+JSON.stringify(row.id)+')');assert.match(x.document.getElementById('scl302Dialog').textContent,/TEST_ADV1_P/);
+ await x.click(x.document.querySelector('#scl302Dialog [data-scl303="complete"]'));
  assert.equal(run('SCL302.model.changes.find(t=>t.kind===\'local\').complete'),true);assert.ok(calls.includes('scl292_set_done'));assert.equal(calls.includes('scl302_set_initial_deadline'),false);
  assert.equal(run('SCL212.done['+JSON.stringify(row.id)+']'),true);
- fail=true;x.ctx.confirm=()=>true;const uncheck=x.document.getElementById('scl302Done');uncheck.checked=false;uncheck.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));for(let i=0;i<8;i++)await new Promise(r=>setImmediate(r));
+ fail=true;await x.click(x.document.querySelector('#scl302Dialog [data-scl303="undo"]'));await x.click(x.document.querySelector('[data-scl303="confirm-undo"]'));
  assert.equal(run('SCL212.done['+JSON.stringify(row.id)+']'),true);assert.match(x.document.getElementById('scl302Error').textContent,/Δεν αποθηκεύτηκε/);
  await x.click(x.document.querySelector('#scl302Dialog [data-scl302="close"]'));
  run("SCL293.data.themes=[{key:'Base',files:{vertical:'BASE_P.mp4',horizontal:'BASE_L.mp4'}}];SCL302.showTask(SCL302.model.all.find(t=>t.row?.final_title==='Base').id)");assert.match(x.document.getElementById('scl302Dialog').textContent,/BASE_P.mp4/);
