@@ -35,6 +35,7 @@ test('overview links filters to exact rows, shares completion with Changes and r
  fail=true;x.ctx.confirm=()=>true;const uncheck=x.document.getElementById('scl302Done');uncheck.checked=false;uncheck.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));for(let i=0;i<8;i++)await new Promise(r=>setImmediate(r));
  assert.equal(run('SCL212.done['+JSON.stringify(row.id)+']'),true);assert.match(x.document.getElementById('scl302Error').textContent,/Δεν αποθηκεύτηκε/);
  await x.click(x.document.querySelector('#scl302Dialog [data-scl302="close"]'));
+ run("SCL293.data.themes=[{key:'Base',files:{vertical:'BASE_P.mp4',horizontal:'BASE_L.mp4'}}];SCL302.showTask(SCL302.model.all.find(t=>t.row?.final_title==='Base').id)");assert.match(x.document.getElementById('scl302Dialog').textContent,/BASE_P.mp4/);
  run("document.getElementById('scl212Year').value='2027';SCL302.render()");assert.ok(run('SCL302.model.overdue.some(t=>t.year===2026)'));
 });
 test('next month rolls December into January and persists both year and month',async()=>{
