@@ -12,11 +12,11 @@
 
 ## Validation
 
-- Build completed; all 106 automated tests pass.
+- Build completed; all 107 automated tests pass.
 - PGlite database tests cover authorization, stale revision rejection, idempotent material changes, history, unchanged programme/charges/completion, cross-year filename correction and deactivation cleanup.
 - Supabase migration applied on 2026-10-21 (`hq_materials_and_history`, remote version 20261021150925). New private tables have RLS and no direct anon access.
 - Live desktop visual review: all HQ/pharmacy navigation sections; Changes → Charges filter persistence; exact library/orientation destination; installation and Pharmaplus campaign forms; supplier material detail; pharmacy programme history; initial programme, customization, sponsorship, agreement, supplier confirmation and planogram dialogs. Read-only inspection preserved business records.
-- Findings fixed: toolbar actions surviving legacy refresh paths, explicit clear-selection control, duplicate history removal, readable small text and a stable position ID in the approved-reset button.
+- Findings fixed: toolbar actions surviving legacy refresh paths, explicit clear-selection control, duplicate history removal, readable small text, a stable position ID in the approved-reset button and cleanup of a library editor after returning without saving.
 - Responsive CSS is included; a phone viewport was not visually verified in the available browser.
 
 ## Deliberately separate next work

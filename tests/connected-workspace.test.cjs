@@ -33,6 +33,15 @@ test('source routing distinguishes local theme, PP library theme, own PP theme, 
  assert.equal(C.source({...r,pp_kind:'fallback'},data,seed).kind,'pp-theme');assert.equal(C.source({...r,final_type:'deal'},data,seed).kind,'agreement');
  assert.deepEqual(C.context({months:['11',11,15,-1],pharmacies:[]}),{months:[11],pharmacies:[]});
 });
+test('return without saving clears the routed library editor and preserves the originating selection',async()=>{
+ let saves=0;const x=await smoke(html,'hq',null,async n=>{
+ if(n==='scl290_hq_data')return{data:fixture(),error:null};if(n==='scl304_materials')return{data:{items:[]},error:null};if(n==='scl293_library')return{data:seed,error:null};if(n==='scl293_save'){saves++;return{data:{},error:null};}
+ });const u=x.ctx.SCL303;u.openChanges({month:9,status:''});u.changes.pharmacies=['a'];await x.ctx.SCL304.openFile(u.visibleChanges()[0]);
+ x.document.querySelector('#scl293Editor [name="file_vertical"]').value='UNSAVED_PORTRAIT.mp4';x.ctx.confirm=()=>true;
+ x.document.querySelector('[data-scl304="return"]').click();await tick();
+ assert.equal(saves,0);assert.equal(x.ctx.SCL293.editing,null);assert.equal(vm.runInContext('SCL212.tab',x.ctx),'changes');assert.deepEqual([...u.common.pharmacies],['a']);assert.deepEqual([...u.common.months],[9]);
+ vm.runInContext("scl212SetTab('library')",x.ctx);assert.equal(x.document.querySelector('#scl293Editor'),null);assert.doesNotMatch(x.document.getElementById('scl212Page-library').textContent,/UNSAVED_PORTRAIT/);
+});
 test('supplier confirmation gives exact filenames per changed content, destination and deadline',async()=>{
  const st={turnover:500000,cards:[{...card,confirmedDeals:[{id:'d',confirmed:true,supplier:'SUPPLIER',brand:'BRAND',startMonth:10,duration:2,monthlyContentChanges:true,schedule:{10:'First',11:'Second'},soldMonthlyPrice:100}]}]};
  const x=await smoke(html,'pharmacy',st);vm.runInContext("SCL297.document('base-1',state.cards.find(c=>c.id==='base-1').confirmedDeals[0],'confirmation')",x.ctx);
