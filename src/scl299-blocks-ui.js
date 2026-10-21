@@ -19,8 +19,7 @@ scl206BuildPositionMonthsPayload=function(){
  return old.filter(r=>!ids.has(r.position_id)).concat(local.flatMap(c=>resolveRows(c,Number(state.programYear),old.filter(r=>r.position_id===c.id))));
 };
 const oldVisible=scl212VisibleChanges;
-scl212VisibleChanges=function(){
- const year=scl212Year(),hq=root.SCL290?.hq,old=oldVisible.apply(this,arguments)||[];
+B.rowsForYear=function(hq,year,old=[]){
  if(!hq)return old;
  const snapshots=(hq.snapshots||[]).filter(s=>Number(s.year)===year),states=(hq.base?.pharmacy_state||[]).filter(s=>Number(s.year)===year);
  const byPharmacy=new Map(states.map(s=>[s.pharmacy_id,s]));snapshots.forEach(s=>byPharmacy.set(s.pharmacy_id,s));
@@ -32,9 +31,9 @@ scl212VisibleChanges=function(){
    if(saved.type==='hq')continue;
    covered.add(pid+'|'+saved.id);
    const pos=cfg?.positions?.find(p=>p.id===saved.id),c=pos?{...saved,installationStart:pos.startsOn,stopsOn:pos.stopsOn}:saved;
-   const source=(SCL212.months||[]).filter(r=>r.pharmacy_id===pid&&r.position_id===c.id);
+   const source=(hq.months||[]).filter(r=>r.pharmacy_id===pid&&r.position_id===c.id&&Number(r.year)===year);
    const rs=resolveRows(c,year,source).map(r=>{
-    const p=root.scl290PlayerFor({...r,pharmacy_id:pid})||pos||c;
+    const p=pos?root.SCL290Core.at(pos,year,r.month):c;
     return {...r,pharmacy_id:pid,pharmacy_name:reg?.name||source[0]?.pharmacy_name||'',position_orientation:p.screenFormat||c.screenFormat,player_code:p.playerCode,content_code:p.contentCode};
    });
    all.push(...rs);
@@ -44,8 +43,10 @@ scl212VisibleChanges=function(){
  result.push(...old.filter(r=>!covered.has(r.pharmacy_id+'|'+r.position_id)));
  // Keep explicit library media replacements even when the theme remains unchanged.
  const withMedia=root.SCL293Core.mediaRows(root.SCL293?.data,all,result,year,A.today());
- return withMedia;
+ const active=new Set((hq.registry||[]).filter(r=>r.pharmacy_id).map(r=>r.pharmacy_id));
+ return withMedia.filter(r=>active.has(r.pharmacy_id));
 };
+scl212VisibleChanges=function(){return B.rowsForYear(root.SCL290?.hq,scl212Year(),oldVisible.apply(this,arguments)||[]);};
 // The legacy monthly enrichment must not reinstall itself after an async reload.
 scl212VisibleChanges.__scl285=true;
 B.resolveRows=resolveRows;
