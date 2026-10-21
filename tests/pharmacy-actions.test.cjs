@@ -90,7 +90,7 @@ test('monthly supplier content, file dates and planned custom quota agree with c
  c.confirmedDeals=[];c.simpleConfirmed=true;c.simpleSchedule[9]=other;c.simpleSchedule[10]=other;
  const rows=[1,2,3].map((q,i)=>({position_id:c.id,year:2026,category:'custom',month:i,quota_index:q,status:'finalized',amount:0}));
  const predicted=C.forecast(c,2026,rows,A.active);assert.equal(predicted.length,1);assert.equal(predicted[0].quota,4);assert.equal(predicted[0].amount,15);
- const x=await app(base());x.run("SCL297.openDeal('base-1')");await x.field('monthlyContentChanges','monthly');await x.field('duration',2);await x.field('monthlySublines.9','Line A');await x.field('monthlySublines.10','Line B');assert.equal(x.writes.length,0);
+ const x=await app(base());x.run("SCL297.openDeal('base-1')");await x.field('duration',2);await x.field('monthlyContentChanges','monthly');await x.field('monthlySublines.9','Line A');await x.field('monthlySublines.10','Line B');assert.equal(x.writes.length,0);
  assert.doesNotMatch(x.text('negotiationModalBody'),/Θέμα \/ μήνυμα|Μηχανισμός προβολής|Αναφορά Αποτελεσμάτων|Σημειώσεις/);
 });
 

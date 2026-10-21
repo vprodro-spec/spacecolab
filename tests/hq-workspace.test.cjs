@@ -26,7 +26,7 @@ test('financial totals and export use the same filtered finalized rows and prese
  const x=await smoke(html,'hq',null,async n=>n==='scl292_finance'?{data:{rows,history:[],requests:[]},error:null}:undefined);assert.deepEqual(x.errors,[]);
  const u=x.ctx.SCL303;assert.deepEqual(C.sum(u.visibleCharges()),{charges:30,credits:-15,net:15,planned:60});
  const exported=JSON.parse(JSON.stringify(u.exportBillingRows()));assert.deepEqual(exported[2],['001','Alpha','30.00','-15.00','15.00']);assert.equal(exported.filter(r=>r.includes('Προγραμματισμένη χρέωση')).length,0);
- await x.click(x.document.querySelector('[data-scl303="charge-detail"][data-id="1"]'));assert.match(x.document.getElementById('scl303Dialog').textContent,/30,00/);
+ await x.click(x.document.querySelector('[data-scl303="charge-detail"][data-id="1"]'));assert.match(x.document.getElementById('scl305Dialog').textContent,/30,00/);
  u.billing.months=[10];u.renderBilling();assert.equal(x.document.querySelectorAll('#scl303BillingResult tbody tr').length,1);assert.equal(u.exportBillingRows().length,5);
  assert.equal(x.document.getElementById('scl212OpsMode'),null);assert.match(vm.runInContext('scl212OpsMode()',x.ctx),/manual_monthly/);
  assert.doesNotMatch(x.document.getElementById('sclLanding').textContent,/token|dashboard|reporting|Secure access|HQ Mode/);

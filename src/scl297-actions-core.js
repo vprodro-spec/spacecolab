@@ -65,11 +65,11 @@ function blocks(c,year,active=()=>true){
  return out.sort((a,b)=>a.start-b.start||a.category.localeCompare(b.category));
 }
 function forecast(c,year,rows,active){
- const locked=rows.filter(r=>r.position_id===c.id&&Number(r.year||year)===year&&r.status==='finalized');
+ const locked=rows.filter(r=>r.position_id===c.id&&Number(r.year||year)===year&&['finalized','cancelled'].includes(r.status)&&r.entry_type!=='credit');
  let quota=Math.max(0,...locked.filter(r=>r.category==='custom').map(r=>Number(r.quota_index)||0));
  return blocks(c,year,active).map(b=>{
   const old=locked.find(r=>r.category===b.category&&Number(r.month??r.start_month)===b.start);
-  if(old)return {...b,status:'finalized',amount:Number(old.amount)||0,quota:Number(old.quota_index)||0};
+  if(old)return {...b,status:old.status,amount:old.status==='cancelled'?0:Number(old.amount)||0,quota:Number(old.quota_index)||0};
   if(b.category==='custom')quota++;
   return {...b,status:'planned',amount:b.category==='deal'?30:quota<=3?0:15,quota:b.category==='custom'?quota:0};
  });
