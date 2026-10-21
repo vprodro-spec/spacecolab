@@ -12,7 +12,7 @@ test('pharmacy access links use the published app from downloaded, temporary and
   assert.equal(x.document.getElementById('scl290Link').value,expected);
   assert.equal(x.document.querySelector('#scl290Dialog a.scl294-open').getAttribute('href'),expected);
   let copied;x.ctx.navigator.clipboard={writeText:async s=>{copied=s;}};click('[data-scl290="copy-link"]');assert.equal(copied,expected);
-  for(const fn of ['sclBuildPharmacyLink','scl213PharmacyUrl','scl223PharmacyUrl'])assert.equal(vm.runInContext(fn+"('a+b&c?d#e')",x.ctx),'https://vprodro-spec.github.io/spacecolab/?pharmacy=a%2Bb%26c%3Fd%23e');
+  for(const fn of ['sclBuildPharmacyLink','scl213PharmacyUrl','scl223PharmacyUrl','sclSimpleBuildPharmacyLinkV193','sclV196Link','sclHqLiveBuildLinkV202'])assert.equal(vm.runInContext(fn+"('a+b&c?d#e')",x.ctx),'https://vprodro-spec.github.io/spacecolab/?pharmacy=a%2Bb%26c%3Fd%23e');
  });
 });
 test('HQ interface: activation opens screens, progress excludes PP, selected export and deactivation preview',async()=>{
