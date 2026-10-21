@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'src/scl29*-*.js'
+      - 'src/scl*-*.js'
       - 'data/library-seed.json'
       - 'scripts/build-v295.py'
       - 'scripts/build-v297.py'
