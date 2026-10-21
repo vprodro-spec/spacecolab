@@ -3,6 +3,7 @@
 (function(root){
   'use strict';
   const C={
+    pharmacyLink:token=>'https://vprodro-spec.github.io/spacecolab/?pharmacy='+encodeURIComponent(String(token??'')),
     id:n=>n===0?'hq':n<=2?'base-'+n:'extra-'+(n-2),
     ordinal:id=>id==='hq'||id==='pharmaplus'?0:/^base-\d+$/.test(id)?Number(id.split('-')[1]):/^extra-\d+$/.test(id)?Number(id.split('-')[1])+2:null,
     title:n=>n===0?'Pharmaplus':'Θέση '+n,
@@ -27,6 +28,11 @@
   };
   root.SCL290Core=C;
   if(typeof module!=='undefined'&&module.exports){module.exports=C;return;}
+  // Downloaded HTML may run on file: or a temporary signed storage URL.
+  // Access links always target the published app, never inherit that URL or its query.
+  root.sclBuildPharmacyLink=C.pharmacyLink;
+  root.scl213PharmacyUrl=C.pharmacyLink;
+  root.scl223PharmacyUrl=C.pharmacyLink;
   if(root.__scl290Installed)return;root.__scl290Installed=true;
   const R=root.SCL290={hq:null,hqPromise:null,hqAt:0,context:null,loading:false,dirty:false,saving:null,
     registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',snapshots:{},turnoverEdit:false};

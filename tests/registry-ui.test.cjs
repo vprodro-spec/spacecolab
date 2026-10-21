@@ -1,6 +1,20 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const {smoke}=require('./fixtures/full-app.cjs');
 const html=fs.readFileSync('index.html','utf8');
+test('pharmacy access links use the published app from downloaded, temporary and online HTML',async t=>{
+ for(const baseUrl of ['file:///Downloads/SpaceCoLab.html','https://sdmntprukwest.oaiusercontent.com/files/temporary/raw','https://vprodro-spec.github.io/spacecolab/'])await t.test(baseUrl,async()=>{
+  const dataset={api_version:290,setup:[],months:[],deals:[],registry:[{id:'registry-a',name:'Test Pharmacy',pharmacy_id:'ph-a',token:'fixture-token-a',billing_code:'A001'}],installations:[{pharmacy_id:'ph-a',service_from:'2026-10-01',positions:[{id:'hq',ordinal:0,type:'hq',screenFormat:'vertical',startsOn:'2026-10-01',playerCode:'TEST_ADV0_P'}]}],base:{pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]}};
+  const x=await smoke(html,'hq',null,async name=>name==='scl290_hq_data'?{data:dataset,error:null}:undefined,{baseUrl});
+  assert.deepEqual(x.errors,[]);
+  const click=selector=>x.document.querySelector(selector).dispatchEvent(new x.ctx.Event('click',{bubbles:true}));
+  click('[data-scl290="link"]');
+  const expected='https://vprodro-spec.github.io/spacecolab/?pharmacy=fixture-token-a';
+  assert.equal(x.document.getElementById('scl290Link').value,expected);
+  assert.equal(x.document.querySelector('#scl290Dialog a.scl294-open').getAttribute('href'),expected);
+  let copied;x.ctx.navigator.clipboard={writeText:async s=>{copied=s;}};click('[data-scl290="copy-link"]');assert.equal(copied,expected);
+  for(const fn of ['sclBuildPharmacyLink','scl213PharmacyUrl','scl223PharmacyUrl'])assert.equal(vm.runInContext(fn+"('a+b&c?d#e')",x.ctx),'https://vprodro-spec.github.io/spacecolab/?pharmacy=a%2Bb%26c%3Fd%23e');
+ });
+});
 test('HQ interface: activation opens screens, progress excludes PP, selected export and deactivation preview',async()=>{
  const dataset={api_version:290,setup:[],months:[],deals:[],registry:[{id:'registry-a',name:'Test Pharmacy',billing_code:'A001',address:'Street 1',area:'Athens',revision:1,pharmacy_id:null}],installations:[],base:{pharmacies:[],pharmacy_state:[],hq_programs:[],hq_changes_done:[],reports:[]}};
  const calls=[];

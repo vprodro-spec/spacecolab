@@ -9,6 +9,13 @@ test('Pharmaplus database: cross-year periods, participation, history and atomic
  await db.exec("INSERT INTO pharmaplus_campaigns(year,month,title,supplier,fallback_title) VALUES(2026,9,'October history','Supplier','Autumn'),(2026,11,'Legacy December','Supplier','Winter');");
  for(const signature of [...migration.matchAll(/REVOKE ALL ON FUNCTION public\.(hq_(?:upsert|delete)_pharmaplus_campaign\([^)]*\))/g)].map(m=>m[1]))await db.exec('CREATE FUNCTION public.'+signature+' RETURNS void LANGUAGE sql AS $$SELECT$$');
  await db.exec(migration);
+ await db.exec(fs.readFileSync('supabase/migrations/20261021115851_pharmaplus_save_guard.sql','utf8'));
+ await t.test('all revision writes have a singleton WHERE clause for API safeupdate sessions',async()=>{
+  for(const fn of ['public.scl300_pp_save(text,jsonb,text,boolean)','scl_private.pp_library_sync()','scl_private.pp_media_sync()']){
+   const definition=(await db.query('SELECT pg_get_functiondef($1::regprocedure) definition',[fn])).rows[0].definition;
+   const updates=[...definition.matchAll(/UPDATE scl_private\.pp_meta[^;]+;/g)];assert.equal(updates.length,1);assert.match(updates[0][0],/WHERE singleton=true/);
+  }
+ });
  const phs=[];
  for(const [name,start] of [['A','2026-11-01'],['B','2026-12-01'],['C','2027-02-01']]){
   const pid=(await db.query('INSERT INTO pharmacies(name,token) VALUES($1,$2) RETURNING id',[name,'token-'+name])).rows[0].id;
