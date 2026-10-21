@@ -10,14 +10,14 @@ test('Pharmaplus is view-only even through legacy editor entry points',async()=>
  let writes=0;const x=await smoke(html,'pharmacy',{turnover:500000,cards:[card()]},async n=>{if(n==='scl290_save_program')writes++;});
  const {click,run,text}=controls(x);
  const pp=x.document.querySelector('[data-scl295="pp-programme"]');assert.equal(pp.textContent,'Προβολή προγράμματος');
- await click('[data-scl295="pp-programme"]');assert.match(text('plannerRoot'),/ορίζεται από τα HQ/);
+ await click('[data-scl295="pp-programme"]');assert.match(text('plannerRoot'),/ορίζεται από τα κεντρικά/);
  assert.equal(x.document.querySelector('#plannerRoot [data-scl295="initial"]'),null);assert.equal(x.document.querySelector('#plannerRoot [data-scl295="custom"]'),null);assert.equal(x.document.querySelector('#plannerRoot [data-scl295="new-deal"]'),null);
  run("state.cards.find(c=>c.id==='hq').initialPlanLocked=false");
  const before=run("JSON.stringify(state.cards.find(c=>c.id==='hq'))");
  for(const name of ['renderInitialPlanModal','renderProgramModal','renderCustomModal','renderNegotiationModal','renderSponsoredModal'])run(name+"('hq',11)");
  assert.equal(run("lockInitialPlan(state.cards.find(c=>c.id==='hq'),'manual','MANUAL',Array(12).fill('test'))"),false);
  assert.equal(run("JSON.stringify(state.cards.find(c=>c.id==='hq'))"),before);
- assert.match(text('scl295Notice'),/αποκλειστικά από τα HQ/);assert.equal(x.document.querySelector('.modal.open'),null);assert.equal(writes,0);
+ assert.match(text('scl295Notice'),/αποκλειστικά από τα κεντρικά/);assert.equal(x.document.querySelector('.modal.open'),null);assert.equal(writes,0);
 });
 
 test('switching local positions keeps customization scoped and explains deadline, agreement and initial-lock restrictions',async()=>{

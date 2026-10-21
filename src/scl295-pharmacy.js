@@ -26,7 +26,7 @@ function installFor(c,yr=y(),m=now().month){return SCL290Core.at(c,yr,m);}
 function inactiveLabel(c,m,yr=y()){return c.stopsOn&&c.stopsOn.slice(0,7)<=yr+'-'+String(m+1).padStart(2,'0')?'Η θέση έχει παύσει':'Πριν την εγκατάσταση';}
 function cutoffLabel(m){return C.cutoff(y(),m).split('-').reverse().join('/');}
 function customReason(c,m){
- if(!c||c.type==='hq')return 'Η θέση Pharmaplus προγραμματίζεται αποκλειστικά από τα HQ.';
+ if(!c||c.type==='hq')return 'Η θέση Pharmaplus προγραμματίζεται αποκλειστικά από τα κεντρικά.';
  if(!c.initialPlanLocked)return 'Οριστικοποίησε πρώτα το αρχικό πρόγραμμα της θέσης.';
  if(!turnoverReady())return 'Συμπλήρωσε πρώτα τον ετήσιο τζίρο.';
  if(!active(c,m))return inactiveLabel(c,m)+'.';
@@ -38,7 +38,7 @@ function customReason(c,m){
 V.customReason=customReason;
 function customMonthsAvailable(c){return Array.from({length:12},(_,m)=>m).filter(m=>!customReason(c,m));}
 function customSummary(c){const months=customMonthsAvailable(c);return months.length?'Διαθέσιμοι μήνες για Εξατομίκευση: '+months.map(m=>period(m)).join(', ')+'.':'Δεν υπάρχουν διαθέσιμοι μήνες για Εξατομίκευση στο '+y()+'. Δες την αιτία σε κάθε μήνα.';}
-function pharmacyOnly(c){if(c?.type!=='hq')return true;notice('Η θέση Pharmaplus προγραμματίζεται αποκλειστικά από τα HQ. Εδώ βλέπεις το πρόγραμμά της.');return false;}
+function pharmacyOnly(c){if(c?.type!=='hq')return true;notice('Η θέση Pharmaplus προγραμματίζεται αποκλειστικά από τα κεντρικά. Εδώ βλέπεις το πρόγραμμά της.');return false;}
 function snapshotCard(c,yr){if(yr===y())return c;return V.contexts[yr]?.state_json?.cards?.find(x=>x.id===c.id)||null;}
 function row(c,m,yr=y()){
  if(!active(c,m,yr))return {kind:'inactive',label:inactiveLabel(c,m,yr),type:''};
@@ -67,7 +67,7 @@ function mount(){
  if(V.mounted)return;const shell=document.querySelector('.shell'),nav=document.querySelector('.sticky-nav');if(!shell||!nav)return;
  V.mounted=true;document.body.classList.add('scl295-pharmacy');
  const logo=nav.querySelector('.hero-logo')?.outerHTML||'<strong>SpaceCoLab</strong>';
- nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v303</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
+ nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v304</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
  const econ=$('economicsGrid'),econNote=$('economicsNote');
  $('overviewPage').innerHTML='<section class="scl295-section"><h1>Το φαρμακείο μου</h1><div id="scl295Profile"></div></section><section class="scl295-section"><h2>Οι οθόνες μου</h2><div id="scl295Installation"></div></section><div id="setupStatus" hidden></div><section class="scl295-section" id="scl295RequestHost"></section>';
  $('plannerPage').innerHTML='<section class="scl295-section"><div class="scl295-section-head"><h1>Προγραμματισμός</h1><span id="scl295ProgramYear"></span></div><div id="scl295Pending"></div><div id="cards" class="scl295-cards"></div></section><section id="scl295PositionSection" class="scl295-section" hidden><div id="plannerRoot"></div></section><section class="scl295-section"><h2>Ετήσιο πρόγραμμα</h2><div id="timelineGrid" class="scl295-timeline"></div></section>';
@@ -93,7 +93,7 @@ function renderProfile(){
 function renderCards295(){
  if(!V.mounted)return;const ready=loaded()&&configured();$('scl295ProgramYear').textContent=y();
  $('scl295Pending').innerHTML=!ready?'<p>Αναμονή ρύθμισης οθονών από τα κεντρικά.</p>':!turnoverReady()?'<p>Συμπλήρωσε πρώτα τον ετήσιο τζίρο σου.</p>'+button('Συμπλήρωση τζίρου','profile'):pending().length?'<p><strong>Εκκρεμεί αρχικό πρόγραμμα:</strong> '+pending().map(c=>E(name(c))).join(', ')+'.</p>':'<p class="scl295-muted">'+(local().length?'Τα αρχικά προγράμματα των τοπικών θέσεων έχουν οριστικοποιηθεί.':'Δεν απαιτείται αρχικό πρόγραμμα για το επιλεγμένο έτος.')+'</p>';
- const a=now(),b=next();$('cards').innerHTML=state.cards.map(c=>'<article class="scl295-position-card"><header><h2>'+E(name(c))+'</h2><span>'+E(fmt(c.screenFormat))+'</span></header>'+(c.type==='hq'?'<p class="scl296-hq-note">Διαχείριση από τα HQ · μόνο προβολή</p>':'')+'<code>'+E(c.playerCode||'Αναμονή κωδικού συσκευής')+'</code>'+[[a,'Τώρα'],[b,'Επόμενο']].map(([d,t])=>{const r=row(c,d.month,d.year);return '<div class="scl295-now-next"><span>'+t+' · '+period(d.month,d.year)+'</span><strong>'+E(r.label)+'</strong>'+(r.type?'<small>'+E(r.type)+'</small>':'')+'</div>';}).join('')+button(c.type==='hq'?'Προβολή προγράμματος':'Προγραμματισμός',c.type==='hq'?'pp-programme':'position','data-card="'+E(c.id)+'" '+(!ready||(c.type!=='hq'&&!turnoverReady())?'disabled':''))+'</article>').join('');
+ const a=now(),b=next();$('cards').innerHTML=state.cards.map(c=>'<article class="scl295-position-card"><header><h2>'+E(name(c))+'</h2><span>'+E(fmt(c.screenFormat))+'</span></header>'+(c.type==='hq'?'<p class="scl296-hq-note">Διαχείριση από τα κεντρικά · μόνο προβολή</p>':'')+'<code>'+E(c.playerCode||'Αναμονή κωδικού συσκευής')+'</code>'+[[a,'Τώρα'],[b,'Επόμενο']].map(([d,t])=>{const r=row(c,d.month,d.year);return '<div class="scl295-now-next"><span>'+t+' · '+period(d.month,d.year)+'</span><strong>'+E(r.label)+'</strong>'+(r.type?'<small>'+E(r.type)+'</small>':'')+'</div>';}).join('')+button(c.type==='hq'?'Προβολή προγράμματος':'Προγραμματισμός',c.type==='hq'?'pp-programme':'position','data-card="'+E(c.id)+'" '+(!ready||(c.type!=='hq'&&!turnoverReady())?'disabled':''))+'</article>').join('');
 }
 function timelineKey(c,m){
  const r=row(c,m);if(c.type!=='hq')return root.SCL297Core?.content(c,m).key||r.kind+'|'+r.label;
@@ -113,7 +113,7 @@ function renderTimeline295(){
  if(!V.mounted)return;
  let out='<div class="scl296-timeline-table" role="table" aria-label="Ετήσιο πρόγραμμα '+y()+'"><div class="scl296-timeline-row scl296-month-head" role="row"><div role="columnheader">Θέση</div>'+MONTHS.map((m,i)=>'<div role="columnheader" class="'+(y()===now().year&&i===now().month?'current':'')+'">'+m+' '+y()+'</div>').join('')+'</div>';
  for(const c of state.cards){
-  out+='<div class="scl296-timeline-row" role="row"><div class="scl296-position-label" role="rowheader"><strong>'+E(name(c))+'</strong><small>'+E(c.type==='hq'?'Διαχείριση HQ':fmt(c.screenFormat))+'</small></div>';
+  out+='<div class="scl296-timeline-row" role="row"><div class="scl296-position-label" role="rowheader"><strong>'+E(name(c))+'</strong><small>'+E(c.type==='hq'?'Διαχείριση από τα κεντρικά':fmt(c.screenFormat))+'</small></div>';
   for(let m=0;m<12;m++){
    if(!active(c,m)){const start=m,label=inactiveLabel(c,m);while(m<11&&!active(c,m+1)&&inactiveLabel(c,m+1)===label)m++;out+='<div role="cell" class="scl295-inactive" style="grid-column:span '+(m-start+1)+'">'+E(groupText({start,end:m,label}))+'</div>';continue;}
    const start=m,r=row(c,m),key=timelineKey(c,m);
@@ -148,7 +148,7 @@ function renderPosition(){
   body+='<article class="scl295-position-month '+(V.focusMonth===m?'focused':'')+'"><div><h3>'+period(m)+'</h3>'+(historic?'<small>Ιστορικό · μόνο προβολή</small>':'')+'</div><div><strong>'+E(r.label)+'</strong>'+(r.type?'<span class="scl295-type '+r.kind+'">'+E(r.type)+'</span>':'')+badges(c,m)+(c.type!=='hq'&&c.initialPlanLocked?'<p class="scl296-month-access '+(customReason(c,m)?'restricted':'available')+'">'+E(customReason(c,m)||'Διαθέσιμος για Εξατομίκευση έως '+cutoffLabel(m))+'</p>':'')+'</div><div class="scl295-actions">'+actions+'</div></article>';
  }
  const unfinished=c.type!=='hq'&&!c.initialPlanLocked&&activeYear(c);
- $('plannerRoot').innerHTML='<div class="scl295-section-head"><div><h2>'+E(name(c))+' · '+y()+'</h2><code>'+E(c.playerCode||'')+'</code><p>'+E(fmt(c.screenFormat))+'</p></div>'+button('Κλείσιμο θέσης','close-position')+'</div>'+(c.type==='hq'?'<p class="scl296-hq-note">Το πρόγραμμα της Pharmaplus ορίζεται από τα HQ. Δεν δημιουργείς ή αλλάζεις πρόγραμμα σε αυτή τη θέση.</p>':'')+(unfinished?'<div class="scl295-callout"><h3>Εκκρεμεί αρχικό πρόγραμμα</h3><p>Επίλεξε έτοιμο πρόγραμμα ή ξεκίνησε από την αρχή. Συμπλήρωσε όλους τους μήνες λειτουργίας μέχρι το τέλος του έτους.</p>'+button('Οργάνωσε το πρόγραμμα της θέσης','initial','data-card="'+E(c.id)+'" '+(readonly||!turnoverReady()?'disabled':''))+'</div>':'')+body+(c.type!=='hq'&&c.initialPlanLocked?'<div class="scl295-actions scl295-position-actions">'+button('Εξατομίκευση','custom','data-card="'+E(c.id)+'" '+(!customMonthsAvailable(c).length?'disabled':''))+'<p class="scl295-muted">'+E(customSummary(c))+'</p></div>'+agreements(c):'');
+ $('plannerRoot').innerHTML='<div class="scl295-section-head"><div><h2>'+E(name(c))+' · '+y()+'</h2><code>'+E(c.playerCode||'')+'</code><p>'+E(fmt(c.screenFormat))+'</p></div>'+button('Κλείσιμο θέσης','close-position')+'</div>'+(c.type==='hq'?'<p class="scl296-hq-note">Το πρόγραμμα της Pharmaplus ορίζεται από τα κεντρικά. Δεν δημιουργείς ή αλλάζεις πρόγραμμα σε αυτή τη θέση.</p>':'')+(unfinished?'<div class="scl295-callout"><h3>Εκκρεμεί αρχικό πρόγραμμα</h3><p>Επίλεξε έτοιμο πρόγραμμα ή ξεκίνησε από την αρχή. Συμπλήρωσε όλους τους μήνες λειτουργίας μέχρι το τέλος του έτους.</p>'+button('Οργάνωσε το πρόγραμμα της θέσης','initial','data-card="'+E(c.id)+'" '+(readonly||!turnoverReady()?'disabled':''))+'</div>':'')+body+(c.type!=='hq'&&c.initialPlanLocked?'<div class="scl295-actions scl295-position-actions">'+button('Εξατομίκευση','custom','data-card="'+E(c.id)+'" '+(!customMonthsAvailable(c).length?'disabled':''))+'<p class="scl295-muted">'+E(customSummary(c))+'</p></div>'+agreements(c):'');
  bindEvents();
 }
 function splitEconomics(){if(!V.mounted)return;const estimate=[...$('economicsGrid').querySelectorAll('details')].find(d=>d.querySelector('summary')?.textContent.startsWith('Εκτίμηση εσόδων'));if(estimate){$('scl295Estimate').replaceChildren(estimate);estimate.open=true;}}
