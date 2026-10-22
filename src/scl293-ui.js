@@ -5,7 +5,7 @@ const L=root.SCL293={data:null,promise:null,error:'',section:'themes',filter:'av
 const statuses={available:'Διαθέσιμη',draft:'Υπό προετοιμασία',withdrawn:'Αποσυρμένη'};
 const api=async(name,args)=>{const r=await sb.rpc(name,args);if(r.error)throw Error(r.error.message);return r.data;};
 const key=()=>({p_token:hq()?null:SCL_ROUTING.pharmacyToken,p_hq_key:hq()?SCL_ROUTING.hqKey:null});
-const note=t=>{let b=$('scl293Notice');if(!b){b=document.createElement('div');b.id='scl293Notice';b.className='scl293-notice';document.body.prepend(b);}b.textContent=t;b.hidden=!t;};
+const note=t=>{L.noticeSource=t&&t===L.error?'load':'';let b=$('scl293Notice');if(!b){b=document.createElement('div');b.id='scl293Notice';b.className='scl293-notice';document.body.prepend(b);}b.textContent=L.noticeSource==='load'&&/failed to fetch|networkerror|network request failed|load failed/i.test(t)?'Δεν φορτώθηκε η βιβλιοθήκη. Πάτησε «Ανανέωση» για νέα προσπάθεια.':t;b.hidden=!t;};
 const btn=(label,action,attrs='')=>'<button type="button" data-scl293="'+action+'" '+attrs+'>'+E(label)+'</button>';
 const opts=(items,val)=>items.map(([v,t])=>'<option value="'+E(v)+'" '+(v===val?'selected':'')+'>'+E(t)+'</option>').join('');
 const field=(label,html)=>'<label class="scl293-field"><span>'+E(label)+'</span>'+html+'</label>';
@@ -15,7 +15,7 @@ root.scl293Title=title;
 L.load=async function(force=false){
  if(!sb||!SCL_ROUTING?.ready&&!hq()||hq()&&!SCL_ROUTING.hqKey)return null;
  if(L.promise)return L.promise;if(L.data&&!force)return L.data;
- L.promise=api('scl293_library',key()).then(d=>{if(!d||!Array.isArray(d.themes)||!Array.isArray(d.programs))throw Error('Μη έγκυρη βιβλιοθήκη');L.data=d;L.error='';L.attachPP();L.render();return d;}).catch(e=>{L.error=e.message;L.render();throw e;}).finally(()=>L.promise=null);return L.promise;
+ L.promise=api('scl293_library',key()).then(d=>{if(!d||!Array.isArray(d.themes)||!Array.isArray(d.programs))throw Error('Μη έγκυρη βιβλιοθήκη');L.data=d;L.error='';if(L.noticeSource==='load')note('');L.attachPP();L.render();return d;}).catch(e=>{L.error=e.message;note(e.message);L.render();throw e;}).finally(()=>L.promise=null);return L.promise;
 };
 L.attachPP=function(){const input=$('scl231FallbackTitle');if(!input||!L.data)return;let list=$('scl293PPThemes');if(!list){list=document.createElement('datalist');list.id='scl293PPThemes';input.after(list);}list.innerHTML=C.available(L.data).map(t=>'<option value="'+E(t.title)+'"></option>').join('');input.setAttribute('list','scl293PPThemes');};
 L.mount=function(){

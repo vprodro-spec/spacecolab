@@ -35,19 +35,25 @@
   root.scl223PharmacyUrl=C.pharmacyLink;
   if(root.__scl290Installed)return;root.__scl290Installed=true;
   const R=root.SCL290={hq:null,hqPromise:null,hqAt:0,context:null,loading:false,dirty:false,saving:null,
-    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',noticeSource:'',hqLoadError:null,snapshots:{},turnoverEdit:false};
+    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',noticeSource:'',hqLoadError:null,pharmacyPromise:null,pendingLoad:null,requestedYear:null,pharmacyLoadError:null,failedYear:null,snapshots:{},turnoverEdit:false};
   const el=id=>document.getElementById(id),html=esc,year=()=>Number(state.programYear)||new Date().getFullYear();
   const isPh=()=>sclMode()==='pharmacy',isHQ=()=>sclMode()==='hq';
   const raw=sb?sb.rpc.bind(sb):null;
   const msg=e=>String(e?.message||e||'Αποτυχία αποθήκευσης');
   const installed=()=>!!R.context?.installation;
   function currentMonth(y=year()){const d=new Date();return `${y}-${String(y===d.getFullYear()?d.getMonth()+1:1).padStart(2,'0')}`;}
-  async function api(name,args){if(!raw)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const res=await raw(name,args);if(res.error)throw res.error;return res.data;}
+  const boundedReads=new Set(['scl290_hq_data','scl290_get_pharmacy','scl292_finance','scl293_library','scl300_pp_pharmacy','get_hq_program']);
+  async function rpc(name,args,options){
+    if(!raw)throw Error('Δεν υπάρχει σύνδεση με τη βάση');
+    if(!boundedReads.has(name))return raw(name,args,options);
+    let timer;try{return await Promise.race([raw(name,args,options),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Η φόρτωση καθυστέρησε. Δοκίμασε ξανά.')),20000);})]);}finally{clearTimeout(timer);}
+  }
+  async function api(name,args){const res=await rpc(name,args);if(res.error)throw res.error;return res.data;}
   function notice(text,bad=false,source=''){R.error=bad?text:'';R.noticeSource=text?source:'';let box=el('scl290Notice');if(!box){box=document.createElement('div');box.id='scl290Notice';box.setAttribute('role','status');document.body.prepend(box);}box.className=bad?'scl290-notice error':'scl290-notice';box.textContent=text;box.hidden=!text;}
   function failure(e){
-    const text=msg(e),source=e===R.hqLoadError?'hq-load':'';
+    const text=msg(e),source=e===R.pharmacyLoadError?'pharmacy-load':e===R.hqLoadError?'hq-load':'';
     const network=/failed to fetch|networkerror|network request failed|load failed/i.test(text);
-    const message=source&&network?'Δεν ολοκληρώθηκε η ανανέωση από τη βάση. '+(R.hq?'Βλέπεις τα τελευταία στοιχεία που φορτώθηκαν. ':'')+'Πάτησε «Ανανέωση» για νέα προσπάθεια.':/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text;
+    const message=source==='pharmacy-load'?'Δεν φορτώθηκε το πρόγραμμα του '+R.failedYear+'. '+(R.context?'Παραμένει ανοικτό το '+year()+'. ':'')+'Πάτησε «Ανανέωση».':source&&network?'Δεν ολοκληρώθηκε η ανανέωση από τη βάση. '+(R.hq?'Βλέπεις τα τελευταία στοιχεία που φορτώθηκαν. ':'')+'Πάτησε «Ανανέωση» για νέα προσπάθεια.':/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text;
     notice(message,true,source);return text;
   }
   async function loadHQ(force=false){
@@ -66,27 +72,38 @@
   root.scl290AnnualExtraCost=function(){if(!installed())return extraCount()*COST.extraMonthly*12;return Array.from({length:12},(_,m)=>Math.max(0,R.context.installation.positions.filter(p=>p.type!=='hq'&&C.active(p,year(),m)).length-2)*COST.extraMonthly).reduce((a,b)=>a+b,0);};
   function make(p){if(p.type==='hq')return {id:'hq',type:'hq',title:'Pharmaplus',mode:'fixed',defaultProgram:'HQ',initialPlanLocked:true,basicSchedule:Array(12).fill('Pharmaplus')};return makePositionCard({id:p.id,type:p.type,title:p.title,p:null,fallbackProgram:p.ordinal===2?'OTC2':'OTC1'});}
   function applyInstallation(){if(!installed())return;state.cards=C.merge(state.cards,R.context.installation,year(),make).map(c=>{if(c.type==='hq')return c;const fallback=C.ordinal(c.id)===2?'OTC2':'OTC1';const ready=makePositionCard({id:c.id,type:c.type,title:c.title,p:c,fallbackProgram:fallback});if(!ready.initialPlanLocked&&!ready.pendingInitialSchedule?.some(Boolean))ready.pendingInitialSchedule=schedule(fallback);return ready;});state.totalCounters=state.cards.length;state.setupLocked=true;state._scl290InstallationVersion=R.context.installation.version;if(!state.cards.some(c=>c.id===state.selectedCardId&&c.type!=='hq'))state.selectedCardId=state.cards.find(c=>c.type!=='hq')?.id||'hq';}
-  async function loadPharmacy(y=year(),keepLocal=false){
-    if(R.loading)return;R.loading=true;SCL_ROUTING.suppressSave=true;clearTimeout(SCL_ROUTING.saveTimer);
-    const retained=keepLocal?yearSnapshot():null;
-    try{
+  function loadPharmacy(y=year(),keepLocal=false){
+    y=Number(y);
+    if(R.pharmacyPromise&&R.requestedYear===y)return R.pharmacyPromise;
+    R.pendingLoad={year:y,retained:keepLocal?yearSnapshot():null,keepLocal};R.requestedYear=y;
+    if(R.pharmacyPromise){root.SCL295?.loadingChanged?.();return R.pharmacyPromise;}
+    R.loading=true;SCL_ROUTING.suppressSave=true;clearTimeout(SCL_ROUTING.saveTimer);root.SCL295?.loadingChanged?.();
+    R.pharmacyPromise=Promise.resolve().then(async()=>{
+     while(R.pendingLoad){
+      const request=R.pendingLoad;R.pendingLoad=null;let y=request.year;
+      try{
       let context=await api('scl290_get_pharmacy',{p_token:SCL_ROUTING.pharmacyToken,p_year:y});
       const firstYear=Number(context.installation?.service_from?.slice(0,4));
       if(!R.context&&firstYear>y){y=firstYear;context=await api('scl290_get_pharmacy',{p_token:SCL_ROUTING.pharmacyToken,p_year:y});}
+      if(R.pendingLoad)continue;
       R.context=context;R.available=true;R.snapshots[y]=context.snapshot_revision;
       SCL_ROUTING.pharmacy={id:context.pharmacy_id,name:context.pharmacy_name};state.programYear=y;
-      if(retained)sclApplyStatePayload(retained);
+      if(request.retained)sclApplyStatePayload(request.retained);
       else if(context.state_json&&Object.keys(context.state_json).length)sclApplyStatePayload(context.state_json);
       else {state.cards=[];state.totalCounters=0;state.turnover=0;state.setupLocked=false;}
       state.programYear=y;
       if(installed())applyInstallation();
       state.availableYears=Array.from(new Set([...(context.available_years||[]),y])).sort();
-      SCL_ROUTING.ready=true;R.dirty=!!keepLocal;
+      SCL_ROUTING.ready=true;R.dirty=!!request.keepLocal;R.pharmacyLoadError=null;R.failedYear=null;
       refresh(false);sclAttachPharmacyPill();if(typeof sclUpdatePharmacyIdentityV190==='function')sclUpdatePharmacyIdentityV190();
-      if(state.cards.some(c=>c.type==='hq'))await sclLoadHQProgramReadOnly();
+      // Installed pharmacies use the current Pharmaplus loader; the legacy reader duplicates it.
+      if(!installed()&&state.cards.some(c=>c.type==='hq'))await sclLoadHQProgramReadOnly();
       pharmacyUI();notice(installed()?'':context.registry.legacy?'Οι υπάρχουσες θέσεις διατηρούνται. Η αντιστοίχιση players ολοκληρώνεται από τα κεντρικά.':'Αναμονή ρύθμισης οθονών από τα κεντρικά.');
-    }catch(e){SCL_ROUTING.ready=false;failure(e);throw e;}
-    finally{R.loading=false;SCL_ROUTING.suppressSave=!SCL_ROUTING.ready;}
+      }catch(e){if(R.pendingLoad)continue;SCL_ROUTING.ready=!!R.context;R.pharmacyLoadError=e;R.failedYear=request.year;failure(e);throw e;}
+     }
+     return R.context;
+    }).finally(()=>{R.loading=false;R.pharmacyPromise=null;R.requestedYear=null;SCL_ROUTING.suppressSave=!SCL_ROUTING.ready;root.SCL295?.loadingChanged?.();});
+    return R.pharmacyPromise;
   }
   async function saveManaged(){
     if(R.saving)return R.saving;
@@ -117,7 +134,7 @@
         if(['upsert_pharmacy_setup_summary_by_token','upsert_pharmacy_position_months_by_token','upsert_pharmacy_deals_by_token'].includes(name))return {data:true,error:null};
       }
       if(isPh()&&R.context&&!R.context.registry.legacy&&!installed()&&name.startsWith('upsert_pharmacy_'))return {data:null,error:{message:'Αναμονή ρύθμισης οθονών από τα κεντρικά'}};
-      return raw(name,args,options);
+      return rpc(name,args,options);
     }catch(e){return {data:null,error:{message:msg(e)}};}
   };}
   async function flushManaged(){while(R.dirty||R.saving){await saveManaged();if(R.loading||!SCL_ROUTING.ready)break;}}
@@ -164,12 +181,12 @@
     return !p||C.active(p,Number(r.year)||scl212Year(),Number(r.month));
   }).map(r=>{const p=root.scl290PlayerFor(r);return p?Object.assign(r,{player_code:p.playerCode,content_code:p.contentCode,position_orientation:Number(r.year)<Number(p.configuredYear)&&r.position_orientation?r.position_orientation:p.screenFormat}):r;});};
   const oldLoadYear=loadYear;
-  loadYear=async function(y){if(!isPh()||!R.context)return oldLoadYear(y);try{if(installed())await flushManaged();else if(R.dirty)await sclSaveNow();await loadPharmacy(Number(y));}catch(e){failure(e);}};
+  loadYear=async function(y){if(!isPh())return oldLoadYear(y);try{if(!R.loading){if(installed())await flushManaged();else if(R.dirty)await sclSaveNow();}return await loadPharmacy(Number(y));}catch(e){failure(e);throw e;}};
   const oldCreateYear=createNextProgramYear;
   createNextProgramYear=async function(){if(!isPh()||!installed())return oldCreateYear();try{
     await flushManaged();const next=Number(SCL292Core.today().slice(0,4))+1;
     const template=yearSnapshot();template.cards=template.cards.map(resetYearOperationalData);
-    await loadPharmacy(next);if(!R.context.snapshot_revision&&!R.context.had_saved_state){sclApplyStatePayload(template);applyInstallation();R.dirty=true;refresh(false);await saveManaged();}
+    await loadPharmacy(next);if(year()!==next)return;if(!R.context.snapshot_revision&&!R.context.had_saved_state){sclApplyStatePayload(template);applyInstallation();R.dirty=true;refresh(false);await saveManaged();}
   }catch(e){failure(e);throw e;}};
   function pharmacyUI(){
     if(!isPh())return;const ready=installed()||!!R.context?.registry.legacy;

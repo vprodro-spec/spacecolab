@@ -67,7 +67,7 @@ function mount(){
  if(V.mounted)return;const shell=document.querySelector('.shell'),nav=document.querySelector('.sticky-nav');if(!shell||!nav)return;
  V.mounted=true;document.body.classList.add('scl295-pharmacy');
  const logo=nav.querySelector('.hero-logo')?.outerHTML||'<strong>SpaceCoLab</strong>';
- nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v307</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
+ nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v308</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
  const econ=$('economicsGrid'),econNote=$('economicsNote');
  $('overviewPage').innerHTML='<section class="scl295-section"><h1>Το φαρμακείο μου</h1><div id="scl295Profile"></div></section><section class="scl295-section"><h2>Οι οθόνες μου</h2><div id="scl295Installation"></div></section><div id="setupStatus" hidden></div><section class="scl295-section" id="scl295RequestHost"></section>';
  $('plannerPage').innerHTML='<section class="scl295-section"><div class="scl295-section-head"><h1>Προγραμματισμός</h1><span id="scl295ProgramYear"></span></div><div id="scl295Pending"></div><div id="cards" class="scl295-cards"></div></section><section id="scl295PositionSection" class="scl295-section" hidden><div id="plannerRoot"></div></section><section class="scl295-section"><h2>Ετήσιο πρόγραμμα</h2><div id="timelineGrid" class="scl295-timeline"></div></section>';
@@ -78,7 +78,11 @@ function mount(){
  for(const id of ['overviewPage','plannerPage','guidePage'])shell.appendChild($(id));
  const n=document.createElement('div');n.id='scl295Notice';n.hidden=true;n.setAttribute('role','status');shell.prepend(n);
 }
-function renderYears(){if(!V.mounted)return;const current=now().year,years=[...new Set([...(state.availableYears||[]),y()])].sort((a,b)=>a-b);$('yearControls').innerHTML='<div class="scl295-years"><label>Έτος προγράμματος <select id="scl295Year">'+years.map(yr=>'<option value="'+yr+'" '+(yr===y()?'selected':'')+'>'+yr+'</option>').join('')+'</select></label>'+(y()!==current+1?button('Πρόγραμμα '+(current+1),'new-year'):button('Τρέχον έτος · '+current,'current-year'))+(y()<current?'<span>Ιστορικό · μόνο προβολή</span>':y()>current?'<span>Προγραμματισμός επόμενου έτους · '+y()+'</span>':'')+'</div>';document.querySelectorAll('[data-scl295-year]').forEach(e=>e.textContent=y());}
+function renderYears(){
+ if(!V.mounted)return;const current=now().year,busy=SCL290.loading,chosen=SCL290.requestedYear??y(),years=[...new Set([...(state.availableYears||[]),y(),chosen])].sort((a,b)=>a-b);
+ $('yearControls').innerHTML='<div class="scl295-years"><label>Έτος προγράμματος <select id="scl295Year">'+years.map(yr=>'<option value="'+yr+'" '+(yr===chosen?'selected':'')+'>'+yr+'</option>').join('')+'</select></label>'+(y()!==current+1?button('Πρόγραμμα '+(current+1),'new-year',busy?'disabled':''):button('Τρέχον έτος · '+current,'current-year'))+button('Ανανέωση','reload',busy?'disabled':'')+(busy?'<span role="status">Φόρτωση προγράμματος '+chosen+'…</span>':y()<current?'<span>Ιστορικό · μόνο προβολή</span>':y()>current?'<span>Προγραμματισμός επόμενου έτους · '+y()+'</span>':'')+'</div>';document.querySelectorAll('[data-scl295-year]').forEach(e=>e.textContent=y());
+}
+V.loadingChanged=function(){if(!V.mounted)return;for(const id of ['plannerPage','overviewPage','economicsPage','estimatePage']){const p=$(id);if(p){p.inert=!!SCL290.loading;p.setAttribute('aria-busy',String(!!SCL290.loading));}}renderYears();};
 function renderNavigation(){if(!V.mounted)return;for(const p of ['planner','overview','economics','estimate','guide'])$(p+'Page')?.classList.toggle('active',V.page===p);document.querySelectorAll('[data-page-value]').forEach(b=>{b.classList.toggle('active',b.dataset.pageValue===V.page);b.setAttribute('aria-current',b.dataset.pageValue===V.page?'page':'false');});state.currentPage=V.page;}
 function renderProfile(){
  if(!V.mounted)return;const ctx=SCL290.context,r=ctx?.registry||{},cfg=ctx?.installation;
@@ -160,6 +164,7 @@ async function loadRelated(){
   if(yr!==y()&&!V.contexts[yr]&&!V.loads['year'+yr]&&!V.loadErrors['year'+yr])V.loads['year'+yr]=api('scl290_get_pharmacy',{p_token:SCL_ROUTING.pharmacyToken,p_year:yr}).then(d=>V.contexts[yr]=d).catch(e=>V.loadErrors['year'+yr]=e.message).finally(()=>{delete V.loads['year'+yr];renderCards295();});
   if((!V.campaigns[yr]||Date.now()-(V.campaignTimes[yr]||0)>30000)&&!V.loads['pp'+yr]&&!V.loadErrors['pp'+yr])V.loads['pp'+yr]=api('scl300_pp_pharmacy',{p_pharmacy_token:SCL_ROUTING.pharmacyToken,p_year:yr}).then(d=>{V.campaignTimes[yr]=Date.now();V.campaigns[yr]=d||[];}).catch(e=>V.loadErrors['pp'+yr]=e.message).finally(()=>{delete V.loads['pp'+yr];renderCards295();renderTimeline295();renderPosition();});
  }
+ return Promise.allSettled(Object.values(V.loads));
 }
 root.addEventListener('focus',()=>loadRelated());
 function enter(){if(!loaded())return;if(!V.entered){V.entered=true;V.page=turnoverReady()?'planner':'overview';}if(!turnoverReady()&&V.page!=='guide')V.page='overview';renderAll();loadRelated();}
@@ -193,6 +198,7 @@ async function action(b){
  else if(a==='close-dialog')$('scl295Dialog')?.remove();
  else if(a==='new-year'){V.selected=null;V.contexts={};await createNextProgramYear();refresh(false);}
  else if(a==='current-year'){V.selected=null;V.contexts={};await loadYear(now().year);refresh(false);}
+ else if(a==='reload'){V.contexts={};V.loadErrors={};V.campaignTimes={};await loadYear(SCL290.failedYear??y());await Promise.allSettled([L.load(true),SCL292.loadFinance(true),loadRelated()]);refresh(false);}
 }
 V.confirmInitial=async function(){
  const d=L.initial,c=state.cards.find(c=>c.id===d?.card);if(!c||V.busy||!pharmacyOnly(c))return;
@@ -229,7 +235,7 @@ for(const fn of ['renderProgramModal','renderNegotiationModal','renderSponsoredM
 root.isCustomReadOnlyMonth=isCustomReadOnlyMonth=(c,m)=>!!customReason(c,Number(m));
 const previousPlanogram=renderPlanogramModal;renderPlanogramModal=function(id,m,setup){const c=state.cards.find(c=>c.id===id);if(c&&active(c,Number(m))){const info=planogramInfo(c,Number(m)),found=LC.resolve(L.data,c,Number(m),c.simpleConfirmed?c.simpleSchedule?.[m]||c.basicSchedule?.[m]:c.basicSchedule?.[m]);if(info&&found){const historical=SCL290Core.at(c,y(),Number(m));return L.previewTheme(found.theme,found.variant.id,historical.screenFormat,setup||LC.styles[0]);}}return previousPlanogram.apply(this,arguments);};
 document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-scl295]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();if(b.disabled)return;b.disabled=true;try{await action(b);}catch(err){notice(err.message,true);}finally{b.disabled=false;}},true);
-document.addEventListener('change',async e=>{if(e.target.id!=='scl295Year')return;try{V.selected=null;V.contexts={};await loadYear(Number(e.target.value));refresh(false);}catch(err){notice(err.message,true);}});
+document.addEventListener('change',async e=>{if(e.target.id!=='scl295Year')return;try{V.selected=null;V.contexts={};await loadYear(Number(e.target.value));refresh(false);}catch(err){if(!SCL290.pharmacyLoadError)notice(err.message,true);}});
 const style=document.createElement('style');style.id='scl295-style';style.textContent=`
 body.scl295-pharmacy{background:var(--bg);color:var(--text);font:12px/1.4 Inter,Arial,sans-serif;padding:14px}
 body.scl295-pharmacy .shell{width:100%!important;max-width:none!important;margin:0!important;padding:14px!important;background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:18px;box-shadow:none!important;overflow:visible!important}

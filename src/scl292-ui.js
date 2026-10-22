@@ -1,7 +1,7 @@
 (function(root){
  'use strict';
  const C=root.SCL292Core,el=id=>document.getElementById(id),escape=esc;
- const R=root.SCL292={data:null,key:'',promise:null,error:'',last:0,done:{},doneMeta:{},doneSaving:null,filters:{month:'',pharmacy:'',category:'',status:''}};
+ const R=root.SCL292={data:null,key:'',promise:null,promiseKey:'',forcedPromise:null,error:'',errorKey:'',errorAt:0,noticeSource:'',last:0,done:{},doneMeta:{},doneSaving:null,filters:{month:'',pharmacy:'',category:'',status:''}};
  const isHQ=()=>typeof sclMode==='function'&&sclMode()==='hq';
  const isPh=()=>typeof sclMode==='function'&&sclMode()==='pharmacy';
  const currentYear=()=>C.year(isHQ()?el('scl212Year')?.value:state.programYear);
@@ -19,7 +19,7 @@
  const money=n=>new Intl.NumberFormat('el-GR',{style:'currency',currency:'EUR'}).format(Number(n)||0);
  const label=m=>MONTHS[Number(m)]||'';
  const api=async(name,args)=>{const result=await sb.rpc(name,args);if(result.error)throw Error(result.error.message);return result.data;};
- const notice=t=>{let n=el('scl292Status');if(!n){n=document.createElement('div');n.id='scl292Status';n.className='scl290-notice';document.body.prepend(n);}n.textContent=t;n.hidden=!t;};
+ const notice=(t,source='')=>{R.noticeSource=t?source:'';let n=el('scl292Status');if(!n){n=document.createElement('div');n.id='scl292Status';n.className='scl290-notice';document.body.prepend(n);}n.textContent=t;n.hidden=!t;};
  R.invalidate=()=>{R.last=0;};
  R.loadDone=async function(){if(!isHQ()||!SCL_ROUTING?.hqKey)return;const data=await api('scl292_get_done',{p_hq_key:SCL_ROUTING.hqKey});if(R.doneSaving)return;R.doneMeta=Object.fromEntries(data.map(x=>[x.change_key,x]));R.done=Object.fromEntries(data.map(x=>[x.change_key,x.done]));SCL212.done={...R.done};if(typeof scl212RenderChanges==='function')scl212RenderChanges();};
  R.saveDone=function(){
@@ -30,12 +30,18 @@
  R.loadFinance=async function(force=false){
   if(!sb||!SCL_ROUTING?.ready&&!isHQ()||isHQ()&&!SCL_ROUTING?.hqKey)return;
   const y=currentYear(),key=(isHQ()?'hq':SCL_ROUTING.pharmacy?.id||'pharmacy')+':'+y;
-  if(R.promise)return R.promise.then(()=>force||R.key!==key?R.loadFinance(force):R.data);
+  if(R.promise){
+   if(force){if(!R.forcedPromise)R.forcedPromise=R.promise.catch(()=>null).then(()=>{R.forcedPromise=null;return R.loadFinance(true);});return R.forcedPromise;}
+   if(R.promiseKey===key)return R.promise;
+   return R.promise.catch(()=>null).then(()=>currentYear()===y?R.loadFinance():R.data);
+  }
+  if(!force&&R.errorKey===key&&Date.now()-R.errorAt<10000)throw Error(R.error);
   if(!force&&R.key===key&&R.data&&Date.now()-R.last<30000)return R.data;
+  R.promiseKey=key;
   R.promise=api('scl292_finance',{p_year:y,p_token:isPh()?SCL_ROUTING.pharmacyToken:null,p_hq_key:isHQ()?SCL_ROUTING.hqKey:null}).then(data=>{
-   R.data=data;R.key=key;R.last=Date.now();R.error='';
+   R.data=data;R.key=key;R.last=Date.now();R.error='';R.errorKey='';if(R.noticeSource==='finance')notice('');
    if(currentYear()===y){if(isPh())R.renderEconomics();if(isHQ())R.renderBilling();R.renderRequests();}return data;
-  }).catch(e=>{R.error=e.message;notice('Δεν φορτώθηκαν τα οικονομικά: '+e.message);throw e;}).finally(()=>{R.promise=null;});
+  }).catch(e=>{R.error=e.message;R.errorKey=key;R.errorAt=Date.now();if(currentYear()===y){notice(/failed to fetch|networkerror|network request failed|load failed/i.test(e.message)?'Δεν φορτώθηκαν τα οικονομικά. Πάτησε «Ανανέωση» για νέα προσπάθεια.':'Δεν φορτώθηκαν τα οικονομικά: '+e.message,'finance');if(isPh())R.renderEconomics();}throw e;}).finally(()=>{R.promise=null;R.promiseKey='';});
   return R.promise;
  };
  const ready=()=>R.data&&R.key===(isHQ()?'hq':SCL_ROUTING.pharmacy?.id||'pharmacy')+':'+currentYear();
