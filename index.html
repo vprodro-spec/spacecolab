@@ -207,6 +207,10 @@ const C={
 
 
 
+
+
+
+
 <!-- v293 library integration -->
 
 
@@ -220,7 +224,7 @@ const C={
 <!-- v292 integration -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpaceCoLab v306 · Pharmaplus</title>
+  <title>SpaceCoLab v307 · Pharmaplus</title>
   <style>
     :root{
       --bg:#eef2f7;--surface:#f7f9fc;--card:#fff;--line:#d9e1ea;--text:#14213d;--muted:#637083;
@@ -5722,7 +5726,7 @@ const C={
 
     /* v180 — corrected Supabase URL tbnh */
     #sclLanding::before{
-      content:'SpaceCoLab v306';
+      content:'SpaceCoLab v307';
       display:block;
       margin-bottom:8px;
       font-size:10px;
@@ -31765,7 +31769,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   root.scl223PharmacyUrl=C.pharmacyLink;
   if(root.__scl290Installed)return;root.__scl290Installed=true;
   const R=root.SCL290={hq:null,hqPromise:null,hqAt:0,context:null,loading:false,dirty:false,saving:null,
-    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',snapshots:{},turnoverEdit:false};
+    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',noticeSource:'',hqLoadError:null,snapshots:{},turnoverEdit:false};
   const el=id=>document.getElementById(id),html=esc,year=()=>Number(state.programYear)||new Date().getFullYear();
   const isPh=()=>sclMode()==='pharmacy',isHQ=()=>sclMode()==='hq';
   const raw=sb?sb.rpc.bind(sb):null;
@@ -31773,12 +31777,17 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   const installed=()=>!!R.context?.installation;
   function currentMonth(y=year()){const d=new Date();return `${y}-${String(y===d.getFullYear()?d.getMonth()+1:1).padStart(2,'0')}`;}
   async function api(name,args){if(!raw)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const res=await raw(name,args);if(res.error)throw res.error;return res.data;}
-  function notice(text,bad=false){R.error=bad?text:'';let box=el('scl290Notice');if(!box){box=document.createElement('div');box.id='scl290Notice';box.setAttribute('role','status');document.body.prepend(box);}box.className=bad?'scl290-notice error':'scl290-notice';box.textContent=text;box.hidden=!text;}
-  function failure(e){const text=msg(e);notice(/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text,true);return text;}
+  function notice(text,bad=false,source=''){R.error=bad?text:'';R.noticeSource=text?source:'';let box=el('scl290Notice');if(!box){box=document.createElement('div');box.id='scl290Notice';box.setAttribute('role','status');document.body.prepend(box);}box.className=bad?'scl290-notice error':'scl290-notice';box.textContent=text;box.hidden=!text;}
+  function failure(e){
+    const text=msg(e),source=e===R.hqLoadError?'hq-load':'';
+    const network=/failed to fetch|networkerror|network request failed|load failed/i.test(text);
+    const message=source&&network?'Δεν ολοκληρώθηκε η ανανέωση από τη βάση. '+(R.hq?'Βλέπεις τα τελευταία στοιχεία που φορτώθηκαν. ':'')+'Πάτησε «Ανανέωση» για νέα προσπάθεια.':/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text;
+    notice(message,true,source);return text;
+  }
   async function loadHQ(force=false){
     if(R.hqPromise)return R.hqPromise;
     if(!force&&R.hq&&Date.now()-R.hqAt<1800)return R.hq;
-    R.hqPromise=api('scl290_hq_data',{p_hq_key:SCL_ROUTING.hqKey}).then(d=>{if(d?.api_version!==290)throw Error('Μη συμβατή ενημέρωση βάσης');R.hq=d;R.hqAt=Date.now();R.available=true;if(root.SCL285){root.SCL285.stateData=d.base;root.SCL285.lastLoad=Date.now();}renderRegistry();return d;}).catch(e=>{failure(e);throw e;}).finally(()=>{R.hqPromise=null;});
+    R.hqPromise=api('scl290_hq_data',{p_hq_key:SCL_ROUTING.hqKey}).then(d=>{if(d?.api_version!==290)throw Error('Μη συμβατή ενημέρωση βάσης');R.hq=d;R.hqAt=Date.now();R.available=true;if(root.SCL285){root.SCL285.stateData=d.base;root.SCL285.lastLoad=Date.now();}renderRegistry();if(R.noticeSource==='hq-load')notice('');R.hqLoadError=null;return d;}).catch(e=>{R.hqLoadError=e;failure(e);throw e;}).finally(()=>{R.hqPromise=null;});
     return R.hqPromise;
   }
   function configFor(pid){return (R.hq?.installations||[]).find(x=>String(x.pharmacy_id)===String(pid))||null;}
@@ -32472,7 +32481,7 @@ function mount(){
  if(V.mounted)return;const shell=document.querySelector('.shell'),nav=document.querySelector('.sticky-nav');if(!shell||!nav)return;
  V.mounted=true;document.body.classList.add('scl295-pharmacy');
  const logo=nav.querySelector('.hero-logo')?.outerHTML||'<strong>SpaceCoLab</strong>';
- nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v306</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
+ nav.innerHTML='<div class="scl295-brand">'+logo+'<div><strong id="scl295Name">Φαρμακείο</strong><span>SpaceCoLab · v307</span></div></div><nav class="scl295-nav" aria-label="Πλοήγηση φαρμακείου">'+[['planner','Προγραμματισμός'],['overview','Το φαρμακείο μου'],['economics','Οικονομικά'],['estimate','Εκτίμηση εσόδων'],['guide','Οδηγός']].map(([p,t])=>button(t,'page','data-page-value="'+p+'"')).join('')+'</nav><div id="yearControls"></div>';
  const econ=$('economicsGrid'),econNote=$('economicsNote');
  $('overviewPage').innerHTML='<section class="scl295-section"><h1>Το φαρμακείο μου</h1><div id="scl295Profile"></div></section><section class="scl295-section"><h2>Οι οθόνες μου</h2><div id="scl295Installation"></div></section><div id="setupStatus" hidden></div><section class="scl295-section" id="scl295RequestHost"></section>';
  $('plannerPage').innerHTML='<section class="scl295-section"><div class="scl295-section-head"><h1>Προγραμματισμός</h1><span id="scl295ProgramYear"></span></div><div id="scl295Pending"></div><div id="cards" class="scl295-cards"></div></section><section id="scl295PositionSection" class="scl295-section" hidden><div id="plannerRoot"></div></section><section class="scl295-section"><h2>Ετήσιο πρόγραμμα</h2><div id="timelineGrid" class="scl295-timeline"></div></section>';
@@ -33801,7 +33810,7 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 :is(.scl300-field,.scl293-field,.scl290-fields>label,.field) textarea{line-height:1.6}
 .scl304 input[type=checkbox]{border-radius:5px;cursor:pointer}
 .scl304 .scl306-money{position:relative;display:flex;align-items:center;width:min(100%,340px);max-width:100%;font-weight:500!important}
-.scl304 .scl306-money input[type=number]{padding:12px 58px 12px 15px!important;min-height:56px!important;font-size:24px!important;font-weight:650!important;line-height:1.2;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
+.scl304 .scl306-money input[type=number][inputmode=decimal]{padding:12px 58px 12px 15px!important;min-height:56px!important;font-size:24px!important;font-weight:650!important;line-height:1.2;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
 .scl304 .scl306-money input::-webkit-inner-spin-button,.scl304 .scl306-money input::-webkit-outer-spin-button{appearance:none;margin:0}
 .scl304 .scl306-money .scl306-currency{position:absolute;right:17px;top:50%;transform:translateY(-50%);font-size:21px;font-weight:500;color:#6e8295;pointer-events:none;border-left:1px solid #dce5ed;padding-left:13px}
 .scl304 .scl297-form button.scl306-suggestion{display:inline-flex;align-items:center;gap:5px;padding:6px 0!important;background:none!important;color:var(--scl-accent)!important;border:0!important;border-radius:4px!important;min-height:36px;font-size:13px!important;font-weight:500!important;text-align:left}
@@ -33812,6 +33821,9 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 .scl297-form #scl297DealTotals p:last-child{background:#eef6f4;color:#235b4c}
 .scl304 .scl297-comparison strong{font-size:21px;font-variant-numeric:tabular-nums;line-height:1.4}
 .scl304 :is(.modal-card,.scl290-dialog,.scl300-overlay>section,.scl295-overlay>section){border-radius:18px!important;box-shadow:0 24px 80px #172d4738!important}
+.scl304 .modal>.modal-card{display:flex;flex-direction:column;overflow:hidden;padding:0!important}
+.scl304 .modal>.modal-card>.modal-head{position:relative;top:auto;flex:0 0 auto;margin:0;padding:20px 22px;z-index:4}
+.scl304 .modal>.modal-card>[id$="ModalBody"]{flex:1 1 auto;min-height:0;overflow:auto;padding:22px;overscroll-behavior:contain}
 .scl304 :is(.modal-head,.scl300-dialog-head,.scl290-dialog>header,.scl295-overlay>section>header){align-items:center}
 .scl304 :is(.modal-head [data-close],.scl300-dialog-head button,.scl290-dialog>header button){background:#f3f6f9;border:1px solid transparent!important;border-radius:9px;min-height:36px;padding:8px 12px;font-size:12px;flex-shrink:0}
 .scl304 :is(.deal-section,.scl300-panel,.scl293-box){border-radius:12px;padding:20px;border-color:#e3eaf0}
@@ -33854,6 +33866,7 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 .scl300-scope-list label:hover{background:#f5f9fd}.scl304 .scl300-scope-list label:has(input:checked){background:#edf5fc}
 .scl304 .scl305-total{border-radius:12px!important}.scl304 button.scl305-total:hover{background:#f0f6fc!important;border-color:#9dbbd2!important}
 @media(max-width:700px){.scl304 .scl306-picker .scl293-themes{grid-template-columns:1fr;max-height:48vh}.scl304 .scl306-money{width:100%}.scl304 .scl306-theme-select{min-height:84px!important}.scl304 .scl297-form .actionRow{bottom:-22px}.scl304 .scl293-list article{padding:15px}.scl304 :is(.deal-section,.scl300-panel,.scl293-box){padding:15px}.scl304 .scl297-form .actionRow .blue{flex-basis:100%;order:2}.scl304 :is(input,select,textarea){font-size:16px!important}.scl304 .scl306-search input[data-scl293-search]{font-size:16px}.scl304 .scl293-themes{overscroll-behavior:auto}}
+@media print{.scl304 .modal>.modal-card{display:block;overflow:visible}.scl304 .modal>.modal-card>[id$="ModalBody"]{overflow:visible;max-height:none;padding:0}}
 @media(prefers-reduced-motion:reduce){.scl304 :is(button,input,select,textarea){transition:none}}
 @media print{.scl304 body{background:white}.scl304 .scl306-clear{display:none}}
 `;
