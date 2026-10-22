@@ -18,6 +18,48 @@ async function app(c=base(),opts={}){
  return {...x,run,click,field,check,state,writes,text:id=>x.document.getElementById(id)?.textContent||''};
 }
 
+test('polished picker searches without accents, keeps draft selection and scroll, previews without writes',async()=>{
+ const x=await app();x.run("SCL297.openCustom('base-1')");await tick();
+ const t=seed.themes.find(t=>t.key===other),before=x.state();
+ const search=x.document.querySelector('[data-scl293-search="actions"]');
+ search.value=t.title.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+ search.dispatchEvent(new x.ctx.Event('input',{bubbles:true}));await tick();
+ const grid=x.document.querySelector('[data-scl306-picker="actions"] .scl293-themes');grid.scrollTop=123;
+ await x.click('[data-scl293="actions-select"][data-theme="'+t.id+'"]');
+ assert.equal(x.document.querySelector('[data-scl293="actions-select"][data-theme="'+t.id+'"]').getAttribute('aria-pressed'),'true');
+ assert.equal(x.document.querySelector('[data-scl306-picker="actions"] .scl293-themes').scrollTop,123);
+ assert.deepEqual(x.state(),before);assert.equal(x.writes.length,0);
+ await x.click('[data-scl293="preview"][data-theme="'+t.id+'"]');
+ assert.equal(x.run('SCL293.preview.format'),'vertical');assert.equal(x.run('SCL297.draft.data.schedule[9]'),t.key);
+ await x.click('[data-close="planogramModal"]');
+ await x.click('[data-scl306="clear-search"]');
+ assert.equal(x.document.querySelector('[data-scl293-search="actions"]').value,'');
+ assert.ok(x.document.querySelectorAll('.scl306-theme').length>1);assert.equal(x.run('SCL297.draft.data.schedule[9]'),t.key);
+ assert.equal(x.writes.length,0);
+});
+
+test('suggested amount updates only the draft, recalculates totals and saves only after confirmation',async()=>{
+ const x=await app();x.run("SCL297.openDeal('base-1')");await x.field('supplier','Supplier');await x.field('brand','Brand');await x.field('duration',2);await x.field('soldMonthlyPrice',12.5);
+ const suggested=x.run('suggestedPrice()');
+ await x.click('[data-scl297="suggest-price"]');
+ assert.equal(Number(x.run('SCL297.draft.data.soldMonthlyPrice')),suggested);
+ assert.equal(Number(x.document.querySelector('[data-scl297-field="soldMonthlyPrice"]').value),suggested);
+ assert.ok(x.text('scl297DealTotals').includes(Number(suggested*2).toLocaleString('el-GR')));
+ assert.equal(x.writes.length,0);assert.equal(x.state().confirmedDeals.length,0);
+ await x.click('[data-scl297="review-deal"]');await x.click('[data-scl297="commit"]');
+ assert.equal(x.writes.length,1);assert.equal(x.state().confirmedDeals[0].soldMonthlyPrice,suggested);
+});
+
+test('existing sponsorship keeps its amount until an explicit suggestion click',async()=>{
+ const c=base();c.sponsoredShelves=[{id:'saved-shelf',month:9,brand:'Brand',price:31.25,shelves:'2 πρώτα ράφια'}];
+ const x=await app(c);x.run("SCL297.openShelf('base-1',9)");
+ assert.equal(x.run('SCL297.draft.data.price'),31.25);assert.equal(x.state().sponsoredShelves[0].price,31.25);
+ await x.click('[data-scl297="suggest-price"]');
+ assert.equal(Number(x.run('SCL297.draft.data.price')),x.run('sponsoredBasePrice()'));
+ assert.equal(x.state().sponsoredShelves[0].price,31.25);assert.equal(x.writes.length,0);
+ await x.field('price','');await x.click('[data-scl297="review-shelf"]');assert.match(x.text('scl297Error'),/έγκυρο μηνιαίο ποσό/);assert.equal(x.writes.length,0);
+});
+
 test('custom multi-month draft, lost sponsorship warning, explicit confirmation and period-only return to basic',async()=>{
  const c=base();c.sponsoredShelves=[{id:'s',month:9,brand:'Shelf',price:70}];
  const x=await app(c);const before=x.state();x.run("SCL297.openCustom('base-1')");await tick();

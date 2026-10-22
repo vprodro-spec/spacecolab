@@ -67,10 +67,10 @@ function editor(){
   body+='<section class="scl300-panel"><h3>Συμμετοχή · '+E(C.label(d.month_on))+'</h3><strong>'+E(s.campaign.title)+'</strong><p>Αυτή η εξαίρεση αφορά μόνο τον συγκεκριμένο μήνα.</p>'+field('Ρύθμιση συμμετοχής','<select name="inherit">'+opts([['true','Ακολουθεί τη συμμετοχή της καμπάνιας'],['false','Εξαίρεση μόνο για αυτόν τον μήνα']],String(d.inherit))+'</select>')+'<div id="scl300Override" '+(d.inherit?'hidden':'')+'>'+scopeFields(d.scope)+'</div></section>';
  }else{
   const themes=root.SCL293Core.available(root.SCL293?.data),oldTheme=root.SCL293Core.theme(root.SCL293?.data,data.theme_id);if(oldTheme&&!themes.includes(oldTheme))themes.push(oldTheme);
-  body+='<section class="scl300-panel"><h3>Θεματική Pharmaplus</h3>'+field('Προέλευση','<select name="theme_source">'+opts([['library','Από τη βιβλιοθήκη'],['own','Δική μας θεματική']],d.source||'own')+'</select>')+(d.source==='library'?field('Θεματική βιβλιοθήκης','<select name="theme_id">'+opts([['','Επιλέξτε θεματική'],...themes.map(t=>[t.id,t.title])],data.theme_id||'')+'</select>')+'<p class="scl300-help">Ο τίτλος και τα ονόματα αρχείων ακολουθούν τη βιβλιοθήκη.</p>':field('Τίτλος θεματικής *',input('title',data.title,'required'))+fileFields(data))+'<p class="scl300-help">Η θεματική διατηρείται ακόμη και όταν υπάρχει καμπάνια στον ίδιο μήνα.</p></section>';
+  body+='<section class="scl300-panel"><h3>Θεματική Pharmaplus</h3>'+field('Προέλευση','<select name="theme_source">'+opts([['library','Από τη βιβλιοθήκη'],['own','Δική μας θεματική']],d.source||'own')+'</select>')+(d.source==='library'?input('theme_id',data.theme_id||'','type="hidden"')+root.SCL293.picker('pp',d.query||'',data.theme_id,'vertical',false,themes)+'<p class="scl300-help">Ο τίτλος και τα ονόματα αρχείων ακολουθούν τη βιβλιοθήκη.</p>':field('Τίτλος θεματικής *',input('title',data.title,'required'))+fileFields(data))+'<p class="scl300-help">Η θεματική διατηρείται ακόμη και όταν υπάρχει καμπάνια στον ίδιο μήνα.</p></section>';
  }
  body+='</form>';
- overlay(act==='create'?'Νέα Καμπάνια Pharmaplus':act==='edit'?'Επεξεργασία Καμπάνιας Pharmaplus':act==='cancel'?'Ακύρωση Καμπάνιας Pharmaplus':act==='scope'?'Εξαίρεση συμμετοχής':'Θεματική Pharmaplus',body,button('Έλεγχος πριν την αποθήκευση','preview',''));
+ overlay(act==='create'?'Νέα Καμπάνια Pharmaplus':act==='edit'?'Επεξεργασία Καμπάνιας Pharmaplus':act==='cancel'?'Ακύρωση Καμπάνιας Pharmaplus':act==='scope'?'Εξαίρεση συμμετοχής':'Θεματική Pharmaplus',body,button('Προεπισκόπηση αλλαγών','preview',''));
 }
 function read(){
  const f=$('scl300Form'),d=C.clone(P.draft),v=n=>f.querySelector('[name="'+n+'"]')?.value?.trim()||'',files=()=>({vertical:v('file_vertical'),horizontal:v('file_horizontal')}),scope=()=>({mode:v('scope_mode')||'all',ids:[...f.querySelectorAll('[name="scope_ids"]:checked')].map(x=>x.value)});
@@ -114,7 +114,7 @@ async function action(b){
   finally{P.saving=false;}
  }
 }
-document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-scl300]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();if(P.saving)return;b.disabled=true;try{await action(b);}catch(err){if($('scl300Error'))$('scl300Error').textContent=err.message;else notice(err.message);}finally{if(b.isConnected)b.disabled=false;}},true);
+document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-scl300],[data-scl293="pp-select"]');if(!b||!isHQ())return;e.preventDefault();e.stopImmediatePropagation();if(P.saving||b.disabled)return;const restore=b.dataset.scl293==='pp-select'?root.SCL306?.rememberPicker(b):null;b.disabled=true;try{if(b.dataset.scl293==='pp-select'){P.draft=read();P.draft.data.theme_id=b.dataset.theme;editor();}else await action(b);}catch(err){if($('scl300Error'))$('scl300Error').textContent=err.message;else notice(err.message);}finally{if(b.isConnected)b.disabled=false;restore?.();}},true);
 document.addEventListener('change',e=>{
  if(e.target.closest?.('#scl300Form')){
   if(['scope_mode','inherit'].includes(e.target.name)){const scope=$('scl300Form').querySelector('.scl300-scope');if(scope)scope.hidden=$('scl300Form').querySelector('[name="scope_mode"]').value==='all';if($('scl300Override'))$('scl300Override').hidden=$('scl300Form').querySelector('[name="inherit"]').value==='true';}
@@ -123,7 +123,7 @@ document.addEventListener('change',e=>{
  }
  if(e.target.id==='scl212Year'){close();P.error='';P.render();P.load(true).catch(()=>{});}
 });
-document.addEventListener('input',e=>{if(e.target.name!=='pharmacy_search'||!e.target.closest?.('#scl300Form'))return;const q=e.target.value.toLocaleLowerCase('el');$('scl300Form').querySelectorAll('[data-scl300-pharmacy]').forEach(x=>x.hidden=!x.dataset.scl300Pharmacy.includes(q));});
+document.addEventListener('input',e=>{if(e.target.dataset?.scl293Search==='pp'&&P.draft?.action==='theme'){const pos=e.target.selectionStart;P.draft=read();P.draft.query=e.target.value;editor();const x=document.querySelector('[data-scl293-search="pp"]');x?.focus();x?.setSelectionRange?.(pos,pos);return;}if(e.target.name!=='pharmacy_search'||!e.target.closest?.('#scl300Form'))return;const q=e.target.value.toLocaleLowerCase('el');$('scl300Form').querySelectorAll('[data-scl300-pharmacy]').forEach(x=>x.hidden=!x.dataset.scl300Pharmacy.includes(q));});
 
 P.install=function(){
  if(!isHQ()||P.installed)return;P.installed=true;

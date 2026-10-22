@@ -4,6 +4,27 @@ const html=fs.readFileSync('index.html','utf8');
 const records=['2026-11-01','2026-12-01','2027-01-01','2027-02-01'].map(month_on=>({month_on,campaign_id:'winter',campaign:{title:'Winter campaign',supplier:'Supplier',scope:{mode:'all',ids:[]},files:{vertical:'WINTER_P.mp4'}},thematic:{theme_id:'theme',title:'Underlying theme'},starts_on:'2026-11-01',ends_on:'2027-02-01'}));
 const data=y=>({year:y,revision:1,today:'2026-10-21',records,pharmacies:[{id:'fixture-pharmacy',registry_id:'registry',name:'Fixture',billing_code:'001',active:true,positions:[{id:'hq',type:'hq',screenFormat:'vertical',startsOn:'2026-10-01',playerCode:'FIXTURE_ADV0_P'}]}],history:[]});
 const field=(x,name,value)=>{const el=x.document.querySelector('#scl300Form [name="'+name+'"]');assert.ok(el,name);Object.defineProperty(el,'value',{value,writable:true,configurable:true});};
+test('HQ thematic picker preserves search and selection through preview without saving',async()=>{
+ let request,saves=0;
+ const x=await smoke(html,'hq',null,async(n,a)=>{
+  if(n==='scl300_pp_hq')return{data:data(a.p_year),error:null};
+  if(n==='scl300_pp_preview'){request=a.p_request;return{data:{fingerprint:'preview',conflicts:[],affected_pharmacies:0,content_changes:0,months:[]},error:null};}
+  if(n==='scl300_pp_save'){saves++;return{data:{},error:null};}
+ });
+ const run=s=>vm.runInContext(s,x.ctx);await run("SCL300.start('theme','2026-11-01')");
+ const choice=x.document.querySelector('[data-scl293="pp-select"]');assert.ok(choice);
+ const id=choice.dataset.theme;await x.click(choice);
+ assert.equal(x.document.querySelector('[name="theme_id"]').value,id);
+ const search=x.document.querySelector('[data-scl293-search="pp"]');search.value='δενυπαρχειθεματικη';search.dispatchEvent(new x.ctx.Event('input',{bubbles:true}));
+ assert.match(x.document.getElementById('scl300Form').textContent,/Δεν βρέθηκε/);
+ assert.equal(x.document.querySelector('[name="theme_id"]').value,id);
+ await x.click(x.document.querySelector('[data-scl306="clear-search"]'));
+ await x.click(x.document.querySelector('[data-scl293="preview"][data-theme="'+id+'"]'));
+ assert.equal(run('SCL300.draft.data.theme_id'),id);assert.ok(x.document.querySelector('#planogramModal.open'));
+ await x.click(x.document.querySelector('[data-close="planogramModal"]'));
+ await x.click(x.document.querySelector('[data-scl300="preview"]'));
+ assert.equal(request.data.theme_id,id);assert.equal(saves,0);assert.deepEqual(x.errors,[]);
+});
 test('annual cards keep campaign and theme separate; preview never writes, failed save preserves choices and successful save closes',async()=>{
  let saves=0,fail=true,request;
  const x=await smoke(html,'hq',null,async(n,a)=>{
