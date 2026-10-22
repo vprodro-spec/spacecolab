@@ -35,7 +35,7 @@
   root.scl223PharmacyUrl=C.pharmacyLink;
   if(root.__scl290Installed)return;root.__scl290Installed=true;
   const R=root.SCL290={hq:null,hqPromise:null,hqAt:0,context:null,loading:false,dirty:false,saving:null,
-    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',snapshots:{},turnoverEdit:false};
+    registryView:'active',search:'',selected:new Set(),dialog:null,available:false,error:'',noticeSource:'',hqLoadError:null,snapshots:{},turnoverEdit:false};
   const el=id=>document.getElementById(id),html=esc,year=()=>Number(state.programYear)||new Date().getFullYear();
   const isPh=()=>sclMode()==='pharmacy',isHQ=()=>sclMode()==='hq';
   const raw=sb?sb.rpc.bind(sb):null;
@@ -43,12 +43,17 @@
   const installed=()=>!!R.context?.installation;
   function currentMonth(y=year()){const d=new Date();return `${y}-${String(y===d.getFullYear()?d.getMonth()+1:1).padStart(2,'0')}`;}
   async function api(name,args){if(!raw)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const res=await raw(name,args);if(res.error)throw res.error;return res.data;}
-  function notice(text,bad=false){R.error=bad?text:'';let box=el('scl290Notice');if(!box){box=document.createElement('div');box.id='scl290Notice';box.setAttribute('role','status');document.body.prepend(box);}box.className=bad?'scl290-notice error':'scl290-notice';box.textContent=text;box.hidden=!text;}
-  function failure(e){const text=msg(e);notice(/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text,true);return text;}
+  function notice(text,bad=false,source=''){R.error=bad?text:'';R.noticeSource=text?source:'';let box=el('scl290Notice');if(!box){box=document.createElement('div');box.id='scl290Notice';box.setAttribute('role','status');document.body.prepend(box);}box.className=bad?'scl290-notice error':'scl290-notice';box.textContent=text;box.hidden=!text;}
+  function failure(e){
+    const text=msg(e),source=e===R.hqLoadError?'hq-load':'';
+    const network=/failed to fetch|networkerror|network request failed|load failed/i.test(text);
+    const message=source&&network?'Δεν ολοκληρώθηκε η ανανέωση από τη βάση. '+(R.hq?'Βλέπεις τα τελευταία στοιχεία που φορτώθηκαν. ':'')+'Πάτησε «Ανανέωση» για νέα προσπάθεια.':/scl290_|schema cache|PGRST202/i.test(text)?'Η έκδοση v290 χρειάζεται την ενημέρωση βάσης που συνοδεύει το αρχείο. Δεν έχει γίνει αποθήκευση.':text;
+    notice(message,true,source);return text;
+  }
   async function loadHQ(force=false){
     if(R.hqPromise)return R.hqPromise;
     if(!force&&R.hq&&Date.now()-R.hqAt<1800)return R.hq;
-    R.hqPromise=api('scl290_hq_data',{p_hq_key:SCL_ROUTING.hqKey}).then(d=>{if(d?.api_version!==290)throw Error('Μη συμβατή ενημέρωση βάσης');R.hq=d;R.hqAt=Date.now();R.available=true;if(root.SCL285){root.SCL285.stateData=d.base;root.SCL285.lastLoad=Date.now();}renderRegistry();return d;}).catch(e=>{failure(e);throw e;}).finally(()=>{R.hqPromise=null;});
+    R.hqPromise=api('scl290_hq_data',{p_hq_key:SCL_ROUTING.hqKey}).then(d=>{if(d?.api_version!==290)throw Error('Μη συμβατή ενημέρωση βάσης');R.hq=d;R.hqAt=Date.now();R.available=true;if(root.SCL285){root.SCL285.stateData=d.base;root.SCL285.lastLoad=Date.now();}renderRegistry();if(R.noticeSource==='hq-load')notice('');R.hqLoadError=null;return d;}).catch(e=>{R.hqLoadError=e;failure(e);throw e;}).finally(()=>{R.hqPromise=null;});
     return R.hqPromise;
   }
   function configFor(pid){return (R.hq?.installations||[]).find(x=>String(x.pharmacy_id)===String(pid))||null;}

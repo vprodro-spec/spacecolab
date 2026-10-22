@@ -32,8 +32,8 @@ for script_id in ['scl290-installation', 'scl292-ui', 'scl293-ui', 'scl300-pharm
 closing = re.search(r'</body>\s*</html>\s*$', s)
 assert closing, 'Missing final document closing tags'
 s = s[:closing.start()].rstrip() + '\n' + '\n'.join(ordered) + '\n</body>\n</html>\n'
-s = re.sub(r'<title>.*?</title>', '<title>SpaceCoLab v306 · Pharmaplus</title>', s, count=1)
-s = re.sub(r"content:'SpaceCoLab v(?:29[6789]|30[0123456])';", "content:'SpaceCoLab v306';", s)
+s = re.sub(r'<title>.*?</title>', '<title>SpaceCoLab v307 · Pharmaplus</title>', s, count=1)
+s = re.sub(r"content:'SpaceCoLab v(?:29[6789]|30[01234567])';", "content:'SpaceCoLab v307';", s)
 for fn in ['renderOverviewRoom250','renderStats250','renderTodo250']:
     needle='function '+fn+'(){'
     guard='if(window.SCL302?.installed)return window.SCL302.render();'
@@ -65,4 +65,4 @@ landing = '''<div id="sclLanding" class="scl-access-card">
 s = re.sub(r'<div id="sclLanding" class="scl-access-card">[\s\S]*?(?=<div id="sclHqShell")', lambda _:landing, s, count=1)
 s = s.replace('      \n      <button id="scl212Refresh"', '\n      <button id="scl212Refresh"')
 p.write_text(s)
-print('Built connected HQ workspace v306.')
+print('Built connected HQ workspace v307.')

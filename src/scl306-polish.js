@@ -45,7 +45,7 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 :is(.scl300-field,.scl293-field,.scl290-fields>label,.field) textarea{line-height:1.6}
 .scl304 input[type=checkbox]{border-radius:5px;cursor:pointer}
 .scl304 .scl306-money{position:relative;display:flex;align-items:center;width:min(100%,340px);max-width:100%;font-weight:500!important}
-.scl304 .scl306-money input[type=number]{padding:12px 58px 12px 15px!important;min-height:56px!important;font-size:24px!important;font-weight:650!important;line-height:1.2;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
+.scl304 .scl306-money input[type=number][inputmode=decimal]{padding:12px 58px 12px 15px!important;min-height:56px!important;font-size:24px!important;font-weight:650!important;line-height:1.2;font-variant-numeric:tabular-nums;appearance:textfield;-moz-appearance:textfield}
 .scl304 .scl306-money input::-webkit-inner-spin-button,.scl304 .scl306-money input::-webkit-outer-spin-button{appearance:none;margin:0}
 .scl304 .scl306-money .scl306-currency{position:absolute;right:17px;top:50%;transform:translateY(-50%);font-size:21px;font-weight:500;color:#6e8295;pointer-events:none;border-left:1px solid #dce5ed;padding-left:13px}
 .scl304 .scl297-form button.scl306-suggestion{display:inline-flex;align-items:center;gap:5px;padding:6px 0!important;background:none!important;color:var(--scl-accent)!important;border:0!important;border-radius:4px!important;min-height:36px;font-size:13px!important;font-weight:500!important;text-align:left}
@@ -56,6 +56,9 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 .scl297-form #scl297DealTotals p:last-child{background:#eef6f4;color:#235b4c}
 .scl304 .scl297-comparison strong{font-size:21px;font-variant-numeric:tabular-nums;line-height:1.4}
 .scl304 :is(.modal-card,.scl290-dialog,.scl300-overlay>section,.scl295-overlay>section){border-radius:18px!important;box-shadow:0 24px 80px #172d4738!important}
+.scl304 .modal>.modal-card{display:flex;flex-direction:column;overflow:hidden;padding:0!important}
+.scl304 .modal>.modal-card>.modal-head{position:relative;top:auto;flex:0 0 auto;margin:0;padding:20px 22px;z-index:4}
+.scl304 .modal>.modal-card>[id$="ModalBody"]{flex:1 1 auto;min-height:0;overflow:auto;padding:22px;overscroll-behavior:contain}
 .scl304 :is(.modal-head,.scl300-dialog-head,.scl290-dialog>header,.scl295-overlay>section>header){align-items:center}
 .scl304 :is(.modal-head [data-close],.scl300-dialog-head button,.scl290-dialog>header button){background:#f3f6f9;border:1px solid transparent!important;border-radius:9px;min-height:36px;padding:8px 12px;font-size:12px;flex-shrink:0}
 .scl304 :is(.deal-section,.scl300-panel,.scl293-box){border-radius:12px;padding:20px;border-color:#e3eaf0}
@@ -98,6 +101,7 @@ const style=document.createElement('style');style.id='scl306-polish';style.textC
 .scl304 .scl300-scope-list label:hover{background:#f5f9fd}.scl304 .scl300-scope-list label:has(input:checked){background:#edf5fc}
 .scl304 .scl305-total{border-radius:12px!important}.scl304 button.scl305-total:hover{background:#f0f6fc!important;border-color:#9dbbd2!important}
 @media(max-width:700px){.scl304 .scl306-picker .scl293-themes{grid-template-columns:1fr;max-height:48vh}.scl304 .scl306-money{width:100%}.scl304 .scl306-theme-select{min-height:84px!important}.scl304 .scl297-form .actionRow{bottom:-22px}.scl304 .scl293-list article{padding:15px}.scl304 :is(.deal-section,.scl300-panel,.scl293-box){padding:15px}.scl304 .scl297-form .actionRow .blue{flex-basis:100%;order:2}.scl304 :is(input,select,textarea){font-size:16px!important}.scl304 .scl306-search input[data-scl293-search]{font-size:16px}.scl304 .scl293-themes{overscroll-behavior:auto}}
+@media print{.scl304 .modal>.modal-card{display:block;overflow:visible}.scl304 .modal>.modal-card>[id$="ModalBody"]{overflow:visible;max-height:none;padding:0}}
 @media(prefers-reduced-motion:reduce){.scl304 :is(button,input,select,textarea){transition:none}}
 @media print{.scl304 body{background:white}.scl304 .scl306-clear{display:none}}
 `;
