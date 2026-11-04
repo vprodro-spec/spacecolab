@@ -1,6 +1,16 @@
 <!doctype html>
 <html lang="el">
 <head>
+<style id="scl3266-boot-style">
+/* v326.6 — μέχρι να φορτώσει όλο το αρχείο, δείχνει μόνο «φόρτωση» αντί για τις παλιές οθόνες. */
+html.scl3266-boot body{opacity:0!important;pointer-events:none!important}
+html.scl3266-boot{background:#f4f5f8}
+html.scl3266-boot::after{content:'SpaceCoLab · φόρτωση…';position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font:500 15px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#6b7280;letter-spacing:.02em}
+@media (prefers-color-scheme:dark){html.scl3266-boot{background:#0f1115}html.scl3266-boot::after{color:#9aa0aa}}
+</style>
+<script id="scl3266-boot">
+(function(){try{var d=document.documentElement;d.classList.add('scl3266-boot');window.__scl3266Reveal=function(){d.classList.remove('scl3266-boot')};setTimeout(window.__scl3266Reveal,12000);}catch(e){}})();
+</script>
 <script id="scl326-bootstrap">
 (function(){'use strict';
  const u=new URL(location.href), aliases=['hq','hq_key','key'];
@@ -43419,6 +43429,22 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  }catch(e){}}
  document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('scl303-multi'))fit(d);},true);
  addEventListener('resize',()=>document.querySelectorAll('.scl303-multi[open]').forEach(fit));
+})();
+</script>
+<script id="scl3266-boot-ready">
+/* v326.6 — εμφάνιση της σελίδας μόλις στηθεί η νέα εικόνα. Στο F5 των κεντρικών περιμένει τον επανέλεγχο κωδικού (έως 5''). Καμία RPC. */
+(function(){'use strict';
+ let done=false,mo=null;
+ function reveal(){if(done)return;done=true;try{mo&&mo.disconnect()}catch(e){}requestAnimationFrame(()=>requestAnimationFrame(()=>{try{window.__scl3266Reveal?window.__scl3266Reveal():document.documentElement.classList.remove('scl3266-boot')}catch(e){document.documentElement.classList.remove('scl3266-boot')}}));}
+ function key(){try{return sessionStorage.getItem('scl326-hq-key')}catch(e){return null}}
+ function ready(){
+  const pharmacy=!!(window.SCL_ROUTING&&SCL_ROUTING.pharmacyToken)||new URLSearchParams(location.search).has('pharmacy');
+  if(pharmacy||!key()){reveal();return;}
+  const b=document.body,check=()=>{const err=document.getElementById('scl326LoginError');if(b.classList.contains('scl-hq')||!key()||(err&&!err.hidden))reveal();};
+  mo=new MutationObserver(check);mo.observe(b,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+  check();setTimeout(reveal,5000);
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(ready,0));else setTimeout(ready,0);
 })();
 </script>
 </body>
