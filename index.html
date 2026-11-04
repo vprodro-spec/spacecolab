@@ -43349,6 +43349,21 @@ body.scl295-pharmacy[data-scl324-theme="dark"] #negotiationModal .scl299-agreeme
  placeRemoval();addUser();placeNotFound();
 })();
 </script>
+<script id="scl3263-hq-install">
+/* v326.3 — Διόρθωση: από τη v326 η είσοδος HQ γίνεται μετά τη φόρτωση της σελίδας (φόρμα / επανέλεγχος στο F5),
+   ενώ το SCL303.install() (Αλλαγές, Στατιστικά, νέες Χρεώσεις) έτρεχε μόνο κατά τη φόρτωση, όταν η σελίδα ήταν ακόμη «locked».
+   Εδώ καλείται ο ΙΔΙΟΣ υπάρχων installer μία φορά, μόλις η σελίδα γίνει HQ, και ξαναζωγραφίζεται η ενεργή καρτέλα.
+   Καμία RPC, καμία αλλαγή λογικής. Ο installer είναι ήδη ιδεμποτής (U.installed). */
+(function(){'use strict';
+ function run(){
+  try{if(typeof sclMode!=='function'||sclMode()!=='hq'||!window.SCL303||SCL303.installed)return;}catch(e){return;}
+  SCL303.install();
+  try{const t=(window.SCL212&&SCL212.tab)||'overview';if(typeof scl212SetTab==='function')scl212SetTab(t);}catch(e){}
+ }
+ new MutationObserver(run).observe(document.body,{attributes:true,attributeFilter:['class']});
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script>
 </body>
 </html>
 
