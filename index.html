@@ -43404,6 +43404,23 @@ body.scl295-pharmacy[data-scl324-theme="dark"] #negotiationModal .scl299-agreeme
  document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('#scl212Refresh')&&window.SCL290)SCL290.hqAt=0;},true);
 })();
 </script>
+<style id="scl3265-dropdown-style">
+body.scl-hq .scl303-multi[open]{z-index:1300}
+</style>
+<script id="scl3265-dropdown-fit">
+(function(){'use strict';
+ function fit(d){try{
+  if(!document.body.classList.contains('scl-hq'))return;
+  const o=d.querySelector(':scope>.scl303-options');if(!o)return;
+  o.style.removeProperty('left');if(!d.open)return;
+  const r=o.getBoundingClientRect(),vw=document.documentElement.clientWidth,gap=12;
+  let shift=0;if(r.right>vw-gap)shift=r.right-(vw-gap);if(r.left-shift<gap)shift=r.left-gap;
+  if(shift>0){const base=parseFloat(getComputedStyle(o).left)||0;o.style.setProperty('left',(base-shift)+'px','important');}
+ }catch(e){}}
+ document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.classList&&d.classList.contains('scl303-multi'))fit(d);},true);
+ addEventListener('resize',()=>document.querySelectorAll('.scl303-multi[open]').forEach(fit));
+})();
+</script>
 </body>
 </html>
 
