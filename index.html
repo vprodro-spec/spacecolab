@@ -245,7 +245,7 @@ const C={
 <!-- v292 integration -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SpaceCoLab v314 · Pharmaplus</title>
+  <title>SpaceCoLab · Pharmaplus</title>
   <style>
     :root{
       --bg:#eef2f7;--surface:#f7f9fc;--card:#fff;--line:#d9e1ea;--text:#14213d;--muted:#637083;
@@ -43324,6 +43324,31 @@ body.scl-locked #sclLanding #scl326NotFound{display:block}
 body.scl-locked #sclLanding #scl326NotFound b{display:block;margin:0 0 4px}
 body.scl-locked #sclLanding #scl326NotFound p{margin:0;font-weight:500}
 </style>
+<style id="scl3262-style">
+/* v326.2 — μόνο εμφάνιση. */
+body.scl295-pharmacy #negotiationModal .scl299-agreement-status + .scl3235-removal{margin:-6px 0 18px;padding:0;border-top:0}
+body.scl295-pharmacy #negotiationModal .scl299-agreement-status + .scl3235-removal button[data-scl3235="review"]{border:1px solid color-mix(in srgb,#b42318 45%,transparent)!important;border-radius:999px!important;padding:7px 14px!important;font-weight:600}
+body.scl295-pharmacy[data-scl324-theme="dark"] #negotiationModal .scl299-agreement-status + .scl3235-removal button[data-scl3235="review"]{border-color:color-mix(in srgb,var(--danger) 55%,transparent)!important}
+.scl3262-user{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;border:0!important;opacity:0!important;pointer-events:none!important}
+</style>
+<script id="scl3262-presentation">
+/* v326.2 — μόνο παρουσίαση: (α) «Ακύρωση συμφωνίας» αμέσως κάτω από το «Έχεις οριστική συμφωνία» (ίδιος κόμβος, ίδιος χειρισμός),
+   (β) ο browser να μη βάζει αποθηκευμένους κωδικούς στο πεδίο φαρμακείου, (γ) στο κινητό το «Ο σύνδεσμος δεν ισχύει» κάτω από το λογότυπο.
+   Καμία RPC, καμία αλλαγή λογικής. Κάθε διόρθωση είναι ιδεμποτής: δεύτερο πέρασμα δεν αλλάζει τίποτα. */
+(function(){'use strict';
+ const ph=document.getElementById('sclPharmacyTokenInput');
+ if(ph){ph.setAttribute('autocomplete','off');ph.setAttribute('name','scl-pharmacy-code');ph.setAttribute('autocapitalize','off');ph.setAttribute('spellcheck','false');ph.setAttribute('data-lpignore','true');ph.setAttribute('data-1p-ignore','true');}
+ // Το κρυφό «username» μπαίνει μόνο αφού στηθεί η νέα είσοδος (.land), ακριβώς πριν από το πεδίο κωδικού HQ.
+ function addUser(){const hk=document.getElementById('sclHqKeyInput');if(!hk||document.getElementById('scl3262User')||!hk.closest('#sclLanding .land'))return;const u=document.createElement('input');u.type='text';u.id='scl3262User';u.className='scl3262-user';u.name='username';u.autocomplete='username';u.value='kentrika';u.tabIndex=-1;u.setAttribute('aria-hidden','true');u.readOnly=true;(hk.closest('.pw')||hk).before(u);hk.setAttribute('name','password');}
+ function placeRemoval(){const box=document.querySelector('#negotiationModalBody .scl316-scroll > .scl3235-removal'),st=box&&box.parentElement.querySelector(':scope > .scl299-agreement-status');if(box&&st&&st.nextElementSibling!==box)st.after(box);}
+ function placeNotFound(){const n=document.getElementById('scl326NotFound'),card=n&&n.parentElement,logo=card&&card.querySelector(':scope > .l-mlogo');if(n&&logo&&logo.nextElementSibling!==n)logo.after(n);}
+ const deal=document.getElementById('negotiationModalBody');
+ if(deal&&document.body.classList.contains('scl295-pharmacy')||deal&&new URLSearchParams(location.search).has('pharmacy'))new MutationObserver(placeRemoval).observe(deal,{childList:true,subtree:true});
+ const land=document.getElementById('sclLanding');
+ if(land)new MutationObserver(()=>{addUser();placeNotFound();}).observe(land,{childList:true,subtree:true});
+ placeRemoval();addUser();placeNotFound();
+})();
+</script>
 </body>
 </html>
 
