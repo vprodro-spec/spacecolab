@@ -43455,7 +43455,12 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
 (function(){'use strict';
  const root=window;
  // id, όνομα, εικόνες, πού μπαίνει ο τίτλος (ποσοστά της οθόνης) και χρώμα κειμένου.
- const TEMPLATES=[{id:'basic',name:'Βασικό · PLUS Άμεση Ανακούφιση'}].concat(Array.isArray(root.__scl327Extra)?root.__scl327Extra:[]);
+ const TEMPLATES=[
+  {id:'basic',name:'Βασικό · PLUS Άμεση Ανακούφιση'},
+  {id:'privileges',name:'Προνόμια · πορτοκαλί / λάιμ',portrait:'templates/privileges-portrait.png',landscape:'templates/privileges-landscape.png',color:'#9eff1f',
+   text:{size:30,align:'left',weight:900,family:'"Fira Sans Extra Condensed","Roboto Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif',spacing:'-.01em'},
+   zone:{P:{left:4,right:3,top:16,height:32},L:{left:35,right:2,top:14,bottom:20}}}
+ ].concat(Array.isArray(root.__scl327Extra)?root.__scl327Extra:[]);
  const byId=id=>TEMPLATES.find(t=>t.id===id);
  const DEFAULT='basic';
  root.SCL327={templates:TEMPLATES};
@@ -43467,8 +43472,11 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   rules.push('.screen-content.horizontal'+sel+'{background-image:url("'+t.landscape+'")!important;background-size:100% 100%!important}');
   rules.push('.screen-content.vertical'+sel+' .screen-theme-zone{left:'+(P.left??8)+'%!important;right:'+(P.right??8)+'%!important;top:'+(P.top??14)+'%!important;bottom:auto!important;height:'+(P.height??32)+'%!important}');
   rules.push('.screen-content.horizontal'+sel+' .screen-theme-zone{left:'+(L.left??42)+'%!important;right:'+(L.right??5)+'%!important;top:'+(L.top??20)+'%!important;bottom:'+(L.bottom??18)+'%!important;height:auto!important}');
-  rules.push('.screen-content'+sel+' .screen-theme-text{color:'+c+'!important}');
-  rules.push('.device-screen'+sel+'{background-image:url("'+t.portrait+'")!important;background-size:100% 100%!important;background-color:#fff!important;color:'+c+'!important;padding:'+(P.top??24)+'% '+(P.right??3)+'% 0 '+(P.left??3)+'%!important;justify-content:flex-start!important;align-items:center!important;text-align:center!important}');
+  const tx=t.text||{},font=(tx.weight?'font-weight:'+tx.weight+'!important;':'')+(tx.family?'font-family:'+tx.family+'!important;':'')+(tx.spacing?'letter-spacing:'+tx.spacing+'!important;':'')+(tx.align?'text-align:'+tx.align+'!important;':'')+'text-shadow:none!important;line-height:.95!important;transition:none!important;animation:none!important;';
+  rules.push('.screen-content'+sel+' .screen-theme-text{color:'+c+'!important;'+font+'max-width:none!important;overflow-wrap:normal!important;word-break:keep-all!important;hyphens:none!important;white-space:normal!important}');
+    if(tx.align)rules.push('.screen-content'+sel+' .screen-theme-zone{justify-content:'+(tx.align==='left'?'flex-start':'center')+'!important;text-align:'+tx.align+'!important}');
+  rules.push('.device-screen'+sel+' b{'+font+'width:100%!important;overflow-wrap:normal!important;word-break:keep-all!important;hyphens:none!important}');
+  rules.push('.device-screen'+sel+'{background-image:url("'+t.portrait+'")!important;background-size:100% 100%!important;background-color:#fff!important;color:'+c+'!important;padding:'+(P.top??24)+'% '+(P.right??3)+'% 0 '+(P.left??3)+'%!important;justify-content:flex-start!important;align-items:'+((t.text&&t.text.align==='left')?'flex-start':'center')+'!important;text-align:'+((t.text&&t.text.align)||'center')+'!important}');
   rules.push('.device.L .device-screen'+sel+'{background-image:url("'+t.landscape+'")!important;padding:'+(L.top??20)+'% '+(L.right??8)+'% '+(L.bottom??6)+'% '+(L.left??42)+'%!important;justify-content:center!important}');
   rules.push('.device-screen'+sel+' i{display:none!important}.device-screen'+sel+'::after{background:none!important}');
  }if(rules.length){const st=document.createElement('style');st.id='scl327-template-style';st.textContent=rules.join('\n');document.head.append(st);}})();
@@ -43476,7 +43484,7 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  // ---- Εφαρμογή στις προεπισκοπήσεις: βρίσκει τη θεματική από τον τίτλο που ήδη γράφεται στην οθόνη.
  let index=null,indexFor=null;
  function themes(){return root.SCL293?.data?.themes||[]}
- function lookup(){const list=themes();if(indexFor===list)return index;index=new Map();for(const t of list){const tid=t.template&&byId(t.template)?t.template:DEFAULT;for(const name of [t.title,...(t.aliases||[])])if(name)index.set(norm(name),tid);}indexFor=list;return index;}
+ function lookup(){const list=themes(),sig=list.length+'|'+list.map(t=>t.title+':'+(t.template||'')).join('|');if(indexFor===sig)return index;index=new Map();for(const t of list){const tid=t.template&&byId(t.template)?t.template:DEFAULT;for(const name of [t.title,...(t.aliases||[])])if(name)index.set(norm(name),tid);}indexFor=sig;return index;}
  function active(){if(TEMPLATES.length<2)return false;return themes().some(t=>t.template&&t.template!==DEFAULT&&byId(t.template));}
  function title(el){if(el.classList.contains('screen-content'))return el.querySelector('.screen-theme-text')?.textContent;return el.querySelector('b')?.textContent;}
  function apply(){
@@ -43485,10 +43493,23 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   for(const el of nodes){
    if(el.closest('.scl311-device-stage.pp,#sclLanding'))continue;
    const tid=on?(map.get(norm(title(el)))||DEFAULT):DEFAULT;
-   if(tid===DEFAULT){if(el.hasAttribute('data-scl327'))el.removeAttribute('data-scl327');}
-   else if(el.getAttribute('data-scl327')!==tid)el.setAttribute('data-scl327',tid);
+   if(tid===DEFAULT){if(el.hasAttribute('data-scl327')){el.removeAttribute('data-scl327');const tn=el.querySelector('.screen-theme-text,b');if(tn)tn.style.removeProperty('font-size');delete el.dataset.scl327Fit;}}
+   else{if(el.getAttribute('data-scl327')!==tid)el.setAttribute('data-scl327',tid);watch(el);fit(el,tid);}
   }
  }
+ let ro=null;const seen=new WeakSet();
+ function watch(el){try{if(!ro&&'ResizeObserver' in root)ro=new ResizeObserver(list=>{for(const e of list){const n=e.target,tid=n.getAttribute('data-scl327');if(tid)fit(n,tid);}});if(ro&&!seen.has(el)){seen.add(el);ro.observe(el);}}catch(e){}}
+ function fit(el,tid){try{
+  const tn=el.querySelector('.screen-theme-text')||el.querySelector('b');if(!tn)return;
+  const box=el.classList.contains('screen-content')?(el.querySelector('.screen-theme-zone')||el):el;
+  const key=tid+'|'+tn.textContent+'|'+Math.round(box.clientWidth)+'x'+Math.round(box.clientHeight);if(el.dataset.scl327Fit===key)return;
+  tn.style.removeProperty('font-size');if(!box.clientWidth)return;
+  const bs=getComputedStyle(box),iw=box.clientWidth-parseFloat(bs.paddingLeft)-parseFloat(bs.paddingRight),ih=box.clientHeight-parseFloat(bs.paddingTop)-parseFloat(bs.paddingBottom);
+  const want=byId(tid)?.text?.size;let size=want?iw*want/100:(parseFloat(getComputedStyle(tn).fontSize)||12),n=0;if(want)tn.style.setProperty('font-size',size.toFixed(2)+'px','important');
+  const over=()=>Math.max(tn.scrollWidth,tn.offsetWidth)>iw+1||tn.offsetHeight>ih+1;
+  while(over()&&n++<30&&size>5){size*=0.92;tn.style.setProperty('font-size',size.toFixed(2)+'px','important');}
+  el.dataset.scl327Fit=key;
+ }catch(e){}}
  let queued=false;const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;try{apply()}catch(e){}})};
  const start=()=>{new MutationObserver(m=>{if(TEMPLATES.length<2&&!document.querySelector('[data-scl327]'))return;schedule()}).observe(document.body,{childList:true,subtree:true,characterData:true});schedule();};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
