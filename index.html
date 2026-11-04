@@ -43364,6 +43364,46 @@ body.scl295-pharmacy[data-scl324-theme="dark"] #negotiationModal .scl299-agreeme
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 })();
 </script>
+<script id="scl3264-hq-performance">
+/* v326.4 — Απόδοση κεντρικών. Καμία αλλαγή λογικής, χρεώσεων ή βάσης.
+   (1) Ο παλιός πίνακας Επισκόπησης (v212–v263) είναι μόνιμα κρυφός από το SCL302 (#scl212Page-overview>:not(#scl302Overview){display:none}),
+       αλλά ξαναϋπολογιζόταν σε κάθε σχεδίαση (για κάθε φαρμακείο, όλες οι αλλαγές). Όταν υπάρχει η νέα Επισκόπηση,
+       το scl212RenderOverview καλεί μόνο τη νέα (SCL302.render). Αν η νέα δεν υπάρχει, τρέχει ο παλιός όπως πριν.
+   (2) Παλιοί χρονοδιακόπτες (v196–v203) ζητούσαν όλα τα δεδομένα HQ κάθε 5–6 δευτ. Οι παλιές αναγνώσεις hq_get_* απαντώνται
+       από τα ήδη φορτωμένα δεδομένα για 60 δευτ. (και πάντα όσο η καρτέλα του browser είναι στο παρασκήνιο).
+       Το κουμπί «Ανανέωση» και κάθε αποθήκευση (refreshHQ) φέρνουν πάντα νέα δεδομένα. */
+(function(){'use strict';
+ const TTL=60000;
+ const hq=()=>{try{return typeof sclMode==='function'&&sclMode()==='hq'}catch(e){return false}};
+ // (1)
+ let patched=false;
+ function patchOverview(){
+  if(patched||!window.SCL302||!SCL302.installed||typeof window.scl212RenderOverview!=='function')return;
+  patched=true;const prev=window.scl212RenderOverview;
+  window.scl212RenderOverview=function(){
+   if(hq()&&document.getElementById('scl302Overview'))return SCL302.render();
+   return prev.apply(this,arguments);
+  };
+ }
+ if(window.SCL302&&typeof SCL302.install==='function'){
+  const inst=SCL302.install;
+  SCL302.install=function(){const r=inst.apply(this,arguments);patchOverview();return r;};
+  patchOverview();
+ }
+ // (2)
+ const map={hq_get_all_data:'base',hq_get_setup_summaries:'setup',hq_get_position_months:'months',hq_get_deals:'deals'};
+ if(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function'){
+  const inner=sb.rpc;
+  sb.rpc=function(name,args,options){
+   const R=window.SCL290;
+   if(map[name]&&hq()&&R&&R.hq&&R.hqAt&&(document.hidden||Date.now()-R.hqAt<TTL))
+    return Promise.resolve({data:R.hq[map[name]],error:null});
+   return inner.apply(this,arguments);
+  };
+ }
+ document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('#scl212Refresh')&&window.SCL290)SCL290.hqAt=0;},true);
+})();
+</script>
 </body>
 </html>
 
