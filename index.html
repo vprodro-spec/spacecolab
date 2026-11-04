@@ -43447,6 +43447,68 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(ready,0));else setTimeout(ready,0);
 })();
 </script>
+<script id="scl327-templates">
+/* v327 — Πρότυπο φόντου ανά θεματική της Βιβλιοθήκης.
+   Τα πρότυπα είναι αρχεία στον φάκελο templates/. Το «Βασικό» είναι το υπάρχον και ΔΕΝ αγγίζεται (καμία αλλαγή εμφάνισης).
+   Για νέο πρότυπο: προστίθενται οι δύο εικόνες στο templates/ και μία εγγραφή στη λίστα TEMPLATES παρακάτω.
+   Η επιλογή αποθηκεύεται στη θεματική (data.template) μέσω της υπάρχουσας scl293_save· καμία νέα RPC. */
+(function(){'use strict';
+ const root=window;
+ // id, όνομα, εικόνες, πού μπαίνει ο τίτλος (ποσοστά της οθόνης) και χρώμα κειμένου.
+ const TEMPLATES=[{id:'basic',name:'Βασικό · PLUS Άμεση Ανακούφιση'}].concat(Array.isArray(root.__scl327Extra)?root.__scl327Extra:[]);
+ const byId=id=>TEMPLATES.find(t=>t.id===id);
+ const DEFAULT='basic';
+ root.SCL327={templates:TEMPLATES};
+ const norm=x=>String(x||'').toLocaleLowerCase('el').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+
+ // ---- Στυλ για κάθε μη βασικό πρότυπο
+ (function css(){const rules=[];for(const t of TEMPLATES){if(t.id===DEFAULT)continue;const sel='[data-scl327="'+t.id+'"]',P=t.zone?.P||{},L=t.zone?.L||{},c=t.color||'#103a53';
+  rules.push('.screen-content.vertical'+sel+'{background-image:url("'+t.portrait+'")!important;background-size:100% 100%!important}');
+  rules.push('.screen-content.horizontal'+sel+'{background-image:url("'+t.landscape+'")!important;background-size:100% 100%!important}');
+  rules.push('.screen-content.vertical'+sel+' .screen-theme-zone{left:'+(P.left??8)+'%!important;right:'+(P.right??8)+'%!important;top:'+(P.top??14)+'%!important;bottom:auto!important;height:'+(P.height??32)+'%!important}');
+  rules.push('.screen-content.horizontal'+sel+' .screen-theme-zone{left:'+(L.left??42)+'%!important;right:'+(L.right??5)+'%!important;top:'+(L.top??20)+'%!important;bottom:'+(L.bottom??18)+'%!important;height:auto!important}');
+  rules.push('.screen-content'+sel+' .screen-theme-text{color:'+c+'!important}');
+  rules.push('.device-screen'+sel+'{background-image:url("'+t.portrait+'")!important;background-size:100% 100%!important;background-color:#fff!important;color:'+c+'!important;padding:'+(P.top??24)+'% '+(P.right??3)+'% 0 '+(P.left??3)+'%!important;justify-content:flex-start!important;align-items:center!important;text-align:center!important}');
+  rules.push('.device.L .device-screen'+sel+'{background-image:url("'+t.landscape+'")!important;padding:'+(L.top??20)+'% '+(L.right??8)+'% '+(L.bottom??6)+'% '+(L.left??42)+'%!important;justify-content:center!important}');
+  rules.push('.device-screen'+sel+' i{display:none!important}.device-screen'+sel+'::after{background:none!important}');
+ }if(rules.length){const st=document.createElement('style');st.id='scl327-template-style';st.textContent=rules.join('\n');document.head.append(st);}})();
+
+ // ---- Εφαρμογή στις προεπισκοπήσεις: βρίσκει τη θεματική από τον τίτλο που ήδη γράφεται στην οθόνη.
+ let index=null,indexFor=null;
+ function themes(){return root.SCL293?.data?.themes||[]}
+ function lookup(){const list=themes();if(indexFor===list)return index;index=new Map();for(const t of list){const tid=t.template&&byId(t.template)?t.template:DEFAULT;for(const name of [t.title,...(t.aliases||[])])if(name)index.set(norm(name),tid);}indexFor=list;return index;}
+ function active(){if(TEMPLATES.length<2)return false;return themes().some(t=>t.template&&t.template!==DEFAULT&&byId(t.template));}
+ function title(el){if(el.classList.contains('screen-content'))return el.querySelector('.screen-theme-text')?.textContent;return el.querySelector('b')?.textContent;}
+ function apply(){
+  const nodes=document.querySelectorAll('.screen-content,.device-screen.tpl,.device.tpl>.device-screen');if(!nodes.length)return;
+  const on=active(),map=on?lookup():null;
+  for(const el of nodes){
+   if(el.closest('.scl311-device-stage.pp,#sclLanding'))continue;
+   const tid=on?(map.get(norm(title(el)))||DEFAULT):DEFAULT;
+   if(tid===DEFAULT){if(el.hasAttribute('data-scl327'))el.removeAttribute('data-scl327');}
+   else if(el.getAttribute('data-scl327')!==tid)el.setAttribute('data-scl327',tid);
+  }
+ }
+ let queued=false;const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;try{apply()}catch(e){}})};
+ const start=()=>{new MutationObserver(m=>{if(TEMPLATES.length<2&&!document.querySelector('[data-scl327]'))return;schedule()}).observe(document.body,{childList:true,subtree:true,characterData:true});schedule();};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+
+ // ---- Επιλογή στη φόρμα θεματικής της Βιβλιοθήκης (μόνο κεντρικά).
+ function hook(){const L=root.SCL293;if(!L||L.__scl327)return !!L;if(typeof L.renderEditor!=='function'||typeof L.readEditor!=='function')return false;L.__scl327=true;
+  const render=L.renderEditor,read=L.readEditor;
+  L.renderEditor=function(){const r=render.apply(this,arguments);try{
+   if(L.editing?.kind!=='theme')return r;const f=document.getElementById('scl293Editor');if(!f||f.querySelector('[name="scl327_template"]'))return r;
+   const cur=byId(L.editing.data.template)?L.editing.data.template:DEFAULT;
+   const wrap=document.createElement('div');wrap.className='scl327-template';
+   wrap.innerHTML='<h4>Πρότυπο φόντου οθόνης</h4><p class="scl293-help">Η εικόνα πίσω από τον τίτλο της θεματικής στις προεπισκοπήσεις (φαρμακείο και κεντρικά). Δεν αλλάζει το βίντεο στο Product Me.</p><label class="scl293-field"><span>Πρότυπο</span><select name="scl327_template"></select></label>';
+   const sel=wrap.querySelector('select');for(const t of TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;if(t.id===cur)o.selected=true;sel.append(o);}
+   const anchor=[...f.querySelectorAll('h4')].find(h=>/Product Me/.test(h.textContent));if(anchor)anchor.before(wrap);else f.querySelector('.scl293-save')?.before(wrap);
+  }catch(e){}return r;};
+  L.readEditor=function(){const d=read.apply(this,arguments);try{if(L.editing?.kind==='theme'){const v=document.querySelector('#scl293Editor [name="scl327_template"]')?.value;if(v&&byId(v)){if(v===DEFAULT)delete d.template;else d.template=v;}}}catch(e){}return d;};
+  return true;}
+ if(!hook()){let n=0;const t=setInterval(()=>{if(hook()||++n>40)clearInterval(t)},250);}
+})();
+</script>
 </body>
 </html>
 
