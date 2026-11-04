@@ -43530,6 +43530,46 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  if(!hook()){let n=0;const t=setInterval(()=>{if(hook()||++n>40)clearInterval(t)},250);}
 })();
 </script>
+<script id="scl3271-hq-dedupe">
+/* v327.1 — Κεντρικά: λιγότερα διπλά αιτήματα στο άνοιγμα. Καμία αλλαγή λογικής, χρεώσεων ή βάσης.
+   Στο άνοιγμα των κεντρικών πολλά παλιά και νέα κομμάτια ζητούσαν τα ίδια δεδομένα ταυτόχρονα
+   (π.χ. καμπάνιες Pharmaplus 7–8 φορές). Εδώ, μόνο στα κεντρικά και μόνο για αναγνώσεις:
+   ίδιο αίτημα που ήδη τρέχει ή απαντήθηκε τα τελευταία 5'' παίρνει την ίδια απάντηση (νέο αντίγραφο για τον καθένα).
+   Κάθε εγγραφή (οποιοδήποτε άλλο RPC) και το κουμπί «Ανανέωση» αδειάζουν αμέσως τη μνήμη. Η σελίδα φαρμακείου δεν επηρεάζεται. */
+(function(){'use strict';
+ const READS=new Set(['hq_get_pharmaplus_campaigns','scl292_get_done','scl292_finance','scl293_library','scl300_pp_hq','scl302_overview','scl304_materials','scl290_hq_data','hq_get_all_data','hq_get_setup_summaries','hq_get_position_months','hq_get_deals','get_hq_program']);
+ const KEEP=5000,cache=new Map();
+ const hq=()=>{try{return typeof sclMode==='function'&&sclMode()==='hq'}catch(e){return false}};
+ const rest=(typeof sb!=='undefined'&&sb&&sb.rest)||null;
+ if(!rest||typeof rest.fetch!=='function'||rest.__scl3271)return;
+ const inner=rest.fetch;rest.__scl3271=true;
+ const copy=r=>new Response([101,204,205,304].includes(r.status)?null:r.body,{status:r.status,statusText:r.statusText,headers:r.headers});
+ rest.fetch=function(input,init){
+  try{
+   const url=typeof input==='string'?input:(input&&input.url)||String(input||'');
+   const m=/\/rest\/v1\/rpc\/([A-Za-z0-9_]+)/.exec(url);
+   if(m){
+    const method=String((init&&init.method)||'GET').toUpperCase();
+    if(!READS.has(m[1])){cache.clear();}
+    else if(hq()&&method==='POST'&&init&&typeof init.body==='string'){
+     const key=url+'\n'+init.body,now=Date.now(),hit=cache.get(key);
+     if(hit&&(hit.pending||now-hit.at<KEEP))return hit.p.then(copy);
+     const entry={pending:true,at:now};
+     entry.p=inner.apply(this,arguments).then(async res=>{
+      const body=await res.text(),snap={body,status:res.status,statusText:res.statusText,headers:new Headers(res.headers)};
+      entry.pending=false;entry.at=Date.now();if(!res.ok&&cache.get(key)===entry)cache.delete(key);return snap;
+     },e=>{if(cache.get(key)===entry)cache.delete(key);throw e;});
+     cache.set(key,entry);
+     return entry.p.then(copy);
+    }
+   }
+  }catch(e){}
+  return inner.apply(this,arguments);
+ };
+ document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('#scl212Refresh,#scl326Logout'))cache.clear();},true);
+ window.SCL3271={clear:()=>cache.clear(),size:()=>cache.size};
+})();
+</script>
 </body>
 </html>
 
