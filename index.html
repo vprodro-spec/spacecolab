@@ -43570,6 +43570,294 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  window.SCL3271={clear:()=>cache.clear(),size:()=>cache.size};
 })();
 </script>
+
+<style id="scl3272-style">
+.scl3272-chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px;align-items:center}
+.scl3272-chip{font:inherit!important;font-size:13px!important;font-weight:500!important;cursor:pointer;min-height:38px;padding:0 14px!important;border:1px solid var(--hair,#d9e1ea)!important;border-radius:20px!important;background:var(--fill,#f2f2f5)!important;color:var(--ink,#1d1d1f)!important;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:none!important;text-align:left}
+.scl3272-chip small{display:inline!important;margin:0!important;font-size:12px!important;font-weight:500;color:var(--muted,#636366)!important}
+.scl3272-chip.scl3272-zero{background:transparent!important;border-style:dashed!important;color:var(--muted,#636366)!important}
+.scl3272-chip[aria-pressed=true]{background:var(--accent-fill,var(--accent,#2459e0))!important;border-color:var(--accent-fill,var(--accent,#2459e0))!important;color:var(--on-accent,#fff)!important;font-weight:600!important}
+.scl3272-chip[aria-pressed=true] small{color:inherit!important;opacity:.85}
+.scl3272-chip:focus-visible{outline:2px solid var(--accent,#2459e0);outline-offset:2px}
+.scl3272-tag{display:block;width:fit-content;max-width:100%;margin:6px 0 2px;padding:2px 10px;border-radius:12px;background:var(--accent-soft,#e8efff);color:var(--accent-ink,#1a45b8);font-size:12px;font-weight:600;line-height:1.6}
+.scl3272-tag.scl3272-untagged{background:transparent;color:var(--muted,#636366);box-shadow:inset 0 0 0 1px var(--hair,#d9e1ea);font-weight:500}
+.scl3272-empty{grid-column:1/-1;padding:28px 16px;text-align:center;color:var(--muted,#636366);font-size:14px}
+.scl3272-field{margin:10px 0}
+.scl3272-field select{min-height:40px}
+.scl3272-picker-hint{margin:6px 0 0;font-size:12px;color:var(--muted,#636366)}
+#scl293Editor .seg>button{flex:0 0 auto}
+.scl3272-off{display:none!important}
+.scl3272-exp h2{margin:0 0 4px}
+.scl3272-exp h3{margin:18px 0 4px;font-size:15px}
+.scl3272-shelf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;margin-top:8px}
+.scl3272-shelfstrip{display:flex!important;flex-wrap:wrap;gap:4px;margin-top:12px;justify-content:flex-start!important;align-items:stretch;width:100%;text-align:left}
+.scl3272-shelfstrip span{background:var(--fill,#f2f2f5);border-radius:8px;padding:6px 9px;font-size:11.5px;font-weight:560;line-height:1.25}
+.scl3272-shelfstrip small{display:block;font-size:10px;font-weight:650;color:var(--faint,#8e8e93);text-transform:uppercase;margin-bottom:2px}
+.scl3272-file{margin:8px 0 0;font-size:13px;color:var(--muted,#636366);overflow-wrap:anywhere;text-align:left!important;width:100%}
+@media(max-width:700px){.scl3272-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.scl3272-chip{flex:0 0 auto;min-height:44px}.scl3272-shelf-grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+<script id="scl3272-categories">
+/* v327.2 — Κατηγορίες στη Βιβλιοθήκη.
+   Κεντρικά: πεδίο «Κατηγορία» στη φόρμα θεματικής, κουμπιά κατηγοριών και ετικέτα στη λίστα, ετικέτα «Πάγκος · ADV» στα έτοιμα προγράμματα.
+   Φαρμακείο: κουμπιά κατηγοριών πάνω από τις θεματικές στα παράθυρα «Αρχικό πρόγραμμα» και «Εξατομίκευση».
+   Η κατηγορία αποθηκεύεται μέσα στα δεδομένα της θεματικής (πεδίο category). Καμία αλλαγή δομής βάσης, επιλογής ή χρεώσεων.
+   Αν καμία θεματική δεν έχει κατηγορία, το φαρμακείο βλέπει ακριβώς ό,τι και πριν. */
+(function(root){'use strict';
+ const DEFAULTS=['Υγεία & OTC','Βιταμίνες & Συμπληρώματα','Ομορφιά & Δέρμα','Μαμά & Μωρό','Ιατροτεχνολογικά & Ορθοπεδικά','Προσωπική Φροντίδα','Οικογένεια & Σπίτι','Εποχιακά','Εμπορικά'];
+ const NONE='__none__',NEW='__new__';
+ const q=(s,p=document)=>p&&p.querySelector?p.querySelector(s):null;
+ const qa=(s,p=document)=>p&&p.querySelectorAll?[...p.querySelectorAll(s)]:[];
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const hqMode=()=>document.body&&document.body.classList.contains('scl-hq');
+ const shelfValues=()=>qa('#scl293Editor [name="scl3272_shelf"]').map(i=>i.value.replace(/\s+/g,' ').trim().slice(0,60));
+ const catOf=t=>String(t&&t.category||'').replace(/\s+/g,' ').trim().slice(0,40);
+ function order(themes){const used=[...new Set(themes.map(catOf).filter(Boolean))];return DEFAULTS.concat(used.filter(c=>!DEFAULTS.includes(c)).sort((a,b)=>a.localeCompare(b,'el')));}
+ function counts(themes){const m=new Map();for(const t of themes){const c=catOf(t);m.set(c,(m.get(c)||0)+1);}return m;}
+ function chipsHtml(attr,ctx,items,current,label){
+  return '<div class="scl3272-chips" role="group" aria-label="'+esc(label)+'" data-scl3272-ctx="'+esc(ctx)+'">'+items.map(i=>'<button type="button" class="scl3272-chip'+(i.empty?' scl3272-zero':'')+'" '+attr+'="'+esc(i.value)+'" aria-pressed="'+(i.value===current)+'">'+esc(i.label)+' <small>'+i.count+'</small></button>').join('')+'</div>';
+ }
+
+ /* ---------- Φαρμακείο: κουμπιά κατηγοριών στον επιλογέα θεματικών ---------- */
+ const pharm={};
+ function hookPicker(){
+  const L=root.SCL293,C=root.SCL293Core;
+  if(!L||!C||typeof L.picker!=='function')return false;
+  if(L.picker.__scl3272)return true;
+  const orig=L.picker;
+  const wrapped=function(context,query,current,format,disabled,themes){
+   if(context!=='initial'&&context!=='actions')return orig.apply(this,arguments);
+   try{
+    const all=themes||(L.data?C.available(L.data):null);
+    if(!all||!all.length)return orig.apply(this,arguments);
+    const ref=context==='initial'?L.initial:(root.SCL297&&root.SCL297.draft);
+    if(!ref)return orig.apply(this,arguments);
+    const st=pharm[context]||(pharm[context]={cat:'',ref:null});
+    if(st.ref!==ref){st.ref=ref;st.cat='';}
+    const cnt=counts(all),cats=order(all).filter(c=>cnt.get(c)>0);
+    if(!cats.length)return orig.apply(this,arguments);
+    const hasNone=(cnt.get('')||0)>0;
+    if(st.cat&&st.cat!==NONE&&!cats.includes(st.cat))st.cat='';
+    const shown=!st.cat?all:st.cat===NONE?all.filter(t=>!catOf(t)):all.filter(t=>catOf(t)===st.cat);
+    const html=orig.call(this,context,query,current,format,disabled,shown);
+    const items=[{value:'',label:'Όλες',count:all.length}].concat(cats.map(c=>({value:c,label:c,count:cnt.get(c)})));
+    if(hasNone)items.push({value:NONE,label:'Χωρίς κατηγορία',count:cnt.get('')});
+    const bar=chipsHtml('data-scl3272-cat',context,items,st.cat,'Κατηγορίες θεματικών');
+    const marker='<div class="scl293-themes">',at=html.indexOf(marker);
+    return at<0?html:html.slice(0,at)+bar+html.slice(at);
+   }catch(e){return orig.apply(this,arguments);}
+  };
+  wrapped.__scl3272=true;L.picker=wrapped;return true;
+ }
+ document.addEventListener('click',e=>{
+  const b=e.target&&e.target.closest?e.target.closest('[data-scl3272-cat]'):null;if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  const L=root.SCL293,bar=b.closest('[data-scl3272-ctx]'),ctx=bar&&bar.dataset.scl3272Ctx;if(!L||!ctx)return;
+  const st=pharm[ctx]||(pharm[ctx]={cat:'',ref:null}),val=b.dataset.scl3272Cat;if(st.cat===val)return;st.cat=val;
+  let restore=()=>{};try{if(root.SCL306&&typeof root.SCL306.rememberPicker==='function')restore=root.SCL306.rememberPicker(b)||restore;}catch(err){}
+  const left=bar.scrollLeft;
+  try{
+   if(ctx==='initial'&&L.initial&&typeof L.initialPicker==='function')L.initialPicker();
+   else if(ctx==='actions'){const s=q('[data-scl293-search="actions"]');if(s)s.dispatchEvent(new Event('input',{bubbles:true}));}
+  }catch(err){}
+  try{restore();}catch(err){}
+  const grid=q('[data-scl306-picker="'+ctx+'"] .scl293-themes');if(grid)grid.scrollTop=0;
+  const nb=q('[data-scl3272-ctx="'+ctx+'"]');
+  if(nb){nb.scrollLeft=left;const nbtn=qa('[data-scl3272-cat]',nb).find(x=>x.dataset.scl3272Cat===val);if(nbtn)nbtn.focus({preventScroll:true});}
+ },true);
+
+ /* ---------- Κεντρικά: φόρμα θεματικής (πεδίο κατηγορίας) ---------- */
+ function hookEditor(){
+  const L=root.SCL293;
+  if(!L||typeof L.readEditor!=='function'||typeof L.save!=='function')return false;
+  if(L.__scl3272)return true;L.__scl3272=true;
+  const read=L.readEditor,save=L.save;
+  L.readEditor=function(){
+   const d=read.apply(this,arguments);
+   try{
+    if(L.editing&&L.editing.kind==='theme'){
+     const sel=q('#scl293Editor [name="scl3272_category"]');
+     if(sel){
+      let v=sel.value;
+      if(v===NEW){const i=q('#scl293Editor [name="scl3272_category_new"]');v=i?i.value:'';}
+      v=String(v||'').replace(/\s+/g,' ').trim().slice(0,40);
+      if(v)d.category=v;else delete d.category;
+     }
+    }
+   }catch(e){}
+   try{
+    if(L.editing&&L.editing.kind==='program'){
+     const sel=q('#scl293Editor [name="scl3272_type"]');
+     if(sel){
+      if(sel.value==='exp'){const f=q('#scl293Editor [name="scl3272_file"]');d.type='exp';d.file=String(f?f.value:'').trim();d.shelfNames=shelfValues().filter(Boolean);d.months=[];}
+      else{delete d.type;delete d.shelfNames;delete d.file;}
+     }
+    }
+   }catch(e){}
+   return d;
+  };
+  L.save=async function(){
+   let msg='';
+   try{
+    if(L.editing&&L.editing.kind==='theme'){
+     const sel=q('#scl293Editor [name="scl3272_category"]');
+     if(sel&&sel.value===NEW){const i=q('#scl293Editor [name="scl3272_category_new"]');if(!i||!i.value.trim())msg='Γράψτε το όνομα της νέας κατηγορίας ή διαλέξτε υπάρχουσα.';}
+    }
+    if(!msg&&L.editing&&L.editing.kind==='program'){
+     const sel=q('#scl293Editor [name="scl3272_type"]');
+     if(sel&&sel.value==='exp'){
+      const vals=shelfValues(),filled=vals.filter(Boolean).length,gap=vals.findIndex((v,i)=>!v&&vals.slice(i+1).some(Boolean))>=0;
+      const f=q('#scl293Editor [name="scl3272_file"]'),live=arguments[0]===true||(L.editing.data&&L.editing.data.status==='available');
+      if(gap)msg='Συμπλήρωσε τα ράφια με τη σειρά, από πάνω προς τα κάτω, χωρίς κενά.';
+      else if(live&&!String(f?f.value:'').trim())msg='Γράψε το όνομα του αρχείου βίντεο στο Product Me.';
+      else if(live&&filled<6)msg='Το πρόγραμμα Experience χρειάζεται 6 έως 8 ράφια, ένα όνομα για κάθε ράφι.';
+     }
+    }
+   }catch(e){}
+   if(msg)throw Error(msg);
+   return save.apply(this,arguments);
+  };
+  return true;
+ }
+
+ /* ---------- Τα προγράμματα Experience δεν προσφέρονται ως αφετηρία σε θέσεις Πάγκου ---------- */
+ function hookCore(){
+  const C=root.SCL293Core;if(!C||typeof C.programs!=='function')return false;
+  if(C.programs.__scl3272)return true;
+  const orig=C.programs;
+  C.programs=function(lib){
+   const rest=[].slice.call(arguments,1);
+   const clean=lib&&Array.isArray(lib.programs)?Object.assign({},lib,{programs:lib.programs.filter(p=>!p||p.type!=='exp')}):lib;
+   return orig.apply(this,[clean].concat(rest));
+  };
+  C.programs.__scl3272=true;return true;
+ }
+
+ /* ---------- Κεντρικά: λίστα Βιβλιοθήκης ---------- */
+ const hs={cat:'',prog:'all',focus:null};
+ function editorField(page,L){
+  const form=q('#scl293Editor',page);if(!form||q('[name="scl3272_category"]',form))return;
+  const title=q('[name="title"]',form);if(!title)return;
+  if(!form.classList.contains('edit2')){
+   if(!form.dataset.scl3272Wait){form.dataset.scl3272Wait='1';setTimeout(()=>{form.dataset.scl3272Wait='2';schedule();},1200);}
+   if(form.dataset.scl3272Wait!=='2')return;
+  }
+  const label=title.closest('label')||title.parentElement;if(!label)return;
+  const cur=catOf(L.editing.data),list=order(L.data.themes.concat([L.editing.data]));
+  const wrap=document.createElement('div');wrap.className='scl3272-field';
+  wrap.innerHTML='<label class="scl293-field"><span>Κατηγορία</span><select name="scl3272_category"></select></label><label class="scl293-field scl3272-newcat" hidden><span>Όνομα νέας κατηγορίας</span><input name="scl3272_category_new" maxlength="40" autocomplete="off"></label><p class="scl293-help">Η κατηγορία βοηθά το φαρμακείο να βρίσκει γρήγορα τη θεματική. Δεν αλλάζει το πρόγραμμα και δεν χρεώνεται.</p>';
+  const sel=q('select',wrap),inp=q('input',wrap),newLabel=q('.scl3272-newcat',wrap);
+  const add=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;sel.append(o);};
+  add('','Χωρίς κατηγορία');list.forEach(c=>add(c,c));add(NEW,'＋ Νέα κατηγορία…');
+  sel.value=cur;if(sel.value!==cur)sel.value='';
+  sel.addEventListener('change',()=>{newLabel.hidden=sel.value!==NEW;if(!newLabel.hidden)inp.focus();});
+  label.after(wrap);
+ }
+ /* Πρόγραμμα: τύπος (Πάγκος / Experience). Το Experience είναι ΕΝΑ περιεχόμενο: ένα αρχείο βίντεο (file) και 6–8 ονόματα ραφιών (shelfNames), από πάνω προς τα κάτω.
+    Δεν έχει μήνες και δεν διαλέγει θεματικές. Αποθηκεύονται μέσα στα δεδομένα του προγράμματος (type, file, shelfNames, months=[]). Χωρίς τύπο = Πάγκος, όπως τα υπάρχοντα. */
+ function programFields(page,L){
+  const form=q('#scl293Editor',page);if(!form||q('[name="scl3272_type"]',form)||!form.classList.contains('scl3256-program'))return;
+  const title=q('[name="title"]',form),label=title&&title.closest('label');if(!label)return;
+  const d=L.editing.data,isNew=!d.revision,type=d.type==='exp'?'exp':(isNew&&!d.type&&hs.prog==='exp'?'exp':'adv');
+  const wrap=document.createElement('div');wrap.className='scl3272-field';
+  wrap.innerHTML='<label class="scl293-field"><span>Τύπος προγράμματος</span><select name="scl3272_type"><option value="adv">Πάγκος (ADV)</option><option value="exp">Experience (EXP)</option></select></label><p class="scl293-help scl3272-typehelp"></p>';
+  const sel=q('select',wrap);sel.value=type;sel.disabled=!isNew;label.after(wrap);
+  const names=Array.isArray(d.shelfNames)?d.shelfNames:[];
+  const exp=document.createElement('section');exp.className='panel scl3272-exp';
+  let shelfHtml='';for(let i=0;i<8;i++)shelfHtml+='<label class="scl293-field"><span>Ράφι '+(i+1)+(i<6?'':' (προαιρετικό)')+'</span><input name="scl3272_shelf" maxlength="60" autocomplete="off" placeholder="Όνομα υποκατηγορίας" value="'+esc(names[i]||'')+'"></label>';
+  exp.innerHTML='<h2>Βίντεο και ράφια</h2><p class="scl293-help">Ένα βίντεο για όλο το πρόγραμμα και ένα όνομα υποκατηγορίας για κάθε ράφι, από πάνω προς τα κάτω. Δεν υπάρχουν μήνες και δεν επιλέγονται θεματικές.</p><label class="scl293-field"><span>Όνομα αρχείου βίντεο στο Product Me</span><input name="scl3272_file" maxlength="160" autocomplete="off" placeholder="ΟΝΟΜΑ_ΑΡΧΕΙΟΥ.mp4" value="'+esc(d.file||'')+'"></label><h3>Ράφια · 6 έως 8</h3><p class="scl293-help">Συμπλήρωσε τα ράφια με τη σειρά, χωρίς κενά. Αν μια θέση έχει λιγότερα ράφια, χρησιμοποιούνται τα πρώτα από πάνω.</p><div class="scl3272-shelf-grid">'+shelfHtml+'</div>';
+  const months=q('.scl293-months',form),baseHelp=[...form.children].find(n=>n.classList&&n.classList.contains('scl293-help')&&n!==wrap);
+  if(months)months.before(exp);else{const save=q('.scl293-save',form);if(save)save.before(exp);else form.append(exp);}
+  const help=q('.scl3272-typehelp',wrap),sync=()=>{
+   const isExp=sel.value==='exp';
+   exp.classList.toggle('scl3272-off',!isExp);
+   if(months)months.classList.toggle('scl3272-off',isExp);
+   if(baseHelp)baseHelp.classList.toggle('scl3272-off',isExp);
+   help.textContent=(isExp?'Ένα περιεχόμενο Experience: ένα βίντεο και 6–8 ράφια. Δεν έχει μήνες. Το φαρμακείο το παίρνει όπως είναι σε θέση Experience και δεν χρησιμοποιείται σε θέσεις Πάγκου.':'Έτοιμο πρόγραμμα για θέσεις Πάγκου: 12 μήνες, μία θεματική τον μήνα.')+(isNew?'':' Ο τύπος δεν αλλάζει μετά την πρώτη αποθήκευση.');
+  };
+  sel.addEventListener('change',sync);sync();
+ }
+ /* Διόρθωση διάταξης (από την v327): το «Πρότυπο φόντου οθόνης» έμενε έξω από τα πάνελ και έσπρωχνε τη φόρμα στη στενή στήλη. Μπαίνει σε δικό του πάνελ μέσα στη φόρμα. */
+ function templatePanel(page){
+  const form=q('#scl293Editor',page);if(!form||!form.classList.contains('edit2'))return;
+  const wrap=[...form.children].find(n=>n.classList&&n.classList.contains('scl327-template'));if(!wrap)return;
+  const main=q('.ed-form',form);if(!main)return;
+  const panel=document.createElement('section');panel.className='panel scl3272-template-panel';panel.append(wrap);
+  const first=main.querySelector(':scope>section.panel');if(first)first.after(panel);else main.prepend(panel);
+ }
+ function decorate(){
+  if(!hqMode())return;
+  const L=root.SCL293;if(!L||!L.data)return;
+  const page=document.getElementById('scl212Page-library');if(!page)return;
+  if(L.editing){if(L.editing.kind==='theme'){editorField(page,L);templatePanel(page);}else if(L.editing.kind==='program')programFields(page,L);return;}
+  const list=q('.scl293-list',page);if(!list||list.dataset.scl3272)return;
+  if(L.section==='programs'&&!list.classList.contains('scl3256-list')&&L.data.programs.some(p=>p&&p.type==='exp'))return;
+  list.dataset.scl3272='1';qa('.scl3272-chips',page).forEach(n=>n.remove());
+  const articles=[...list.children].filter(n=>n.tagName==='ARTICLE');
+  const idOf=a=>{const b=q('[data-scl293="edit"]',a);return b&&b.dataset.id;};
+  const query=String(L.query||'').toLocaleLowerCase('el');
+  const base=L.data[L.section].filter(t=>t.status===L.filter&&String(t.title).toLocaleLowerCase('el').includes(query));
+  let bar='',focusAttr='',focusVal='';
+  if(L.section==='themes'){
+   const cnt=counts(base),items=[{value:'',label:'Όλες',count:base.length}].concat(order(L.data.themes).map(c=>({value:c,label:c,count:cnt.get(c)||0,empty:!(cnt.get(c)>0)})));
+   if((cnt.get('')||0)>0)items.push({value:NONE,label:'Χωρίς κατηγορία',count:cnt.get('')});
+   bar=chipsHtml('data-scl3272-hq','hq-themes',items,hs.cat,'Κατηγορίες θεματικών');focusAttr='scl3272Hq';focusVal=hs.cat;
+   let kept=0;
+   for(const a of articles){
+    const t=L.data.themes.find(x=>x.id===idOf(a)),c=catOf(t);
+    const match=!hs.cat||(hs.cat===NONE?!c:c===hs.cat);
+    if(!match){a.remove();continue;}
+    kept++;
+    const host=q('.lc-body',a)||a.firstElementChild;
+    if(host&&!q('.scl3272-tag',a)){const s=document.createElement('span');s.className='scl3272-tag'+(c?'':' scl3272-untagged');s.textContent=c||'Χωρίς κατηγορία';host.append(s);}
+   }
+   if(!kept&&base.length)list.insertAdjacentHTML('beforeend','<p class="scl3272-empty">Δεν υπάρχουν θεματικές σε αυτή την κατηγορία. Η κατηγορία ορίζεται στο παράθυρο επεξεργασίας κάθε θεματικής.</p>');
+  }else if(L.section==='programs'){
+   const isExp=p=>!!p&&p.type==='exp';
+   const nExp=base.filter(isExp).length,nAdv=base.length-nExp;
+   const items=[{value:'all',label:'Όλα',count:base.length},{value:'adv',label:'Πάγκος · ADV',count:nAdv,empty:!nAdv},{value:'exp',label:'Experience · EXP',count:nExp,empty:!nExp}];
+   bar=chipsHtml('data-scl3272-prog','hq-programs',items,hs.prog,'Τύπος προγράμματος');focusAttr='scl3272Prog';focusVal=hs.prog;
+   let kept=0;
+   for(const a of articles){
+    const pr=L.data.programs.find(x=>x.id===idOf(a)),exp=isExp(pr);
+    if((hs.prog==='exp'&&!exp)||(hs.prog==='adv'&&exp)){a.remove();continue;}
+    kept++;
+    const host=q('.pc-h',a)||a.firstElementChild;
+    if(host&&!q('.scl3272-tag',a)){const s=document.createElement('span');s.className='scl3272-tag';s.textContent=exp?'Experience · EXP · '+((pr.shelfNames||[]).length)+' ράφια':'Πάγκος · ADV';host.append(s);}
+    if(exp){
+     const small=q('small',host);if(small)small.remove();
+     host.style.flexWrap='wrap';
+     const fp=document.createElement('p');fp.className='scl3272-file';fp.textContent=pr.file?'Βίντεο στο Product Me: '+pr.file:'Δεν έχει καταχωριστεί αρχείο βίντεο';host.after(fp);
+     const strip=q('.pc-strip',a);
+     if(strip){const st=document.createElement('div');st.className='scl3272-shelfstrip';(pr.shelfNames||[]).forEach((n,i)=>{const sp=document.createElement('span'),sm=document.createElement('small');sm.textContent='Ράφι '+(i+1);sp.title='Ράφι '+(i+1)+' · '+n;sp.append(sm,document.createTextNode(n));st.append(sp);});strip.replaceWith(st);}
+    }
+   }
+   if(!kept&&hs.prog==='exp')list.insertAdjacentHTML('beforeend','<div class="scl3272-empty"><p>Δεν υπάρχουν ακόμη προγράμματα Experience. Κάθε πρόγραμμα Experience είναι ένα βίντεο με 6 έως 8 ράφια, χωρίς μήνες.</p><button type="button" class="btn line" data-scl293="new">+ Νέο πρόγραμμα Experience</button></div>');
+   else if(!kept)list.insertAdjacentHTML('beforeend','<p class="scl3272-empty">Δεν υπάρχουν προγράμματα σε αυτόν τον τύπο.</p>');
+  }
+  if(bar){
+   list.insertAdjacentHTML('beforebegin',bar);
+   if(hs.focus){const key=hs.focus;hs.focus=null;const nb=q('.scl3272-chips',page);const b=nb&&qa('.scl3272-chip',nb).find(x=>(x.dataset[focusAttr]!==undefined)&&('f:'+x.dataset[focusAttr])===key);if(b)b.focus({preventScroll:true});}
+  }
+ }
+ document.addEventListener('click',e=>{
+  const b=e.target&&e.target.closest?e.target.closest('[data-scl3272-hq],[data-scl3272-prog]'):null;if(!b)return;
+  e.preventDefault();e.stopPropagation();
+  const L=root.SCL293;if(!L)return;
+  if(b.dataset.scl3272Hq!==undefined){hs.cat=b.dataset.scl3272Hq;hs.focus='f:'+hs.cat;}
+  else{hs.prog=b.dataset.scl3272Prog;hs.focus='f:'+hs.prog;}
+  L.render();
+ },true);
+ let queued=false,obs=null;
+ function observe(){if(obs)obs.observe(document.body,{childList:true,subtree:true});}
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;if(!hqMode()||!document.getElementById('scl212Page-library'))return;if(obs)obs.disconnect();try{decorate();}catch(e){}finally{observe();}});}
+ function start(){obs=new MutationObserver(schedule);observe();schedule();}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+
+ /* ---------- σύνδεση στα υπάρχοντα (με επανάληψη μέχρι να φορτώσουν) ---------- */
+ let tries=0;const t=setInterval(()=>{const a=hookPicker(),b=hookEditor(),c=hookCore();if((a&&b&&c)||++tries>60)clearInterval(t);},250);
+ hookPicker();hookEditor();hookCore();
+})(window);
+</script>
 </body>
 </html>
 
