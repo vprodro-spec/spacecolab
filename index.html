@@ -43816,12 +43816,11 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
 .scl3329-dur button:disabled{opacity:.4;cursor:not-allowed}
 .scl3329-dur button:focus-visible{outline:2px solid var(--accent,#2459e0);outline-offset:2px}
 .scl3329-dur output{min-width:96px;text-align:center;font-size:16px;font-weight:700}
-.scl3329-month{margin-top:14px;padding:16px 18px;border-radius:14px;box-shadow:0 0 0 1px var(--hair,#d9e1ea)}
-.scl3329-month h3{margin:0 0 8px}
-.scl3329-month h3+label{margin-top:4px}
+.scl3329-h2{margin-top:22px}
+.scl3329-files{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 16px;margin-top:10px}
 .scl3329-sum{margin:12px 0 0;font-size:13px;line-height:1.45;color:var(--muted,#636366)}
 .scl3329-sum.scl3329-warn{color:var(--ink,#1d1d1f);font-weight:560}
-@media(max-width:700px){.scl3272-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.scl3272-chip{flex:0 0 auto;min-height:44px}.scl3272-shelf-grid{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:700px){.scl3272-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.scl3272-chip{flex:0 0 auto;min-height:44px}.scl3272-shelf-grid,.scl3329-files{grid-template-columns:minmax(0,1fr)}}
 </style>
 <script id="scl3272-categories">
 /* v327.2 — Κατηγορίες στη Βιβλιοθήκη.
@@ -43837,78 +43836,82 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const hqMode=()=>document.body&&document.body.classList.contains('scl-hq');
  const shelfValues=()=>qa('#scl293Editor [name="scl3272_shelf"]').map(i=>i.value.replace(/\s+/g,' ').trim().slice(0,60));
- /* ---------- v329.0 — Πρόγραμμα Experience με μήνες ----------
-    Αποθηκεύεται ως months:[{theme,file,shelfNames[]}], 1 έως 12 μήνες. Κάθε μήνας έχει θέμα, ένα βίντεο και 6–8 ράφια (από πάνω προς τα κάτω).
+/* ---------- v329.1 — Πρόγραμμα Experience: ένα θέμα, ένα σετ ραφιών, βίντεο ανά μήνα ----------
+    Το θέμα του προγράμματος είναι ο τίτλος του και ΔΕΝ αλλάζει από μήνα σε μήνα. Τα 6–8 ράφια (υποκατηγορίες) είναι επίσης τα ίδια κάθε μήνα.
+    Αυτό που αλλάζει ανά μήνα είναι μόνο το αρχείο βίντεο. Αποθηκεύεται ως shelfNames:[6–8 ράφια] και months:[{file}], 1 έως 12 μήνες.
     Οι μήνες είναι σχετικοί (Μήνας 1, 2…): το φαρμακείο θα διαλέγει από ποιον μήνα του ημερολογίου ξεκινά.
-    Παλιά προγράμματα (ένα βίντεο και ράφια στο ίδιο το πρόγραμμα, months=[]) διαβάζονται ως πρόγραμμα ενός μήνα. */
+    Παλιότερες μορφές διαβάζονται ως έχουν: (α) ένα βίντεο και ράφια στο πρόγραμμα, months=[] → ένας μήνας·
+    (β) v329.0, months:[{theme,file,shelfNames}] → τα ράφια του 1ου μήνα γίνονται τα ράφια του προγράμματος. */
  const EXP_MAX=12,SHELF_MAX=8,SHELF_MIN=6;
  const clean=(v,n)=>String(v==null?'':v).replace(/\s+/g,' ').trim().slice(0,n);
  const cleanShelves=a=>(Array.isArray(a)?a:[]).map(x=>clean(x,60)).filter(Boolean).slice(0,SHELF_MAX);
+ function expShelves(p){
+  if(!p||p.type!=='exp')return [];
+  if(Array.isArray(p.shelfNames)&&p.shelfNames.length)return cleanShelves(p.shelfNames);
+  const m=Array.isArray(p.months)?p.months.find(x=>x&&typeof x==='object'&&Array.isArray(x.shelfNames)&&x.shelfNames.length):null;
+  return m?cleanShelves(m.shelfNames):[];
+ }
  function expMonths(p){
   if(!p||p.type!=='exp')return [];
   const m=Array.isArray(p.months)?p.months.filter(x=>x&&typeof x==='object'):[];
-  if(m.length)return m.slice(0,EXP_MAX).map(x=>({theme:clean(x.theme,60),file:clean(x.file,160),shelfNames:cleanShelves(x.shelfNames)}));
-  if(p.file||(Array.isArray(p.shelfNames)&&p.shelfNames.length))return [{theme:clean(p.title,60),file:clean(p.file,160),shelfNames:cleanShelves(p.shelfNames)}];
-  return [];
+  if(m.length)return m.slice(0,EXP_MAX).map(x=>({file:clean(x.file,160)}));
+  if(p.file)return [{file:clean(p.file,160)}];
+  return expShelves(p).length?[{file:''}]:[];
  }
- const monthOk=m=>!!m.theme&&!!m.file&&m.shelfNames.length>=SHELF_MIN;
- const blankMonth=()=>({theme:'',file:'',shelves:Array(SHELF_MAX).fill('')});
- const monthHas=m=>!!(m&&(clean(m.theme,60)||clean(m.file,160)||m.shelves.some(x=>clean(x,60))));
- const outMonth=m=>({theme:clean(m.theme,60),file:clean(m.file,160),shelfNames:m.shelves.map(x=>clean(x,60)).filter(Boolean)});
- const ed={ref:null,n:1,cur:0,months:[]};
+ const monthOk=m=>!!(m&&m.file);
+ const ed={ref:null,n:1,shelves:[],files:[]};
  function edInit(L){
-  const list=expMonths(L.editing.data);
-  ed.ref=L.editing;ed.n=Math.max(1,list.length);ed.cur=0;
-  ed.months=Array.from({length:EXP_MAX},(_,i)=>{const m=list[i];return m?{theme:m.theme,file:m.file,shelves:Array.from({length:SHELF_MAX},(_,k)=>m.shelfNames[k]||'')}:blankMonth();});
+  const d=L.editing.data,list=expMonths(d),sh=expShelves(d);
+  ed.ref=L.editing;ed.n=Math.max(1,list.length);
+  ed.shelves=Array.from({length:SHELF_MAX},(_,k)=>sh[k]||'');
+  ed.files=Array.from({length:EXP_MAX},(_,i)=>list[i]?list[i].file:'');
  }
  function edState(L){if(ed.ref!==L.editing)edInit(L);return ed;}
  function edSync(){
   const L=root.SCL293,f=q('#scl293Editor');if(!L||!f||ed.ref!==L.editing)return;
-  const m=ed.months[ed.cur];if(!m)return;
-  const th=q('[name="scl3329_theme"]',f),fl=q('[name="scl3329_file"]',f);
-  if(th)m.theme=th.value;if(fl)m.file=fl.value;
-  qa('[name="scl3329_shelf"]',f).forEach((i,k)=>{m.shelves[k]=i.value;});
+  qa('[name="scl3329_shelf"]',f).forEach((i,k)=>{ed.shelves[k]=i.value;});
+  qa('[name="scl3329_file"]',f).forEach(i=>{const k=Number(i.dataset.i);if(k>=0&&k<EXP_MAX)ed.files[k]=i.value;});
  }
- function edOut(){return ed.months.slice(0,ed.n).map(outMonth);}
- function expCheck(live){
+ const edShelves=()=>ed.shelves.map(x=>clean(x,60)).filter(Boolean);
+ function edOut(){return ed.files.slice(0,ed.n).map(f=>({file:clean(f,160)}));}
+ function pending(){
   const bad=[];
-  for(let i=0;i<ed.n;i++){
-   const v=ed.months[i].shelves.map(x=>clean(x,60));
-   if(v.findIndex((x,k)=>!x&&v.slice(k+1).some(Boolean))>=0)return 'Μήνας '+(i+1)+': συμπλήρωσε τα ράφια με τη σειρά, από πάνω προς τα κάτω, χωρίς κενά.';
-   if(!monthOk(outMonth(ed.months[i])))bad.push('Μήνας '+(i+1));
-  }
-  return live&&bad.length?'Για να διατεθεί, κάθε μήνας χρειάζεται θέμα, βίντεο και 6 έως 8 ράφια. Εκκρεμούν: '+bad.join(', ')+'.':'';
+  if(edShelves().length<SHELF_MIN)bad.push('Ράφια');
+  for(let i=0;i<ed.n;i++)if(!clean(ed.files[i],160))bad.push('Μήνας '+(i+1));
+  return bad;
+ }
+ function expCheck(live){
+  const v=ed.shelves.map(x=>clean(x,60));
+  if(v.findIndex((x,k)=>!x&&v.slice(k+1).some(Boolean))>=0)return 'Συμπλήρωσε τα ράφια με τη σειρά, από πάνω προς τα κάτω, χωρίς κενά.';
+  const bad=pending();
+  return live&&bad.length?'Για να διατεθεί, χρειάζονται 6 έως 8 ράφια και βίντεο σε κάθε μήνα. Εκκρεμούν: '+bad.join(', ')+'.':'';
  }
  const monthsLabel=n=>n+(n===1?' μήνας':' μήνες');
  function summaryNote(){
-  const bad=[],lost=[];
-  for(let i=0;i<ed.n;i++)if(!monthOk(outMonth(ed.months[i])))bad.push('Μήνας '+(i+1));
-  for(let i=ed.n;i<EXP_MAX;i++)if(monthHas(ed.months[i]))lost.push('Μήνας '+(i+1));
-  const text=(bad.length?'Για να διατεθεί, κάθε μήνας χρειάζεται θέμα, βίντεο και 6 έως 8 ράφια. Εκκρεμούν: '+bad.join(', ')+'.':'Κάθε μήνας έχει θέμα, βίντεο και 6 έως 8 ράφια.')+(lost.length?(lost.length===1?' Ο '+lost[0]+' έχει περιεχόμενο και θα αφαιρεθεί όταν αποθηκεύσεις.':' Οι '+lost.join(', ')+' έχουν περιεχόμενο και θα αφαιρεθούν όταν αποθηκεύσεις.'):'');
+  const bad=pending(),lost=[];
+  for(let i=ed.n;i<EXP_MAX;i++)if(clean(ed.files[i],160))lost.push('Μήνας '+(i+1));
+  const text=(bad.length?'Για να διατεθεί, χρειάζονται 6 έως 8 ράφια και βίντεο σε κάθε μήνα. Εκκρεμούν: '+bad.join(', ')+'.':'Το πρόγραμμα έχει 6 έως 8 ράφια και βίντεο σε κάθε μήνα.')+(lost.length?(lost.length===1?' Ο '+lost[0]+' έχει βίντεο και θα αφαιρεθεί όταν αποθηκεύσεις.':' Οι '+lost.join(', ')+' έχουν βίντεο και θα αφαιρεθούν όταν αποθηκεύσεις.'):'');
   return {text,warn:!!(bad.length||lost.length)};
  }
  function edRefresh(){
   const panel=q('#scl293Editor .scl3272-exp');if(!panel)return;
-  qa('.scl3272-chip[data-scl3329="month"]',panel).forEach(c=>{const good=monthOk(outMonth(ed.months[Number(c.dataset.i)]));c.classList.toggle('scl3272-zero',!good);const sm=q('small',c);if(sm)sm.textContent=good?'✓':'εκκρεμεί';});
   const sum=q('.scl3329-sum',panel),sm=summaryNote();if(sum){sum.textContent=sm.text;sum.classList.toggle('scl3329-warn',sm.warn);}
  }
  function expPanelHtml(){
-  const n=ed.n,cur=Math.min(ed.cur,n-1),m=ed.months[cur],ok=i=>monthOk(outMonth(ed.months[i])),sm=summaryNote();
-  const chips=Array.from({length:n},(_,i)=>'<button type="button" class="scl3272-chip'+(ok(i)?'':' scl3272-zero')+'" data-scl3329="month" data-i="'+i+'" aria-pressed="'+(i===cur)+'">Μήνας '+(i+1)+' <small>'+(ok(i)?'✓':'εκκρεμεί')+'</small></button>').join('');
-  let shelfHtml='';for(let i=0;i<SHELF_MAX;i++)shelfHtml+='<label class="scl293-field"><span>Ράφι '+(i+1)+(i<SHELF_MIN?'':' (προαιρετικό)')+'</span><input name="scl3329_shelf" maxlength="60" autocomplete="off" placeholder="Όνομα υποκατηγορίας" value="'+esc(m.shelves[i]||'')+'"></label>';
-  return '<h2>Διάρκεια και μήνες</h2><p class="scl293-help">Ορίζεις πόσους μήνες έχει το πρόγραμμα, από 1 έως 12. Κάθε μήνας έχει δικό του θέμα, δικό του βίντεο και δικά του ράφια. Οι μήνες είναι σχετικοί: το φαρμακείο διαλέγει από ποιον μήνα του ημερολογίου ξεκινά.</p>'
+  const n=ed.n,sm=summaryNote();
+  let shelfHtml='';for(let i=0;i<SHELF_MAX;i++)shelfHtml+='<label class="scl293-field"><span>Ράφι '+(i+1)+(i<SHELF_MIN?'':' (προαιρετικό)')+'</span><input name="scl3329_shelf" maxlength="60" autocomplete="off" placeholder="Όνομα υποκατηγορίας" value="'+esc(ed.shelves[i]||'')+'"></label>';
+  let fileHtml='';for(let i=0;i<n;i++)fileHtml+='<label class="scl293-field"><span>Μήνας '+(i+1)+' · αρχείο βίντεο στο Product Me</span><input name="scl3329_file" data-i="'+i+'" maxlength="160" autocomplete="off" placeholder="ΟΝΟΜΑ_ΑΡΧΕΙΟΥ.mp4" value="'+esc(ed.files[i]||'')+'"></label>';
+  return '<h2>Ράφια του προγράμματος · 6 έως 8</h2><p class="scl293-help">Το θέμα του προγράμματος είναι ο τίτλος του και μένει ίδιο όλους τους μήνες. Τα ράφια (υποκατηγορίες) είναι επίσης τα ίδια κάθε μήνα. Συμπλήρωσέ τα με τη σειρά, χωρίς κενά, από πάνω προς τα κάτω. Αν μια θέση έχει λιγότερα ράφια, χρησιμοποιούνται τα πρώτα από πάνω.</p>'
+   +'<div class="scl3272-shelf-grid">'+shelfHtml+'</div>'
+   +'<h2 class="scl3329-h2">Διάρκεια και βίντεο</h2><p class="scl293-help">Ορίζεις πόσους μήνες έχει το πρόγραμμα, από 1 έως 12. Κάθε μήνας έχει δικό του βίντεο· το θέμα και τα ράφια δεν αλλάζουν. Οι μήνες είναι σχετικοί: το φαρμακείο διαλέγει από ποιον μήνα του ημερολογίου ξεκινά.</p>'
    +'<div class="scl3329-dur" role="group" aria-labelledby="scl3329DurLabel"><span id="scl3329DurLabel">Διάρκεια</span><button type="button" data-scl3329="dec" aria-label="Λιγότεροι μήνες"'+(n<=1?' disabled':'')+'>−</button><output aria-live="polite">'+monthsLabel(n)+'</output><button type="button" data-scl3329="inc" aria-label="Περισσότεροι μήνες"'+(n>=EXP_MAX?' disabled':'')+'>+</button></div>'
-   +'<div class="scl3272-chips" role="group" aria-label="Μήνες του προγράμματος">'+chips+'</div>'
-   +'<div class="scl3329-month"><h3>Μήνας '+(cur+1)+'</h3>'
-   +'<label class="scl293-field"><span>Θέμα του μήνα</span><input name="scl3329_theme" maxlength="60" autocomplete="off" placeholder="π.χ. Πόνος" value="'+esc(m.theme)+'"></label><p class="scl293-help">Η κατηγορία που προβάλλει η οθόνη. Φαίνεται στο φαρμακείο, στο ετήσιο πρόγραμμα.</p>'
-   +'<label class="scl293-field"><span>Όνομα αρχείου βίντεο στο Product Me</span><input name="scl3329_file" maxlength="160" autocomplete="off" placeholder="ΟΝΟΜΑ_ΑΡΧΕΙΟΥ.mp4" value="'+esc(m.file)+'"></label>'
-   +'<h3>Ράφια · 6 έως 8</h3><p class="scl293-help">Συμπλήρωσε τα ράφια με τη σειρά, χωρίς κενά, από πάνω προς τα κάτω. Αν μια θέση έχει λιγότερα ράφια, χρησιμοποιούνται τα πρώτα από πάνω, για κάθε μήνα.</p><div class="scl3272-shelf-grid">'+shelfHtml+'</div></div>'
+   +'<div class="scl3329-files">'+fileHtml+'</div>'
    +'<p class="scl3329-sum'+(sm.warn?' scl3329-warn':'')+'" role="status">'+esc(sm.text)+'</p>';
  }
  function edRender(focus){
   const panel=q('#scl293Editor .scl3272-exp');if(!panel)return;
   panel.innerHTML=expPanelHtml();
-  if(focus){const b=q('[data-scl3329="'+focus.a+'"]'+(focus.i!=null?'[data-i="'+focus.i+'"]':''),panel);if(b&&!b.disabled)b.focus({preventScroll:true});}
+  if(focus){const b=q('[data-scl3329="'+focus.a+'"]',panel);if(b&&!b.disabled)b.focus({preventScroll:true});}
  }
  document.addEventListener('click',e=>{
   const b=e.target&&e.target.closest?e.target.closest('[data-scl3329]'):null;if(!b)return;
@@ -43916,12 +43919,12 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   e.preventDefault();e.stopPropagation();
   edState(L);edSync();
   const a=b.dataset.scl3329;
-  if(a==='dec')ed.n=Math.max(1,ed.n-1);else if(a==='inc')ed.n=Math.min(EXP_MAX,ed.n+1);else if(a==='month')ed.cur=Math.max(0,Math.min(EXP_MAX-1,Number(b.dataset.i)||0));
-  if(ed.cur>=ed.n)ed.cur=ed.n-1;
-  edRender(a==='month'?{a,i:ed.cur}:{a});
+  if(a==='dec')ed.n=Math.max(1,ed.n-1);else if(a==='inc')ed.n=Math.min(EXP_MAX,ed.n+1);
+  edRender({a});
  },true);
  document.addEventListener('input',e=>{const t=e.target;if(t&&t.matches&&t.matches('[name^="scl3329_"]')){edSync();edRefresh();}},true);
- root.SCL3272Exp={months:expMonths,check:expCheck,state:()=>ed,out:edOut,ok:monthOk,init:edInit};
+ 
+ root.SCL3272Exp={months:expMonths,shelves:expShelves,check:expCheck,state:()=>ed,out:edOut,shelvesOut:edShelves,ok:monthOk,init:edInit};
  const catOf=t=>String(t&&t.category||'').replace(/\s+/g,' ').trim().slice(0,40);
  function order(themes){const used=[...new Set(themes.map(catOf).filter(Boolean))];return DEFAULTS.concat(used.filter(c=>!DEFAULTS.includes(c)).sort((a,b)=>a.localeCompare(b,'el')));}
  function counts(themes){const m=new Map();for(const t of themes){const c=catOf(t);m.set(c,(m.get(c)||0)+1);}return m;}
@@ -44000,7 +44003,7 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
     if(L.editing&&L.editing.kind==='program'){
      const sel=q('#scl293Editor [name="scl3272_type"]');
      if(sel){
-      if(sel.value==='exp'){edState(L);edSync();d.type='exp';d.months=edOut();delete d.file;delete d.shelfNames;}
+      if(sel.value==='exp'){edState(L);edSync();d.type='exp';d.shelfNames=edShelves();d.months=edOut();delete d.file;}
       else{delete d.type;delete d.shelfNames;delete d.file;}
      }
     }
@@ -44061,8 +44064,8 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   sel.addEventListener('change',()=>{newLabel.hidden=sel.value!==NEW;if(!newLabel.hidden)inp.focus();});
   label.after(wrap);
  }
- /* Πρόγραμμα: τύπος (Πάγκος / Experience). Το Experience (v329.0) έχει 1 έως 12 μήνες: κάθε μήνας έχει θέμα, ένα αρχείο βίντεο και 6–8 ονόματα ραφιών, από πάνω προς τα κάτω.
-    Δεν διαλέγει θεματικές. Αποθηκεύεται μέσα στα δεδομένα του προγράμματος (type, months:[{theme,file,shelfNames}]). Χωρίς τύπο = Πάγκος, όπως τα υπάρχοντα. */
+ /* Πρόγραμμα: τύπος (Πάγκος / Experience). Το Experience (v329.1) έχει ένα θέμα (ο τίτλος) και 6–8 ράφια για όλο το πρόγραμμα, και 1 έως 12 μήνες με ένα αρχείο βίντεο ο καθένας.
+    Δεν διαλέγει θεματικές. Αποθηκεύεται μέσα στα δεδομένα του προγράμματος (type, shelfNames, months:[{file}]). Χωρίς τύπο = Πάγκος, όπως τα υπάρχοντα. */
  function programFields(page,L){
   const form=q('#scl293Editor',page);if(!form||q('[name="scl3272_type"]',form)||!form.classList.contains('scl3256-program'))return;
   const title=q('[name="title"]',form),label=title&&title.closest('label');if(!label)return;
@@ -44070,6 +44073,7 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   const wrap=document.createElement('div');wrap.className='scl3272-field';
   wrap.innerHTML='<label class="scl293-field"><span>Τύπος προγράμματος</span><select name="scl3272_type"><option value="adv">Πάγκος (ADV)</option><option value="exp">Experience (EXP)</option></select></label><p class="scl293-help scl3272-typehelp"></p>';
   const sel=q('select',wrap);sel.value=type;sel.disabled=!isNew;label.after(wrap);
+  const tSpan=q('span',label),tOrig=tSpan?tSpan.textContent:'';
   const exp=document.createElement('section');exp.className='panel scl3272-exp';
   edState(L);exp.innerHTML=expPanelHtml();
   const months=q('.scl293-months',form),baseHelp=[...form.children].find(n=>n.classList&&n.classList.contains('scl293-help')&&n!==wrap);
@@ -44077,9 +44081,10 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
   const help=q('.scl3272-typehelp',wrap),sync=()=>{
    const isExp=sel.value==='exp';
    exp.classList.toggle('scl3272-off',!isExp);
+   if(tSpan)tSpan.textContent=isExp?'Θέμα προγράμματος (ίδιο όλους τους μήνες)':tOrig;
    if(months)months.classList.toggle('scl3272-off',isExp);
    if(baseHelp)baseHelp.classList.toggle('scl3272-off',isExp);
-   help.textContent=(isExp?'Πρόγραμμα για θέσεις Experience: 1 έως 12 μήνες, κάθε μήνας με θέμα, βίντεο και 6–8 ράφια. Δεν χρησιμοποιείται σε θέσεις Πάγκου.':'Έτοιμο πρόγραμμα για θέσεις Πάγκου: 12 μήνες, μία θεματική τον μήνα.')+(isNew?'':' Ο τύπος δεν αλλάζει μετά την πρώτη αποθήκευση.');
+   help.textContent=(isExp?'Πρόγραμμα για θέσεις Experience: ένα θέμα και 6–8 ράφια για όλο το πρόγραμμα, και 1 έως 12 μήνες με ένα βίντεο τον μήνα. Δεν χρησιμοποιείται σε θέσεις Πάγκου.':'Έτοιμο πρόγραμμα για θέσεις Πάγκου: 12 μήνες, μία θεματική τον μήνα.')+(isNew?'':' Ο τύπος δεν αλλάζει μετά την πρώτη αποθήκευση.');
   };
   sel.addEventListener('change',sync);sync();
  }
@@ -44133,13 +44138,13 @@ body.scl-hq .scl303-multi[open]{z-index:1300}
     if(exp){
      const small=q('small',host);if(small)small.remove();
      host.style.flexWrap='wrap';
-     const ms=expMonths(pr),noFile=ms.filter(m=>!m.file).length;
-     const fp=document.createElement('p');fp.className='scl3272-file';fp.textContent=!ms.length?'Δεν έχουν οριστεί μήνες':noFile?'Λείπει αρχείο βίντεο σε '+monthsLabel(noFile):'Βίντεο στο Product Me: '+ms.length+(ms.length===1?' αρχείο':' αρχεία');host.after(fp);
+     const ms=expMonths(pr),sh=expShelves(pr),noFile=ms.filter(m=>!m.file).length;
+     const fp=document.createElement('p');fp.className='scl3272-file';fp.textContent=!ms.length?'Δεν έχουν οριστεί μήνες':noFile?'Λείπει αρχείο βίντεο σε '+noFile+(noFile===1?' μήνα':' μήνες'):'Βίντεο στο Product Me: '+ms.length+(ms.length===1?' αρχείο':' αρχεία');host.after(fp);
      const strip=q('.pc-strip',a);
-     if(strip){const st=document.createElement('div');st.className='scl3272-shelfstrip';ms.forEach((m,i)=>{const sp=document.createElement('span'),sm=document.createElement('small');sm.textContent='Μήνας '+(i+1)+' · '+m.shelfNames.length+' ράφια';sp.title='Μήνας '+(i+1)+' · '+(m.theme||'Χωρίς θέμα')+(m.shelfNames.length?': '+m.shelfNames.join(' · '):'');sp.append(sm,document.createTextNode(m.theme||'Χωρίς θέμα'));st.append(sp);});strip.replaceWith(st);}
+     if(strip){const st=document.createElement('div');st.className='scl3272-shelfstrip';sh.forEach((n,i)=>{const sp=document.createElement('span'),sm=document.createElement('small');sm.textContent='Ράφι '+(i+1);sp.title='Ράφι '+(i+1)+' · '+n;sp.append(sm,document.createTextNode(n));st.append(sp);});strip.replaceWith(st);}
     }
    }
-   if(!kept&&hs.prog==='exp')list.insertAdjacentHTML('beforeend','<div class="scl3272-empty"><p>Δεν υπάρχουν ακόμη προγράμματα Experience. Κάθε πρόγραμμα Experience έχει 1 έως 12 μήνες, με θέμα, βίντεο και 6 έως 8 ράφια ανά μήνα.</p><button type="button" class="btn line" data-scl293="new">+ Νέο πρόγραμμα Experience</button></div>');
+   if(!kept&&hs.prog==='exp')list.insertAdjacentHTML('beforeend','<div class="scl3272-empty"><p>Δεν υπάρχουν ακόμη προγράμματα Experience. Κάθε πρόγραμμα Experience έχει ένα θέμα και 6 έως 8 ράφια, και 1 έως 12 μήνες με ένα βίντεο τον μήνα.</p><button type="button" class="btn line" data-scl293="new">+ Νέο πρόγραμμα Experience</button></div>');
    else if(!kept)list.insertAdjacentHTML('beforeend','<p class="scl3272-empty">Δεν υπάρχουν προγράμματα σε αυτόν τον τύπο.</p>');
   }
   if(bar){
