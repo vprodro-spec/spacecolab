@@ -33699,17 +33699,13 @@ function intro331(){
   +'<button type="button" class="action blue scl331-btn" data-scl331="activate"'+(V331.busy?' disabled aria-busy="true"':'')+'>'+(V331.busy?'Ενεργοποίηση…':'Ενεργοποίηση της Βιτρίνας')+'</button></div>'
   +(V331.error?'<p class="scl331-error" role="alert">'+E(V331.error)+'</p>':'')+'</div>';
 }
-function active331(){
- const f=V331.data?.facades||[];
- if(!f.length)return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Ξεκίνα σχεδιάζοντας την όψη του φαρμακείου</h2><p>Δεν έχεις ακόμη κομμάτια στη Βιτρίνα. Πρόσθεσε πρώτα τα κομμάτια της όψης και μετά σημείωσε ποια είναι θέσεις πώλησης.</p>'
-  +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn" disabled aria-describedby="scl331Soon">Σχεδίασε την όψη</button><span id="scl331Soon" class="scl331-soon">Ο σχεδιαστής της όψης έρχεται στην επόμενη έκδοση.</span></div>'
-  +'<p class="scl331-hint">Γωνιακό φαρμακείο; Μπορείς να σχεδιάσεις έως 3 όψεις.</p></div>';
- return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Οι όψεις του φαρμακείου σου</h2><ul class="scl331-facades">'+f.map(x=>'<li><strong>'+E(x.name)+'</strong><span>'+(x.design?.pieces?.length||0)+' κομμάτια</span></li>').join('')+'</ul></div>';
-}
 function fit331(){
- const st=document.querySelector('#scl331Host .scl331-stage'),f=st?.querySelector('.scl331-facade');if(!st||!f)return;
- const cs=getComputedStyle(st),avail=st.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);if(!(avail>0))return;
- const k=Math.min(1,avail/SAMPLE331.reduce((a,p)=>a+p.w,0));f.style.zoom=k<1?String(k):'';
+ const st=document.querySelector('#scl331Host .scl331-stage'),f=st?.querySelector('.scl331-facade');
+ if(st&&f){
+  const cs=getComputedStyle(st),avail=st.clientWidth-parseFloat(cs.paddingLeft)-parseFloat(cs.paddingRight);
+  if(avail>0){const k=Math.min(1,avail/SAMPLE331.reduce((a,p)=>a+p.w,0));f.style.zoom=k<1?String(k):'';}
+ }
+ document.querySelectorAll('#scl331Host .scl331-prev').forEach(p=>{const i=p.firstElementChild,w=+(i?.dataset.w),avail=p.clientWidth;if(i&&w>0&&avail>0){const k=Math.min(1,avail/w);i.style.zoom=k<1?String(k):'';}});
 }
 window.addEventListener('resize',()=>requestAnimationFrame(fit331));
 function render331(){
@@ -33719,18 +33715,382 @@ function render331(){
  if(nb){nb.classList.toggle('scl331-off',off);const t=off?'Βιτρίνα · ανενεργή':'Βιτρίνα';nb.setAttribute('aria-label',t);nb.title=t;const l=nb.querySelector('.scl310-nav-label');if(l)l.innerHTML='Βιτρίνα'+(off?'<small class="scl331-offtag"> · ανενεργή</small>':'');}
  const host=$('scl331Host');if(!host)return;
  let body;
- if(V331.status==='ready'&&d)body=d.activated?active331():intro331();
+ if(V331.status==='ready'&&d)body=d.activated?(B331.open?builder331():list331()):intro331();
  else if(V331.status==='error')body='<div class="scl331-card" role="alert"><h2 id="scl331Title" tabindex="-1">Δεν φορτώθηκε η Βιτρίνα</h2><p>'+E(V331.error)+'</p><div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-scl331="retry">Δοκίμασε ξανά</button></div></div>';
  else body='<div class="scl331-card" aria-busy="true"><p role="status">Φόρτωση της Βιτρίνας…</p></div>';
  const html='<span class="scl321-eyebrow">ΦΑΡΜΑΚΕΙΟ</span><h1>Βιτρίνα</h1>'+body;
- if(V331.html!==html){V331.html=html;host.innerHTML=html;}
+ if(V331.html!==html){
+  const a=document.activeElement,keep=!V331.focusTitle&&a&&a!==document.body&&host.contains(a)&&a.dataset&&a.dataset.b?{k:fkey331(a),s:a.selectionStart,e:a.selectionEnd}:null;
+  const pv=$('scl331Vp'),prev=pv?{w:pv.dataset.w,off:pv.dataset.off}:null;
+  V331.html=html;host.innerHTML=html;
+  if(keep){const n=[...host.querySelectorAll('[data-b]')].find(x=>!x.disabled&&fkey331(x)===keep.k);if(n){n.focus({preventScroll:true});if(keep.s!=null&&n.setSelectionRange){try{n.setSelectionRange(keep.s,keep.e);}catch(_e){}}}}
+  const nv=$('scl331Vp'),tr=nv?.querySelector('.scl331-track');
+  if(prev&&tr&&prev.w===nv.dataset.w&&prev.off!==nv.dataset.off){tr.style.transition='none';tr.style.transform='translateX('+(-prev.off)+'px)';void tr.offsetWidth;tr.style.transition='';tr.style.transform='translateX('+(-nv.dataset.off)+'px)';}
+ }
+ if(B331.open&&d&&d.activated&&syncVw331()){render331();return;}
  fit331();
  if(V331.focusTitle){V331.focusTitle=false;$('scl331Title')?.focus({preventScroll:false});}
+ if(V331.scrollSteps){V331.scrollSteps=false;host.querySelector('.scl331-stps')?.scrollIntoView({block:'start'});}
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest?.('[data-scl331]');if(!b||!$('vitrinaPage')?.contains(b))return;
  e.preventDefault();
  if(b.dataset.scl331==='activate')activate331();else if(b.dataset.scl331==='retry'){V331.status='idle';load331();}
+});
+
+// v331.1 — Βιτρίνα: σχεδιαστής όψης. Βήμα 1: κομμάτια της όψης. Βήμα 2: θέσεις πώλησης. Αποθήκευση μόνο με το «Αποθήκευση όψης» (scl330_vitrina_save_facade).
+const SIGNURL331=(()=>{try{const a=atob(SIGN331.split(',')[1]),u=new Uint8Array(a.length);for(let i=0;i<a.length;i++)u[i]=a.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:'image/png'}));}catch(e){return SIGN331;}})();
+var B331=root.SCL331B={open:false,no:1,rev:0,name:'',step:1,sel:'',twoTier:false,signPos:'top',next:1,zoom:1,offset:0,pieces:[],upPieces:[],dirty:false,saving:false,error:'',conflict:false,savedMsg:'',leave:false,vw:0,mz:0};
+const MAXPIECES331=100;
+const mkP331=(id,type,w,names,kind)=>({id:String(id),type,w,kind:kind||'',names:names||[]});
+const tl331=(t,up)=>t==='glass'?'Τζάμι':t==='panel'?(up?'Τοίχος':'Πάνελ'):t==='column'?'Κολώνα':'Πόρτα';
+const dl331=k=>k==='double'?'Διπλή πόρτα':k==='auto'?'Αυτόματη πόρτα':'Μονή πόρτα';
+const maxPos331=w=>w<40?0:Math.max(1,Math.floor((w-16+6)/36));
+const minW331=p=>p.type==='column'?15:p.type==='door'?(p.kind==='single'?40:80):30;
+const pl331=(n,one,many)=>n+' '+(n===1?one:many);
+const rowW331=a=>a.reduce((s,p)=>s+p.w,0);
+const VW331=()=>Math.max(240,B331.vw||1052);
+const R331=o=>{o=o||{};return{low:o.low||B331.pieces,up:o.up||B331.upPieces,two:o.two!==undefined?o.two:B331.twoTier};};
+const facW331=o=>{const r=R331(o);return Math.max(rowW331(r.low),r.two?rowW331(r.up):0);};
+const zMin331=o=>Math.min(1,VW331()/facW331(o));
+const effZ331=()=>Math.max(zMin331(),Math.min(2,B331.zoom));
+const clampOff331=(off,W)=>{const vw=VW331();return W<=vw?(W-vw)/2:Math.max(0,Math.min(W-vw,off));};
+function allPos331(M){
+ const out=[];let n=0;
+ M.pieces.forEach(p=>p.names.forEach((nm,i)=>{n++;out.push({id:p.id+'.'+i,num:n,name:nm,piece:p.id,tier:'low',type:p.type});}));
+ if(M.twoTier)M.upPieces.forEach(p=>p.names.forEach((nm,i)=>{n++;out.push({id:p.id+'.'+i,num:n,name:nm,piece:p.id,tier:'up',type:p.type});}));
+ return out;
+}
+function pGeo331(id,o){
+ const r=R331(o),scan=arr=>{let x=0;for(const p of arr){if(p.id===id)return{x,w:p.w};x+=p.w;}return null;};
+ return scan(r.low)||(r.two?scan(r.up):null)||{x:0,w:0};
+}
+function pAt331(arr,x){let a=0;for(const p of arr){if(x<a+p.w)return p;a+=p.w;}return arr[arr.length-1];}
+function center331(id,z,o){const g=pGeo331(id,o);return clampOff331((g.x+g.w/2)*z-VW331()/2,facW331(o)*z);}
+function zoomTo331(nz,focusId){
+ const b=B331,total=facW331(),z0=effZ331(),z1=Math.max(zMin331(),Math.min(2,nz));
+ let off;
+ if(focusId)off=center331(focusId,z1);
+ else{const cx=(clampOff331(b.offset,total*z0)+VW331()/2)/z0;off=clampOff331(cx*z1-VW331()/2,total*z1);}
+ b.zoom=z1;b.offset=off;
+}
+function panBy331(dx){const W=facW331()*effZ331();B331.offset=clampOff331(clampOff331(B331.offset,W)+dx,W);}
+function rowKey331(id){return B331.twoTier&&B331.upPieces.some(p=>p.id===id)?'upPieces':'pieces';}
+const curKey331=()=>rowKey331(B331.sel);
+function selPiece331(){const b=B331;return b[curKey331()].find(p=>p.id===b.sel)||b.pieces[0];}
+function touch331(){const b=B331;b.dirty=true;b.savedMsg='';b.error='';b.conflict=false;b.leave=false;}
+function patchSel331(fn){const b=B331,k=curKey331();let ch=false;b[k]=b[k].map(p=>{if(p.id!==b.sel)return p;const n=fn(Object.assign({},p));if(JSON.stringify(n)!==JSON.stringify(p))ch=true;return n;});if(ch)touch331();}
+function fitP331(p){if(p.type==='column')p.names=[];p.names=p.names.slice(0,maxPos331(p.w));return p;}
+function setW331(w){patchSel331(p=>{p.w=Math.max(minW331(p),Math.min(260,Math.round(w)));return fitP331(p);});}
+function setType331(t){patchSel331(p=>{p.type=t;if(t==='door'){p.kind=p.kind||'single';p.w=p.kind==='single'?50:110;p.names=[];}else p.kind='';if(t==='column')p.w=20;if((t==='glass'||t==='panel')&&p.w<30)p.w=80;return fitP331(p);});}
+function setKind331(k){patchSel331(p=>{p.kind=k;p.w=k==='single'?50:110;return fitP331(p);});}
+function numBefore331(id){let n=0;for(const p of B331.pieces){if(p.id===id)return n;n+=p.names.length;}if(B331.twoTier)for(const p of B331.upPieces){if(p.id===id)return n;n+=p.names.length;}return n;}
+function setCount331(n){
+ const up=curKey331()==='upPieces',nb=numBefore331(B331.sel);
+ patchSel331(p=>{const cur=p.names.slice(0,n);while(cur.length<n)cur.push((up?'Πάνω τζάμι ':tl331(p.type)+' ')+(nb+cur.length+1));p.names=cur;return p;});
+}
+function focusAfter331(key,arr,id){const o=key==='pieces'?{low:arr}:{up:arr};return center331(id,Math.max(zMin331(o),Math.min(2,B331.zoom)),o);}
+function addPiece331(type){
+ const b=B331,k=curKey331();if(b[k].length>=MAXPIECES331)return;
+ const id=(k==='upPieces'?'u':'p')+b.next,np=mkP331(id,type,type==='column'?20:type==='door'?50:80,[],type==='door'?'single':'');
+ const i=b[k].findIndex(p=>p.id===b.sel),arr=b[k].slice();arr.splice(i+1,0,np);
+ b[k]=arr;b.sel=id;b.next++;b.offset=focusAfter331(k,arr,id);touch331();
+}
+function moveSel331(d){
+ const b=B331,k=curKey331(),i=b[k].findIndex(p=>p.id===b.sel),j=i+d;if(j<0||j>=b[k].length)return;
+ const arr=b[k].slice(),t=arr[i];arr[i]=arr[j];arr[j]=t;b[k]=arr;b.offset=focusAfter331(k,arr,b.sel);touch331();
+}
+function removeSel331(){
+ const b=B331,k=curKey331();if(b[k].length<=1)return;
+ const i=b[k].findIndex(p=>p.id===b.sel),arr=b[k].filter(p=>p.id!==b.sel),nid=arr[Math.min(i,arr.length-1)].id;
+ b[k]=arr;b.sel=nid;b.offset=focusAfter331(k,arr,nid);touch331();
+}
+function pick331(id){B331.sel=id;B331.offset=center331(id,effZ331());}
+function stepPiece331(d){const b=B331,arr=b[curKey331()],i=arr.findIndex(p=>p.id===b.sel);pick331(arr[Math.max(0,Math.min(arr.length-1,i+d))].id);}
+function setRow331(row){
+ const b=B331,cur=selPiece331(),g=pGeo331(cur.id),target=pAt331(row==='up'?b.upPieces:b.pieces,g.x+g.w/2);
+ b.sel=target.id;b.offset=center331(target.id,effZ331());
+}
+function mirrorUp331(){
+ const b=B331;let n=b.next;
+ const arr=b.pieces.map(p=>mkP331('u'+(n++),p.type==='door'?'glass':p.type,p.w,[],''));
+ const g=pGeo331(b.sel),inUp=b.upPieces.some(p=>p.id===b.sel);
+ b.upPieces=arr;b.next=n;if(inUp)b.sel=pAt331(arr,g.x+g.w/2).id;touch331();
+}
+function setTwoTier331(on){
+ const b=B331;
+ if(on){if(b.twoTier)return;if(!b.upPieces.length){b.twoTier=true;mirrorUp331();}else{b.twoTier=true;touch331();}return;}
+ if(!b.twoTier)return;
+ let sel=b.sel;if(b.upPieces.some(p=>p.id===b.sel)){const g=pGeo331(b.sel);sel=pAt331(b.pieces,g.x+g.w/2).id;}
+ b.twoTier=false;b.sel=sel;b.offset=center331(sel,effZ331());touch331();
+}
+// ---- ανοιγμα / αποθήκευση -------------------------------------------------
+function cleanRow331(a,up){
+ return (Array.isArray(a)?a:[]).filter(p=>p&&typeof p==='object'&&p.id!=null).map(p=>{
+  let t=['glass','panel','column','door'].includes(p.type)?p.type:'glass';if(up&&t==='door')t='glass';
+  const names=t==='column'?[]:(Array.isArray(p.names)?p.names:[]).filter(x=>typeof x==='string').slice(0,4);
+  return mkP331(p.id,t,Math.max(1,Math.min(260,Number(p.w)||80)),names,t==='door'?(['single','double','auto'].includes(p.kind)?p.kind:'single'):'');
+ });
+}
+function normDesign331(d){d=d||{};const up=cleanRow331(d.upPieces,true);return{pieces:cleanRow331(d.pieces,false),upPieces:up,twoTier:!!d.twoTier&&up.length>0,signPos:d.signPos==='mid'?'mid':'top',meta:d.meta&&typeof d.meta==='object'?d.meta:{}};}
+function reset331(extra){Object.assign(B331,{open:true,step:1,zoom:1,offset:0,dirty:false,saving:false,error:'',conflict:false,savedMsg:'',leave:false,mz:0},extra);}
+function newFacade331(){
+ const used=new Set((V331.data?.facades||[]).map(f=>f.facade_no)),no=[1,2,3].find(n=>!used.has(n));if(!no)return;
+ reset331({no,rev:0,name:'Όψη '+no,twoTier:false,signPos:'top',next:4,pieces:[mkP331('p1','glass',160),mkP331('p2','door',50,[],'single'),mkP331('p3','glass',160)],upPieces:[],sel:'p1'});
+}
+function editFacade331(no){
+ const f=(V331.data?.facades||[]).find(x=>x.facade_no===no);if(!f)return;
+ const d=normDesign331(f.design),low=d.pieces,up=d.upPieces;if(!low.length)return;
+ const ids=[...low,...up].map(p=>parseInt(String(p.id).replace(/\D/g,''),10)||0);
+ reset331({no,rev:f.revision,name:f.name,twoTier:d.twoTier,signPos:d.signPos,next:Math.max(parseInt(d.meta.next,10)||0,Math.max(0,...ids)+1),pieces:low,upPieces:up,sel:low[0].id});
+}
+function designOut331(){
+ const b=B331,two=b.twoTier,defName=(p,up,i,nb)=>(up?'Πάνω τζάμι ':tl331(p.type)+' ')+(nb+i+1);
+ let n=0;
+ const row=(arr,up)=>arr.map(p=>{const names=p.type==='column'?[]:p.names.map((x,i)=>{const t=String(x).trim().slice(0,80);return t||defName(p,up,i,n);});n+=names.length;return{id:p.id,type:p.type,w:p.w,kind:p.kind||'',names};});
+ const low=row(b.pieces,false),up=two?row(b.upPieces,true):[];
+ return{pieces:low,upPieces:up,twoTier:two,signPos:b.signPos,meta:{next:b.next}};
+}
+function blocked331(){
+ const b=B331,f=(V331.data?.facades||[]).find(x=>x.facade_no===b.no);if(!b.rev||!f)return[];
+ const keep=new Set(allPos331({pieces:b.pieces,upPieces:b.upPieces,twoTier:b.twoTier}).map(p=>p.id)),old=allPos331(normDesign331(f.design)),names={};
+ old.forEach(p=>{names[p.id]=p.name;});
+ const ids=[...new Set((V331.data?.bookings||[]).filter(x=>x.facade_no===b.no&&!keep.has(x.position_id)).map(x=>x.position_id))];
+ return ids.map(id=>names[id]||id);
+}
+async function save331(){
+ const b=B331;if(b.saving)return;
+ const nm=b.name.trim();
+ if(!nm){b.error='Γράψε ένα όνομα για την όψη, π.χ. «Λεωφόρου».';render331();$('scl331Name')?.focus();return;}
+ if(blocked331().length){render331();return;}
+ b.saving=true;b.error='';b.conflict=false;b.savedMsg='';render331();
+ try{
+  const st=await api('scl330_vitrina_save_facade',{p_token:SCL_ROUTING.pharmacyToken,p_facade_no:b.no,p_expected_revision:b.rev,p_name:nm,p_design:designOut331()});
+  V331.data=st;V331.status='ready';
+  const f=(st.facades||[]).find(x=>x.facade_no===b.no);
+  if(f){b.rev=f.revision;b.name=f.name;}
+  b.dirty=false;
+  const cnt=allPos331({pieces:b.pieces,upPieces:b.upPieces,twoTier:b.twoTier}).length;
+  b.savedMsg=cnt?'Η όψη αποθηκεύτηκε με '+pl331(cnt,'θέση πώλησης','θέσεις πώλησης')+'.':'Η όψη αποθηκεύτηκε. Δεν έχεις ακόμη θέσεις πώλησης· μπορείς να τις προσθέσεις οποιαδήποτε στιγμή.';
+ }catch(e){b.error=msg331(e);b.conflict=/άλλαξε από άλλη συσκευή|δεν υπάρχει πια/.test(b.error);}
+ b.saving=false;render331();
+}
+async function reloadFacade331(){
+ const b=B331;if(b.saving)return;b.saving=true;b.error='';render331();
+ try{V331.data=await api('scl330_vitrina_get',{p_token:SCL_ROUTING.pharmacyToken});V331.status='ready';
+  const no=b.no,has=(V331.data.facades||[]).some(f=>f.facade_no===no);b.saving=false;b.open=false;if(has)editFacade331(no);}
+ catch(e){b.error=msg331(e);b.saving=false;}
+ render331();
+}
+async function delFacade331(no){
+ const f=(V331.data?.facades||[]).find(x=>x.facade_no===no);if(!f||V331.busy)return;
+ V331.busy=true;V331.error='';render331();
+ try{V331.data=await api('scl330_vitrina_delete_facade',{p_token:SCL_ROUTING.pharmacyToken,p_facade_no:no,p_expected_revision:f.revision});V331.delNo=0;V331.status='ready';}
+ catch(e){V331.error=msg331(e);}
+ V331.busy=false;render331();
+}
+// ---- σχεδίαση --------------------------------------------------------------
+function doorDeco331(kind,cw,ch){
+ const bar=(l,t,w,h,r)=>'<i class="scl331-db" style="left:'+l+'px;top:'+t+'px;width:'+w+'px;height:'+h+'px;border-radius:'+(r||0)+'px"></i>';
+ const tr=Math.round(ch*.27),hy=Math.round(ch*.56),hh=Math.max(12,Math.round(ch*.2));
+ let o=bar(0,tr,cw,2);
+ if(kind==='double')o+=bar(cw/2-1,tr,2,ch-tr)+bar(cw/2-12,hy,5,hh,3)+bar(cw/2+7,hy,5,hh,3);
+ else if(kind==='auto')o+=bar(cw/2-1,tr,2,ch-tr)+bar(cw/2-16,Math.max(2,tr-14),32,9,2)+bar(0,ch-5,cw,3)+'<i class="scl331-da" style="top:'+Math.round(ch*.5)+'px;font-size:'+Math.max(12,Math.round(ch*.14))+'px">↔</i>';
+ else o+=bar(cw-12,hy,5,hh,3)+bar(4,Math.round(ch*.36),3,10)+bar(4,Math.round(ch*.74),3,10);
+ return o;
+}
+// M = {pieces,upPieces,twoTier,signPos}· o = {z,off,mode:'edit'|'static',sel}
+function facade331(M,o){
+ const z=o.z,total=facW331({low:M.pieces,up:M.upPieces,two:M.twoTier}),W=total*z,off=o.off,two=!!M.twoTier;
+ const signTop=!two||M.signPos!=='mid',signMid=two&&M.signPos==='mid',hasBelt=two&&M.signPos!=='mid';
+ const H=Math.round(150*z),UH=Math.round(90*z),SH=Math.round(125*z),BH=Math.max(6,Math.round(18*z)),m=Math.max(3,Math.round(8*z)),g=Math.max(2,Math.round(6*z)),bs=z<.6?16:22;
+ const edit=o.mode==='edit',num={};allPos331(M).forEach(p=>{num[p.id]=p.num;});
+ const cell=(pc,isUp,pad)=>{
+  const doorCell=pc.type==='door'&&!isUp,ch=isUp?UH:H,pw=pc.w*z,k=pc.names.length,rw=k?(pw-2*m-g*(k-1))/k:0;
+  const rects=pc.names.map((nm,i)=>'<span class="scl331-ps" style="top:'+m+'px;bottom:'+m+'px;left:'+(m+i*(rw+g))+'px;width:'+rw+'px"><b class="scl331-pn" style="width:'+bs+'px;height:'+bs+'px;border-radius:'+bs/2+'px;font-size:'+(bs<20?11:12)+'px">'+(num[pc.id+'.'+i]||'')+'</b></span>').join('');
+  const deco=doorCell?doorDeco331(pc.kind||'single',pw,ch):'';
+  const what=pad?'Τοίχος (συμπλήρωμα πλάτους)':doorCell?dl331(pc.kind):(isUp?'Πάνω ':'')+tl331(pc.type,isUp).toLowerCase();
+  const aria=what+(k?', '+pl331(k,'θέση πώλησης','θέσεις πώλησης'):(pad?'':', χωρίς πώληση'));
+  const isSel=edit&&!pad&&o.sel===pc.id,cls='scl331-pc '+(pad?'panel pad':pc.type)+(isSel?' sel':''),st='width:'+pw+'px;height:'+ch+'px';
+  if(edit&&!pad)return '<button type="button" class="'+cls+'" style="'+st+'" data-b="pick" data-id="'+E(pc.id)+'"'+(isSel?' aria-current="true"':'')+' aria-label="'+E(aria)+'">'+deco+rects+'</button>';
+  return '<div class="'+cls+'" style="'+st+'"'+(edit?' role="img" aria-label="'+E(aria)+'"':'')+'>'+deco+rects+'</div>';
+ };
+ const row=(arr,isUp)=>{const cells=arr.map(pc=>cell(pc,isUp,false)),used=rowW331(arr);if(used<total-.5)cells.push(cell({id:'pad',type:'panel',w:total-used,kind:'',names:[]},isUp,true));return '<div class="scl331-row" style="width:'+W+'px">'+cells.join('')+'</div>';};
+ const zs=z*Math.min(1,total/360);
+ const sign='<div class="scl331-sg'+(signTop?' top':'')+'" style="width:'+W+'px;height:'+SH+'px"><i style="height:'+Math.round(18*z)+'px"></i><img src="'+SIGNURL331+'" alt="" style="top:'+Math.round(12*z+(94*z-94*zs)/2)+'px;height:'+Math.round(94*zs)+'px"><s style="left:calc(50% + '+Math.round(176*zs)+'px);bottom:'+Math.round(24*z)+'px;height:'+Math.max(3,Math.round(8*zs))+'px;clip-path:polygon('+Math.round(8*zs)+'px 0,100% 0,100% 100%,0 100%)"></s></div>';
+ const hs=(signTop?SH:0)+(signMid?SH:0)+(two?UH:0)+(hasBelt?BH:0)+H+3;
+ return{h:hs,html:'<div class="scl331-track" style="width:'+W+'px;transform:translateX('+(-off)+'px)">'+(signTop?sign:'')+(two?row(M.upPieces,true):'')+(hasBelt?'<div class="scl331-belt" style="width:'+W+'px;height:'+BH+'px"></div>':'')+(signMid?sign:'')+row(M.pieces,false)+'<div class="scl331-gnd" style="width:'+W+'px"></div></div>'};
+}
+function mini331(sel){
+ const b=B331,vw=VW331(),total=facW331(),r=vw/total,W=total*effZ331(),off=clampOff331(b.offset,W),two=!!b.twoTier,sh=two?24:44;
+ const mkCell=(pc,isUp,pad)=>{
+  const dark=pc.type==='panel'||pc.type==='column';
+  const segs=pc.names.map(()=>'<span class="scl331-ms"></span>').join('');
+  const lab=pad?'Τοίχος':'Μετάβαση στο κομμάτι: '+(pc.type==='door'?dl331(pc.kind):tl331(pc.type,isUp))+(isUp?' (πάνω σειρά)':'');
+  const cls='scl331-mc '+(pad||dark?'panel':pc.type==='door'&&!isUp?'door':'glass')+(!pad&&sel===pc.id?' sel':'');
+  return pad?'<span class="'+cls+'" style="width:'+pc.w*r+'px" aria-hidden="true"></span>':'<button type="button" class="'+cls+'" style="width:'+pc.w*r+'px" data-b="pick" data-s="m" data-id="'+E(pc.id)+'" aria-label="'+E(lab)+'">'+segs+'</button>';
+ };
+ const mkRow=(arr,isUp)=>{const cells=arr.map(pc=>mkCell(pc,isUp,false)),used=rowW331(arr);if(used<total-.5)cells.push(mkCell({id:'pad',type:'panel',w:total-used,kind:'',names:[]},isUp,true));return '<div class="scl331-mr" style="height:'+sh+'px">'+cells.join('')+'</div>';};
+ return '<div class="scl331-mini"><div class="scl331-minih">Μικρογραφία όλης της όψης: πάτα για να πας εκεί. Το μπλε πλαίσιο είναι ό,τι βλέπεις τώρα.</div><div class="scl331-minimap" style="height:'+(two?48:44)+'px">'+(two?mkRow(b.upPieces,true):'')+mkRow(b.pieces,false)+'<span class="scl331-win" style="left:'+(Math.max(0,off)/W)*vw+'px;width:'+Math.min(1,vw/W)*vw+'px"></span></div></div>';
+}
+const seg331=(label,on,attrs,o)=>'<button type="button" class="scl331-seg'+(on?' on':'')+(o&&o.cls?' '+o.cls:'')+'" aria-pressed="'+!!on+'"'+(o&&o.dis?' disabled':'')+' '+attrs+'>'+label+'</button>';
+const act331=(label,attrs,o)=>'<button type="button" class="scl331-seg scl331-act'+(o&&o.cls?' '+o.cls:'')+'"'+(o&&o.dis?' disabled':'')+(o&&o.aria?' aria-label="'+E(o.aria)+'"':'')+' '+attrs+'>'+label+'</button>';
+function stage331(sel){
+ const b=B331,vw=VW331(),total=facW331(),z=effZ331(),W=total*z,fit=zMin331(),off=clampOff331(b.offset,W),long=total>vw+.5;
+ const f=facade331(b,{z,off,mode:'edit',sel});
+ const isFit=Math.abs(z-fit)<.005,isRead=Math.abs(z-1)<.005,canL=W>vw&&off>1,canR=W>vw&&off<W-vw-1;
+ const up=curKey331()==='upPieces',arr=b[curKey331()],idx=arr.findIndex(p=>p.id===sel);
+ let h='<div class="scl331-stg"><div class="scl331-vp" id="scl331Vp" style="height:'+(f.h+38)+'px" data-off="'+Math.round(off)+'" data-w="'+Math.round(W)+'">'+f.html
+  +(canL?'<button type="button" class="scl331-pan scl331-panl" data-b="pan" data-d="-1" aria-label="Μετακίνηση αριστερά">‹</button>':'')
+  +(canR?'<button type="button" class="scl331-pan scl331-panr" data-b="pan" data-d="1" aria-label="Μετακίνηση δεξιά">›</button>':'')+'</div>';
+ if(long)h+='<div class="scl331-tb"><span class="scl331-tbl">Μεγέθυνση</span>'
+  +act331('−','data-b="zoom" data-v="out"',{aria:'Σμίκρυνση',cls:'sq'})+'<span class="scl331-zl" role="status">'+Math.round(z*100)+'%</span>'+act331('+','data-b="zoom" data-v="in"',{aria:'Μεγέθυνση',cls:'sq'})
+  +seg331('Ευανάγνωστο',isRead,'data-b="zoom" data-v="read"',{cls:'sm'})+seg331('Όλη η όψη',isFit,'data-b="zoom" data-v="fit"',{cls:'sm'})
+  +'<span class="scl331-grow"></span>'+act331('‹ Προηγούμενο κομμάτι','data-b="step" data-d="-1"',{cls:'sm'})+'<span class="scl331-cnt" role="status">Κομμάτι '+(idx+1)+' από '+arr.length+(b.twoTier?(up?' (πάνω)':' (κάτω)'):'')+'</span>'+act331('Επόμενο κομμάτι ›','data-b="step" data-d="1"',{cls:'sm'})+'</div>'+mini331(sel);
+ h+='<ul class="scl331-legend scl331-leg2"><li><i class="sw glass"></i>Τζάμι</li><li><i class="sw panel"></i>Πάνελ, κολώνα ή τοίχος</li><li><i class="sw door"></i>Πόρτα</li><li><i class="sw sale"></i>Θέση πώλησης (αριθμημένη)</li><li><i class="sw sign"></i>Πινακίδα (δεν πουλιέται)</li></ul></div>';
+ return h;
+}
+function step1_331(sel,up,row,idx){
+ const b=B331,types=up?['glass','panel','column']:['glass','panel','column','door'];
+ const stepW=sel.type==='column'?5:10,lock=row.length>=MAXPIECES331;
+ const doorKinds=[['single','Μονή','Ένα φύλλο'],['double','Διπλή','Δύο φύλλα'],['auto','Αυτόματη','Συρόμενη, με αισθητήρα']];
+ const title=(b.twoTier?(up?'Πάνω σειρά':'Κάτω σειρά')+' · ':'')+tl331(sel.type,up)+(sel.type==='door'?' · '+dl331(sel.kind):'')+' · '+(idx+1)+'ο κομμάτι από αριστερά';
+ const left='<div class="scl331-pn1"><div class="scl331-selh"><span class="k">Κομμάτι που διάλεξες</span><strong>'+E(title)+'</strong><span class="s">Πάτα ένα άλλο κομμάτι στο σχέδιο για να το αλλάξεις.</span></div>'
+  +'<div class="scl331-grp" role="group" aria-label="Τι είναι"><span class="scl331-gl">Τι είναι</span><div class="scl331-g" style="--n:'+types.length+'">'+types.map(t=>seg331(tl331(t,up),sel.type===t,'data-b="type" data-v="'+t+'"')).join('')+'</div></div>'
+  +(sel.type==='door'?'<div class="scl331-grp" role="group" aria-label="Είδος πόρτας"><span class="scl331-gl">Είδος πόρτας</span><div class="scl331-g" style="--n:3">'+doorKinds.map(d=>seg331('<b>'+d[1]+'</b><small>'+d[2]+'</small>',sel.kind===d[0],'data-b="kind" data-v="'+d[0]+'"',{cls:'tall'})).join('')+'</div></div>':'')
+  +'<div class="scl331-grp" role="group" aria-label="Πλάτος"><span class="scl331-gl">Πλάτος</span><div class="scl331-wrow">'+act331('−','data-b="w" data-d="-'+stepW+'"',{aria:'Στένεψε το κομμάτι',cls:'sq big'})+'<span class="scl331-wv" role="status">'+sel.w+'</span>'+act331('+','data-b="w" data-d="'+stepW+'"',{aria:'Πλάτυνε το κομμάτι',cls:'sq big'})
+  +((sel.type==='glass'||sel.type==='panel')?'<span class="scl331-vsep"></span>'+[['Στενό',50],['Κανονικό',80],['Πλατύ',120]].map(p=>seg331(p[0],sel.w===p[1],'data-b="wset" data-v="'+p[1]+'"',{cls:'sm'})).join(''):'')+'</div><span class="scl331-note">Το πλάτος είναι σχετικό μέγεθος, όχι εκατοστά. Φτάνει να μοιάζει με την πραγματική όψη.</span></div>'
+  +'<div class="scl331-mv">'+act331('‹ Μετακίνηση αριστερά','data-b="mv" data-d="-1"',{cls:'sm',dis:idx===0})+act331('Μετακίνηση δεξιά ›','data-b="mv" data-d="1"',{cls:'sm',dis:idx===row.length-1})+'<span class="scl331-grow"></span>'+act331('Διαγραφή κομματιού','data-b="rm"',{cls:'danger sm',dis:row.length<=1})+'</div>'
+  +(row.length<=1?'<span class="scl331-note">Η σειρά χρειάζεται τουλάχιστον ένα κομμάτι.</span>':'')+'</div>';
+ const right='<div class="scl331-pn1 scl331-col2"><div class="scl331-box"><div class="scl331-boxh"><strong>'+(b.twoTier?'Πρόσθεσε κομμάτι στην '+(up?'πάνω':'κάτω')+' σειρά':'Πρόσθεσε κομμάτι')+'</strong><span class="s">Μπαίνει αμέσως δεξιά από αυτό που διάλεξες.</span></div><div class="scl331-g2">'+types.map(t=>act331('+ '+tl331(t,up),'data-b="add" data-v="'+t+'"',{cls:'pri',dis:lock})).join('')+'</div>'+(lock?'<span class="scl331-note">Έχεις φτάσει το μέγιστο αριθμό κομματιών σε αυτή τη σειρά.</span>':'')+'</div>'
+  +'<div class="scl331-box"><div class="scl331-boxh"><strong>Έχει η όψη και πάνω τζαμαρία;</strong><span class="s">Αν πάνω από την κάτω τζαμαρία υπάρχει τοίχος και ξανά τζάμια, πες «Ναι». Η πάνω σειρά ξεκινά ίδια με την κάτω, αλλά την αλλάζεις ελεύθερα με δικά της πλάτη και κομμάτια.</span></div>'
+  +'<div class="scl331-g" style="--n:2" role="group" aria-label="Πάνω τζαμαρία">'+seg331('Όχι',!b.twoTier,'data-b="tier" data-v="0"')+seg331('Ναι',b.twoTier,'data-b="tier" data-v="1"')+'</div>'
+  +(b.twoTier?'<div class="scl331-grp" role="group" aria-label="Πού είναι η πινακίδα"><span class="scl331-gl">Πού είναι η πινακίδα;</span><div class="scl331-g" style="--n:2">'+[['top','Πάνω από όλα','Ανάμεσα στις τζαμαρίες υπάρχει λεπτός τοίχος'],['mid','Ανάμεσα στις τζαμαρίες','Η πινακίδα είναι ο οριζόντιος τοίχος']].map(d=>seg331('<b>'+d[1]+'</b><small>'+d[2]+'</small>',b.signPos===d[0],'data-b="sign" data-v="'+d[0]+'"',{cls:'tall'})).join('')+'</div>'+act331('Ξαναφτιάξε την πάνω σειρά ίδια με την κάτω','data-b="mirror"')+'</div>':'')+'</div></div>';
+ return '<div class="scl331-2col">'+left+right+'</div>';
+}
+function step2_331(sel,up,positions){
+ const b=B331,mx=maxPos331(sel.w),groups=[['Κάτω τζαμαρία','low'],['Πάνω τζαμαρία','up']].map(g=>[g[0],positions.filter(p=>p.tier===g[1])]).filter(g=>g[1].length);
+ const title=(b.twoTier?(up?'Πάνω σειρά':'Κάτω σειρά')+' · ':'')+tl331(sel.type,up)+(sel.type==='door'?' · '+dl331(sel.kind):'');
+ const nums={};positions.forEach(p=>{nums[p.id]=p.num;});
+ const heading=b.twoTier?(up?'Πάνω τζαμαρία: πόσες θέσεις πώλησης έχει;':'Κάτω τζαμαρία: πόσες θέσεις πώλησης έχει;'):'Πόσες θέσεις πώλησης έχει;';
+ const left='<div class="scl331-pn1"><div class="scl331-selh"><span class="k">Θέσεις στο κομμάτι που διάλεξες</span><strong>'+E(title)+'</strong><span class="s">Πάτα ένα άλλο κομμάτι στο σχέδιο για να αλλάξεις τις θέσεις του.</span></div>'
+  +(mx===0?'<div class="scl331-warn" role="status">Αυτό το κομμάτι είναι πολύ στενό για θέση πώλησης. Πήγαινε στο Βήμα 1 και πλάτυνέ το αν θέλεις.</div>'
+   :'<div class="scl331-grp" role="group" aria-label="'+E(heading)+'"><span class="scl331-gl">'+E(heading)+'</span><div class="scl331-g scl331-gc">'+[0,1,2,3,4].map(n=>seg331(n===0?'Καμία':String(n),sel.names.length===n,'data-b="count" data-v="'+n+'"',{dis:n>mx})).join('')+'</div>'
+   +sel.names.map((nm,i)=>'<label class="scl331-nm"><span class="scl331-pn big">'+(nums[sel.id+'.'+i]||'')+'</span><input type="text" maxlength="80" value="'+E(nm)+'" placeholder="Όνομα θέσης" aria-label="Όνομα θέσης '+(nums[sel.id+'.'+i]||'')+'" data-b="pname" data-i="'+i+'" autocomplete="off"></label>').join('')+'</div>')
+  +(b.twoTier?'<div class="scl331-note">Συχνά θέση πώλησης είναι το τζάμι ακριβώς πάνω από την είσοδο: διάλεξέ το από την πάνω σειρά και δώσε του θέση.</div>':'')+'</div>';
+ return '<div class="scl331-2col">'+left+'<div class="scl331-pn1 scl331-col2" id="scl331Plist">'+plist331(positions,groups,sel)+'</div></div>';
+}
+function plist331(positions,groups,sel){
+ groups=groups||[['Κάτω τζαμαρία','low'],['Πάνω τζαμαρία','up']].map(g=>[g[0],positions.filter(p=>p.tier===g[1])]).filter(g=>g[1].length);
+ return '<div class="scl331-boxh"><strong>Όλες οι θέσεις σου ('+positions.length+')</strong><span class="s">Πάτα μία για να πας στο κομμάτι της.</span></div>'
+  +(positions.length?groups.map(g=>'<div class="scl331-plg">'+(B331.twoTier?'<span class="scl331-gl">'+g[0]+'</span>':'')+g[1].map(p=>'<button type="button" class="scl331-pi'+(sel&&p.piece===sel.id?' on':'')+'" data-b="pick" data-s="l" data-id="'+E(p.piece)+'" aria-label="Θέση '+p.num+' '+E(p.name)+'"><span class="scl331-pn big">'+p.num+'</span><span class="scl331-pnm">'+E(p.name)+'</span></button>').join('')+'</div>').join(''):'<span class="scl331-note">Δεν έχεις ακόμη θέσεις πώλησης. Διάλεξε ένα κομμάτι και πάτα έναν αριθμό.</span>');
+}
+function builder331(){
+ const b=B331,sel=selPiece331(),key=curKey331(),up=key==='upPieces',row=b[key],idx=row.findIndex(p=>p.id===sel.id),positions=allPos331(b);
+ const s1=b.step===1,miss=blocked331(),lowW=rowW331(b.pieces),upW=rowW331(b.upPieces),diff=Math.round(Math.abs(lowW-upW));
+ const stepBtn=(n,t,sub)=>'<button type="button" class="scl331-stp'+(b.step===n?' on':'')+'" data-b="stp" data-v="'+n+'" aria-pressed="'+(b.step===n)+'"><span class="n">'+n+'</span><span class="t"><strong>'+t+'</strong><small>'+sub+'</small></span></button>';
+ return '<div class="scl331-card scl331-bd">'
+  +'<button type="button" class="scl331-link" data-b="leave">‹ Όλες οι όψεις</button>'
+  +'<div class="scl331-bhead"><div class="scl331-lead"><h2 id="scl331Title" tabindex="-1">Σχεδίασε την όψη του φαρμακείου σου</h2><p>Δύο απλά βήματα: πρώτα φτιάχνεις το σχήμα της όψης, μετά σημειώνεις πού πουλάς θέσεις. Δεν χρειάζονται μετρήσεις, φτάνει να μοιάζει με την πραγματική όψη.</p></div></div>'
+  +'<div class="scl331-bar"><label class="scl331-fname"><span>Όνομα όψης</span><input id="scl331Name" type="text" maxlength="80" value="'+E(b.name)+'" placeholder="π.χ. Λεωφόρου" data-b="name" autocomplete="off"></label><span class="scl331-fno">Όψη '+b.no+(b.rev?'':' · νέα')+'</span></div>'
+  +(b.leave?'<div class="scl331-confirm" role="alertdialog" aria-label="Έξοδος χωρίς αποθήκευση"><span>Έχεις αλλαγές που δεν αποθηκεύτηκαν. Να φύγεις χωρίς να τις αποθηκεύσεις;</span><span class="scl331-cbtn">'+act331('Ναι, φεύγω','data-b="leaveok"',{cls:'danger'})+act331('Μένω εδώ','data-b="leavecancel"')+'</span></div>':'')
+  +'<div class="scl331-stps">'+stepBtn(1,'Φτιάξε την όψη','Κομμάτια, πλάτος, πόρτες')+stepBtn(2,'Σημείωσε τις θέσεις πώλησης','Πού μπαίνουν αφίσες και υλικά')+'</div>'
+  +'<div class="scl331-help"><strong>'+(s1?'Βήμα 1 από 2 · Φτιάξε την όψη':'Βήμα 2 από 2 · Σημείωσε τις θέσεις πώλησης')+'</strong><span>'+(s1?'Πάτα ένα κομμάτι στο σχέδιο για να αλλάξεις το είδος, το πλάτος ή την πόρτα του. Με το «Πρόσθεσε κομμάτι» βάζεις νέα, από αριστερά προς τα δεξιά.':'Πάτα ένα κομμάτι στο σχέδιο και διάλεξε πόσες θέσεις πώλησης έχει. Ένα μεγάλο τζάμι μπορεί να χωριστεί σε έως 4. Δώσε και ένα όνομα σε κάθε θέση.')+'</span></div>'
+  +(b.twoTier?'<div class="scl331-rows"><div class="scl331-grp" role="group" aria-label="Ποια σειρά αλλάζεις"><span class="scl331-gl">Ποια σειρά αλλάζεις;</span><div class="scl331-g" style="--n:2">'+seg331('Πάνω σειρά',up,'data-b="row" data-v="up"')+seg331('Κάτω σειρά',!up,'data-b="row" data-v="low"')+'</div></div><span class="scl331-rw" role="status">Πλάτος σειράς: πάνω '+Math.round(upW)+' · κάτω '+Math.round(lowW)+'</span>'+(diff>0?'<div class="scl331-warn" role="status">Η '+(upW<lowW?'πάνω':'κάτω')+' σειρά είναι πιο στενή κατά '+diff+'. Ο υπόλοιπος χώρος φαίνεται ως τοίχος. Άλλαξε πλάτη ή πρόσθεσε κομμάτι ώστε να ταιριάζουν.</div>':'')+'</div>':'')
+  +stage331(sel.id)
+  +(s1?step1_331(sel,up,row,idx):step2_331(sel,up,positions))
+  +'<div class="scl331-bfoot">'+(s1?'<span class="scl331-hintf">Όταν η όψη μοιάζει με την πραγματική, συνέχισε.</span><button type="button" class="action blue scl331-btn" data-b="stp" data-v="2">Συνέχεια: θέσεις πώλησης ›</button>'
+    :'<button type="button" class="scl331-seg scl331-act" data-b="stp" data-v="1">‹ Πίσω στην όψη</button><span class="scl331-grow"></span><button type="button" class="action blue scl331-btn" data-b="save"'+(b.saving||miss.length?' disabled':'')+(b.saving?' aria-busy="true"':'')+'>'+(b.saving?'Αποθήκευση…':'Αποθήκευση όψης')+'</button>')+'</div>'
+  +'<div class="scl331-msgs" id="scl331Msgs">'+msgs331(miss)+'</div></div>';
+}
+function msgs331(miss){
+ const b=B331;
+ return (b.dirty&&!b.savedMsg?'<p class="scl331-dirty">Έχεις αλλαγές που δεν έχουν αποθηκευτεί. Θα αποθηκευτούν όταν πατήσεις «Αποθήκευση όψης» στο Βήμα 2.</p>':'')
+  +(miss.length?'<p class="scl331-error" role="alert">Δεν μπορείς να αφαιρέσεις θέσεις που έχουν κρατήσεις: '+miss.map(x=>'«'+E(x)+'»').join(', ')+'. Διέγραψε πρώτα τις κρατήσεις τους ή κράτησε τις θέσεις.</p>':'')
+  +(b.error?'<p class="scl331-error" role="alert">'+E(b.error)+'</p>'+(b.conflict?'<div class="scl331-actions">'+act331('Φόρτωσε ξανά την αποθηκευμένη όψη','data-b="reload"')+'</div><p class="scl331-note">Οι αλλαγές που έκανες εδώ θα χαθούν.</p>':''):'')
+  +(b.savedMsg?'<div class="scl331-ok" role="status"><span>'+E(b.savedMsg)+'</span>'+act331('Πίσω στις όψεις','data-b="done"')+'</div>':'');
+}
+function previewFacade331(M){
+ if(!M.pieces.length)return '';
+ const w=facW331({low:M.pieces,up:M.upPieces,two:M.twoTier}),f=facade331(M,{z:1,off:0,mode:'static'});
+ return '<div class="scl331-prev"><div class="scl331-previn" data-w="'+w+'" style="width:'+w+'px">'+f.html+'</div></div>';
+}
+function list331(){
+ const f=V331.data?.facades||[],bk=V331.data?.bookings||[],can=f.length<3;
+ const err=V331.error?'<p class="scl331-error" role="alert">'+E(V331.error)+'</p>':'';
+ if(!f.length)return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Ξεκίνα σχεδιάζοντας την όψη του φαρμακείου</h2><p>Δεν έχεις ακόμη κομμάτια στη Βιτρίνα. Πρόσθεσε πρώτα τα κομμάτια της όψης και μετά σημείωσε ποια είναι θέσεις πώλησης.</p>'
+  +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-b="new">Σχεδίασε την όψη</button></div>'
+  +'<p class="scl331-hint">Γωνιακό φαρμακείο; Μπορείς να σχεδιάσεις έως 3 όψεις.</p>'+err+'</div>';
+ return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Οι όψεις του φαρμακείου σου</h2><p>Πάτα «Επεξεργασία» για να αλλάξεις το σχέδιο μιας όψης. Γωνιακό φαρμακείο; Μπορείς να έχεις έως 3 όψεις.</p>'
+  +'<ul class="scl331-fl">'+f.map(x=>{
+   const d=normDesign331(x.design),cnt=allPos331(d).length,np=d.pieces.length+(d.twoTier?d.upPieces.length:0),nb=bk.filter(y=>y.facade_no===x.facade_no).length,conf=V331.delNo===x.facade_no;
+   return '<li class="scl331-fi">'+previewFacade331(d)+'<div class="scl331-fm"><div><strong>'+E(x.name)+'</strong><span>Όψη '+x.facade_no+' · '+pl331(np,'κομμάτι','κομμάτια')+' · '+pl331(cnt,'θέση πώλησης','θέσεις πώλησης')+'</span></div>'
+   +(conf?'<div class="scl331-confirm" role="alertdialog" aria-label="Διαγραφή όψης"><span>Να διαγραφεί η όψη «'+E(x.name)+'»; Θα χαθεί το σχέδιό της'+(nb?' και '+pl331(nb,'κράτησή της','κρατήσεις της'):'')+'. Δεν γίνεται αναίρεση.</span><span class="scl331-cbtn">'+act331(V331.busy?'Διαγραφή…':'Ναι, διαγραφή','data-b="delok" data-no="'+x.facade_no+'"',{cls:'danger',dis:V331.busy})+act331('Όχι','data-b="delcancel"',{dis:V331.busy})+'</span></div>'
+    :'<div class="scl331-fb">'+act331('Επεξεργασία','data-b="edit" data-no="'+x.facade_no+'"',{cls:'pri'})+act331('Διαγραφή','data-b="del" data-no="'+x.facade_no+'"',{cls:'danger',aria:'Διαγραφή της όψης '+x.name})+'</div>')+'</div></li>';}).join('')+'</ul>'
+  +(can?'<div class="scl331-actions">'+act331('+ Πρόσθεσε άλλη όψη','data-b="new"',{cls:'pri'})+'</div>':'<p class="scl331-hint">Έχεις τον μέγιστο αριθμό όψεων (3).</p>')+err+'</div>';
+}
+// ---- DOM: εστίαση, μέτρηση πλάτους, γεγονότα --------------------------------
+const fkey331=el=>el&&el.dataset?[el.dataset.b||'',el.dataset.v??'',el.dataset.id??'',el.dataset.d??'',el.dataset.i??'',el.dataset.s??'',el.dataset.no??''].join('|'):'';
+function syncVw331(){
+ const vp=$('scl331Vp');if(!B331.open||!vp)return false;
+ const w=Math.round(vp.clientWidth);
+ if(w>0&&Math.abs(w-B331.vw)>1&&B331.mz<4){B331.vw=w;B331.mz++;return true;}
+ return false;
+}
+window.addEventListener('resize',()=>requestAnimationFrame(()=>{if(B331.open&&$('scl331Vp')){B331.mz=0;if(syncVw331())render331();}}));
+window.addEventListener('beforeunload',e=>{if(B331.open&&B331.dirty){e.preventDefault();e.returnValue='';}});
+function closeBuilder331(){B331.open=false;B331.leave=false;V331.focusTitle=true;}
+function updPlist331(){
+ const box=$('scl331Plist');if(box)box.innerHTML=plist331(allPos331(B331),null,selPiece331());
+ const m=$('scl331Msgs');if(m)m.innerHTML=msgs331(blocked331());
+ V331.html='';
+}
+const host331=()=>$('scl331Host');
+document.addEventListener('click',e=>{
+ const t=e.target.closest?.('[data-b]');if(!t||!host331()?.contains(t)||t.disabled||t.tagName==='INPUT')return;
+ e.preventDefault();
+ const b=B331,a=t.dataset.b,v=t.dataset.v,d=+t.dataset.d;
+ let keep=false; // true = αλλαγή που ξαναζωγραφίζει την όψη
+ switch(a){
+  case 'new':newFacade331();V331.focusTitle=true;V331.error='';break;
+  case 'edit':editFacade331(+t.dataset.no);V331.focusTitle=true;V331.error='';break;
+  case 'del':V331.delNo=+t.dataset.no;V331.error='';break;
+  case 'delcancel':V331.delNo=0;break;
+  case 'delok':delFacade331(+t.dataset.no);return;
+  case 'leave':if(b.dirty)b.leave=true;else closeBuilder331();break;
+  case 'leaveok':b.dirty=false;closeBuilder331();break;
+  case 'leavecancel':b.leave=false;break;
+  case 'done':closeBuilder331();break;
+  case 'reload':reloadFacade331();return;
+  case 'save':save331();return;
+  case 'stp':b.step=+v===2?2:1;if(t.closest('.scl331-bfoot'))V331.scrollSteps=true;break;
+  case 'pick':pick331(t.dataset.id);break;
+  case 'type':setType331(v);break;
+  case 'kind':setKind331(v);break;
+  case 'w':setW331(selPiece331().w+d);break;
+  case 'wset':setW331(+v);break;
+  case 'mv':moveSel331(d);break;
+  case 'rm':removeSel331();break;
+  case 'add':addPiece331(v);break;
+  case 'tier':setTwoTier331(v==='1');break;
+  case 'sign':if(b.signPos!==v){b.signPos=v;touch331();}break;
+  case 'mirror':mirrorUp331();break;
+  case 'row':setRow331(v);break;
+  case 'count':setCount331(+v);break;
+  case 'zoom':if(v==='in')zoomTo331(effZ331()+.25,null);else if(v==='out')zoomTo331(effZ331()-.25,null);else if(v==='read')zoomTo331(1,b.sel);else{b.zoom=zMin331();b.offset=0;}break;
+  case 'pan':panBy331(d*VW331()*.6);break;
+  case 'step':stepPiece331(d);break;
+  default:return;
+ }
+ render331();
+});
+document.addEventListener('input',e=>{
+ const t=e.target;if(!t.matches?.('[data-b="name"],[data-b="pname"]')||!host331()?.contains(t))return;
+ const b=B331;
+ if(t.dataset.b==='name'){b.name=t.value;b.dirty=true;b.savedMsg='';b.error='';b.conflict=false;}
+ else{const i=+t.dataset.i,k=curKey331();b[k]=b[k].map(p=>{if(p.id!==b.sel)return p;const n=p.names.slice();n[i]=t.value;return Object.assign({},p,{names:n});});touch331();}
+ V331.html='';
+ updPlist331();
 });
 
 function canEditMonth(c,m){return y()>=now().year&&active(c,m)&&operationalMonthEditable(m);}
@@ -46279,12 +46639,180 @@ body.scl295-pharmacy #scl331Host .scl331-facades{display:grid;gap:8px;margin:0;p
 body.scl295-pharmacy #scl331Host .scl331-facades li{display:flex;justify-content:space-between;gap:12px;padding:14px 16px;border-radius:12px;background:var(--fill);color:var(--ink)}
 body.scl295-pharmacy #scl331Host .scl331-facades span{color:var(--muted);font-size:13px}
 body.scl295-pharmacy[data-scl324-theme="dark"] #scl331Host .scl331-stage{background:#101012}
-body.scl295-pharmacy[data-scl324-theme="dark"] #scl331Host .scl331-legend .sw.panel{box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)}
+body.scl295-pharmacy[data-scl324-theme="dark"] #scl331Host .scl331-legend .sw.panel,body.scl295-pharmacy[data-scl324-theme="dark"] #scl331Host .scl331-legend .sw.sign{box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)}
 @media(max-width:900px){
 body.scl295-pharmacy #scl331Host .scl331-card{padding:20px;gap:20px}
 body.scl295-pharmacy #scl331Host .scl331-steps{grid-template-columns:1fr}
 body.scl295-pharmacy #scl331Host .scl331-foot{grid-template-columns:1fr}
 body.scl295-pharmacy #scl331Host .scl331-foot .scl331-btn{width:100%}
 body.scl295-pharmacy #scl331Host .scl331-stage{padding:16px 10px 12px}
+}
+/* v331.1 — σχεδιαστής όψης */
+body.scl295-pharmacy{--scl331-ring:rgba(0,0,0,.14);--scl331-vpbg:#fbfbfd;--scl331-sela:#1d1d1f;--scl331-selb:rgba(255,255,255,.92)}
+body.scl295-pharmacy[data-scl324-theme="dark"]{--scl331-ring:rgba(255,255,255,.24);--scl331-vpbg:#101012}
+body.scl295-pharmacy #scl331Host .scl331-bd{align-items:stretch;gap:18px}
+body.scl295-pharmacy #scl331Host .scl331-bd .scl331-lead{gap:6px}
+body.scl295-pharmacy #scl331Host .scl331-bar{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-bd>.scl331-link{align-self:flex-start;margin:-8px 0 -6px -4px}
+body.scl295-pharmacy #scl331Host .scl331-link{min-height:44px;padding:0 4px;border:0;background:none;color:var(--accent-ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;border-radius:8px}
+body.scl295-pharmacy #scl331Host .scl331-link:hover{text-decoration:underline}
+body.scl295-pharmacy #scl331Host .scl331-fname{display:flex;flex-direction:column;gap:4px;flex:1 1 260px;max-width:420px}
+body.scl295-pharmacy #scl331Host .scl331-fname span{font-size:12px;font-weight:600;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-fname input,body.scl295-pharmacy #scl331Host .scl331-nm input{min-height:44px;box-sizing:border-box;padding:0 12px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;font-size:15px;width:100%}
+body.scl295-pharmacy #scl331Host .scl331-fname input:focus-visible,body.scl295-pharmacy #scl331Host .scl331-nm input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+body.scl295-pharmacy #scl331Host .scl331-fno{align-self:center;font-size:13px;font-weight:700;color:var(--muted);white-space:nowrap}
+body.scl295-pharmacy #scl331Host .scl331-confirm{display:flex;align-items:center;justify-content:space-between;gap:12px 18px;flex-wrap:wrap;padding:14px 16px;border-radius:12px;background:var(--accent-soft);color:var(--ink);font-size:14px;line-height:1.45}
+body.scl295-pharmacy #scl331Host .scl331-cbtn{display:flex;gap:8px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-stps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+body.scl295-pharmacy #scl331Host .scl331-stp{display:flex;align-items:center;gap:12px;min-height:64px;padding:0 18px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-stp .n{flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:16px;background:var(--accent-soft);color:var(--accent-ink);font-size:15px;font-weight:800}
+body.scl295-pharmacy #scl331Host .scl331-stp .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+body.scl295-pharmacy #scl331Host .scl331-stp strong{font-size:15px;font-weight:700}
+body.scl295-pharmacy #scl331Host .scl331-stp small{font-size:12px;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-stp.on{background:var(--accent);box-shadow:none;color:var(--on-accent)}
+body.scl295-pharmacy #scl331Host .scl331-stp.on .n{background:var(--on-accent);color:var(--accent)}
+body.scl295-pharmacy #scl331Host .scl331-stp.on small{color:inherit;opacity:.85}
+body.scl295-pharmacy #scl331Host .scl331-help{display:flex;flex-direction:column;gap:3px;padding:14px 18px;border-radius:12px;background:var(--accent-soft);font-size:14px;line-height:1.5;color:var(--ink2)}
+body.scl295-pharmacy #scl331Host .scl331-help strong{color:var(--accent-ink);font-size:14px}
+body.scl295-pharmacy #scl331Host .scl331-rows{display:flex;align-items:center;gap:10px 18px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-rows .scl331-warn{flex:1 1 100%}
+body.scl295-pharmacy #scl331Host .scl331-rw{font-size:13px;font-weight:600;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-warn{padding:12px 14px;border-radius:12px;background:var(--scl330-promo-bg);color:var(--scl330-promo-ink);font-size:13px;line-height:1.5;font-weight:600}
+/* σκηνή */
+body.scl295-pharmacy #scl331Host .scl331-stg{display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:14px;background:var(--fill)}
+body.scl295-pharmacy #scl331Host .scl331-vp{position:relative;overflow:hidden;box-sizing:border-box;width:100%;padding:24px 0 14px;border-radius:10px;background:var(--scl331-vpbg);box-shadow:inset 0 0 0 1px var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-track{display:flex;flex-direction:column;transition:transform .3s ease}
+body.scl295-pharmacy #scl331Host .scl331-row{display:flex;align-items:flex-end}
+body.scl295-pharmacy #scl331Host .scl331-pc{position:relative;flex:none;display:block;box-sizing:border-box;margin:0;padding:0;border:0;font:inherit}
+body.scl295-pharmacy #scl331Host button.scl331-pc{cursor:pointer}
+body.scl295-pharmacy #scl331Host button.scl331-pc:focus-visible{outline:3px solid var(--accent);outline-offset:-3px;z-index:6}
+body.scl295-pharmacy #scl331Host .scl331-pc.glass{background:var(--scl331-glass);box-shadow:inset 0 0 0 1px var(--scl331-glass-line)}
+body.scl295-pharmacy #scl331Host .scl331-pc.panel,body.scl295-pharmacy #scl331Host .scl331-pc.column{background:var(--scl331-panel);box-shadow:inset 0 0 0 1px var(--scl331-panel-line)}
+body.scl295-pharmacy #scl331Host .scl331-pc.door{background:var(--scl331-door);box-shadow:inset 0 0 0 1px var(--scl331-glass-line)}
+body.scl295-pharmacy #scl331Host .scl331-pc.sel{outline:3px solid var(--scl331-sela);outline-offset:-3px;box-shadow:inset 0 0 0 6px var(--scl331-selb);z-index:5}
+body.scl295-pharmacy #scl331Host .scl331-pc.sel.glass,body.scl295-pharmacy #scl331Host .scl331-pc.sel.door{box-shadow:inset 0 0 0 6px var(--scl331-selb)}
+body.scl295-pharmacy #scl331Host .scl331-db{position:absolute;background:var(--scl331-panel-line)}
+body.scl295-pharmacy #scl331Host .scl331-da{position:absolute;left:0;right:0;text-align:center;font-style:normal;font-weight:800;line-height:1;color:var(--scl331-panel-line)}
+body.scl295-pharmacy #scl331Host .scl331-ps{position:absolute;box-sizing:border-box;z-index:2;display:flex;align-items:center;justify-content:center;border:2px dashed #2459e0;border-radius:3px;background:rgba(255,255,255,.35)}
+body.scl295-pharmacy #scl331Host .scl331-pc.panel .scl331-ps,body.scl295-pharmacy #scl331Host .scl331-pc.column .scl331-ps{border-color:#fff;background:transparent}
+body.scl295-pharmacy #scl331Host .scl331-pn{flex:none;display:inline-flex;align-items:center;justify-content:center;font-weight:800;background:#2459e0;color:#fff}
+body.scl295-pharmacy #scl331Host .scl331-pc.panel .scl331-pn,body.scl295-pharmacy #scl331Host .scl331-pc.column .scl331-pn{background:#fff;color:#1d1d1f}
+body.scl295-pharmacy #scl331Host .scl331-pn.big{width:32px;height:32px;border-radius:16px;font-size:13px;background:var(--accent);color:var(--on-accent)}
+body.scl295-pharmacy #scl331Host .scl331-sg{position:relative;flex:none;overflow:hidden;background:repeating-linear-gradient(180deg,var(--scl331-wall) 0,var(--scl331-wall) 3px,var(--scl331-wall2) 3px,var(--scl331-wall2) 6px)}
+body.scl295-pharmacy #scl331Host .scl331-sg.top{border-radius:4px 4px 0 0}
+body.scl295-pharmacy #scl331Host .scl331-sg>i{position:absolute;left:0;right:0;bottom:0;background:#2b2b2f}
+body.scl295-pharmacy #scl331Host .scl331-sg>img{position:absolute;left:50%;width:auto;transform:translateX(-50%);z-index:1;max-width:none}
+body.scl295-pharmacy #scl331Host .scl331-sg>s{position:absolute;right:0;background:#f47b20;z-index:2}
+body.scl295-pharmacy #scl331Host .scl331-belt{flex:none;box-sizing:border-box;background:#3a3a40;box-shadow:inset 0 0 0 1px #2f2f34}
+body.scl295-pharmacy #scl331Host .scl331-gnd{height:3px;background:#1d1d1f}
+body.scl295-pharmacy #scl331Host .scl331-pan{position:absolute;top:50%;margin-top:-26px;width:52px;height:52px;border:0;border-radius:26px;background:rgba(29,29,31,.82);color:#fff;font:inherit;font-size:24px;cursor:pointer;z-index:10}
+body.scl295-pharmacy #scl331Host .scl331-pan:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+body.scl295-pharmacy #scl331Host .scl331-panl{left:8px}
+body.scl295-pharmacy #scl331Host .scl331-panr{right:8px}
+body.scl295-pharmacy #scl331Host .scl331-tb{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-tbl{font-size:12px;font-weight:600;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-zl{min-width:52px;text-align:center;font-size:14px;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-cnt{min-width:100px;text-align:center;font-size:13px;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-grow{flex:1}
+body.scl295-pharmacy #scl331Host .scl331-mini{display:flex;flex-direction:column;gap:6px}
+body.scl295-pharmacy #scl331Host .scl331-minih{font-size:12px;font-weight:600;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-minimap{position:relative;width:100%;display:flex;flex-direction:column;overflow:hidden;border-radius:6px;background:#2c2c30;box-shadow:0 0 0 1px var(--scl331-ring)}
+body.scl295-pharmacy #scl331Host .scl331-mr{flex:none;display:flex}
+body.scl295-pharmacy #scl331Host .scl331-mc{flex:none;display:flex;align-items:stretch;box-sizing:border-box;margin:0;padding:0;border:0;cursor:pointer;font:inherit}
+body.scl295-pharmacy #scl331Host .scl331-mc.glass{background:var(--scl331-glass)}
+body.scl295-pharmacy #scl331Host .scl331-mc.panel{background:var(--scl331-panel)}
+body.scl295-pharmacy #scl331Host .scl331-mc.door{background:var(--scl331-door)}
+body.scl295-pharmacy #scl331Host .scl331-mc.sel{box-shadow:inset 0 0 0 2px #1d1d1f}
+body.scl295-pharmacy #scl331Host .scl331-mc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;z-index:2}
+body.scl295-pharmacy #scl331Host .scl331-ms{flex:1;margin:4px 1px;border-radius:1px;background:#fff;box-shadow:inset 0 0 0 1px #2459e0}
+body.scl295-pharmacy #scl331Host .scl331-win{position:absolute;top:0;bottom:0;box-sizing:border-box;border:3px solid #2459e0;background:rgba(36,89,224,.14);pointer-events:none;border-radius:4px}
+body.scl295-pharmacy #scl331Host .scl331-leg2{justify-content:flex-start;margin:0}
+body.scl295-pharmacy #scl331Host .scl331-legend .sw.sign{background:var(--scl331-wall)}
+/* κουμπιά και ομάδες */
+body.scl295-pharmacy #scl331Host .scl331-seg{min-height:48px;padding:0 12px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:center}
+body.scl295-pharmacy #scl331Host .scl331-seg:hover:not([disabled]):not(.on){background:var(--fill2)}
+body.scl295-pharmacy #scl331Host .scl331-seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.scl295-pharmacy #scl331Host .scl331-seg.on{background:var(--accent);box-shadow:none;color:var(--on-accent);font-weight:700}
+body.scl295-pharmacy #scl331Host .scl331-seg[disabled]{background:var(--fill2);color:var(--muted);cursor:not-allowed;opacity:.7}
+body.scl295-pharmacy #scl331Host .scl331-seg.sm{min-height:44px;padding:0 14px;font-size:13px}
+body.scl295-pharmacy #scl331Host .scl331-seg.sq{min-height:44px;width:48px;padding:0;font-size:22px;font-weight:700}
+body.scl295-pharmacy #scl331Host .scl331-seg.sq.big{min-height:48px;width:54px}
+body.scl295-pharmacy #scl331Host .scl331-seg.tall{min-height:66px;padding:6px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+body.scl295-pharmacy #scl331Host .scl331-seg.tall b{font-size:14px}
+body.scl295-pharmacy #scl331Host .scl331-seg.tall small{font-size:12px;font-weight:500;opacity:.85}
+body.scl295-pharmacy #scl331Host .scl331-seg.pri{background:var(--accent);box-shadow:none;color:var(--on-accent);font-weight:700}
+body.scl295-pharmacy #scl331Host .scl331-seg.pri:hover:not([disabled]){background:var(--accent-hi)}
+body.scl295-pharmacy #scl331Host .scl331-seg.danger{color:var(--scl330-dot);box-shadow:inset 0 0 0 1px var(--scl330-dot);background:var(--surface)}
+body.scl295-pharmacy #scl331Host .scl331-seg.danger[disabled]{color:var(--muted);box-shadow:none}
+body.scl295-pharmacy #scl331Host .scl331-grp{display:flex;flex-direction:column;gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-gl{font-size:12px;font-weight:700;color:var(--ink2)}
+body.scl295-pharmacy #scl331Host .scl331-g{display:grid;gap:8px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+body.scl295-pharmacy #scl331Host .scl331-gc{grid-template-columns:minmax(0,1.7fr) repeat(4,minmax(0,1fr))}
+body.scl295-pharmacy #scl331Host .scl331-g2{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}
+body.scl295-pharmacy #scl331Host .scl331-wrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-wv{min-width:52px;text-align:center;font-size:18px;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-vsep{width:1px;align-self:stretch;margin:0 4px;background:var(--scl331-ring)}
+body.scl295-pharmacy #scl331Host .scl331-note{font-size:12px;line-height:1.5;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-2col{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+body.scl295-pharmacy #scl331Host .scl331-pn1{display:flex;flex-direction:column;gap:16px;padding:20px;border-radius:16px;background:var(--fill)}
+body.scl295-pharmacy #scl331Host .scl331-pn1.scl331-col2{padding:0;background:none}
+body.scl295-pharmacy #scl331Host .scl331-box{display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:16px;background:var(--fill)}
+body.scl295-pharmacy #scl331Host #scl331Plist{padding:20px;background:var(--fill)}
+body.scl295-pharmacy #scl331Host .scl331-boxh{display:flex;flex-direction:column;gap:3px}
+body.scl295-pharmacy #scl331Host .scl331-boxh strong{font-size:15px;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-boxh .s,body.scl295-pharmacy #scl331Host .scl331-selh .s{font-size:13px;line-height:1.5;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-selh{display:flex;flex-direction:column;gap:3px}
+body.scl295-pharmacy #scl331Host .scl331-selh .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-selh strong{font-size:20px;line-height:1.25;color:var(--ink);letter-spacing:-.01em}
+body.scl295-pharmacy #scl331Host .scl331-mv{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-mv .scl331-grow{display:none}
+body.scl295-pharmacy #scl331Host .scl331-mv .danger{margin-left:auto}
+body.scl295-pharmacy #scl331Host .scl331-nm{display:flex;align-items:center;gap:10px}
+body.scl295-pharmacy #scl331Host .scl331-plg{display:flex;flex-direction:column;gap:6px}
+body.scl295-pharmacy #scl331Host .scl331-pi{display:flex;align-items:center;gap:10px;min-height:44px;box-sizing:border-box;padding:6px 10px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-align:left}
+body.scl295-pharmacy #scl331Host .scl331-pi.on{box-shadow:0 0 0 3px var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-pi:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.scl295-pharmacy #scl331Host .scl331-pi .scl331-pn.big{width:24px;height:24px;border-radius:12px;font-size:12px}
+body.scl295-pharmacy #scl331Host .scl331-pnm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.scl295-pharmacy #scl331Host .scl331-bfoot{display:flex;align-items:center;gap:12px 16px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-hintf{flex:1;font-size:13px;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-msgs{display:flex;flex-direction:column;gap:10px}
+body.scl295-pharmacy #scl331Host .scl331-msgs:empty{display:none}
+body.scl295-pharmacy #scl331Host .scl331-dirty{color:var(--muted)!important;font-size:13px!important}
+body.scl295-pharmacy #scl331Host .scl331-ok{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border-radius:12px;background:var(--accent-soft);color:var(--ink);font-weight:600;font-size:14px}
+/* λίστα όψεων */
+body.scl295-pharmacy #scl331Host .scl331-fl{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin:0;padding:0;list-style:none;width:100%}
+body.scl295-pharmacy #scl331Host .scl331-fi{display:flex;flex-direction:column;min-width:0;gap:12px;padding:14px;border-radius:14px;background:var(--fill);box-shadow:none;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-prev{width:100%;overflow:hidden;border-radius:10px;background:var(--scl331-vpbg);padding:14px 0 10px;box-shadow:inset 0 0 0 1px var(--hair);box-sizing:border-box}
+body.scl295-pharmacy #scl331Host .scl331-previn{margin:0 auto}
+body.scl295-pharmacy #scl331Host .scl331-previn .scl331-track{transition:none}
+body.scl295-pharmacy #scl331Host .scl331-fm{display:flex;align-items:center;justify-content:space-between;gap:12px 16px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-fm>div:first-child{display:flex;flex-direction:column;gap:2px}
+body.scl295-pharmacy #scl331Host .scl331-fm strong{font-size:16px}
+body.scl295-pharmacy #scl331Host .scl331-fm span{font-size:13px;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-fb{display:flex;gap:8px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-fi .scl331-confirm{flex:1 1 100%;background:var(--surface)}
+body.scl295-pharmacy #scl331Host .scl331-fi .scl331-confirm span:first-child{font-size:14px;color:var(--ink)}
+@media (prefers-reduced-motion:reduce){body.scl295-pharmacy #scl331Host .scl331-track{transition:none}}
+@media(max-width:900px){
+body.scl295-pharmacy #scl331Host .scl331-2col{grid-template-columns:1fr}
+body.scl295-pharmacy #scl331Host .scl331-bd{gap:16px}
+body.scl295-pharmacy #scl331Host .scl331-pn1,body.scl295-pharmacy #scl331Host .scl331-box,body.scl295-pharmacy #scl331Host #scl331Plist{padding:16px}
+body.scl295-pharmacy #scl331Host .scl331-stg{padding:8px}
+}
+@media(max-width:560px){
+body.scl295-pharmacy #scl331Host .scl331-stp{padding:0 12px;gap:8px;min-height:60px}
+body.scl295-pharmacy #scl331Host .scl331-stp small{display:none}
+body.scl295-pharmacy #scl331Host .scl331-stp strong{font-size:13px}
+body.scl295-pharmacy #scl331Host .scl331-stp .n{width:28px;height:28px}
+body.scl295-pharmacy #scl331Host .scl331-tb{gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-tb .scl331-grow{flex:1 1 100%;height:0}
+body.scl295-pharmacy #scl331Host .scl331-bfoot .scl331-btn{flex:1 1 100%}
+body.scl295-pharmacy #scl331Host .scl331-bfoot .scl331-seg{flex:1 1 40%}
+body.scl295-pharmacy #scl331Host .scl331-bar{align-items:stretch}
+body.scl295-pharmacy #scl331Host .scl331-fname{flex:1 1 100%;max-width:none}
+body.scl295-pharmacy #scl331Host .scl331-selh strong{font-size:18px}
+body.scl295-pharmacy #scl331Host .scl331-fb{width:100%}
+body.scl295-pharmacy #scl331Host .scl331-fb .scl331-seg{flex:1}
 }
 </style>
