@@ -33715,22 +33715,24 @@ function render331(){
  if(nb){nb.classList.toggle('scl331-off',off);const t=off?'Βιτρίνα · ανενεργή':'Βιτρίνα';nb.setAttribute('aria-label',t);nb.title=t;const l=nb.querySelector('.scl310-nav-label');if(l)l.innerHTML='Βιτρίνα'+(off?'<small class="scl331-offtag"> · ανενεργή</small>':'');}
  const host=$('scl331Host');if(!host)return;
  let body;
- if(V331.status==='ready'&&d)body=d.activated?(B331.open?builder331():list331()):intro331();
+ if(V331.status==='ready'&&d)body=d.activated?(B331.open?builder331():V331.view!=='list'&&(d.facades||[]).length?main331():list331()):intro331();
  else if(V331.status==='error')body='<div class="scl331-card" role="alert"><h2 id="scl331Title" tabindex="-1">Δεν φορτώθηκε η Βιτρίνα</h2><p>'+E(V331.error)+'</p><div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-scl331="retry">Δοκίμασε ξανά</button></div></div>';
  else body='<div class="scl331-card" aria-busy="true"><p role="status">Φόρτωση της Βιτρίνας…</p></div>';
  const html='<span class="scl321-eyebrow">ΦΑΡΜΑΚΕΙΟ</span><h1>Βιτρίνα</h1>'+body;
  if(V331.html!==html){
-  const a=document.activeElement,keep=!V331.focusTitle&&a&&a!==document.body&&host.contains(a)&&a.dataset&&a.dataset.b?{k:fkey331(a),s:a.selectionStart,e:a.selectionEnd}:null;
+  const a=document.activeElement,keep=!V331.focusTitle&&a&&a!==document.body&&host.contains(a)&&a.dataset&&(a.dataset.b||a.dataset.m)?{k:fkey331(a),s:a.selectionStart,e:a.selectionEnd}:null;
   const pv=$('scl331Vp'),prev=pv?{w:pv.dataset.w,off:pv.dataset.off}:null;
   V331.html=html;host.innerHTML=html;
-  if(keep){const n=[...host.querySelectorAll('[data-b]')].find(x=>!x.disabled&&fkey331(x)===keep.k);if(n){n.focus({preventScroll:true});if(keep.s!=null&&n.setSelectionRange){try{n.setSelectionRange(keep.s,keep.e);}catch(_e){}}}}
+  if(keep){const n=[...host.querySelectorAll('[data-b],[data-m]')].find(x=>!x.disabled&&fkey331(x)===keep.k);if(n){n.focus({preventScroll:true});if(keep.s!=null&&n.setSelectionRange){try{n.setSelectionRange(keep.s,keep.e);}catch(_e){}}}}
   const nv=$('scl331Vp'),tr=nv?.querySelector('.scl331-track');
   if(prev&&tr&&prev.w===nv.dataset.w&&prev.off!==nv.dataset.off){tr.style.transition='none';tr.style.transform='translateX('+(-prev.off)+'px)';void tr.offsetWidth;tr.style.transition='';tr.style.transform='translateX('+(-nv.dataset.off)+'px)';}
  }
- if(B331.open&&d&&d.activated&&syncVw331()){render331();return;}
+ if(d&&d.activated&&syncVw331()){render331();return;}
  fit331();
  if(V331.focusTitle){V331.focusTitle=false;$('scl331Title')?.focus({preventScroll:false});}
  if(V331.scrollSteps){V331.scrollSteps=false;host.querySelector('.scl331-stps')?.scrollIntoView({block:'start'});}
+ if(M331.focus){const k=M331.focus;M331.focus='';const el=k==='side'?$('scl331Side'):k==='err'?$('scl331Err'):host.querySelector('[data-m="'+k+'"]');if(el&&!el.disabled)el.focus({preventScroll:true});}
+ if(M331.reveal){M331.reveal=false;const sd=$('scl331Side');if(sd){const r=sd.getBoundingClientRect();if(r.top<56||r.top>innerHeight-220)sd.scrollIntoView({block:'start'});}}
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest?.('[data-scl331]');if(!b||!$('vitrinaPage')?.contains(b))return;
@@ -33740,7 +33742,9 @@ document.addEventListener('click',e=>{
 
 // v331.1 — Βιτρίνα: σχεδιαστής όψης. Βήμα 1: κομμάτια της όψης. Βήμα 2: θέσεις πώλησης. Αποθήκευση μόνο με το «Αποθήκευση όψης» (scl330_vitrina_save_facade).
 const SIGNURL331=(()=>{try{const a=atob(SIGN331.split(',')[1]),u=new Uint8Array(a.length);for(let i=0;i<a.length;i++)u[i]=a.charCodeAt(i);return URL.createObjectURL(new Blob([u],{type:'image/png'}));}catch(e){return SIGN331;}})();
-var B331=root.SCL331B={open:false,no:1,rev:0,name:'',step:1,sel:'',twoTier:false,signPos:'top',next:1,zoom:1,offset:0,pieces:[],upPieces:[],dirty:false,saving:false,error:'',conflict:false,savedMsg:'',leave:false,vw:0,mz:0};
+var B331=root.SCL331B={open:false,no:1,rev:0,name:'',step:1,sel:'',twoTier:false,signPos:'top',next:1,zoom:1,offset:0,pieces:[],upPieces:[],dirty:false,saving:false,error:'',conflict:false,savedMsg:'',leave:false,vw:0,mz:0,pmeta:{}};
+var M331=root.SCL331M={no:0,year:0,unit:'month',month:0,week:0,selPos:'',panel:'card',detailId:'',confirmDel:false,detailsOpen:false,msg:'',err:'',busy:false,dsaving:false,dpid:'',dims:'',accepts:'',fBrand:'',fUnit:'month',fFrom:0,fTo:0,fWeek:0,fWeeks:1,fNav:0,fStatus:'discussion',fAmount:'',fNote:'',zoom:1,offset:0,vw:0,mz:0,pieces:[],upPieces:[],twoTier:false,signPos:'top',pmeta:{},bk:[],focus:'',reveal:false};
+const X331=()=>B331.open?B331:M331;
 const MAXPIECES331=100;
 const mkP331=(id,type,w,names,kind)=>({id:String(id),type,w,kind:kind||'',names:names||[]});
 const tl331=(t,up)=>t==='glass'?'Τζάμι':t==='panel'?(up?'Τοίχος':'Πάνελ'):t==='column'?'Κολώνα':'Πόρτα';
@@ -33749,11 +33753,11 @@ const maxPos331=w=>w<40?0:Math.max(1,Math.floor((w-16+6)/36));
 const minW331=p=>p.type==='column'?15:p.type==='door'?(p.kind==='single'?40:80):30;
 const pl331=(n,one,many)=>n+' '+(n===1?one:many);
 const rowW331=a=>a.reduce((s,p)=>s+p.w,0);
-const VW331=()=>Math.max(240,B331.vw||1052);
-const R331=o=>{o=o||{};return{low:o.low||B331.pieces,up:o.up||B331.upPieces,two:o.two!==undefined?o.two:B331.twoTier};};
+const VW331=()=>Math.max(240,X331().vw||1052);
+const R331=o=>{o=o||{};const x=X331();return{low:o.low||x.pieces,up:o.up||x.upPieces,two:o.two!==undefined?o.two:x.twoTier};};
 const facW331=o=>{const r=R331(o);return Math.max(rowW331(r.low),r.two?rowW331(r.up):0);};
 const zMin331=o=>Math.min(1,VW331()/facW331(o));
-const effZ331=()=>Math.max(zMin331(),Math.min(2,B331.zoom));
+const effZ331=()=>Math.max(zMin331(),Math.min(2,X331().zoom));
 const clampOff331=(off,W)=>{const vw=VW331();return W<=vw?(W-vw)/2:Math.max(0,Math.min(W-vw,off));};
 function allPos331(M){
  const out=[];let n=0;
@@ -33768,13 +33772,13 @@ function pGeo331(id,o){
 function pAt331(arr,x){let a=0;for(const p of arr){if(x<a+p.w)return p;a+=p.w;}return arr[arr.length-1];}
 function center331(id,z,o){const g=pGeo331(id,o);return clampOff331((g.x+g.w/2)*z-VW331()/2,facW331(o)*z);}
 function zoomTo331(nz,focusId){
- const b=B331,total=facW331(),z0=effZ331(),z1=Math.max(zMin331(),Math.min(2,nz));
+ const b=X331(),total=facW331(),z0=effZ331(),z1=Math.max(zMin331(),Math.min(2,nz));
  let off;
  if(focusId)off=center331(focusId,z1);
  else{const cx=(clampOff331(b.offset,total*z0)+VW331()/2)/z0;off=clampOff331(cx*z1-VW331()/2,total*z1);}
  b.zoom=z1;b.offset=off;
 }
-function panBy331(dx){const W=facW331()*effZ331();B331.offset=clampOff331(clampOff331(B331.offset,W)+dx,W);}
+function panBy331(dx){const x=X331(),W=facW331()*effZ331();x.offset=clampOff331(clampOff331(x.offset,W)+dx,W);}
 function rowKey331(id){return B331.twoTier&&B331.upPieces.some(p=>p.id===id)?'upPieces':'pieces';}
 const curKey331=()=>rowKey331(B331.sel);
 function selPiece331(){const b=B331;return b[curKey331()].find(p=>p.id===b.sel)||b.pieces[0];}
@@ -33789,7 +33793,7 @@ function setCount331(n){
  const up=curKey331()==='upPieces',nb=numBefore331(B331.sel);
  patchSel331(p=>{const cur=p.names.slice(0,n);while(cur.length<n)cur.push((up?'Πάνω τζάμι ':tl331(p.type)+' ')+(nb+cur.length+1));p.names=cur;return p;});
 }
-function focusAfter331(key,arr,id){const o=key==='pieces'?{low:arr}:{up:arr};return center331(id,Math.max(zMin331(o),Math.min(2,B331.zoom)),o);}
+function focusAfter331(key,arr,id){const o=key==='pieces'?{low:arr}:{up:arr};return center331(id,Math.max(zMin331(o),Math.min(2,X331().zoom)),o);}
 function addPiece331(type){
  const b=B331,k=curKey331();if(b[k].length>=MAXPIECES331)return;
  const id=(k==='upPieces'?'u':'p')+b.next,np=mkP331(id,type,type==='column'?20:type==='door'?50:80,[],type==='door'?'single':'');
@@ -33836,20 +33840,23 @@ function normDesign331(d){d=d||{};const up=cleanRow331(d.upPieces,true);return{p
 function reset331(extra){Object.assign(B331,{open:true,step:1,zoom:1,offset:0,dirty:false,saving:false,error:'',conflict:false,savedMsg:'',leave:false,mz:0},extra);}
 function newFacade331(){
  const used=new Set((V331.data?.facades||[]).map(f=>f.facade_no)),no=[1,2,3].find(n=>!used.has(n));if(!no)return;
- reset331({no,rev:0,name:'Όψη '+no,twoTier:false,signPos:'top',next:4,pieces:[mkP331('p1','glass',160),mkP331('p2','door',50,[],'single'),mkP331('p3','glass',160)],upPieces:[],sel:'p1'});
+ reset331({no,rev:0,name:'Όψη '+no,pmeta:{},twoTier:false,signPos:'top',next:4,pieces:[mkP331('p1','glass',160),mkP331('p2','door',50,[],'single'),mkP331('p3','glass',160)],upPieces:[],sel:'p1'});
 }
 function editFacade331(no){
  const f=(V331.data?.facades||[]).find(x=>x.facade_no===no);if(!f)return;
  const d=normDesign331(f.design),low=d.pieces,up=d.upPieces;if(!low.length)return;
  const ids=[...low,...up].map(p=>parseInt(String(p.id).replace(/\D/g,''),10)||0);
- reset331({no,rev:f.revision,name:f.name,twoTier:d.twoTier,signPos:d.signPos,next:Math.max(parseInt(d.meta.next,10)||0,Math.max(0,...ids)+1),pieces:low,upPieces:up,sel:low[0].id});
+ reset331({no,rev:f.revision,name:f.name,pmeta:(d.meta&&d.meta.pos&&typeof d.meta.pos==='object'?d.meta.pos:{}),twoTier:d.twoTier,signPos:d.signPos,next:Math.max(parseInt(d.meta.next,10)||0,Math.max(0,...ids)+1),pieces:low,upPieces:up,sel:low[0].id});
 }
 function designOut331(){
  const b=B331,two=b.twoTier,defName=(p,up,i,nb)=>(up?'Πάνω τζάμι ':tl331(p.type)+' ')+(nb+i+1);
  let n=0;
  const row=(arr,up)=>arr.map(p=>{const names=p.type==='column'?[]:p.names.map((x,i)=>{const t=String(x).trim().slice(0,80);return t||defName(p,up,i,n);});n+=names.length;return{id:p.id,type:p.type,w:p.w,kind:p.kind||'',names};});
  const low=row(b.pieces,false),up=two?row(b.upPieces,true):[];
- return{pieces:low,upPieces:up,twoTier:two,signPos:b.signPos,meta:{next:b.next}};
+ const meta={next:b.next},pos={};
+ allPos331({pieces:b.pieces,upPieces:b.upPieces,twoTier:two}).forEach(p=>{const x=b.pmeta&&b.pmeta[p.id];if(x&&(x.dims||x.accepts))pos[p.id]={dims:String(x.dims||'').slice(0,80),accepts:String(x.accepts||'').slice(0,80)};});
+ if(Object.keys(pos).length)meta.pos=pos;
+ return{pieces:low,upPieces:up,twoTier:two,signPos:b.signPos,meta};
 }
 function blocked331(){
  const b=B331,f=(V331.data?.facades||[]).find(x=>x.facade_no===b.no);if(!b.rev||!f)return[];
@@ -33907,7 +33914,12 @@ function facade331(M,o){
  const edit=o.mode==='edit',num={};allPos331(M).forEach(p=>{num[p.id]=p.num;});
  const cell=(pc,isUp,pad)=>{
   const doorCell=pc.type==='door'&&!isUp,ch=isUp?UH:H,pw=pc.w*z,k=pc.names.length,rw=k?(pw-2*m-g*(k-1))/k:0;
-  const rects=pc.names.map((nm,i)=>'<span class="scl331-ps" style="top:'+m+'px;bottom:'+m+'px;left:'+(m+i*(rw+g))+'px;width:'+rw+'px"><b class="scl331-pn" style="width:'+bs+'px;height:'+bs+'px;border-radius:'+bs/2+'px;font-size:'+(bs<20?11:12)+'px">'+(num[pc.id+'.'+i]||'')+'</b></span>').join('');
+  const rects=pc.names.map((nm,i)=>{
+   const pid=pc.id+'.'+i,sty='top:'+m+'px;bottom:'+m+'px;left:'+(m+i*(rw+g))+'px;width:'+rw+'px',bd='<b class="scl331-pn" style="width:'+bs+'px;height:'+bs+'px;border-radius:'+bs/2+'px;font-size:'+(bs<20?11:12)+'px">'+(num[pid]||'')+'</b>';
+   if(o.mode!=='pos')return '<span class="scl331-ps" style="'+sty+'">'+bd+'</span>';
+   const inf=o.info(pid),s=inf.s,sp=pid===o.selPos;
+   return '<button type="button" class="scl331-ps pos st-'+s+(sp?' selp':'')+'" style="'+sty+'" data-m="mpos" data-id="'+E(pid)+'"'+(sp?' aria-current="true"':'')+' aria-label="'+E('Θέση '+(num[pid]||'')+' '+nm+', '+(o.per||'')+': '+SL331[s]+(inf.brand?', '+inf.brand:''))+'">'+bd+(s!=='free'&&rw>=58&&ch>=70?'<span class="scl331-pb">'+E(inf.brand)+'</span>':'')+(rw>=100&&ch>=80?'<span class="scl331-pt">'+SL331[s]+'</span>':'')+'</button>';
+  }).join('');
   const deco=doorCell?doorDeco331(pc.kind||'single',pw,ch):'';
   const what=pad?'Τοίχος (συμπλήρωμα πλάτους)':doorCell?dl331(pc.kind):(isUp?'Πάνω ':'')+tl331(pc.type,isUp).toLowerCase();
   const aria=what+(k?', '+pl331(k,'θέση πώλησης','θέσεις πώλησης'):(pad?'':', χωρίς πώληση'));
@@ -33921,14 +33933,14 @@ function facade331(M,o){
  const hs=(signTop?SH:0)+(signMid?SH:0)+(two?UH:0)+(hasBelt?BH:0)+H+3;
  return{h:hs,html:'<div class="scl331-track" style="width:'+W+'px;transform:translateX('+(-off)+'px)">'+(signTop?sign:'')+(two?row(M.upPieces,true):'')+(hasBelt?'<div class="scl331-belt" style="width:'+W+'px;height:'+BH+'px"></div>':'')+(signMid?sign:'')+row(M.pieces,false)+'<div class="scl331-gnd" style="width:'+W+'px"></div></div>'};
 }
-function mini331(sel){
- const b=B331,vw=VW331(),total=facW331(),r=vw/total,W=total*effZ331(),off=clampOff331(b.offset,W),two=!!b.twoTier,sh=two?24:44;
+function mini331(sel,o){
+ o=o||{};const b=X331(),vw=VW331(),total=facW331(),r=vw/total,W=total*effZ331(),off=clampOff331(b.offset,W),two=!!b.twoTier,sh=two?24:44;
  const mkCell=(pc,isUp,pad)=>{
   const dark=pc.type==='panel'||pc.type==='column';
-  const segs=pc.names.map(()=>'<span class="scl331-ms"></span>').join('');
+  const segs=pc.names.map((nm,i)=>'<span class="scl331-ms'+(o.info?' st-'+o.info(pc.id+'.'+i).s:'')+'"></span>').join('');
   const lab=pad?'Τοίχος':'Μετάβαση στο κομμάτι: '+(pc.type==='door'?dl331(pc.kind):tl331(pc.type,isUp))+(isUp?' (πάνω σειρά)':'');
   const cls='scl331-mc '+(pad||dark?'panel':pc.type==='door'&&!isUp?'door':'glass')+(!pad&&sel===pc.id?' sel':'');
-  return pad?'<span class="'+cls+'" style="width:'+pc.w*r+'px" aria-hidden="true"></span>':'<button type="button" class="'+cls+'" style="width:'+pc.w*r+'px" data-b="pick" data-s="m" data-id="'+E(pc.id)+'" aria-label="'+E(lab)+'">'+segs+'</button>';
+  return pad?'<span class="'+cls+'" style="width:'+pc.w*r+'px" aria-hidden="true"></span>':'<button type="button" class="'+cls+'" style="width:'+pc.w*r+'px" '+(o.info?'data-m="mmini"':'data-b="pick" data-s="m"')+' data-id="'+E(pc.id)+'" aria-label="'+E(lab)+'">'+segs+'</button>';
  };
  const mkRow=(arr,isUp)=>{const cells=arr.map(pc=>mkCell(pc,isUp,false)),used=rowW331(arr);if(used<total-.5)cells.push(mkCell({id:'pad',type:'panel',w:total-used,kind:'',names:[]},isUp,true));return '<div class="scl331-mr" style="height:'+sh+'px">'+cells.join('')+'</div>';};
  return '<div class="scl331-mini"><div class="scl331-minih">Μικρογραφία όλης της όψης: πάτα για να πας εκεί. Το μπλε πλαίσιο είναι ό,τι βλέπεις τώρα.</div><div class="scl331-minimap" style="height:'+(two?48:44)+'px">'+(two?mkRow(b.upPieces,true):'')+mkRow(b.pieces,false)+'<span class="scl331-win" style="left:'+(Math.max(0,off)/W)*vw+'px;width:'+Math.min(1,vw/W)*vw+'px"></span></div></div>';
@@ -34008,7 +34020,7 @@ function msgs331(miss){
  return (b.dirty&&!b.savedMsg?'<p class="scl331-dirty">Έχεις αλλαγές που δεν έχουν αποθηκευτεί. Θα αποθηκευτούν όταν πατήσεις «Αποθήκευση όψης» στο Βήμα 2.</p>':'')
   +(miss.length?'<p class="scl331-error" role="alert">Δεν μπορείς να αφαιρέσεις θέσεις που έχουν κρατήσεις: '+miss.map(x=>'«'+E(x)+'»').join(', ')+'. Διέγραψε πρώτα τις κρατήσεις τους ή κράτησε τις θέσεις.</p>':'')
   +(b.error?'<p class="scl331-error" role="alert">'+E(b.error)+'</p>'+(b.conflict?'<div class="scl331-actions">'+act331('Φόρτωσε ξανά την αποθηκευμένη όψη','data-b="reload"')+'</div><p class="scl331-note">Οι αλλαγές που έκανες εδώ θα χαθούν.</p>':''):'')
-  +(b.savedMsg?'<div class="scl331-ok" role="status"><span>'+E(b.savedMsg)+'</span>'+act331('Πίσω στις όψεις','data-b="done"')+'</div>':'');
+  +(b.savedMsg?'<div class="scl331-ok" role="status"><span>'+E(b.savedMsg)+'</span><span class="scl331-cbtn">'+(allPos331({pieces:b.pieces,upPieces:b.upPieces,twoTier:b.twoTier}).length?act331('Πήγαινε στις κρατήσεις','data-b="tomain"',{cls:'pri'}):'')+act331('Πίσω στις όψεις','data-b="done"')+'</span></div>':'');
 }
 function previewFacade331(M){
  if(!M.pieces.length)return '';
@@ -34021,25 +34033,25 @@ function list331(){
  if(!f.length)return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Ξεκίνα σχεδιάζοντας την όψη του φαρμακείου</h2><p>Δεν έχεις ακόμη κομμάτια στη Βιτρίνα. Πρόσθεσε πρώτα τα κομμάτια της όψης και μετά σημείωσε ποια είναι θέσεις πώλησης.</p>'
   +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-b="new">Σχεδίασε την όψη</button></div>'
   +'<p class="scl331-hint">Γωνιακό φαρμακείο; Μπορείς να σχεδιάσεις έως 3 όψεις.</p>'+err+'</div>';
- return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Οι όψεις του φαρμακείου σου</h2><p>Πάτα «Επεξεργασία» για να αλλάξεις το σχέδιο μιας όψης. Γωνιακό φαρμακείο; Μπορείς να έχεις έως 3 όψεις.</p>'
+ return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Οι όψεις του φαρμακείου σου</h2><p>Πάτα «Άνοιγμα κρατήσεων» για να κρατήσεις μήνες ή εβδομάδες σε μια όψη, ή «Επεξεργασία» για να αλλάξεις το σχέδιό της. Γωνιακό φαρμακείο; Μπορείς να έχεις έως 3 όψεις.</p>'
   +'<ul class="scl331-fl">'+f.map(x=>{
    const d=normDesign331(x.design),cnt=allPos331(d).length,np=d.pieces.length+(d.twoTier?d.upPieces.length:0),nb=bk.filter(y=>y.facade_no===x.facade_no).length,conf=V331.delNo===x.facade_no;
    return '<li class="scl331-fi">'+previewFacade331(d)+'<div class="scl331-fm"><div><strong>'+E(x.name)+'</strong><span>Όψη '+x.facade_no+' · '+pl331(np,'κομμάτι','κομμάτια')+' · '+pl331(cnt,'θέση πώλησης','θέσεις πώλησης')+'</span></div>'
    +(conf?'<div class="scl331-confirm" role="alertdialog" aria-label="Διαγραφή όψης"><span>Να διαγραφεί η όψη «'+E(x.name)+'»; Θα χαθεί το σχέδιό της'+(nb?' και '+pl331(nb,'κράτησή της','κρατήσεις της'):'')+'. Δεν γίνεται αναίρεση.</span><span class="scl331-cbtn">'+act331(V331.busy?'Διαγραφή…':'Ναι, διαγραφή','data-b="delok" data-no="'+x.facade_no+'"',{cls:'danger',dis:V331.busy})+act331('Όχι','data-b="delcancel"',{dis:V331.busy})+'</span></div>'
-    :'<div class="scl331-fb">'+act331('Επεξεργασία','data-b="edit" data-no="'+x.facade_no+'"',{cls:'pri'})+act331('Διαγραφή','data-b="del" data-no="'+x.facade_no+'"',{cls:'danger',aria:'Διαγραφή της όψης '+x.name})+'</div>')+'</div></li>';}).join('')+'</ul>'
+    :'<div class="scl331-fb">'+act331('Άνοιγμα κρατήσεων','data-b="openmain" data-no="'+x.facade_no+'"',{cls:'pri'})+act331('Επεξεργασία','data-b="edit" data-no="'+x.facade_no+'"')+act331('Διαγραφή','data-b="del" data-no="'+x.facade_no+'"',{cls:'danger',aria:'Διαγραφή της όψης '+x.name})+'</div>')+'</div></li>';}).join('')+'</ul>'
   +(can?'<div class="scl331-actions">'+act331('+ Πρόσθεσε άλλη όψη','data-b="new"',{cls:'pri'})+'</div>':'<p class="scl331-hint">Έχεις τον μέγιστο αριθμό όψεων (3).</p>')+err+'</div>';
 }
 // ---- DOM: εστίαση, μέτρηση πλάτους, γεγονότα --------------------------------
-const fkey331=el=>el&&el.dataset?[el.dataset.b||'',el.dataset.v??'',el.dataset.id??'',el.dataset.d??'',el.dataset.i??'',el.dataset.s??'',el.dataset.no??''].join('|'):'';
+const fkey331=el=>el&&el.dataset?[el.dataset.m||'',el.dataset.b||'',el.dataset.v??'',el.dataset.id??'',el.dataset.d??'',el.dataset.i??'',el.dataset.s??'',el.dataset.no??''].join('|'):'';
 function syncVw331(){
- const vp=$('scl331Vp');if(!B331.open||!vp)return false;
+ const vp=$('scl331Vp'),x=X331();if(!vp)return false;
  const w=Math.round(vp.clientWidth);
- if(w>0&&Math.abs(w-B331.vw)>1&&B331.mz<4){B331.vw=w;B331.mz++;return true;}
+ if(w>0&&Math.abs(w-x.vw)>1&&x.mz<4){x.vw=w;x.mz++;return true;}
  return false;
 }
-window.addEventListener('resize',()=>requestAnimationFrame(()=>{if(B331.open&&$('scl331Vp')){B331.mz=0;if(syncVw331())render331();}}));
+window.addEventListener('resize',()=>requestAnimationFrame(()=>{if($('scl331Vp')){X331().mz=0;if(syncVw331())render331();}}));
 window.addEventListener('beforeunload',e=>{if(B331.open&&B331.dirty){e.preventDefault();e.returnValue='';}});
-function closeBuilder331(){B331.open=false;B331.leave=false;V331.focusTitle=true;}
+function closeBuilder331(){B331.open=false;B331.leave=false;V331.view='list';V331.focusTitle=true;}
 function updPlist331(){
  const box=$('scl331Plist');if(box)box.innerHTML=plist331(allPos331(B331),null,selPiece331());
  const m=$('scl331Msgs');if(m)m.innerHTML=msgs331(blocked331());
@@ -34054,6 +34066,8 @@ document.addEventListener('click',e=>{
  switch(a){
   case 'new':newFacade331();V331.focusTitle=true;V331.error='';break;
   case 'edit':editFacade331(+t.dataset.no);V331.focusTitle=true;V331.error='';break;
+  case 'openmain':openMain331(+t.dataset.no);V331.focusTitle=true;V331.error='';break;
+  case 'tomain':{const no=b.no;b.open=false;b.leave=false;openMain331(no);V331.focusTitle=true;break;}
   case 'del':V331.delNo=+t.dataset.no;V331.error='';break;
   case 'delcancel':V331.delNo=0;break;
   case 'delok':delFacade331(+t.dataset.no);return;
@@ -34091,6 +34105,337 @@ document.addEventListener('input',e=>{
  else{const i=+t.dataset.i,k=curKey331();b[k]=b[k].map(p=>{if(p.id!==b.sel)return p;const n=p.names.slice();n[i]=t.value;return Object.assign({},p,{names:n});});touch331();}
  V331.html='';
  updPlist331();
+});
+
+// v331.2 — Βιτρίνα: κύριο παράθυρο με κρατήσεις (μήνες ή εβδομάδες). Αποθήκευση στη βάση: scl330_vitrina_add_booking / delete_booking· οι λεπτομέρειες θέσης μέσα στην όψη (save_facade).
+const MF331=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const MS331=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιούν','Ιούλ','Αύγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const MD331=['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const SL331={free:'Ελεύθερη',discussion:'Σε συζήτηση',closed:'Κλεισμένη',partial:'Μερικώς κλεισμένη'};
+const dn331=(yy,m,d)=>Math.floor(Date.UTC(yy,m,d)/864e5);
+const dd331=n=>new Date(n*864e5);
+const mS331=m=>dn331(y(),m,1);
+const mE331=m=>dn331(y(),m+1,1)-1;
+const monDay331=n=>n-((dd331(n).getUTCDay()+6)%7);
+function weeksOf331(m){const out=[];let w=monDay331(mS331(m))-7;for(let i=0;i<9;i++,w+=7){const th=dd331(w+3);if(th.getUTCFullYear()===y()&&th.getUTCMonth()===m)out.push(w);}return out;}
+const allWeeks331=()=>{let o=[];for(let m=0;m<12;m++)o=o.concat(weeksOf331(m));return o;};
+const monthOfWeek331=w=>{const th=dd331(w+3);return th.getUTCFullYear()<y()?0:th.getUTCFullYear()>y()?11:th.getUTCMonth();};
+const fmtD331=n=>{const d=dd331(n);return d.getUTCDate()+' '+MD331[d.getUTCMonth()];};
+const fmtR331=(s,e)=>{const a=dd331(s),b=dd331(e);return a.getUTCMonth()===b.getUTCMonth()&&a.getUTCFullYear()===b.getUTCFullYear()?a.getUTCDate()+'–'+b.getUTCDate()+' '+MD331[a.getUTCMonth()]:fmtD331(s)+' – '+fmtD331(e);};
+const isoDn331=s=>{const t=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(s));return t?dn331(+t[1],+t[2]-1,+t[3]):0;};
+const dnIso331=n=>dd331(n).toISOString().slice(0,10);
+function rangeText331(b){
+ const a=dd331(b.s),z=dd331(b.e),ys=a.getUTCFullYear(),ye=z.getUTCFullYear(),m1=a.getUTCMonth(),m2=z.getUTCMonth();
+ const yr=ys===ye&&ys===y()?'':' · '+(ys===ye?ys:ys+'–'+ye);
+ if(b.s===dn331(ys,m1,1)&&b.e===dn331(ye,m2+1,1)-1)return (ys===ye&&m1===m2?MF331[m1]:MS331[m1]+'–'+MS331[m2])+yr;
+ const days=b.e-b.s+1,nw=Math.round(days/7);
+ return fmtR331(b.s,b.e)+yr+(days%7===0?' · '+nw+(nw===1?' εβδομάδα':' εβδομάδες'):'');
+}
+const per331=()=>M331.unit==='week'?[M331.week,M331.week+6]:[mS331(M331.month),mE331(M331.month)];
+const perLabel331=()=>M331.unit==='week'?fmtR331(M331.week,M331.week+6):MF331[M331.month];
+const overl331=(pid,s,e)=>M331.bk.filter(b=>b.pos===pid&&b.s<=e&&b.e>=s).sort((a,b)=>a.s-b.s);
+function pinfo331(pid){
+ const p=per331(),ps=p[0],pe=p[1],bs=overl331(pid,ps,pe);
+ if(!bs.length)return{s:'free',brand:'',brands:'',free:''};
+ let cur=ps;const gaps=[];
+ bs.forEach(b=>{if(b.s>cur)gaps.push([cur,b.s-1]);cur=Math.max(cur,b.e+1);});
+ if(cur<=pe)gaps.push([cur,pe]);
+ const names=[];bs.forEach(b=>{if(names.indexOf(b.brand)<0)names.push(b.brand);});
+ return{s:gaps.length?'partial':bs.every(b=>b.status==='closed')?'closed':'discussion',brand:names[0]+(names.length>1?' +'+(names.length-1):''),brands:names.join(' · '),free:gaps.map(g=>fmtR331(g[0],g[1])).join(', ')};
+}
+const monthFree331=(pid,m)=>!overl331(pid,mS331(m),mE331(m)).length;
+const weekFree331=(pid,w)=>!overl331(pid,w,w+6).length;
+function firstFreeMonth331(pid,m){for(let i=m;i<12;i++)if(monthFree331(pid,i))return i;for(let i=0;i<m;i++)if(monthFree331(pid,i))return i;return -1;}
+function firstFreeWeek331(pid,from){const ws=allWeeks331(),idx=ws.findIndex(w=>w>=from),st=idx<0?0:idx;for(let i=st;i<ws.length;i++)if(weekFree331(pid,ws[i]))return ws[i];for(let i=0;i<st;i++)if(weekFree331(pid,ws[i]))return ws[i];return null;}
+function maxWeeksFrom331(pid,w){const last=allWeeks331().slice(-1)[0];let n=0,x=w;while(x<=last&&n<12&&weekFree331(pid,x)){n++;x+=7;}return n;}
+// ---- κατάσταση ---------------------------------------------------------------
+function resetM331(no){
+ const t=String(V331.data?.today||''),ty=+t.slice(0,4),tm=+t.slice(5,7)-1,mo=ty===y()&&tm>=0&&tm<12?tm:0;
+ Object.assign(M331,{no,year:y(),unit:'month',month:mo,week:(weeksOf331(mo)[0]||mS331(mo)),selPos:'',panel:'card',detailId:'',confirmDel:false,detailsOpen:false,msg:'',err:'',busy:false,dsaving:false,dpid:'',dims:'',accepts:'',zoom:1,offset:0,mz:0,focus:'',reveal:false,bk:[]});
+}
+function syncM331(){
+ const d=V331.data,m=M331,fs=d?.facades||[],f=fs.find(x=>x.facade_no===m.no)||fs[0];if(!f)return null;
+ if(m.no!==f.facade_no||m.year!==y())resetM331(f.facade_no);
+ const des=normDesign331(f.design);
+ m.pieces=des.pieces;m.upPieces=des.upPieces;m.twoTier=des.twoTier;m.signPos=des.signPos;
+ m.pmeta=des.meta&&des.meta.pos&&typeof des.meta.pos==='object'?des.meta.pos:{};
+ m.bk=(d.bookings||[]).filter(b=>b.facade_no===f.facade_no).map(b=>({id:b.id,pos:b.position_id,brand:String(b.brand||''),s:isoDn331(b.start),e:isoDn331(b.end),status:b.status==='closed'?'closed':'discussion',amount:b.amount===null||b.amount===undefined?null:Number(b.amount),note:String(b.note||'')}));
+ return f;
+}
+const dsaved331=pid=>{const x=M331.pmeta[pid]||{};return{dims:String(x.dims||''),accepts:String(x.accepts||'')};};
+const dchanged331=()=>{const s=dsaved331(M331.dpid);return M331.dims.trim()!==s.dims||M331.accepts.trim()!==s.accepts;};
+function openForm331(pid,unit,ref){
+ const m=M331;Object.assign(m,{selPos:pid,panel:'form',detailId:'',confirmDel:false,msg:'',err:'',fBrand:'',fUnit:unit,fStatus:'discussion',fAmount:'',fNote:'',focus:'brand',reveal:true});
+ if(unit==='month')Object.assign(m,{fFrom:ref,fTo:ref,fNav:ref});else Object.assign(m,{fWeek:ref,fWeeks:1,fNav:monthOfWeek331(ref)});
+}
+function noRoom331(pid){Object.assign(M331,{selPos:pid,panel:'card',msg:'Αυτή η θέση δεν έχει ελεύθερη περίοδο.',err:'',focus:'side',reveal:true});}
+function newBooking331(pid,unit,ref){
+ if(unit==='month'){
+  if(monthFree331(pid,ref)){openForm331(pid,'month',ref);return;}
+  const w=weeksOf331(ref).find(x=>weekFree331(pid,x));
+  if(w!==undefined){openForm331(pid,'week',w);return;}
+  const f=firstFreeMonth331(pid,ref);
+  if(f>=0){openForm331(pid,'month',f);return;}
+  noRoom331(pid);return;
+ }
+ const w=firstFreeWeek331(pid,ref);
+ if(w===null){noRoom331(pid);return;}
+ openForm331(pid,'week',w);
+}
+function newForSel331(){
+ const m=M331;
+ if(m.unit==='week'){newBooking331(m.selPos,'week',m.week);return;}
+ const f=firstFreeMonth331(m.selPos,m.month);
+ if(f>=0){openForm331(m.selPos,'month',f);return;}
+ const w=firstFreeWeek331(m.selPos,mS331(m.month));
+ if(w===null)noRoom331(m.selPos);else openForm331(m.selPos,'week',w);
+}
+function setFUnit331(u){
+ const m=M331;if(u===m.fUnit)return;
+ if(u==='week'){
+  const w=firstFreeWeek331(m.selPos,mS331(m.fFrom));
+  if(w===null){m.err='Δεν υπάρχει ελεύθερη εβδομάδα σε αυτή τη θέση.';return;}
+  Object.assign(m,{fUnit:'week',fWeek:w,fWeeks:1,fNav:monthOfWeek331(w),err:''});
+ }else{
+  const f=firstFreeMonth331(m.selPos,monthOfWeek331(m.fWeek));
+  if(f<0){m.err='Δεν υπάρχει ολόκληρος ελεύθερος μήνας σε αυτή τη θέση.';return;}
+  Object.assign(m,{fUnit:'month',fFrom:f,fTo:f,fNav:f,err:''});
+ }
+}
+function setUnit331(u){
+ const m=M331;if(u===m.unit)return;
+ if(u==='week'){m.unit='week';m.week=weeksOf331(m.month)[0];}else{m.unit='month';m.month=monthOfWeek331(m.week);}
+}
+function setMonth331(i){const m=M331;m.month=i;if(m.unit==='week')m.week=weeksOf331(i)[0];}
+function openBooking331(id){
+ const b=M331.bk.find(x=>x.id===id);if(!b)return;
+ Object.assign(M331,{selPos:b.pos,panel:'detail',detailId:id,confirmDel:false,msg:'',err:'',focus:'back',reveal:true});
+}
+function pickPos331(pid){
+ const m=M331,p=allPos331(m).find(x=>x.id===pid);if(!p)return;
+ Object.assign(m,{selPos:pid,panel:'card',detailId:'',confirmDel:false,msg:'',err:''});
+ m.offset=center331(p.piece,effZ331());
+}
+function pickPiece331(id){
+ const p=allPos331(M331).find(x=>x.piece===id);
+ if(p)pickPos331(p.id);else M331.offset=center331(id,effZ331());
+}
+function stepPos331(d){
+ const l=allPos331(M331),i=l.findIndex(p=>p.id===M331.selPos);if(!l.length)return;
+ pickPos331(l[Math.max(0,Math.min(l.length-1,i+d))].id);
+}
+async function saveBooking331(){
+ const m=M331;if(m.busy)return;
+ const fail=t=>{m.err=t;m.focus='err';render331();};
+ const brand=m.fBrand.trim();
+ if(!brand)return fail('Γράψε τον προμηθευτή ή τη μάρκα.');
+ const isW=m.fUnit==='week';
+ if(!isW&&m.fTo<m.fFrom)return fail('Ο τελευταίος μήνας δεν μπορεί να είναι πριν τον πρώτο.');
+ const s=isW?m.fWeek:mS331(m.fFrom),e=isW?m.fWeek+7*m.fWeeks-1:mE331(m.fTo);
+ const clash=overl331(m.selPos,s,e)[0];
+ if(clash)return fail('Αυτή η θέση έχει ήδη κράτηση ('+clash.brand+', '+rangeText331(clash)+') σε '+(isW?'εβδομάδες':'μήνες')+' που διάλεξες. Διάλεξε '+(isW?'άλλες εβδομάδες.':'άλλους μήνες.'));
+ const raw=m.fAmount.trim().replace(',','.');let amount=null;
+ if(raw!==''){if(!/^\d{1,9}(\.\d{1,2})?$/.test(raw))return fail('Το ποσό πρέπει να είναι αριθμός με έως δύο δεκαδικά, π.χ. 900 ή 900,50.');amount=parseFloat(raw);}
+ m.busy=true;m.err='';render331();
+ try{
+  const st=await api('scl330_vitrina_add_booking',{p_token:SCL_ROUTING.pharmacyToken,p_facade_no:m.no,p_position_id:m.selPos,p_brand:brand,p_start:dnIso331(s),p_end:dnIso331(e),p_status:m.fStatus,p_amount:amount,p_note:m.fNote.trim()});
+  V331.data=st;V331.status='ready';
+  Object.assign(m,{panel:'card',unit:isW?'week':'month',month:isW?monthOfWeek331(s):m.fFrom,week:isW?s:m.week,err:'',msg:'Η κράτηση αποθηκεύτηκε ('+brand+', '+rangeText331({s,e})+').',focus:'side'});
+ }catch(x){m.err=msg331(x);m.focus='err';}
+ m.busy=false;render331();
+}
+async function deleteBooking331(){
+ const m=M331,b=m.bk.find(x=>x.id===m.detailId);if(!b||m.busy)return;
+ m.busy=true;m.err='';render331();
+ try{
+  const st=await api('scl330_vitrina_delete_booking',{p_token:SCL_ROUTING.pharmacyToken,p_booking_id:b.id});
+  V331.data=st;V331.status='ready';
+  Object.assign(m,{panel:'card',detailId:'',confirmDel:false,msg:'Η κράτηση διαγράφηκε.',focus:'side'});
+ }catch(x){m.err=msg331(x);m.focus='err';}
+ m.busy=false;render331();
+}
+async function saveDetails331(){
+ const m=M331,f=(V331.data?.facades||[]).find(x=>x.facade_no===m.no);if(!f||m.dsaving||!m.dpid||!dchanged331())return;
+ const dims=m.dims.trim().slice(0,80),acc=m.accepts.trim().slice(0,80),pid=m.dpid;
+ const des=JSON.parse(JSON.stringify(f.design||{}));
+ des.meta=des.meta&&typeof des.meta==='object'?des.meta:{};
+ const pos=Object.assign({},des.meta.pos&&typeof des.meta.pos==='object'?des.meta.pos:{});
+ if(!dims&&!acc)delete pos[pid];else pos[pid]={dims,accepts:acc};
+ if(Object.keys(pos).length)des.meta.pos=pos;else delete des.meta.pos;
+ m.dsaving=true;m.err='';render331();
+ try{
+  const st=await api('scl330_vitrina_save_facade',{p_token:SCL_ROUTING.pharmacyToken,p_facade_no:m.no,p_expected_revision:f.revision,p_name:f.name,p_design:des});
+  V331.data=st;V331.status='ready';m.dims=dims;m.accepts=acc;m.msg='Οι λεπτομέρειες της θέσης αποθηκεύτηκαν.';m.focus='';
+ }catch(x){
+  m.err=msg331(x);
+  if(/άλλαξε από άλλη συσκευή|δεν υπάρχει πια/.test(m.err)){try{V331.data=await api('scl330_vitrina_get',{p_token:SCL_ROUTING.pharmacyToken});m.err+=' Φορτώθηκαν τα τελευταία στοιχεία· δοκίμασε ξανά.';}catch(_e){}}
+ }
+ m.dsaving=false;render331();
+}
+// ---- οθόνη --------------------------------------------------------------------
+function stageM331(sel,info,plabel,positions){
+ const m=M331,vw=VW331(),total=facW331(),z=effZ331(),W=total*z,fit=zMin331(),off=clampOff331(m.offset,W),long=total>vw+.5;
+ const f=facade331(m,{z,off,mode:'pos',selPos:sel.id,info,per:plabel});
+ const isFit=Math.abs(z-fit)<.005,isRead=Math.abs(z-1)<.005,canL=W>vw&&off>1,canR=W>vw&&off<W-vw-1,idx=positions.findIndex(p=>p.id===sel.id);
+ let h='<div class="scl331-stg"><div class="scl331-vp" id="scl331Vp" style="height:'+(f.h+38)+'px" data-off="'+Math.round(off)+'" data-w="'+Math.round(W)+'">'+f.html
+  +(canL?'<button type="button" class="scl331-pan scl331-panl" data-m="pan" data-d="-1" aria-label="Μετακίνηση αριστερά">‹</button>':'')
+  +(canR?'<button type="button" class="scl331-pan scl331-panr" data-m="pan" data-d="1" aria-label="Μετακίνηση δεξιά">›</button>':'')+'</div>';
+ if(long)h+='<div class="scl331-tb"><span class="scl331-tbl">Μεγέθυνση</span>'
+  +act331('−','data-m="zoom" data-v="out"',{aria:'Σμίκρυνση',cls:'sq'})+'<span class="scl331-zl" role="status">'+Math.round(z*100)+'%</span>'+act331('+','data-m="zoom" data-v="in"',{aria:'Μεγέθυνση',cls:'sq'})
+  +seg331('Ευανάγνωστο',isRead,'data-m="zoom" data-v="read"',{cls:'sm'})+seg331('Όλη η όψη',isFit,'data-m="zoom" data-v="fit"',{cls:'sm'})
+  +'<span class="scl331-grow"></span>'+act331('‹ Προηγούμενη θέση','data-m="step" data-d="-1"',{cls:'sm',dis:idx<=0})+'<span class="scl331-cnt" role="status">Θέση '+(idx+1)+' από '+positions.length+'</span>'+act331('Επόμενη θέση ›','data-m="step" data-d="1"',{cls:'sm',dis:idx>=positions.length-1})+'</div>'
+  +mini331(sel.piece,{info});
+ h+='<ul class="scl331-legend scl331-leg2"><li><i class="sw free"></i>Ελεύθερη</li><li><i class="sw disc"></i>Σε συζήτηση</li><li><i class="sw closed"></i>Κλεισμένη</li><li><i class="sw part"></i>Μερικώς κλεισμένη (ένα μέρος της περιόδου)</li><li><i class="sw panel"></i>Κομμάτι χωρίς πώληση</li></ul>'
+  +'<span class="scl331-note scl331-lnote">Το χρώμα δείχνει την κατάσταση της περιόδου που διάλεξες, όχι τη μάρκα. Η πινακίδα δεν πουλιέται.</span></div>';
+ return h;
+}
+function main331(){
+ const m=M331,f=syncM331();if(!f)return list331();
+ const d=V331.data,facs=d.facades||[],positions=allPos331(m);
+ const top='<div class="scl331-lead"><h2 id="scl331Title" tabindex="-1">Η Βιτρίνα μου</h2><p>Δούλεψε σε μήνες ή σε εβδομάδες, όπως σε βολεύει. Διάλεξε περίοδο και πάτα μια θέση στο σχέδιο. Δίπλα στο χρονοδιάγραμμα βλέπεις την κάρτα της και κάνεις νέα κράτηση.</p></div>'
+  +'<div class="scl331-mbar">'+(facs.length>1?'<div class="scl331-fsw" role="group" aria-label="Όψη του φαρμακείου">'+facs.map(x=>seg331('Όψη '+x.facade_no+' · '+E(x.name),x.facade_no===m.no,'data-m="fac" data-v="'+x.facade_no+'"',{cls:'sm'})).join('')+'</div>':'<span class="scl331-chip">Όψη '+f.facade_no+' · '+E(f.name)+'</span>')
+  +'<span class="scl331-grow"></span><div class="scl331-mtools">'+act331('Αλλαγή σχεδίου όψης','data-m="edit"',{cls:'sm'})+act331('Όλες οι όψεις','data-m="all"',{cls:'sm'})+'</div></div>';
+ if(!positions.length)return '<div class="scl331-card scl331-bd scl331-mn">'+top+'<div class="scl331-warn" role="status">Αυτή η όψη δεν έχει ακόμη θέσεις πώλησης. Πάτα «Αλλαγή σχεδίου όψης» και σημείωσε ποια κομμάτια πουλάς.</div></div>';
+ const byId={};positions.forEach(p=>{byId[p.id]=p;});
+ const sel=byId[m.selPos]||positions[0];m.selPos=sel.id;
+ if(m.dpid!==sel.id){const s=dsaved331(sel.id);m.dpid=sel.id;m.dims=s.dims;m.accepts=s.accepts;}
+ const cache={},pi=pid=>cache[pid]||(cache[pid]=pinfo331(pid)),info=pid=>{const x=pi(pid);return{s:x.s,brand:x.brand};};
+ const isWeek=m.unit==='week',plabel=perLabel331(),mw=weeksOf331(m.month);
+ let nF=0,nD=0,nC=0,nP=0;positions.forEach(p=>{const s=pi(p.id).s;if(s==='free')nF++;else if(s==='discussion')nD++;else if(s==='partial')nP++;else nC++;});
+ const pill=(n,one,many,c)=>'<span class="scl331-pill '+c+'">'+n+' '+(n===1?one:many)+'</span>';
+ const sumPills=pill(nC,'κλεισμένη','κλεισμένες','cl')+(nP?pill(nP,'μερικώς κλεισμένη','μερικώς κλεισμένες','cl'):'')+pill(nD,'σε συζήτηση','σε συζήτηση','ds')+pill(nF,'ελεύθερη','ελεύθερες','fr');
+ // 1. περίοδος
+ const s1='<section class="scl331-sec"><div class="scl331-sech"><h3>1. Διάλεξε περίοδο</h3><div class="scl331-unit" role="group" aria-label="Μονάδα χρόνου">'+seg331('Μήνες',!isWeek,'data-m="unit" data-v="month"',{cls:'dk'})+seg331('Εβδομάδες',isWeek,'data-m="unit" data-v="week"',{cls:'dk'})+'</div></div>'
+  +'<div class="scl331-mchips" role="group" aria-label="Μήνας">'+MS331.map((n,i)=>seg331(n,i===m.month,'data-m="month" data-v="'+i+'" aria-label="'+MF331[i]+'"',{cls:'sm'})).join('')+'</div>'
+  +(isWeek?'<span class="scl331-gl">Εβδομάδες του μήνα (Δευτέρα–Κυριακή)</span><div class="scl331-wchips" role="group" aria-label="Εβδομάδες του μήνα">'+mw.map(w=>seg331(fmtR331(w,w+6),w===m.week,'data-m="week" data-v="'+w+'" aria-label="Εβδομάδα '+fmtR331(w,w+6)+'"',{cls:'sm'})).join('')+'</div>':'')+'</section>';
+ // 2. σχέδιο
+ const s2='<section class="scl331-sec"><div class="scl331-sech"><h3>2. Πάτα μια θέση στο σχέδιο</h3><div class="scl331-pills" role="status"><span class="scl331-plab">'+E(plabel)+':</span>'+sumPills+'</div></div>'+stageM331(sel,info,plabel,positions)+'</section>';
+ // 3. χρονοδιάγραμμα
+ const cols=isWeek?mw.map(w=>({key:w,label:fmtR331(w,w+6),aria:'Εβδομάδα '+fmtR331(w,w+6),on:w===m.week})):MS331.map((n,i)=>({key:i,label:n,aria:MF331[i],on:i===m.month}));
+ const N=cols.length,viewS=isWeek?mw[0]:mS331(0),viewE=isWeek?mw[N-1]+6:mE331(11);
+ const xOf=day=>{
+  if(isWeek)return Math.max(0,Math.min(1,(day-viewS)/(viewE-viewS+1)));
+  if(day<=mS331(0))return 0;if(day>mE331(11))return 1;
+  const mo=dd331(day).getUTCMonth();return (mo+(day-mS331(mo))/(mE331(mo)-mS331(mo)+1))/12;
+ };
+ const gcol='grid-template-columns:repeat('+N+',minmax(0,1fr))';
+ const heads=cols.map(c=>'<button type="button" class="scl331-gch'+(c.on?' on':'')+'" data-m="gcol" data-v="'+c.key+'" aria-label="'+E(c.aria)+'"'+(c.on?' aria-current="true"':'')+'>'+E(c.label)+'</button>').join('');
+ const rows=positions.map(p=>{
+  const isSel=p.id===sel.id;
+  const cells=cols.map((c,i)=>'<button type="button" class="scl331-gce'+(c.on?' on':'')+'" style="grid-column:'+(i+1)+'" tabindex="-1" data-m="gnew" data-id="'+E(p.id)+'" data-v="'+c.key+'" aria-label="'+E('Νέα κράτηση: '+p.name+', '+c.label)+'"></button>').join('');
+  const bars=m.bk.filter(b=>b.pos===p.id&&b.s<=viewE&&b.e>=viewS).map(b=>{
+   const l=xOf(Math.max(b.s,viewS)),r=xOf(Math.min(b.e,viewE)+1),wpx=(r-l)*560,cl=b.s<viewS,cr=b.e>viewE;
+   const aria='Κράτηση '+b.brand+', '+rangeText331(b)+', '+SL331[b.status];
+   return '<button type="button" class="scl331-gb '+(b.status==='closed'?'cl':'ds')+'" style="left:'+(l*100)+'%;width:'+((r-l)*100)+'%" data-m="open" data-id="'+E(b.id)+'" aria-label="'+E(aria)+'" title="'+E(aria)+'">'+(wpx>=56?(cl?'‹ ':'')+E(b.brand)+(cr?' ›':''):'')+'</button>';
+  }).join('');
+  return '<div class="scl331-gr'+(isSel?' sel':'')+'"><button type="button" class="scl331-glb" data-m="mpos" data-id="'+E(p.id)+'"'+(isSel?' aria-current="true"':'')+'><span class="scl331-pn big">'+p.num+'</span><span class="scl331-pnm2">'+E(p.name)+'</span></button><div class="scl331-gtl" style="'+gcol+'">'+cells+bars+'</div></div>';
+ }).join('');
+ const s3='<div class="scl331-gcol"><div class="scl331-boxh"><h3 class="scl331-h3">'+(isWeek?'3. Οι εβδομάδες του μήνα':'3. Όλη η χρονιά')+'</h3><span class="s">'+(isWeek?'Πάτα μια κενή εβδομάδα για νέα κράτηση ή μια έγχρωμη μπάρα για να τη δεις. Η μπλε στήλη είναι η εβδομάδα που διάλεξες. Ένα βέλος στη μπάρα σημαίνει ότι συνεχίζει πέρα από αυτές τις εβδομάδες.':'Πάτα έναν κενό μήνα για νέα κράτηση ή μια έγχρωμη μπάρα για να τη δεις. Η μπλε στήλη είναι ο μήνας που διάλεξες. Οι στενές μπάρες είναι κρατήσεις εβδομάδων· για να τις διαβάσεις, πάτα «Εβδομάδες».')+'</span></div>'
+  +'<div class="scl331-gw"><div class="scl331-gt"><div class="scl331-gh"><span></span><div class="scl331-ghs" style="'+gcol+'">'+heads+'</div></div>'+rows+'</div></div></div>';
+ // 4. κάρτα θέσης
+ const ni=pi(sel.id),side=m.panel==='form'?formM331(sel):m.panel==='detail'&&m.bk.some(b=>b.id===m.detailId)?detailM331(byId):cardM331(sel,ni,plabel);
+ const s4='<div class="scl331-gcol" id="scl331Side" tabindex="-1"><div class="scl331-boxh"><h3 class="scl331-h3">4. Η θέση και οι κρατήσεις της</h3></div><div class="scl331-pn1 scl331-side">'
+  +(m.msg?'<div class="scl331-ok" role="status"><span>'+E(m.msg)+'</span></div>':'')+side+'</div></div>';
+ return '<div class="scl331-card scl331-bd scl331-mn">'+top+s1+s2+'<div class="scl331-mcols">'+s3+s4+'</div></div>';
+}
+const err331=()=>M331.err?'<p class="scl331-error" id="scl331Err" tabindex="-1" role="alert">'+E(M331.err)+'</p>':'';
+function cardM331(sel,ni,plabel){
+ const m=M331,hist=m.bk.filter(b=>b.pos===sel.id).sort((a,b)=>a.s-b.s);
+ const tone=ni.s==='discussion'?'ds':ni.s==='free'?'fr':'cl';
+ const chip=b=>'<span class="scl331-pill '+(b.status==='closed'?'cl':'ds')+'">'+SL331[b.status]+'</span>';
+ const dv=m.detailsOpen,ch=dchanged331();
+ return '<div class="scl331-selp"><span class="scl331-pn big">'+sel.num+'</span><div class="scl331-selh"><strong>'+E(sel.name)+'</strong><span class="s">'+tl331(sel.type,sel.tier==='up')+(m.twoTier?(sel.tier==='up'?' · πάνω τζαμαρία':' · κάτω τζαμαρία'):'')+'</span></div></div>'
+  +'<div class="scl331-now '+tone+'"><span class="k">'+E(plabel)+'</span><strong>'+SL331[ni.s]+'</strong>'+(ni.s!=='free'?'<span>'+E(ni.brands)+'</span>':'')+(ni.s==='partial'?'<span>Ελεύθερο: '+E(ni.free)+'</span>':'')+'</div>'
+  +'<button type="button" class="action blue scl331-btn scl331-newb" data-m="new">+ Νέα κράτηση</button>'
+  +'<div class="scl331-hist"><span class="scl331-gl">Κρατήσεις αυτής της θέσης</span>'
+  +(hist.length?'<ul>'+hist.map(b=>'<li><button type="button" class="scl331-hi" data-m="open" data-id="'+E(b.id)+'" aria-label="'+E('Άνοιγμα κράτησης '+b.brand+', '+rangeText331(b))+'"><span><strong>'+E(b.brand)+'</strong><small>'+E(rangeText331(b))+'</small></span>'+chip(b)+'</button></li>').join('')+'</ul>':'<span class="scl331-note">Δεν έχει ακόμη κρατήσεις.</span>')+'</div>'
+  +'<div class="scl331-dets"><button type="button" class="scl331-dtog" data-m="details" aria-expanded="'+dv+'">'+(dv?'▾ ':'▸ ')+'Λεπτομέρειες θέσης (προαιρετικά)</button>'
+  +(dv?'<label class="scl331-fl2"><span>Διαστάσεις (προαιρετικά)</span><input type="text" maxlength="80" data-m="dims" value="'+E(m.dims)+'" placeholder="π.χ. 2,4 × 1,8 μ." autocomplete="off"></label>'
+   +'<label class="scl331-fl2"><span>Τι δέχεται η θέση (προαιρετικά)</span><input type="text" maxlength="80" data-m="accepts" value="'+E(m.accepts)+'" placeholder="π.χ. αφίσα ή αυτοκόλλητο" autocomplete="off"></label>'
+   +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn scl331-sm" data-m="dsave"'+(!ch||m.dsaving?' disabled':'')+'>'+(m.dsaving?'Αποθήκευση…':'Αποθήκευση λεπτομερειών')+'</button></div>':'')+err331()+'</div>'
+  +'<span class="scl331-note">Τα ποσά φαίνονται μόνο μέσα στην κράτηση. Τα Κεντρικά δεν βλέπουν τίποτα από τη Βιτρίνα.</span>';
+}
+function formM331(sel){
+ const m=M331,isW=m.fUnit==='week',brands=[];
+ (V331.data?.bookings||[]).forEach(b=>{if(b.brand&&brands.indexOf(b.brand)<0)brands.push(b.brand);});
+ const chipM=kind=>MS331.map((n,i)=>{
+  const on=(kind==='from'?m.fFrom:m.fTo)===i,cl=overl331(sel.id,mS331(i),mE331(i))[0];
+  return seg331(n,on,'data-m="'+(kind==='from'?'ffrom':'fto')+'" data-v="'+i+'" aria-label="'+E((kind==='from'?'Από ':'Μέχρι ')+MF331[i]+(cl?' (έχει κράτηση: '+cl.brand+')':''))+'"',{cls:'sm'+(cl?' clash':''),dis:!!cl});
+ }).join('');
+ const wEnd=m.fWeek+7*m.fWeeks-1,navW=weeksOf331(m.fNav);
+ const wOpts=navW.map(w=>{const cl=overl331(sel.id,w,w+6)[0],on=w>=m.fWeek&&w<=wEnd-6;return seg331(fmtR331(w,w+6),on,'data-m="fweek" data-v="'+w+'" aria-label="'+E('Εβδομάδα '+fmtR331(w,w+6)+(cl?' (έχει κράτηση: '+cl.brand+')':''))+'"',{cls:'sm'+(cl?' clash':''),dis:!!cl});}).join('');
+ const mx=maxWeeksFrom331(sel.id,m.fWeek),more=m.fWeeks<mx;
+ const hint=more?'':(m.fWeeks>=12?'Το πολύ 12 εβδομάδες σε μία κράτηση.':'Δεν προστίθεται άλλη εβδομάδα: η επόμενη έχει ήδη κράτηση ή τελειώνει η χρονιά.');
+ return '<div class="scl331-form"><button type="button" class="scl331-link" data-m="back">‹ Πίσω στη θέση</button><h4 class="scl331-fh">Νέα κράτηση · '+E(sel.name)+'</h4>'
+  +'<label class="scl331-fl2"><span>Προμηθευτής ή μάρκα</span><input type="text" data-m="brand" list="scl331Brands" maxlength="80" value="'+E(m.fBrand)+'" placeholder="Γράψε ή διάλεξε από παλιότερες" autocomplete="off"><datalist id="scl331Brands">'+brands.map(b=>'<option value="'+E(b)+'"></option>').join('')+'</datalist></label>'
+  +'<div class="scl331-grp" role="group" aria-label="Η κράτηση είναι σε"><span class="scl331-gl">Η κράτηση είναι σε</span><div class="scl331-g" style="--n:2">'+seg331('Μήνες',!isW,'data-m="funit" data-v="month"')+seg331('Εβδομάδες',isW,'data-m="funit" data-v="week"')+'</div></div>'
+  +(isW
+   ?'<div class="scl331-grp"><span class="scl331-gl">Πρώτη εβδομάδα (Δευτέρα–Κυριακή)</span><div class="scl331-nav">'+act331('‹','data-m="fnav" data-d="-1"',{cls:'sq',aria:'Προηγούμενος μήνας',dis:m.fNav<=0})+'<span class="scl331-navl" role="status">'+MF331[m.fNav]+'</span>'+act331('›','data-m="fnav" data-d="1"',{cls:'sq',aria:'Επόμενος μήνας',dis:m.fNav>=11})+'</div><div class="scl331-wchips">'+wOpts+'</div></div>'
+    +'<div class="scl331-grp"><span class="scl331-gl">Πόσες εβδομάδες</span><div class="scl331-nav">'+act331('−','data-m="wless"',{cls:'sq big',aria:'Μία εβδομάδα λιγότερη',dis:m.fWeeks<=1})+'<span class="scl331-navl" role="status">'+m.fWeeks+(m.fWeeks===1?' εβδομάδα':' εβδομάδες')+'</span>'+act331('+','data-m="wmore"',{cls:'sq big',aria:'Μία εβδομάδα ακόμη',dis:!more})+'</div>'+(hint?'<span class="scl331-note">'+hint+'</span>':'')+'<div class="scl331-wsum" role="status">Από '+fmtD331(m.fWeek)+' έως '+fmtD331(wEnd)+'</div></div>'
+   :'<div class="scl331-grp"><span class="scl331-gl">Από μήνα</span><div class="scl331-fch">'+chipM('from')+'</div></div><div class="scl331-grp"><span class="scl331-gl">Μέχρι και μήνα</span><div class="scl331-fch">'+chipM('to')+'</div></div>')
+  +'<div class="scl331-grp" role="group" aria-label="Κατάσταση"><span class="scl331-gl">Κατάσταση</span><div class="scl331-g" style="--n:2">'+seg331('Σε συζήτηση',m.fStatus==='discussion','data-m="fstatus" data-v="discussion"')+seg331('Κλεισμένη',m.fStatus==='closed','data-m="fstatus" data-v="closed"')+'</div></div>'
+  +'<label class="scl331-fl2"><span>Ποσό για όλη την κράτηση, σε € (μπορεί να μείνει κενό όσο συζητάτε)</span><input type="text" inputmode="decimal" data-m="amount" value="'+E(m.fAmount)+'" placeholder="π.χ. 900" autocomplete="off"></label>'
+  +'<label class="scl331-fl2"><span>Σημείωση για το υλικό ή σχόλια</span><input type="text" data-m="note" maxlength="300" value="'+E(m.fNote)+'" placeholder="π.χ. αφίσα 2 × 1 μ." autocomplete="off"></label>'
+  +err331()
+  +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-m="bsave"'+(m.busy?' disabled aria-busy="true"':'')+'>'+(m.busy?'Αποθήκευση…':'Αποθήκευση κράτησης')+'</button>'+act331('Άκυρο','data-m="back"',{dis:m.busy})+'</div></div>';
+}
+function detailM331(byId){
+ const m=M331,b=m.bk.find(x=>x.id===m.detailId),p=byId[b.pos];
+ return '<div class="scl331-form"><button type="button" class="scl331-link" data-m="back" >‹ Πίσω στη θέση</button>'
+  +'<div class="scl331-dh"><strong>'+E(b.brand)+'</strong><span class="scl331-pill '+(b.status==='closed'?'cl':'ds')+'">'+SL331[b.status]+'</span></div>'
+  +'<dl class="scl331-kv"><dt>Θέση</dt><dd>'+E(p?p.name:b.pos)+'</dd><dt>Περίοδος</dt><dd>'+E(rangeText331(b))+'</dd><dt>Ποσό</dt><dd>'+(b.amount===null?'Δεν έχει οριστεί ακόμη':'<span class="scl310-private-amount">'+E(b.amount.toLocaleString('el-GR',{minimumFractionDigits:0,maximumFractionDigits:2})+' €')+'</span>')+'</dd><dt>Σημείωση</dt><dd>'+(b.note?E(b.note):'Καμία')+'</dd></dl>'
+  +(m.confirmDel
+   ?'<div class="scl331-confirm" role="alertdialog" aria-label="Διαγραφή κράτησης"><span>Να διαγραφεί η κράτηση του '+E(b.brand)+'; Δεν επαναφέρεται.</span><span class="scl331-cbtn">'+act331(m.busy?'Διαγραφή…':'Ναι, διαγραφή','data-m="dodel"',{cls:'danger',dis:m.busy})+act331('Άκυρο','data-m="nodel"',{dis:m.busy})+'</span></div>'+err331()
+   :err331()+act331('Διαγραφή κράτησης','data-m="askdel"',{cls:'danger'})+'<span class="scl331-note">Για να αλλάξεις μια κράτηση, διέγραψέ την και φτιάξε νέα.</span>')+'</div>';
+}
+function openMain331(no){V331.view='main';resetM331(no);}
+document.addEventListener('click',e=>{
+ const t=e.target.closest?.('[data-m]');if(!t||!host331()?.contains(t)||t.disabled||t.tagName==='INPUT'||t.tagName==='DATALIST')return;
+ e.preventDefault();
+ const m=M331,a=t.dataset.m,v=t.dataset.v,id=t.dataset.id,d=+t.dataset.d;
+ switch(a){
+  case 'unit':setUnit331(v);break;
+  case 'month':setMonth331(+v);break;
+  case 'week':m.week=+v;break;
+  case 'gcol':if(m.unit==='week')m.week=+v;else setMonth331(+v);break;
+  case 'gnew':newBooking331(id,m.unit,+v);break;
+  case 'mpos':pickPos331(id);break;
+  case 'mmini':pickPiece331(id);break;
+  case 'open':openBooking331(id);break;
+  case 'new':newForSel331();m.reveal=true;break;
+  case 'back':Object.assign(m,{panel:'card',confirmDel:false,err:'',focus:'side'});break;
+  case 'details':m.detailsOpen=!m.detailsOpen;break;
+  case 'dsave':saveDetails331();return;
+  case 'funit':setFUnit331(v);break;
+  case 'ffrom':m.fFrom=+v;if(m.fTo<m.fFrom)m.fTo=m.fFrom;m.err='';break;
+  case 'fto':m.fTo=+v;if(m.fFrom>m.fTo)m.fFrom=m.fTo;m.err='';break;
+  case 'fweek':m.fWeek=+v;m.fWeeks=1;m.err='';break;
+  case 'fnav':m.fNav=Math.max(0,Math.min(11,m.fNav+d));break;
+  case 'wless':m.fWeeks=Math.max(1,m.fWeeks-1);m.err='';break;
+  case 'wmore':if(m.fWeeks<maxWeeksFrom331(m.selPos,m.fWeek))m.fWeeks++;m.err='';break;
+  case 'fstatus':m.fStatus=v==='closed'?'closed':'discussion';break;
+  case 'bsave':saveBooking331();return;
+  case 'askdel':m.confirmDel=true;m.err='';break;
+  case 'nodel':m.confirmDel=false;m.err='';break;
+  case 'dodel':deleteBooking331();return;
+  case 'zoom':if(v==='in')zoomTo331(effZ331()+.25,null);else if(v==='out')zoomTo331(effZ331()-.25,null);else if(v==='read'){const p=allPos331(m).find(x=>x.id===m.selPos);zoomTo331(1,p?p.piece:null);}else{m.zoom=zMin331();m.offset=0;}break;
+  case 'pan':panBy331(d*VW331()*.6);break;
+  case 'step':stepPos331(d);break;
+  case 'fac':resetM331(+v);break;
+  case 'edit':editFacade331(m.no);V331.focusTitle=true;V331.error='';break;
+  case 'all':V331.view='list';V331.focusTitle=true;V331.error='';break;
+  default:return;
+ }
+ render331();
+});
+document.addEventListener('input',e=>{
+ const t=e.target,k=t.dataset?.m;if(!k||!host331()?.contains(t))return;
+ const m=M331;
+ if(k==='brand')m.fBrand=t.value;else if(k==='amount')m.fAmount=t.value;else if(k==='note')m.fNote=t.value;
+ else if(k==='dims')m.dims=t.value;else if(k==='accepts')m.accepts=t.value;else return;
+ V331.html='';
+ if(k==='dims'||k==='accepts'){const bt=host331().querySelector('[data-m="dsave"]');if(bt)bt.disabled=!dchanged331()||m.dsaving;}
+ if(m.err){m.err='';$('scl331Err')?.remove();}
 });
 
 function canEditMonth(c,m){return y()>=now().year&&active(c,m)&&operationalMonthEditable(m);}
@@ -46814,5 +47159,132 @@ body.scl295-pharmacy #scl331Host .scl331-fname{flex:1 1 100%;max-width:none}
 body.scl295-pharmacy #scl331Host .scl331-selh strong{font-size:18px}
 body.scl295-pharmacy #scl331Host .scl331-fb{width:100%}
 body.scl295-pharmacy #scl331Host .scl331-fb .scl331-seg{flex:1}
+}
+/* v331.2 — κύριο παράθυρο: κρατήσεις (μήνες ή εβδομάδες) */
+body.scl295-pharmacy{--scl331-okbg:#e3f4ea;--scl331-okink:#14633b;--scl331-okline:#1f7a4d;--scl331-okbar:#bfe6cf;--scl331-okbarink:#0f5132;--scl331-wtbg:#fff4d6;--scl331-wtink:#7a4b00;--scl331-wtline:#c58a00;--scl331-wtbar:#ffe9ad;--scl331-wtbarink:#6b4200;--scl331-frbg:#e8f0fc;--scl331-frink:#1a45b0;--scl331-col:#e8f0fc;--scl331-rowsel:#f5f8ff}
+body.scl295-pharmacy[data-scl324-theme="dark"]{--scl331-okbg:rgba(52,199,89,.2);--scl331-okink:#8fe3ae;--scl331-okline:#3fbf74;--scl331-okbar:rgba(52,199,89,.3);--scl331-okbarink:#c3f3d6;--scl331-wtbg:rgba(255,204,0,.18);--scl331-wtink:#ffd966;--scl331-wtline:#d9a400;--scl331-wtbar:rgba(255,204,0,.28);--scl331-wtbarink:#ffe9a8;--scl331-frbg:rgba(10,132,255,.22);--scl331-frink:#9cc4ff;--scl331-col:rgba(10,132,255,.16);--scl331-rowsel:rgba(10,132,255,.08)}
+body.scl295-pharmacy #scl331Host .scl331-mn{align-items:stretch;gap:22px}
+body.scl295-pharmacy #scl331Host .scl331-mbar{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-fsw,body.scl295-pharmacy #scl331Host .scl331-mtools{display:flex;gap:8px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-sec{display:flex;flex-direction:column;gap:12px}
+body.scl295-pharmacy #scl331Host .scl331-sech{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-sech h3,body.scl295-pharmacy #scl331Host .scl331-h3{margin:0;font-size:16px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none}
+body.scl295-pharmacy #scl331Host .scl331-unit{display:flex;gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-seg.dk{min-height:44px;padding:0 18px;font-size:13px}
+body.scl295-pharmacy #scl331Host .scl331-seg.dk.on{background:var(--ink)!important;color:var(--surface)!important;box-shadow:none!important}
+body.scl295-pharmacy #scl331Host .scl331-mchips{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-mchips .scl331-seg{padding:0}
+body.scl295-pharmacy #scl331Host .scl331-wchips{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-wchips .scl331-seg{padding:0 6px}
+body.scl295-pharmacy #scl331Host .scl331-pills{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-plab{font-size:13px;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-pill{display:inline-block;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:700;white-space:nowrap}
+body.scl295-pharmacy #scl331Host .scl331-pill.cl{background:var(--scl331-okbg);color:var(--scl331-okink)}
+body.scl295-pharmacy #scl331Host .scl331-pill.ds{background:var(--scl331-wtbg);color:var(--scl331-wtink)}
+body.scl295-pharmacy #scl331Host .scl331-pill.fr{background:var(--scl331-frbg);color:var(--scl331-frink)}
+/* θέσεις πώλησης με κατάσταση */
+body.scl295-pharmacy #scl331Host button.scl331-ps{margin:0;padding:2px;font:inherit;cursor:pointer;flex-direction:column;gap:4px}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos .scl331-pn{background:#1d1d1f;color:#fff}
+body.scl295-pharmacy #scl331Host .scl331-pc .scl331-ps.pos.st-free .scl331-pn{background:#1d1d1f;color:#fff}
+body.scl295-pharmacy #scl331Host .scl331-pc.panel .scl331-ps.pos.st-free .scl331-pn,body.scl295-pharmacy #scl331Host .scl331-pc.column .scl331-ps.pos.st-free .scl331-pn{background:#fff;color:#1d1d1f}
+body.scl295-pharmacy #scl331Host .scl331-pc .scl331-ps.pos.st-discussion{background:#fff4d6;border:2px solid #c58a00}
+body.scl295-pharmacy #scl331Host .scl331-pc .scl331-ps.pos.st-closed{background:#e3f4ea;border:2px solid #1f7a4d}
+body.scl295-pharmacy #scl331Host .scl331-pc .scl331-ps.pos.st-partial{background:repeating-linear-gradient(135deg,#e3f4ea 0,#e3f4ea 6px,#fff 6px,#fff 12px);border:2px solid #1f7a4d}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos .scl331-pb,body.scl295-pharmacy #scl331Host .scl331-ps.pos .scl331-pt{font-size:12px;line-height:1.2;text-align:center;overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos .scl331-pb{font-weight:800}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos .scl331-pt{font-weight:600}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-free .scl331-pt{color:#1a45b0}
+body.scl295-pharmacy #scl331Host .scl331-pc.panel .scl331-ps.pos.st-free .scl331-pt,body.scl295-pharmacy #scl331Host .scl331-pc.column .scl331-ps.pos.st-free .scl331-pt{color:#fff}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-discussion .scl331-pb,body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-discussion .scl331-pt{color:#7a4b00}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-closed .scl331-pb,body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-closed .scl331-pt,body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-partial .scl331-pb,body.scl295-pharmacy #scl331Host .scl331-ps.pos.st-partial .scl331-pt{color:#14633b}
+body.scl295-pharmacy #scl331Host .scl331-ps.pos.selp{outline:3px solid var(--scl331-sela);outline-offset:1px;box-shadow:0 0 0 7px var(--scl331-selb);z-index:4}
+body.scl295-pharmacy #scl331Host button.scl331-ps:focus-visible{outline:3px solid var(--accent);outline-offset:2px;z-index:6}
+body.scl295-pharmacy #scl331Host button.scl331-ps.selp:focus-visible{outline-color:var(--accent)}
+body.scl295-pharmacy #scl331Host .scl331-ms.st-closed{background:#1f7a4d;box-shadow:none}
+body.scl295-pharmacy #scl331Host .scl331-ms.st-discussion{background:#c58a00;box-shadow:none}
+body.scl295-pharmacy #scl331Host .scl331-ms.st-partial{background:repeating-linear-gradient(135deg,#1f7a4d 0,#1f7a4d 2px,#fff 2px,#fff 4px);box-shadow:none}
+body.scl295-pharmacy #scl331Host .scl331-legend .sw.free{background:var(--scl331-glass);border:2px dashed #2459e0}
+body.scl295-pharmacy #scl331Host .scl331-legend .sw.disc{background:#fff4d6;border:2px solid #c58a00}
+body.scl295-pharmacy #scl331Host .scl331-legend .sw.closed{background:#e3f4ea;border:2px solid #1f7a4d}
+body.scl295-pharmacy #scl331Host .scl331-legend .sw.part{background:repeating-linear-gradient(135deg,#e3f4ea 0,#e3f4ea 4px,#fff 4px,#fff 8px);border:2px solid #1f7a4d}
+body.scl295-pharmacy #scl331Host .scl331-lnote{display:block;margin:0}
+/* χρονοδιάγραμμα */
+body.scl295-pharmacy #scl331Host .scl331-mcols{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(300px,1fr);gap:24px;align-items:start}
+body.scl295-pharmacy #scl331Host .scl331-gcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+body.scl295-pharmacy #scl331Host #scl331Side{scroll-margin-top:12px}
+body.scl295-pharmacy #scl331Host #scl331Side:focus,body.scl295-pharmacy #scl331Host #scl331Err:focus{outline:none}
+body.scl295-pharmacy #scl331Host .scl331-gw{overflow-x:auto;border-radius:12px;box-shadow:inset 0 0 0 1px var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-gt{min-width:600px}
+body.scl295-pharmacy #scl331Host .scl331-gh,body.scl295-pharmacy #scl331Host .scl331-gr{display:grid;grid-template-columns:124px minmax(0,1fr);align-items:stretch}
+body.scl295-pharmacy #scl331Host .scl331-gh{border-bottom:1px solid var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-gh>span{position:sticky;left:0;z-index:4;background:var(--surface)}
+body.scl295-pharmacy #scl331Host .scl331-ghs{display:grid}
+body.scl295-pharmacy #scl331Host .scl331-gch{min-height:40px;padding:0 2px;border:0;border-bottom:3px solid transparent;background:transparent;font:inherit;font-size:12px;line-height:1.25;font-weight:600;color:var(--ink2);cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-gch.on{color:var(--accent-ink);font-weight:800;border-bottom-color:var(--accent)}
+body.scl295-pharmacy #scl331Host .scl331-gch:focus-visible,body.scl295-pharmacy #scl331Host .scl331-glb:focus-visible,body.scl295-pharmacy #scl331Host .scl331-gb:focus-visible,body.scl295-pharmacy #scl331Host .scl331-gce:focus-visible,body.scl295-pharmacy #scl331Host .scl331-hi:focus-visible,body.scl295-pharmacy #scl331Host .scl331-dtog:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+body.scl295-pharmacy #scl331Host .scl331-gr{border-bottom:1px solid var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-gr:last-child{border-bottom:0}
+body.scl295-pharmacy #scl331Host .scl331-gr.sel{background:var(--scl331-rowsel)}
+body.scl295-pharmacy #scl331Host .scl331-glb{position:sticky;left:0;z-index:4;display:flex;align-items:center;gap:8px;min-height:48px;padding:0 8px 0 8px;border:0;background:var(--surface);font:inherit;font-size:13px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-gr.sel .scl331-glb{background:linear-gradient(var(--scl331-rowsel),var(--scl331-rowsel)),var(--surface);font-weight:800}
+body.scl295-pharmacy #scl331Host .scl331-glb .scl331-pn.big,body.scl295-pharmacy #scl331Host .scl331-selp .scl331-pn.big{background:var(--ink);color:var(--surface)}
+body.scl295-pharmacy #scl331Host .scl331-glb .scl331-pn.big{width:24px;height:24px;border-radius:12px;font-size:12px}
+body.scl295-pharmacy #scl331Host .scl331-pnm2{min-width:0;line-height:1.25;overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331Host .scl331-gtl{position:relative;display:grid;min-height:48px}
+body.scl295-pharmacy #scl331Host .scl331-gce{grid-row:1;min-height:48px;padding:0;border:0;border-left:1px solid var(--hair);background:transparent;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-gce:hover{background:var(--fill)}
+body.scl295-pharmacy #scl331Host .scl331-gce.on{background:var(--scl331-col)}
+body.scl295-pharmacy #scl331Host .scl331-gb{position:absolute;top:5px;bottom:5px;z-index:2;min-width:8px;box-sizing:border-box;padding:0 5px;border-radius:8px;font:inherit;font-size:12px;font-weight:700;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-gb.cl{background:var(--scl331-okbar);border:1px solid var(--scl331-okline);color:var(--scl331-okbarink)}
+body.scl295-pharmacy #scl331Host .scl331-gb.ds{background:var(--scl331-wtbar);border:1px solid var(--scl331-wtline);color:var(--scl331-wtbarink)}
+/* κάρτα θέσης */
+body.scl295-pharmacy #scl331Host .scl331-side{gap:14px}
+body.scl295-pharmacy #scl331Host .scl331-selp{display:flex;align-items:center;gap:12px}
+body.scl295-pharmacy #scl331Host .scl331-selp .scl331-selh strong{font-size:18px}
+body.scl295-pharmacy #scl331Host .scl331-now{display:flex;flex-direction:column;gap:2px;padding:12px 14px;border-radius:12px;font-size:13px;font-weight:600}
+body.scl295-pharmacy #scl331Host .scl331-now .k{font-weight:500;opacity:.9}
+body.scl295-pharmacy #scl331Host .scl331-now strong{font-size:17px;font-weight:800}
+body.scl295-pharmacy #scl331Host .scl331-now.cl{background:var(--scl331-okbg);color:var(--scl331-okink)}
+body.scl295-pharmacy #scl331Host .scl331-now.ds{background:var(--scl331-wtbg);color:var(--scl331-wtink)}
+body.scl295-pharmacy #scl331Host .scl331-now.fr{background:var(--scl331-frbg);color:var(--scl331-frink)}
+body.scl295-pharmacy #scl331Host .scl331-newb{width:100%}
+body.scl295-pharmacy #scl331Host .scl331-hist{display:flex;flex-direction:column;gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-hist ul{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+body.scl295-pharmacy #scl331Host .scl331-hi{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;box-sizing:border-box;padding:8px 12px;border:0;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-hi>span:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+body.scl295-pharmacy #scl331Host .scl331-hi strong{font-size:14px;overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331Host .scl331-hi small{font-size:12px;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-dets{display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid var(--hair)}
+body.scl295-pharmacy #scl331Host .scl331-dtog{min-height:46px;padding:0 12px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-fl2{display:flex;flex-direction:column;gap:4px}
+body.scl295-pharmacy #scl331Host .scl331-fl2>span{font-size:12px;font-weight:600;color:var(--ink2)}
+body.scl295-pharmacy #scl331Host .scl331-fl2 input{min-height:44px;width:100%;box-sizing:border-box;padding:0 12px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--scl331-ring);color:var(--ink);font:inherit;font-size:15px}
+body.scl295-pharmacy #scl331Host .scl331-fl2 input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+body.scl295-pharmacy #scl331Host .scl331-sm{min-height:44px;padding:0 18px;font-size:14px}
+body.scl295-pharmacy #scl331Host .scl331-form{display:flex;flex-direction:column;gap:14px}
+body.scl295-pharmacy #scl331Host .scl331-form>.scl331-link{align-self:flex-start;margin:-6px 0 -4px -4px}
+body.scl295-pharmacy #scl331Host .scl331-fh{margin:0;font-size:17px;font-weight:700;color:var(--ink);letter-spacing:0;text-transform:none}
+body.scl295-pharmacy #scl331Host .scl331-fch{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+body.scl295-pharmacy #scl331Host .scl331-fch .scl331-seg{padding:0}
+body.scl295-pharmacy #scl331Host .scl331-seg.clash{text-decoration:line-through}
+body.scl295-pharmacy #scl331Host .scl331-nav{display:flex;align-items:center;gap:8px}
+body.scl295-pharmacy #scl331Host .scl331-navl{flex:1;text-align:center;font-size:15px;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331Host .scl331-wsum{font-size:13px;font-weight:600;color:var(--ink2)}
+body.scl295-pharmacy #scl331Host .scl331-dh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+body.scl295-pharmacy #scl331Host .scl331-dh strong{font-size:20px;color:var(--ink);overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331Host .scl331-kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;margin:0;font-size:14px}
+body.scl295-pharmacy #scl331Host .scl331-kv dt{color:var(--muted);font-weight:600}
+body.scl295-pharmacy #scl331Host .scl331-kv dd{margin:0;color:var(--ink);overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331Host .scl331-side .scl331-ok{justify-content:flex-start}
+@media(max-width:900px){
+body.scl295-pharmacy #scl331Host .scl331-mcols{grid-template-columns:minmax(0,1fr)}
+body.scl295-pharmacy #scl331Host .scl331-mchips{grid-template-columns:repeat(6,minmax(0,1fr))}
+}
+@media(max-width:560px){
+body.scl295-pharmacy #scl331Host .scl331-mbar>.scl331-grow{display:none}
+body.scl295-pharmacy #scl331Host .scl331-mtools{width:100%}
+body.scl295-pharmacy #scl331Host .scl331-mtools .scl331-seg{flex:1}
+body.scl295-pharmacy #scl331Host .scl331-fch{grid-template-columns:repeat(3,minmax(0,1fr))}
+body.scl295-pharmacy #scl331Host .scl331-gt{min-width:600px}
 }
 </style>
