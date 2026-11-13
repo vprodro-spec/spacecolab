@@ -34036,13 +34036,13 @@ function list331(){
  if(!f.length)return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Ξεκίνα σχεδιάζοντας την όψη του φαρμακείου</h2><p>Δεν έχεις ακόμη κομμάτια στη Βιτρίνα. Πρόσθεσε πρώτα τα κομμάτια της όψης και μετά σημείωσε ποια είναι θέσεις πώλησης.</p>'
   +'<div class="scl331-actions"><button type="button" class="action blue scl331-btn" data-b="new">Σχεδίασε την όψη</button></div>'
   +'<p class="scl331-hint">Γωνιακό φαρμακείο; Μπορείς να σχεδιάσεις έως 3 όψεις.</p>'+err+'</div>';
- return '<div class="scl331-card scl331-active"><span class="scl331-chip">Ενεργοποιήθηκε</span><h2 id="scl331Title" tabindex="-1">Οι όψεις του φαρμακείου σου</h2><p>Εδώ σχεδιάζεις τις όψεις. Οι προσυμφωνίες και οι συμφωνίες γίνονται στο timeline από κάτω. Γωνιακό φαρμακείο; Μπορείς να έχεις έως 3 όψεις.</p>'
+ return '<div class="scl331-card scl331-active scl331-facs"><div class="scl331-fhead"><h2 id="scl331Title" tabindex="-1">Οι όψεις σου <small>· έως 3</small></h2>'+(can?act331('+ Πρόσθεσε άλλη όψη','data-b="new"',{cls:'soft'}):'<span class="scl331-hint">Έχεις τον μέγιστο αριθμό όψεων (3).</span>')+'</div>'
   +'<ul class="scl331-fl">'+f.map(x=>{
    const d=normDesign331(x.design),cnt=allPos331(d).length,np=d.pieces.length+(d.twoTier?d.upPieces.length:0),nb=bk.filter(y=>y.facade_no===x.facade_no).length,conf=V331.delNo===x.facade_no;
    return '<li class="scl331-fi">'+previewFacade331(d)+'<div class="scl331-fm"><div><strong>'+E(x.name)+'</strong><span>Όψη '+x.facade_no+' · '+pl331(np,'κομμάτι','κομμάτια')+' · '+pl331(cnt,'θέση πώλησης','θέσεις πώλησης')+'</span></div>'
    +(conf?'<div class="scl331-confirm" role="alertdialog" aria-label="Διαγραφή όψης"><span>Να διαγραφεί η όψη «'+E(x.name)+'»; Θα χαθεί το σχέδιό της'+(nb?' και '+pl331(nb,'προσυμφωνία ή συμφωνία της','προσυμφωνίες και συμφωνίες της'):'')+'. Δεν γίνεται αναίρεση.</span><span class="scl331-cbtn">'+act331(V331.busy?'Διαγραφή…':'Ναι, διαγραφή','data-b="delok" data-no="'+x.facade_no+'"',{cls:'danger',dis:V331.busy})+act331('Όχι','data-b="delcancel"',{dis:V331.busy})+'</span></div>'
     :'<div class="scl331-fb">'+act331('Επεξεργασία','data-b="edit" data-no="'+x.facade_no+'"',{cls:'pri'})+act331('Διαγραφή','data-b="del" data-no="'+x.facade_no+'"',{cls:'danger',aria:'Διαγραφή της όψης '+x.name})+'</div>')+'</div></li>';}).join('')+'</ul>'
-  +(can?'<div class="scl331-actions">'+act331('+ Πρόσθεσε άλλη όψη','data-b="new"',{cls:'pri'})+'</div>':'<p class="scl331-hint">Έχεις τον μέγιστο αριθμό όψεων (3).</p>')+err+'</div>'+timeline331();
+  +err+'</div>'+timeline331();
 }
 // ---- DOM: εστίαση, μέτρηση πλάτους, γεγονότα --------------------------------
 const fkey331=el=>el&&el.dataset?[el.dataset.t||'',el.dataset.m||'',el.dataset.b||'',el.dataset.v??'',el.dataset.id??'',el.dataset.d??'',el.dataset.i??'',el.dataset.s??'',el.dataset.no??''].join('|'):'';
@@ -34181,7 +34181,7 @@ function tlRow331(C,p){
  const cells=MON331.map((n,i)=>{
   const avail=T331.sale&&!fullClosed331(C,p.no,p.id,i),empty=!ovl331(C,p.no,p.id,mS331(i),mE331(i)).length;
   return avail?'<button type="button" class="scl331-tc on" style="grid-column:'+(i+1)+'" data-t="cell" data-no="'+p.no+'" data-id="'+E(p.id)+'" data-v="'+i+'" aria-label="'+E('Νέα προσυμφωνία ή συμφωνία · '+p.name+' · '+MF331[i])+'">'+(empty?'Ελεύθερο':'')+'</button>'
-   :'<span class="scl331-tc" style="grid-column:'+(i+1)+'" aria-hidden="true"></span>';
+   :'<button type="button" class="scl331-tc" style="grid-column:'+(i+1)+'" data-t="sheet" data-no="'+p.no+'" data-id="'+E(p.id)+'" tabindex="-1" aria-hidden="true"></button>';
  }).join('');
  const bars=rowBars331(C,p).map(g=>{
   const l=xOf331(g.s),r=xOf331(g.e+1),pct=(r-l)*100,b0=g.items[0],extra=g.items.length-1,narrow=pct<14;
@@ -34214,7 +34214,7 @@ function timeline331(){
   f.pos.forEach(p=>{rows+=tlRow331(C,p);});
  });
  const head='<div class="scl331-th"><span>Θέση πώλησης</span><div class="scl331-tms">'+MON331.map((n,i)=>'<span'+(i===tm?' class="now"':'')+'>'+n+'</span>').join('')+'</div></div>';
- const hint=T331.sale?'Επιλέγεις διαθέσιμο μήνα για νέα προσυμφωνία ή συμφωνία. Η προσυμφωνία δεν δεσμεύει τον μήνα.':'Πάτα μια μπάρα για να δεις τη θέση. Πάτα «Προς πώληση» για να δεις τους ελεύθερους μήνες.';
+ const hint=T331.sale?'Επιλέγεις διαθέσιμο μήνα για νέα προσυμφωνία ή συμφωνία. Η προσυμφωνία δεν δεσμεύει τον μήνα.':'Πάτα μια μπάρα ή μια θέση για να τη δεις. Πάτα «Προς πώληση» για να δεις τους ελεύθερους μήνες.';
  const empty=!C.bk.length?'<div class="scl331-tempty"><strong>Δεν έχεις ακόμη προσυμφωνίες ή συμφωνίες</strong><p>Πάτα «Προς πώληση», διάλεξε έναν ελεύθερο μήνα σε μια θέση και κράτησε προσυμφωνία. Όταν συμφωνήσετε, τη μετατρέπεις σε οριστική συμφωνία.</p></div>':'';
  return '<div class="scl331-card scl331-tl" id="scl331Tl" tabindex="-1">'+tlTabs331(C)+'<h2 class="scl331-tlh">'+E(title)+'</h2>'
   +'<div class="scl331-tbar"><button type="button" class="scl331-salebtn'+(T331.sale?' on':'')+'" data-t="sale" aria-pressed="'+T331.sale+'">Προς πώληση</button><p>'+E(hint)+'</p></div>'
@@ -34580,55 +34580,76 @@ const MON331=['Ιαν','Φεβ','Μαρ','Απρ','Μαΐ','Ιουν','Ιουλ'
 const eur331=n=>(Number(n)||0).toLocaleString('el-GR',{minimumFractionDigits:0,maximumFractionDigits:2})+' €';
 const pm331=n=>'<span class="scl310-private-amount">'+E(eur331(n))+'</span>';
 const bkw331=n=>n===1?'1 καταχώριση':n+' καταχωρίσεις';
-function revCalc331(d,yr){
- const cents=a=>Math.round(Number(a)*100);
- const months=Array.from({length:12},()=>({c:0,d:0}));
- const fac=new Map((d.facades||[]).map(f=>[f.facade_no,{no:f.facade_no,name:f.name||('Όψη '+f.facade_no),c:0,d:0,cn:0,dn:0,n:0}]));
- const t={c:0,d:0,cn:0,dn:0,none:0,n:0};
- for(const b of d.bookings||[]){
-  if(+String(b.start).slice(0,4)!==yr)continue;
-  let f=fac.get(b.facade_no);if(!f){f={no:b.facade_no,name:'Όψη '+b.facade_no,c:0,d:0,cn:0,dn:0,n:0};fac.set(b.facade_no,f);}
-  t.n++;f.n++;
-  if(b.amount===null||b.amount===undefined||!isFinite(Number(b.amount))){t.none++;continue;}
-  const a=cents(b.amount),m=Math.min(11,Math.max(0,(+String(b.start).slice(5,7))-1));
-  if(b.status==='closed'){t.c+=a;t.cn++;f.c+=a;f.cn++;months[m].c+=a;}
-  else{t.d+=a;t.dn++;f.d+=a;f.dn++;months[m].d+=a;}
+// v331.5 — ίδια λογική με τα έσοδα θέσεων: Μέχρι σήμερα / Ως το τέλος του έτους / Δυνατότητα. Μετράνε μόνο οι οριστικές συμφωνίες· η προσυμφωνία είναι ένδειξη.
+// Το ποσό κάθε συμφωνίας μοιράζεται στους μήνες που καλύπτει: σε ολόκληρους μήνες ίσα, αλλιώς ανάλογα με τις μέρες.
+const RV335={price:null,edit:false,f:false,focus:''};
+function allocBk331(b){
+ const out=Array(12).fill(0);if(b.amount===null||!isFinite(b.amount))return out;
+ const full=isFull331(b),n=full?nMon331(b):0,tot=b.e-b.s+1;
+ for(let i=0;i<12;i++){const ov=Math.min(b.e,mE331(i))-Math.max(b.s,mS331(i))+1;if(ov<=0)continue;out[i]=full?b.amount/n:b.amount*ov/tot;}
+ return out;
+}
+function revCalc331(yr){
+ const C=ctx331(),t=String(V331.data?.today||''),ty=+t.slice(0,4)||0;
+ const last=ty?(yr<ty?11:yr>ty?-1:(+t.slice(5,7)-1)):-1;
+ const ys=mS331(0),ye=mE331(11);
+ const mc=Array(12).fill(0),mp=Array(12).fill(0),r={cn:0,cnToday:0,dn:0,none:0,n:0};
+ const fac=new Map(C.facs.map(f=>[f.no,{no:f.no,name:f.name||('Όψη '+f.no),c:0,d:0,cn:0,dn:0,n:0}]));
+ for(const b of C.bk){
+  if(b.s>ye||b.e<ys)continue;
+  let f=fac.get(b.no);if(!f){f={no:b.no,name:'Όψη '+b.no,c:0,d:0,cn:0,dn:0,n:0};fac.set(b.no,f);}
+  r.n++;f.n++;
+  if(b.amount===null||!isFinite(b.amount)){r.none++;continue;}
+  const a=allocBk331(b),sum=a.reduce((x,y2)=>x+y2,0);
+  if(b.status==='closed'){a.forEach((v,i)=>{mc[i]+=v;});r.cn++;f.cn++;f.c+=sum;if(last>=0&&b.s<=mE331(last))r.cnToday++;}
+  else{a.forEach((v,i)=>{mp[i]+=v;});r.dn++;f.dn++;f.d+=sum;}
  }
- return {t,months,facades:[...fac.values()].filter(f=>f.n>0).sort((a,b)=>a.no-b.no)};
+ const yearC=mc.reduce((x,y2)=>x+y2,0),todayC=mc.slice(0,last+1).reduce((x,y2)=>x+y2,0),yearP=mp.reduce((x,y2)=>x+y2,0);
+ // μέση μηνιαία τιμή από τις οριστικές συμφωνίες ολόκληρων μηνών που έχουν ποσό
+ let amt=0,mon=0;for(const b of C.bk)if(b.status==='closed'&&b.amount!==null&&isFinite(b.amount)&&isFull331(b)){amt+=b.amount;mon+=nMon331(b);}
+ const avg=mon?Math.round(amt/mon):null,positions=C.facs.reduce((x,f)=>x+f.pos.length,0);
+ const price=RV335.price!==null?RV335.price:avg;
+ return {mc,mp,last,yearC,todayC,yearP,r,avg,price,positions,pot:price===null?null:positions*12*price,facades:[...fac.values()].filter(f=>f.n>0).sort((a,b)=>a.no-b.no)};
 }
 function revHtml331(){
  const d=V331.data;
  if(V331.status!=='ready'||!d||!d.activated)return '';
- const yr=y(),r=revCalc331(d,yr),t=r.t,hasAmt=t.cn+t.dn>0;
+ const yr=y(),k=revCalc331(yr),r=k.r,hasAmt=r.cn+r.dn>0;
  const head='<div class="scl331-rvh"><div class="scl331-rvt"><h2 id="scl331RvT">Βιτρίνα · δική μου καταγραφή · '+yr+'</h2><div class="scl331-rvchips"><span>Δεν περιλαμβάνεται στα σύνολα πιο πάνω</span><span>Δεν τη βλέπουν τα κεντρικά</span></div></div>'
   +'<button type="button" class="action blue scl331-btn scl331-rvbtn" data-scl331rv="open">Άνοιγμα Βιτρίνας ›</button></div>';
  let body;
  if(hasAmt){
-  const fig=(l,v,n)=>'<div class="scl331-rvf"><span class="l">'+l+'</span><strong>'+v+'</strong><small>'+n+'</small></div>';
-  const figs='<div class="scl331-rvfs">'+fig('Οριστικές συμφωνίες',pm331(t.c/100),t.cn===1?'1 συμφωνία με ποσό':t.cn+' συμφωνίες με ποσό')
-   +fig('Προσυμφωνίες',pm331(t.d/100),(t.dn===1?'1 προσυμφωνία':t.dn+' προσυμφωνίες')+' · δεν είναι βέβαιες')
-   +fig('Χωρίς ποσό',E(bkw331(t.none)),'δεν μετράει στα παραπάνω')+'</div>';
-  const max=Math.max(1,...r.months.map(m=>m.c+m.d)),h=v=>v>0?Math.max(3,Math.round(v/max*130)):0;
-  const full='Ποσά Βιτρίνας ανά μήνα έναρξης. Οριστικές συμφωνίες '+eur331(t.c/100)+', προσυμφωνίες '+eur331(t.d/100);
+  const plS=(n,a,b)=>n===1?'1 '+a:n+' '+b;
+  const card=(cls,title,desc,val,foot,badge)=>'<article class="scl331-rvc'+(cls?' '+cls:'')+'"><header><h3>'+title+'</h3>'+(badge?'<span class="scl331-rvbadge">Εκτίμηση</span>':'')+'<p>'+desc+'</p></header><div class="scl331-rvres"><span class="l">Έσοδα Βιτρίνας</span><strong>'+val+'</strong></div><div class="scl331-rvfoot">'+foot+'</div></article>';
+  const potFoot=k.pot===null?'Θα εμφανιστεί όταν γράψεις το ποσό σε μια οριστική συμφωνία ολόκληρου μήνα.'
+   :k.positions+' θέσεις × 12 μήνες στα '+pm331(k.price)+' / μήνα'+(RV335.price===null?', τη μέση τιμή των συμφωνιών σου':'')+' · <button type="button" class="scl331-link" data-scl331rv="edit">αλλαγή</button>';
+  const edit=k.pot!==null&&RV335.edit?'<div class="scl331-rvedit"><label for="scl331RvPrice">Μηνιαία τιμή για την εκτίμηση (€)</label><span class="scl331-rvstep"><button type="button" data-scl331rv="pm" aria-label="Μείωση κατά 5 ευρώ">−</button><input id="scl331RvPrice" class="scl310-private-control" type="number" min="0" step="5" inputmode="decimal" value="'+k.price+'" data-scl331rv="price"><button type="button" data-scl331rv="pp" aria-label="Αύξηση κατά 5 ευρώ">+</button></span>'+(RV335.price!==null?'<button type="button" class="scl331-link" data-scl331rv="reset">Επαναφορά</button>':'')+'<small>Δοκιμαστικό σενάριο, δεν αποθηκεύεται.</small></div>':'';
+  const cards='<div class="scl331-rvcs">'
+   +card('','Μέχρι σήμερα','Συμφωνημένα ποσά για μήνες που έχουν ξεκινήσει. Δεν αφορά εισπράξεις.',pm331(k.todayC),plS(r.cnToday,'οριστική συμφωνία που έχει ξεκινήσει','οριστικές συμφωνίες που έχουν ξεκινήσει'))
+   +card('year','Ως το τέλος του έτους','Όσες οριστικές συμφωνίες έχεις για όλη τη χρονιά.',pm331(k.yearC),plS(r.cn,'οριστική συμφωνία με ποσό','οριστικές συμφωνίες με ποσό')+' · η προσυμφωνία δεν μετράει')
+   +card('pot','Δυνατότητα','Αν όλες οι θέσεις συμφωνούνταν για όλη τη χρονιά. Δεν αποτελεί εγγύηση εσόδων.',k.pot===null?'—':pm331(k.pot),potFoot+edit,true)+'</div>';
+  const max=Math.max(1,...k.mc.map((v,i)=>v+k.mp[i])),h=v=>v>0?Math.max(3,Math.round(v/max*130)):0;
+  const full='Έσοδα Βιτρίνας ανά μήνα. Μέχρι σήμερα '+eur331(k.todayC)+', ως το τέλος του έτους '+eur331(k.yearC)+(k.yearP>0?', προσυμφωνίες (ένδειξη) '+eur331(k.yearP):'');
   const hid=document.body.classList.contains('scl310-hide-amounts');
-  const bars=r.months.map(m=>'<div class="col"><i class="d" style="height:'+h(m.d)+'px"></i><i class="c" style="height:'+h(m.c)+'px"></i><i class="f"></i></div>').join('');
-  const chart='<div class="scl331-rvch"><div class="scl331-rvchh"><h3>Ανά μήνα έναρξης</h3><div class="scl331-rvleg"><span><i class="c"></i>Οριστικές συμφωνίες</span><span><i class="d"></i>Προσυμφωνίες</span></div></div>'
+  const bars=k.mc.map((v,i)=>'<div class="col"><i class="d" style="height:'+h(k.mp[i])+'px"></i><i class="'+(i<=k.last?'c':'cf')+'" style="height:'+h(v)+'px"></i><i class="f"></i></div>').join('');
+  const chart='<div class="scl331-rvch"><div class="scl331-rvchh"><h3>Ανά μήνα · '+yr+'</h3><div class="scl331-rvleg"><span><i class="c"></i>Συμφωνίες (μήνας που ξεκίνησε)</span><span><i class="cf"></i>Συμφωνίες (μήνας που έρχεται)</span>'+(k.yearP>0?'<span><i class="d"></i>Προσυμφωνία (ένδειξη)</span>':'')+'</div></div>'
    +'<div class="scl331-rvbars" id="scl331RvChart" role="img" data-aria="'+E(full)+'" aria-label="'+E(hid?'Γράφημα κρυμμένο λόγω απορρήτου':full)+'">'+bars+'</div>'
    +'<div class="scl331-rvmo" aria-hidden="true">'+MON331.map(m=>'<span>'+m+'</span>').join('')+'</div></div>';
-  const list='<div class="scl331-rvl"><h3>Ανά όψη</h3><ul>'+r.facades.map(f=>'<li><span class="n">'+E(f.name)+'</span><span class="a">'+(f.cn?pm331(f.c/100)+' οριστικές συμφωνίες':'<span class="z">—</span>')+'</span><span class="a b">'+(f.dn?pm331(f.d/100)+' προσυμφωνίες':'<span class="z">—</span>')+'</span><span class="k">'+E(bkw331(f.n))+'</span></li>').join('')+'</ul></div>';
-  body=figs+chart+list;
- }else if(t.n>0){
-  body='<div class="scl331-rve"><strong>Δεν έχεις γράψει ακόμη ποσά στις προσυμφωνίες και στις συμφωνίες σου</strong><p>Έχεις '+bkw331(t.n)+' στη Βιτρίνα για το '+yr+', καμία με ποσό. Στο παράθυρο μιας προσυμφωνίας ή συμφωνίας μπορείς να γράψεις το ποσό και θα εμφανιστεί εδώ. Είναι προαιρετικό και το βλέπεις μόνο εσύ.</p></div>';
+  const list='<details class="scl331-rvl" data-rv="f"'+(RV335.f?' open':'')+'><summary><span><strong>Αναλυτικά ανά όψη</strong><small>Οριστικές συμφωνίες και προσυμφωνίες</small></span></summary><ul>'+k.facades.map(f=>'<li><span class="n">'+E(f.name)+'</span><span class="a">'+(f.cn?pm331(f.c)+' οριστικές συμφωνίες':'<span class="z">—</span>')+'</span><span class="a b">'+(f.dn?pm331(f.d)+' προσυμφωνίες':'<span class="z">—</span>')+'</span><span class="k">'+E(bkw331(f.n))+'</span></li>').join('')+'</ul></details>';
+  body=cards+chart+(r.none?'<p class="scl331-rvn">'+E(bkw331(r.none))+' χωρίς ποσό '+(r.none===1?'δεν μετράει':'δεν μετράνε')+' σε κανένα άθροισμα.</p>':'')+list;
+ }else if(r.n>0){
+  body='<div class="scl331-rve"><strong>Δεν έχεις γράψει ακόμη ποσά στις προσυμφωνίες και στις συμφωνίες σου</strong><p>Έχεις '+bkw331(r.n)+' στη Βιτρίνα για το '+yr+', καμία με ποσό. Στο παράθυρο μιας προσυμφωνίας ή συμφωνίας μπορείς να γράψεις το ποσό και θα εμφανιστεί εδώ. Είναι προαιρετικό και το βλέπεις μόνο εσύ.</p></div>';
  }else{
   body='<div class="scl331-rve"><strong>Δεν έχεις ακόμη προσυμφωνίες ή συμφωνίες στη Βιτρίνα για το '+yr+'</strong><p>Όταν καταχωρίσεις προσυμφωνίες ή συμφωνίες και γράψεις το ποσό, θα εμφανιστούν εδώ. Είναι προαιρετικό και το βλέπεις μόνο εσύ.</p></div>';
  }
- return '<section class="scl331-rv" aria-labelledby="scl331RvT">'+head+body+'<p class="scl331-rvn">Μετράει στο έτος που ξεκινά η συμφωνία. Τα ποσά τα έχεις γράψει εσύ. Αποθηκεύονται στη βάση μαζί με την καταχώριση, όχι μόνο στη σελίδα.</p></section>';
+ return '<section class="scl331-rv" aria-labelledby="scl331RvT">'+head+body+'<p class="scl331-rvn">Οι προσυμφωνίες είναι μόνο ένδειξη και δεν προσμετρώνται στα σύνολα. Το ποσό κάθε συμφωνίας μοιράζεται στους μήνες που καλύπτει. Τα ποσά τα έχεις γράψει εσύ και αποθηκεύονται στη βάση μαζί με την καταχώριση.</p></section>';
 }
 let rvHtml331='';
 function renderRev331(){
  const host=$('scl331RevHost');if(!host)return;
  const html=revHtml331();
  if(html!==rvHtml331){rvHtml331=html;host.innerHTML=html;host.hidden=!html;root.SCL310Privacy?.refresh();}
+ if(RV335.focus){const t=host.querySelector('[data-scl331rv="'+RV335.focus+'"]');RV335.focus='';if(t)t.focus({preventScroll:true});}
 }
 // Το περιγραφικό κείμενο του γραφήματος δεν πρέπει να περιέχει ποσά όταν το φαρμακείο τα κρύβει (κουμπί απορρήτου).
 function rvAria331(){
@@ -34640,8 +34661,18 @@ new MutationObserver(rvAria331).observe(document.body,{attributes:true,attribute
 document.addEventListener('click',e=>{
  const b=e.target.closest?.('[data-scl331rv]');if(!b||!$('scl331RevHost')?.contains(b))return;
  e.preventDefault();
- if(b.dataset.scl331rv==='open')document.querySelector('.scl295-nav [data-page-value="vitrina"]')?.click();
+ const a=b.dataset.scl331rv,k=revCalc331(y()),cur=k.price===null?0:k.price;
+ if(a==='open')document.querySelector('.scl295-nav [data-page-value="vitrina"]')?.click();
+ else if(a==='edit'){RV335.edit=!RV335.edit;RV335.focus=RV335.edit?'price':'edit';renderRev331();}
+ else if(a==='pm'||a==='pp'){RV335.price=Math.max(0,Math.round((cur+(a==='pp'?5:-5))*100)/100);RV335.focus=a;renderRev331();}
+ else if(a==='reset'){RV335.price=null;RV335.focus='edit';renderRev331();}
 });
+document.addEventListener('change',e=>{
+ const i=e.target.closest?.('input[data-scl331rv="price"]');if(!i||!$('scl331RevHost')?.contains(i))return;
+ const v=Number(i.value);if(!isFinite(v)||v<0||i.value==='')return;
+ RV335.price=Math.round(v*100)/100;RV335.focus='price';renderRev331();
+});
+document.addEventListener('toggle',e=>{const d=e.target;if(d&&d.matches&&d.matches('#scl331RevHost details[data-rv]'))RV335[d.dataset.rv]=d.open;},true);
 
 function canEditMonth(c,m){return y()>=now().year&&active(c,m)&&operationalMonthEditable(m);}
 function canEditAgreement(c,d){return [...monthsForNegotiation(d)].every(m=>canEditMonth(c,m));}
@@ -36568,7 +36599,7 @@ function paint(){const grid=$('economicsGrid');if(!grid)return;if(!valid()){cons
  model=prepare();const {a,e,rows,cards,local,today,yr}=model;
  const opened=[...grid.querySelectorAll('details[open][data-scl318-detail]')].map(n=>n.dataset.scl318Detail);
  grid.className='scl318';const note=$('economicsNote');if(note)note.textContent='Συμφωνημένα ποσά και κόστη του '+yr+' από τις υπάρχουσες εγγραφές. Οι προσυμφωνίες δεν προσμετρώνται.';
- grid.innerHTML='<div class="scl318-columns">'+card('Μέχρι σήμερα','Συμφωνημένα ποσά για μήνες που έχουν ξεκινήσει. Δεν αφορά εισπράξεις.',a.today,C.sum(a.excluded.filter(r=>Number(r.month)<=a.last)))+card('Ως το τέλος του έτους','Καταχωρισμένα έσοδα και κόστος ολόκληρου του έτους.',a.annual,a.excludedTotal)+card('Δυνατότητα','Υποθετική αξιοποίηση πλήρους έτους. Δεν αποτελεί εγγύηση εσόδων.',e,0,true)+'</div><details id="scl318Settings" data-scl318-detail="settings" class="scl318-settings"><summary>Παραδοχές και επιλογές εκτίμησης</summary>'+controls('scl318-main')+assumptions(e)+'</details><h2>Αναλυτικά</h2>'+breakdown([a.today,a.annual,e])+comparisonNote(a.excludedTotal)+'<details data-scl318-detail="today"><summary>Εγγραφές · Μέχρι σήμερα</summary>'+rowsTable(a.today)+'</details><details data-scl318-detail="annual"><summary>Εγγραφές · Ως το τέλος του έτους</summary>'+rowsTable(a.annual)+'</details>'+(a.excluded.length?'<details data-scl318-detail="excluded"><summary>Προγραμματισμένες αλλαγές θέματος · εκτός κύριου κόστους</summary>'+rowsTable({revenue:[],cost:a.excluded})+'</details>':'')+chart(cards,a,yr,today)+'<h2>Δωρεάν Εξατομικεύσεις · '+yr+'</h2>'+local.map(c=>{const q=C.quota(rows,c.id);return '<div class="scl305-quota"><strong>'+E(c.title||c.id)+'</strong><span>'+q.used+'/'+q.free+' χρησιμοποιήθηκαν · '+q.remaining+' απομένουν · '+q.paid+' χρεώσιμες ενέργειες</span><button type="button" data-scl305="quota" data-id="'+E(c.id)+'">Προβολή ενεργειών</button></div>';}).join('');
+ grid.innerHTML='<div class="scl318-columns">'+card('Μέχρι σήμερα','Συμφωνημένα ποσά για μήνες που έχουν ξεκινήσει. Δεν αφορά εισπράξεις.',a.today,C.sum(a.excluded.filter(r=>Number(r.month)<=a.last)))+card('Ως το τέλος του έτους','Καταχωρισμένα έσοδα και κόστος ολόκληρου του έτους.',a.annual,a.excludedTotal)+card('Δυνατότητα','Υποθετική αξιοποίηση πλήρους έτους. Δεν αποτελεί εγγύηση εσόδων.',e,0,true)+'</div><details id="scl318Settings" data-scl318-detail="settings" class="scl318-settings"><summary>Παραδοχές και επιλογές εκτίμησης</summary>'+controls('scl318-main')+assumptions(e)+'</details><details data-scl318-detail="analytic" class="scl335-fold"><summary><span><strong>Αναλυτικά</strong><small>Έσοδα και κόστος ανά είδος · και οι εγγραφές</small></span></summary>'+breakdown([a.today,a.annual,e])+comparisonNote(a.excludedTotal)+'<details data-scl318-detail="today"><summary>Εγγραφές · Μέχρι σήμερα</summary>'+rowsTable(a.today)+'</details><details data-scl318-detail="annual"><summary>Εγγραφές · Ως το τέλος του έτους</summary>'+rowsTable(a.annual)+'</details>'+(a.excluded.length?'<details data-scl318-detail="excluded"><summary>Προγραμματισμένες αλλαγές θέματος · εκτός κύριου κόστους</summary>'+rowsTable({revenue:[],cost:a.excluded})+'</details>':'')+'</details>'+chart(cards,a,yr,today)+'<details data-scl318-detail="quota" class="scl335-fold"><summary><span><strong>Δωρεάν Εξατομικεύσεις · '+yr+'</strong><small>'+local.length+(local.length===1?' θέση':' θέσεις')+' · '+local.reduce((t,c)=>t+C.quota(rows,c.id).remaining,0)+' απομένουν</small></span></summary>'+local.map(c=>{const q=C.quota(rows,c.id);return '<div class="scl305-quota"><strong>'+E(c.title||c.id)+'</strong><span>'+q.used+'/'+q.free+' χρησιμοποιήθηκαν · '+q.remaining+' απομένουν · '+q.paid+' χρεώσιμες ενέργειες</span><button type="button" data-scl305="quota" data-id="'+E(c.id)+'">Προβολή ενεργειών</button></div>';}).join('')+'</details>';
  for(const name of opened){const d=grid.querySelector('[data-scl318-detail="'+name+'"]');if(d)d.open=true;}
  const host=$('scl295Estimate');if(host){host.classList.add('scl318');host.innerHTML='<p>Εκτίμηση · προσωρινό σενάριο, χωρίς αποθήκευση.</p>'+controls('scl318-estimate')+assumptions(e)+card('Δυνατότητα','Ανεξάρτητο σενάριο πλήρους έτους.',e,0,true)+breakdown([a.today,a.annual,e]);}
  root.SCL310Privacy?.refresh();
@@ -38395,8 +38426,8 @@ function scenarioControls(prefix,scenario){const s=scenario,C=SCL305Core,euro=n=
 function scenarioPanel(){const old=$('#scl318Settings');if(!old||old.classList.contains('scl3237-panel'))return;
  const inputs=[...old.querySelectorAll('[data-scl318-field]')],scenario=Object.fromEntries(inputs.map(n=>[n.dataset.scl318Field,Number(n.value)]));if(inputs.length!==6)return;
  const active=document.activeElement,focus=inputs.includes(active)?active.id:(active===document.body&&lastScenarioFocus&&!lastScenarioFocus.isConnected?lastScenarioFocus.id:null),paragraphs=[...old.querySelectorAll(':scope>p')],count=paragraphs.map(n=>n.textContent.match(/Εκτίμηση πλήρους έτους για (\d+)/)).find(Boolean)?.[1]||'—';
- const panel=make('section','scl318-settings scl3237-panel');panel.id=old.id;
- panel.innerHTML='<header class="scl3237-panel-head"><div><h2>Οι υποθέσεις της Δυνατότητας</h2><p>Ενδεικτικό σενάριο για '+E(count)+' τοπικές οθόνες, για όλο τον χρόνο. Η Pharmaplus εξαιρείται. Ό,τι αλλάζεις εδώ, αλλάζει την τρίτη στήλη.</p></div><button type="button" data-scl3237="reset-all">Επαναφορά σεναρίου</button></header>'+scenarioControls('scl318-main',scenario);
+ const panel=make('details','scl318-settings scl3237-panel scl335-fold');panel.id=old.id;panel.dataset.scl318Detail='settings';panel.open=!!old.open;
+ panel.innerHTML='<summary><span><strong>Οι υποθέσεις της Δυνατότητας</strong><small>Μήνες, τιμή και χορηγίες για την εκτίμηση</small></span></summary><header class="scl3237-panel-head"><div><p>Ενδεικτικό σενάριο για '+E(count)+' τοπικές οθόνες, για όλο τον χρόνο. Η Pharmaplus εξαιρείται. Ό,τι αλλάζεις εδώ, αλλάζει την τρίτη στήλη.</p></div><button type="button" data-scl3237="reset-all">Επαναφορά σεναρίου</button></header>'+scenarioControls('scl318-main',scenario);
  // Preserve the actual original controls and their handlers; only their layout changes.
  for(const input of inputs){const placeholder=panel.querySelector('[data-scl318-field="'+input.dataset.scl318Field+'"]');if(!placeholder)continue;input.hidden=placeholder.hidden;if(input.dataset.scl318Field==='months')input.type='range';placeholder.replaceWith(input);}
  for(const p of paragraphs){if(p.textContent.startsWith('Προτεινόμενες τιμές:'))continue;panel.append(p);}old.replaceWith(panel);if(focus)document.getElementById(focus)?.focus({preventScroll:true});
@@ -47731,4 +47762,75 @@ body.scl295-pharmacy #scl331Toast:empty{display:none}
  body.scl295-pharmacy #scl331Over .scl331-sr{grid-template-columns:78px minmax(0,1fr);gap:8px}
  body.scl295-pharmacy #scl331Over .scl331-pstp input{flex:1;width:auto;min-width:0}
 }
+/* v331.5 — συμπαγής όψη (μικρογραφία) και timeline από κάτω· τα κενά κελιά πατιούνται και εκτός «Προς πώληση» */
+body.scl295-pharmacy #scl331Host .scl331-facs{gap:12px;padding-top:18px;padding-bottom:18px}
+body.scl295-pharmacy #scl331Host .scl331-fhead{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap}
+body.scl295-pharmacy #scl331Host .scl331-fhead h2{margin:0;font-size:17px}
+body.scl295-pharmacy #scl331Host .scl331-fhead h2 small{font-size:13px;font-weight:500;color:var(--muted)}
+body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fl{gap:10px}
+body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fi{flex-direction:row;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:12px 14px}
+body.scl295-pharmacy #scl331Host .scl331-facs .scl331-prev{width:196px;flex:none;padding:6px 0 4px;border-radius:8px}
+body.scl295-pharmacy #scl331Host .scl331-facs .scl331-prev .scl331-pn{display:none}
+body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fm{flex:1 1 280px;min-width:0}
+body.scl295-pharmacy #scl331Host .scl331-tc{cursor:pointer}
+body.scl295-pharmacy #scl331Host .scl331-tc:not(.on):hover{background:var(--fill2)}
+@media (max-width:560px){
+ body.scl295-pharmacy #scl331Host .scl331-facs .scl331-prev{width:116px}
+ body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fm{display:contents}
+ body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fm>div:first-child{flex:1 1 120px;min-width:0}
+ body.scl295-pharmacy #scl331Host .scl331-facs .scl331-fb{flex:1 1 100%}
+}
+/* v331.5 — Έσοδα: κλειστά τμήματα (ανοίγουν με ένα πάτημα) */
+body.scl295-pharmacy #economicsGrid .scl335-fold{display:block;margin:0 0 10px;padding:0;border:0;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--hair)}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px;padding:12px 20px;cursor:pointer;list-style:none;border-radius:16px;color:var(--ink)}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary::-webkit-details-marker{display:none}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary::after{content:"›";flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:16px;background:var(--fill);color:var(--ink2);font-size:20px;font-weight:700;transition:transform .15s}
+body.scl295-pharmacy #economicsGrid .scl335-fold[open]>summary::after{transform:rotate(90deg)}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary>span{display:flex;flex-direction:column;gap:2px;min-width:0}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary strong{font-size:16px;font-weight:700}
+body.scl295-pharmacy #economicsGrid .scl335-fold>summary small{font-size:13px;color:var(--muted);font-weight:400}
+body.scl295-pharmacy #economicsGrid .scl335-fold>:not(summary){margin-left:20px;margin-right:20px}
+body.scl295-pharmacy #economicsGrid .scl335-fold[open]{padding-bottom:18px}
+body.scl295-pharmacy #economicsGrid .scl335-fold .scl3237-panel-head{margin-top:0;margin-bottom:16px}
+/* v331.5 — Έσοδα Βιτρίνας: ίδια λογική με τα έσοδα θέσεων (Μέχρι σήμερα · Ως το τέλος του έτους · Δυνατότητα) */
+body.scl295-pharmacy #scl331RevHost .scl331-rvcs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc{display:flex;flex-direction:column;gap:6px;padding:20px 22px;border-radius:16px;background:var(--surface);box-shadow:0 0 0 1px var(--hair);min-width:0}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc header{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc h3{font-family:var(--display);font-size:18px;font-weight:680;letter-spacing:-.02em}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc header p{margin:0;font-size:12.5px;line-height:1.45;color:var(--muted)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvres{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+body.scl295-pharmacy #scl331RevHost .scl331-rvres .l{font-size:12px;font-weight:600;color:var(--muted)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvres strong{font-family:var(--display);font-size:34px;font-weight:700;letter-spacing:-.035em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}
+body.scl295-pharmacy #scl331RevHost .scl331-rvfoot{margin-top:10px;padding:9px 12px;border-radius:12px;background:var(--fill);font-size:12.5px;line-height:1.45;color:var(--ink2)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc.year{background:var(--hero);color:var(--on-hero);box-shadow:0 14px 34px -14px rgba(11,20,49,.65)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc.year :is(h3,.scl331-rvres strong){color:var(--on-hero)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc.year :is(header p,.scl331-rvres .l,.scl331-rvfoot){color:var(--on-hero-2)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc.year .scl331-rvfoot{background:rgba(255,255,255,.08)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvc.pot{background:transparent;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--accent) 35%,transparent);background-image:repeating-linear-gradient(135deg,transparent 0 10px,color-mix(in srgb,var(--accent) 4%,transparent) 10px 11px)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvbadge{padding:2px 8px;border-radius:8px;background:var(--accent-soft);color:var(--accent-ink);font-size:11px;font-weight:700}
+body.scl295-pharmacy #scl331RevHost .scl331-rvfoot .scl331-link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline}
+body.scl295-pharmacy #scl331RevHost .scl331-rvedit{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--hair)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvedit label{flex:1 1 100%;font-size:12px;font-weight:600;color:var(--ink2)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvedit small{flex:1 1 100%;font-size:11.5px;color:var(--muted)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvstep{display:inline-flex;align-items:center;gap:6px}
+body.scl295-pharmacy #scl331RevHost .scl331-rvstep button{width:40px;height:40px;border:0;border-radius:10px;background:var(--surface);box-shadow:0 0 0 1px var(--hair);color:var(--ink);font-size:18px;font-weight:700;cursor:pointer}
+body.scl295-pharmacy #scl331RevHost .scl331-rvstep input{width:92px;height:40px;border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);text-align:center;font:inherit;font-weight:700;color:var(--ink)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvstep :is(button,input):focus-visible,body.scl295-pharmacy #scl331RevHost .scl331-rvfoot .scl331-link:focus-visible,body.scl295-pharmacy #scl331RevHost .scl331-rvl>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.scl295-pharmacy #scl331RevHost .scl331-rvbars i.cf{background:color-mix(in srgb,var(--accent) 30%,var(--surface))}
+body.scl295-pharmacy #scl331RevHost .scl331-rvleg i.cf{background:color-mix(in srgb,var(--accent) 30%,var(--surface))}
+body.scl295-pharmacy #scl331RevHost .scl331-rvbars i.d{border:1.5px dashed var(--accent);border-bottom:0;box-sizing:border-box;background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 18%,var(--surface)) 0 6px,color-mix(in srgb,var(--accent) 5%,var(--surface)) 6px 12px)}
+body.scl295-pharmacy.scl310-hide-amounts #scl331RevHost .scl331-rvbars i.cf{display:none}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl{border-top:1px solid var(--hair)}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:10px 0;cursor:pointer;list-style:none;color:var(--ink)}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary::-webkit-details-marker{display:none}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary::after{content:"›";flex:none;display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:16px;background:var(--fill);color:var(--ink2);font-size:20px;font-weight:700;transition:transform .15s}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl[open]>summary::after{transform:rotate(90deg)}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary>span{display:flex;flex-direction:column;gap:2px}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary strong{font-size:15px;font-weight:700}
+body.scl295-pharmacy #scl331RevHost details.scl331-rvl>summary small{font-size:13px;color:var(--muted)}
+body.scl295-pharmacy #scl331RevHost .scl331-rvbars i[style*="height:0px"]{display:none}
+@media(max-width:900px){body.scl295-pharmacy #scl331RevHost .scl331-rvcs{grid-template-columns:1fr}}
+body.scl295-pharmacy #scl331Host .scl331-fhead .scl331-seg.soft{min-height:40px;padding:0 16px;background:var(--accent-soft);box-shadow:none;color:var(--accent-ink);font-size:13px;font-weight:700}
+body.scl295-pharmacy #scl331Host .scl331-fhead .scl331-seg.soft:hover:not([disabled]){background:var(--accent-softer)}
 </style>
