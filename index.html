@@ -32826,6 +32826,40 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   }
   function nextMonth(){const d=new Date(SCL292Core.today()+'T12:00:00Z');d.setUTCMonth(d.getUTCMonth()+1,1);return d.toISOString().slice(0,7);}
   function monthLabel(v){if(!v)return 'Υπάρχουσα';const [y,m]=String(v).split('-');return (MONTHS[Number(m)-1]||m)+' '+y;}
+  /* v331.8 · έναρξη/παύση θέσεων με επιλογή μήνα (όλα τα έτη) και ένδειξη κατάστασης */
+  function curYm(){return SCL292Core.today().slice(0,7);}
+  function ymAdd(ym,n){const [y,m]=String(ym).split('-').map(Number);const d=new Date(Date.UTC(y,m-1+n,1));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}
+  function ymMax(a,b){return !a?b:!b?a:(a>b?a:b);}
+  function monthSpan(from,v){const [fy,fm]=String(from).split('-').map(Number),vy=Number(String(v||from).split('-')[0])||fy;return (Math.max(vy,fy)+2-fy)*12+(12-fm)+1;}
+  function monthSelect(attrs,from,count,value,emptyLabel){
+    let out='<select '+attrs+'>'+(emptyLabel?'<option value="">'+html(emptyLabel)+'</option>':''),last=null;
+    for(let i=0;i<count;i++){const ym=ymAdd(from,i),y=ym.slice(0,4);if(y!==last){if(last!==null)out+='</optgroup>';out+='<optgroup label="'+y+'">';last=y;}out+='<option value="'+ym+'"'+(ym===value?' selected':'')+'>'+html(monthLabel(ym))+'</option>';}
+    return out+'</optgroup></select>';
+  }
+  function savedPos(d,p){return d.config?.positions.find(x=>x.id===p.id)||null;}
+  function startEditable(d,p){const sv=savedPos(d,p);return !!sv&&!d.record?.legacy&&!!sv.startsOn&&String(sv.startsOn).slice(0,7)>curYm();}
+  function serviceYm(d){const el0=document.getElementById('scl290Service');return (el0&&el0.value)||String(d.config?.service_from||'').slice(0,7);}
+  function stateChip(p){
+    const cur=curYm(),st=String(p.startsOn||'').slice(0,7),sp=String(p.stopsOn||'').slice(0,7);
+    let cls='ok',t='Ενεργή';
+    if(sp&&sp<=cur){cls='off';t='Σε παύση από '+monthLabel(sp);}
+    else if(st&&st>cur){cls='soon';t='Ξεκινά '+monthLabel(st)+(sp?' · παύση από '+monthLabel(sp):'');}
+    else if(sp){cls='warn';t='Ενεργή · παύση από '+monthLabel(sp);}
+    return '<span class="scl3318-state '+cls+'" data-state="'+cls+'"><i aria-hidden="true"></i>'+html(t)+'</span>';
+  }
+  function pauseControl(d,p,n){
+    const sv=savedPos(d,p);
+    if(sv?.stopsOn)return '<span class="scl3318-fixed">Από '+html(monthLabel(sv.stopsOn))+'</span>';
+    const st=String(p.startsOn||'').slice(0,7),min=ymMax(nextMonth(),st?ymAdd(st,1):''),v=String(p.stopsOn||'').slice(0,7);
+    return monthSelect('data-pos-stop="'+n+'" aria-label="Παύση από"',min,monthSpan(min,v||min),v,'Χωρίς παύση');
+  }
+  function serviceField(cfg,r){
+    const v=cfg?.service_from?.slice(0,7)||currentMonth(scl212Year());
+    if(!cfg)return field('Έναρξη υπηρεσίας','scl290Service',v,'month','required');
+    const cur=curYm();
+    if(cfg.service_from&&String(cfg.service_from).slice(0,7)>cur)return '<label>Έναρξη υπηρεσίας'+monthSelect('id="scl290Service" required',cur,monthSpan(cur,v),v)+'<small class="scl3318-hint">Αλλάζει μέχρι να ξεκινήσει η υπηρεσία. Μαζί μετακινούνται και οι θέσεις που ξεκινούν στην ίδια έναρξη.</small></label>';
+    return '<label>Έναρξη υπηρεσίας<input type="hidden" id="scl290Service" value="'+html(v)+'"><input type="text" readonly value="'+html(monthLabel(v))+'" aria-label="Έναρξη υπηρεσίας"></label>';
+  }
   function progress(reg,cfg){
     const y=scl212Year(),positions=(cfg?.positions||[]).filter(p=>p.type!=='hq'&&Array.from({length:12},(_,m)=>m).some(m=>C.active(p,y,m)));
     const setup=R.hq.setup.find(s=>s.pharmacy_id===reg.pharmacy_id&&Number(s.year)===y);
@@ -32835,7 +32869,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
   function installDialog(id){
     const r=R.hq.registry.find(x=>x.id===id);if(!r?.pharmacy_id)return;
     const cfg=configFor(r.pharmacy_id);
-    const d=dialog('Οθόνες — '+r.name,'<form id="scl290InstallForm"><div class="scl290-fields">'+field('Ονομασία για τους players','scl290Prefix',r.player_prefix||C.slug(r.name.split(/\s+/)[0]),'text',cfg?'readonly':'required')+(r.legacy?'<div class="scl290-help">Υπάρχον φαρμακείο · διατηρείται το ιστορικό.</div>':field('Έναρξη υπηρεσίας','scl290Service',cfg?.service_from?.slice(0,7)||currentMonth(scl212Year()),'month',cfg?'readonly':'required'))+'</div><p class="scl290-help">ADV0 = Pharmaplus · ADV1 = Θέση 1 · ADV2 = Θέση 2 · PROMO1 = πρώτη γόνδολα ή κολώνα · EXP1 = πρώτη οθόνη Experience. Κάθε είδος θέσης έχει τη δική του αρίθμηση. Για υποκατάστημα ή συνωνυμία πρόσθεσε περιοχή ή κωδικό τιμολόγησης στην ονομασία.</p><div id="scl290PositionRows"></div><div class="scl290-actions"><button type="button" data-scl290="add-position">+ Θέση πάγκου</button><button type="button" data-scl290="add-promo">+ Promotion</button><button type="button" data-scl290="add-exp">+ Experience</button><button type="submit" class="primary">Αποθήκευση οθονών</button>'+(cfg?'<button type="button" data-scl290="correct" data-id="'+r.id+'">Διόρθωση εγκατάστασης</button>':'')+'</div></form>','install');
+    const d=dialog('Οθόνες — '+r.name,'<form id="scl290InstallForm"><div class="scl290-fields">'+field('Ονομασία για τους players','scl290Prefix',r.player_prefix||C.slug(r.name.split(/\s+/)[0]),'text',cfg?'readonly':'required')+(r.legacy?'<div class="scl290-help">Υπάρχον φαρμακείο · διατηρείται το ιστορικό.</div>':serviceField(cfg,r))+'</div><p class="scl290-help">ADV0 = Pharmaplus · ADV1 = Θέση 1 · ADV2 = Θέση 2 · PROMO1 = πρώτη γόνδολα ή κολώνα · EXP1 = πρώτη οθόνη Experience. Κάθε είδος θέσης έχει τη δική του αρίθμηση. Για υποκατάστημα ή συνωνυμία πρόσθεσε περιοχή ή κωδικό τιμολόγησης στην ονομασία.</p><div id="scl290PositionRows"></div><div class="scl290-actions"><button type="button" data-scl290="add-position">+ Θέση πάγκου</button><button type="button" data-scl290="add-promo">+ Promotion</button><button type="button" data-scl290="add-exp">+ Experience</button><button type="submit" class="primary">Αποθήκευση οθονών</button>'+(cfg?'<button type="button" data-scl290="correct" data-id="'+r.id+'">Διόρθωση εγκατάστασης</button>':'')+'</div></form>','install');
     d.record=r;d.config=cfg;d.positions=initialPositions(r);renderPositionRows();
   }
   function chargeLabel(p){const pc=C.cat(p),fee='+'+SCLP.n(SCLP.get('extra_position',pc))+' €/μήνα';return p.type==='hq'?'Κεντρική θέση':pc!=='ADV'?fee:Number(p.ordinal)<=2?'Περιλαμβάνεται':fee;}
@@ -32844,7 +32878,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     const lastOf=cat=>d.positions.reduce((k,p,i)=>C.cat(p)===cat?i:k,-1);
     el('scl290PositionRows').innerHTML=d.positions.map((p,n)=>{
       const locked=!!d.config?.positions.find(x=>x.id===p.id),stopped=!!p.stopsOn,promo=C.cat(p)!=='ADV',minShelves=C.cat(p)==='EXP'?1:0;
-      return '<article class="scl294-screen"><div class="scl294-screen-head"><strong>'+html(C.title(p.ordinal,p.category))+'<small class="scl328-charge">'+html(chargeLabel(p))+'</small></strong><code data-player-preview="'+n+'"></code></div><div class="scl290-fields"><label>Προσανατολισμός<select data-pos-format="'+n+'" '+(locked?'disabled':'required')+'><option value="">Επίλεξε</option><option value="vertical" '+(p.screenFormat==='vertical'?'selected':'')+'>portrait · P</option><option value="horizontal" '+(p.screenFormat==='horizontal'?'selected':'')+'>landscape · L</option></select></label><label>Έναρξη'+(p.startsOn===null?'<span>Υπάρχουσα θέση</span>':'<input type="month" data-pos-start="'+n+'" value="'+html((p.startsOn||'').slice(0,7))+'" '+(locked?'readonly':'required')+'>')+'</label>'+(promo?'<div class="scl328-shelves"><span id="scl328ShelfLabel'+n+'">Ράφια</span>'+(locked?'<strong aria-labelledby="scl328ShelfLabel'+n+'">'+html(p.shelves)+'</strong>':'<span class="scl328-stepper" role="group" aria-labelledby="scl328ShelfLabel'+n+'"><button type="button" data-scl290="shelf-dec" data-i="'+n+'" aria-label="Λιγότερα ράφια" '+(Number(p.shelves)<=minShelves?'disabled':'')+'>−</button><output aria-live="polite">'+html(p.shelves)+'</output><button type="button" data-scl290="shelf-inc" data-i="'+n+'" aria-label="Περισσότερα ράφια" '+(Number(p.shelves)>=12?'disabled':'')+'>+</button></span>')+'</div>':'')+(locked?'<label>Παύση από<input type="month" data-pos-stop="'+n+'" min="'+nextMonth()+'" value="'+html((p.stopsOn||'').slice(0,7))+'" '+(d.config.positions.find(x=>x.id===p.id)?.stopsOn?'readonly':'')+'></label>':'')+'</div>'+(locked?'<p class="scl290-help">'+(stopped?'Από '+html(monthLabel(p.stopsOn))+' η θέση δεν χρησιμοποιείται. Το ιστορικό και η αρίθμηση διατηρούνται.':'Η παύση εφαρμόζεται από τον επιλεγμένο μελλοντικό μήνα. Η αλλαγή στο Product Me γίνεται χειροκίνητα.')+'</p>':'')+(!locked&&n>0&&!p.legacy&&n===lastOf(C.cat(p))?'<button type="button" data-scl290="remove-draft" data-i="'+n+'">Αφαίρεση νέας θέσης</button>':'')+'</article>';
+      return '<article class="scl294-screen"><div class="scl294-screen-head"><strong>'+html(C.title(p.ordinal,p.category))+'<small class="scl328-charge">'+html(chargeLabel(p))+'</small>'+stateChip(p)+'</strong><code data-player-preview="'+n+'"></code></div><div class="scl290-fields"><label>Προσανατολισμός<select data-pos-format="'+n+'" '+(locked?'disabled':'required')+'><option value="">Επίλεξε</option><option value="vertical" '+(p.screenFormat==='vertical'?'selected':'')+'>portrait · P</option><option value="horizontal" '+(p.screenFormat==='horizontal'?'selected':'')+'>landscape · L</option></select></label><label>Έναρξη'+(p.startsOn===null?'<span>Υπάρχουσα θέση</span>':locked&&startEditable(d,p)?monthSelect('data-pos-start="'+n+'" aria-label="Έναρξη θέσης" required',ymMax(curYm(),serviceYm(d)),monthSpan(ymMax(curYm(),serviceYm(d)),(p.startsOn||'').slice(0,7)),(p.startsOn||'').slice(0,7)):(locked?'<input type="text" readonly value="'+html(monthLabel((p.startsOn||'').slice(0,7)))+'" aria-label="Έναρξη θέσης">':'<input type="month" data-pos-start="'+n+'" value="'+html((p.startsOn||'').slice(0,7))+'" required>'))+'</label>'+(promo?'<div class="scl328-shelves"><span id="scl328ShelfLabel'+n+'">Ράφια</span>'+(locked?'<strong aria-labelledby="scl328ShelfLabel'+n+'">'+html(p.shelves)+'</strong>':'<span class="scl328-stepper" role="group" aria-labelledby="scl328ShelfLabel'+n+'"><button type="button" data-scl290="shelf-dec" data-i="'+n+'" aria-label="Λιγότερα ράφια" '+(Number(p.shelves)<=minShelves?'disabled':'')+'>−</button><output aria-live="polite">'+html(p.shelves)+'</output><button type="button" data-scl290="shelf-inc" data-i="'+n+'" aria-label="Περισσότερα ράφια" '+(Number(p.shelves)>=12?'disabled':'')+'>+</button></span>')+'</div>':'')+(locked?'<label>Παύση από'+pauseControl(d,p,n)+'</label>':'')+'</div>'+(locked?'<p class="scl290-help">'+(stopped?'Από '+html(monthLabel(p.stopsOn))+' η θέση δεν χρησιμοποιείται. Το ιστορικό και η αρίθμηση διατηρούνται.':'Η παύση εφαρμόζεται από τον επιλεγμένο μελλοντικό μήνα και, όταν αποθηκευτεί, δεν αναιρείται. '+(startEditable(d,p)?'Η έναρξη αλλάζει μόνο μέχρι να ξεκινήσει η θέση. ':'')+'Η αλλαγή στο Product Me γίνεται χειροκίνητα.')+'</p>':'')+(!locked&&n>0&&!p.legacy&&n===lastOf(C.cat(p))?'<button type="button" data-scl290="remove-draft" data-i="'+n+'">Αφαίρεση νέας θέσης</button>':'')+'</article>';
     }).join('')+(d.positions.some(p=>C.cat(p)!=='ADV')?'<p class="scl328-note">Σύνολο: Pharmaplus + '+(d.positions.filter(p=>p.type!=='hq'&&C.cat(p)==='ADV').length)+' θέσεις πάγκου'+(d.positions.some(p=>C.cat(p)==='PROMO')?' + '+d.positions.filter(p=>C.cat(p)==='PROMO').length+' Promotion':'')+(d.positions.some(p=>C.cat(p)==='EXP')?' + '+d.positions.filter(p=>C.cat(p)==='EXP').length+' Experience':'')+'. Τα ράφια μετριούνται από πάνω προς τα κάτω'+(d.positions.some(p=>C.cat(p)==='PROMO')?' και στο Promotion μπορεί να είναι 0':'')+'. Ορίζονται κατά την εγκατάσταση'+(d.positions.some(p=>C.cat(p)==='EXP')?' και αλλάζουν αργότερα από τη «Διόρθωση εγκατάστασης»':'')+'.'+(d.positions.some(p=>C.cat(p)==='EXP')?' Μια θέση Experience υπάρχει και χρεώνεται από τον μήνα έναρξής της· οι προηγούμενοι μήνες δεν δημιουργούνται και δεν χρεώνονται.':'')+'</p>':'');updatePreviews();
   }
   function updatePreviews(){const d=R.dialog;if(d?.kind!=='install')return;const prefix=C.slug(el('scl290Prefix').value);document.querySelectorAll('[data-player-preview]').forEach(x=>{const n=Number(x.dataset.playerPreview);x.textContent=C.code(prefix,d.positions[n].ordinal,d.positions[n].screenFormat,d.positions[n].category);});}
@@ -32927,7 +32961,7 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     if(e.target.id==='scl290InstallForm'){e.preventDefault();busy(async()=>{const d=R.dialog,prefix=C.slug(el('scl290Prefix').value);if(!/^[A-Z][A-Z0-9_]{1,59}$/.test(prefix))throw Error('Συμπληρώστε την ονομασία για τους players');if(d.positions.some(p=>!p.screenFormat))throw Error('Επιλέξτε προσανατολισμό σε όλες τις θέσεις');if(d.positions.some(p=>C.cat(p)==='PROMO'&&!(Number.isInteger(p.shelves)&&p.shelves>=0&&p.shelves<=12)))throw Error('Ορίστε τον αριθμό των ραφιών (0 έως 12) σε κάθε Promotion');if(d.positions.some(p=>C.cat(p)==='EXP'&&!(Number.isInteger(p.shelves)&&p.shelves>=1&&p.shelves<=12)))throw Error('Ορίστε τον αριθμό των ραφιών (1 έως 12) σε κάθε Experience');const paused=d.positions.filter(p=>p.stopsOn&&!d.config?.positions.find(x=>x.id===p.id)?.stopsOn);if(paused.length&&!confirm('Παύση θέσεων: '+paused.map(p=>C.title(p.ordinal,p.category)+' από '+monthLabel(p.stopsOn)).join(', ')+'. Το ιστορικό και οι οριστικοποιημένες χρεώσεις διατηρούνται. Οι εργασίες και τα προγραμματισμένα κόστη μετά την παύση σταματούν. Απαιτείται χειροκίνητη αλλαγή στο Product Me. Συνέχεια;'))return;await api('scl290_hq_install',{p_hq_key:SCL_ROUTING.hqKey,p_registry_id:d.record.id,p_expected_version:d.config?.version||0,p_year:scl212Year(),p_prefix:prefix,p_service_from:el('scl290Service')?.value?el('scl290Service').value+'-01':null,p_positions:d.positions});closeDialog();await refreshHQ();notice('Οι οθόνες αποθηκεύτηκαν. Ο σύνδεσμος βρίσκεται στην «Πρόσβαση».');});}
   });
   document.addEventListener('input',e=>{if(e.target.id==='scl290Search'){R.search=e.target.value;renderRegistry();}if(e.target.id==='scl290Prefix')updatePreviews();if(e.target.id==='scl294CorrectionPrefix')correctionPreview();});
-  document.addEventListener('change',e=>{if(e.target.dataset.scl294Select){e.target.checked?R.selected.add(e.target.dataset.scl294Select):R.selected.delete(e.target.dataset.scl294Select);renderRegistry();}if(e.target.dataset.correctionFormat)correctionPreview();if(e.target.dataset.correctionShelves!==undefined)correctionLost();const d=R.dialog;if(d?.kind==='install'){if(e.target.dataset.posFormat!==undefined){d.positions[Number(e.target.dataset.posFormat)].screenFormat=e.target.value;updatePreviews();}if(e.target.dataset.posStop!==undefined)d.positions[Number(e.target.dataset.posStop)].stopsOn=e.target.value?e.target.value+'-01':null;if(e.target.dataset.posStart!==undefined)d.positions[Number(e.target.dataset.posStart)].startsOn=e.target.value?e.target.value+'-01':'';}});
+  document.addEventListener('change',e=>{if(e.target.dataset.scl294Select){e.target.checked?R.selected.add(e.target.dataset.scl294Select):R.selected.delete(e.target.dataset.scl294Select);renderRegistry();}if(e.target.dataset.correctionFormat)correctionPreview();if(e.target.dataset.correctionShelves!==undefined)correctionLost();const d=R.dialog;if(d?.kind==='install'){if(e.target.dataset.posFormat!==undefined){d.positions[Number(e.target.dataset.posFormat)].screenFormat=e.target.value;updatePreviews();}if(e.target.dataset.posStop!==undefined)d.positions[Number(e.target.dataset.posStop)].stopsOn=e.target.value?e.target.value+'-01':null;if(e.target.dataset.posStart!==undefined){const ix=Number(e.target.dataset.posStart),pp=d.positions[ix];pp.startsOn=e.target.value?e.target.value+'-01':'';if(e.target.tagName==='SELECT'){if(pp.stopsOn&&e.target.value&&String(pp.stopsOn).slice(0,7)<=e.target.value)pp.stopsOn=null;renderPositionRows();document.querySelector('[data-pos-start="'+ix+'"]')?.focus();}}if(e.target.id==='scl290Service'&&e.target.tagName==='SELECT'&&d.config){const was=d.prevService||String(d.config.service_from||'').slice(0,7),now=e.target.value;d.positions.forEach(pp=>{if(pp.startsOn===null||pp.legacy)return;const sv=String(pp.startsOn||'').slice(0,7);if(!sv||sv<now||sv===was)pp.startsOn=now+'-01';if(pp.stopsOn&&String(pp.stopsOn).slice(0,7)<=now)pp.stopsOn=null;});d.prevService=now;renderPositionRows();document.getElementById('scl290Service')?.focus();}}});
   document.addEventListener('click',e=>{const b=e.target.closest?.('[data-scl290]');if(!b)return;const action=b.dataset.scl290;e.preventDefault();
     if(action==='close')return closeDialog();if(action==='new')return R.available?editRegistry():failure('Περιμένετε τη φόρτωση του μητρώου');
     if(action==='view-active'||action==='view-inactive'){R.registryView=action==='view-active'?'active':'inactive';return renderRegistry();}
@@ -33563,9 +33597,18 @@ function homeSummary311(ready){
  return '<div class="scl311-metric"><span>Προτεινόμενη συμφωνία</span><strong>'+E(euro(suggestedPrice()))+' <small>/ μήνα</small></strong><p>Με βάση ετήσιο τζίρο '+E(euro(state.turnover))+'. Αλλάζει από «Το φαρμακείο μου». <button type="button" data-scl3181-turnover '+(Number(state.programYear)<Number(SCL292Core.today().slice(0,4))?'disabled':'')+'>Αλλαγή τζίρου</button></p></div><p class="scl311-intro">'+E(sentence)+'</p><section class="scl311-attention" aria-label="Χρειάζεται κάτι από σένα"><h2>Χρειάζεται κάτι από σένα</h2>'+attention+nextNotice+'</section><div class="scl311-metrics"><article class="scl311-metric scl311-hero"><span>Κλεισμένα έσοδα · '+y()+'</span><strong>'+E(revenue)+'</strong><small>Συμφωνίες και χορηγίες · δεν πιστοποιούν είσπραξη.</small>'+button('Ανάλυση','page','data-page-value="economics"')+'</article><article class="scl311-metric"><span>Διαθέσιμοι μήνες για συμφωνία</span><strong>'+E(free)+'</strong><small>Άθροισμα ανά τοπική οθόνη · '+y()+'. Οι προσυμφωνίες δεν αποκλείονται.</small></article><article class="scl311-metric"><span>Δωρεάν αλλαγές που απομένουν</span><strong>'+E(remaining)+'</strong><small>Σύνολο τοπικών οθονών · '+y()+'.</small>'+quotaInfo+'</article></div>';
 }
 
+function ym3318(v){const t=String(v||'').slice(0,7);if(!/^\d{4}-\d{2}$/.test(t))return '';return MONTHS[Number(t.slice(5))-1]+' '+t.slice(0,4);}
+function stateChip3318(c){
+ const today=String(root.SCL292Core&&root.SCL292Core.today?root.SCL292Core.today():new Date().toISOString().slice(0,10)).slice(0,7),st=String(c.installationStart||'').slice(0,7),sp=String(c.stopsOn||'').slice(0,7);
+ let k='ok',t='Ενεργή';
+ if(sp&&sp<=today){k='off';t='Σε παύση από '+ym3318(sp);}
+ else if(st&&st>today){k='soon';t='Ξεκινά '+ym3318(st);}
+ else if(sp){k='warn';t='Ενεργή · παύση από '+ym3318(sp);}
+ return '<div class="scl3318-srow"><span class="scl3318-state '+k+'" data-state="'+k+'"><i aria-hidden="true"></i>'+E(t)+'</span></div>';
+}
 function card330(c,a,b,ready,tabs){
  const strip=!!tabs&&c.type==='hq';
- return '<article class="scl295-position-card'+(strip?' scl330-strip':'')+'"'+(tabs?' data-scl330-id="'+E(c.id)+'"':'')+'><header><h2>'+E(name(c))+'</h2><span>'+E(fmt(c.screenFormat))+'</span></header>'+(c.type==='hq'?'<p class="scl296-hq-note">Διαχείριση από τα κεντρικά · μόνο προβολή</p>':'')+'<code>'+E(c.playerCode||'Αναμονή κωδικού συσκευής')+'</code>'+homeDevice311(c)+[[a,'Τώρα'],[b,'Επόμενο']].map(([d,t])=>{const r=row(c,d.month,d.year);return '<div class="scl295-now-next"><span>'+t+' · '+period(d.month,d.year)+'</span><strong>'+E(r.label)+'</strong>'+(r.type?'<small>'+E(r.type)+'</small>':'')+'</div>';}).join('')+button(c.type==='hq'?'Προβολή προγράμματος':'Προγραμματισμός',c.type==='hq'?'pp-programme':'position','data-card="'+E(c.id)+'" '+(!ready||(c.type!=='hq'&&!turnoverReady())?'disabled':''))+'</article>';
+ return '<article class="scl295-position-card'+(strip?' scl330-strip':'')+'"'+(tabs?' data-scl330-id="'+E(c.id)+'"':'')+'><header><h2>'+E(name(c))+'</h2><span>'+E(fmt(c.screenFormat))+'</span></header>'+stateChip3318(c)+(c.type==='hq'?'<p class="scl296-hq-note">Διαχείριση από τα κεντρικά · μόνο προβολή</p>':'')+'<code>'+E(c.playerCode||'Αναμονή κωδικού συσκευής')+'</code>'+homeDevice311(c)+[[a,'Τώρα'],[b,'Επόμενο']].map(([d,t])=>{const r=row(c,d.month,d.year);return '<div class="scl295-now-next"><span>'+t+' · '+period(d.month,d.year)+'</span><strong>'+E(r.label)+'</strong>'+(r.type?'<small>'+E(r.type)+'</small>':'')+'</div>';}).join('')+button(c.type==='hq'?'Προβολή προγράμματος':'Προγραμματισμός',c.type==='hq'?'pp-programme':'position','data-card="'+E(c.id)+'" '+(!ready||(c.type!=='hq'&&!turnoverReady())?'disabled':''))+'</article>';
 }
 function paintCards330(ready){
  const a=now(),b=next(),sh=shown330(),host=$('cards');
@@ -33611,7 +33654,7 @@ function renderTimeline295(){
    localHeading=true;
   }
   const free=available(c);
-  out+='<div class="scl296-timeline-row'+(compact&&c.type==='hq'?' scl3231-pp':'')+'" role="row"'+(tabs?' data-scl330-id="'+E(c.id)+'"':'')+'><div class="scl296-position-label" role="rowheader">'+(compact?'<i class="scl321b-orientation '+(c.screenFormat==='vertical'?'P':'L')+'" aria-hidden="true"></i>'+(c.type==='hq'?'<strong>'+E(name(c))+'</strong>':'<button type="button" class="scl330-rowname" data-scl330-jump="'+cat330(c)+'" aria-label="'+E(name(c)+', '+cat330(c)+'. Άνοιγμα της καρτέλας')+'"><strong>'+E(name(c))+'</strong></button>'):'<strong>'+E(name(c))+'</strong><small>'+E(c.type==='hq'?'Pharmaplus · μόνο προβολή':fmt(c.screenFormat))+'</small><code>'+E(c.playerCode||'')+'</code>')+'</div>';
+  out+='<div class="scl296-timeline-row'+(compact&&c.type==='hq'?' scl3231-pp':'')+'" role="row"'+(tabs?' data-scl330-id="'+E(c.id)+'"':'')+'><div class="scl296-position-label" role="rowheader">'+(compact?'<i class="scl321b-orientation '+(c.screenFormat==='vertical'?'P':'L')+'" aria-hidden="true"></i>'+(c.type==='hq'?'<strong>'+E(name(c))+'</strong>':'<button type="button" class="scl330-rowname" data-scl330-jump="'+cat330(c)+'" aria-label="'+E(name(c)+', '+cat330(c)+'. Άνοιγμα της καρτέλας')+'"><strong>'+E(name(c))+'</strong></button>'):'<strong>'+E(name(c))+'</strong><small>'+E(c.type==='hq'?'Pharmaplus · μόνο προβολή':fmt(c.screenFormat))+'</small>'+stateChip3318(c)+'<code>'+E(c.playerCode||'')+'</code>')+'</div>';
   for(let m=0;m<12;m++){
    if(!active(c,m)){const start=m,label=inactiveLabel(c,m);while(m<11&&!active(c,m+1)&&inactiveLabel(c,m+1)===label)m++;if(compact)out+='<div role="cell" aria-colspan="'+(m-start+1)+'" data-block-start="'+start+'" data-block-end="'+m+'" style="grid-column:'+(start+2)+' / span '+(m-start+1)+'" class="scl296-timeline-cell scl3231-block blk none" title="'+E(groupText({start,end:m,label}))+'"><div class="scl3231-caption"><b>'+E(label)+'</b></div></div>';else out+='<div role="cell" class="scl295-inactive" style="grid-column:span '+(m-start+1)+'">'+E(groupText({start,end:m,label}))+'</div>';continue;}
    const start=m,r=row(c,m),key=timelineKey(c,m);
@@ -46454,7 +46497,7 @@ if(d.kind==='correction')add(q('#scl294CorrectionForm>p:last-of-type',layer),'wa
 }
 qa('button,a.scl294-open',layer).forEach(b=>{if(b.closest('.seg'))return;add(b,'btn');if(b.classList.contains('scl294-danger'))add(b,'danger');else if(!b.classList.contains('primary'))add(b,'line');});
 if(d.kind==='deactivate'){const input=q('#scl294ConfirmName',layer),submit=q('[type=submit]',layer);if(input&&submit){const disabled=!!layer.dataset.busy||input.value.replace(/^ +| +$/g,'')!==d.record.name;if(submit.disabled!==disabled)submit.disabled=disabled;}}
-if(d.kind==='install'){const rows=q('#scl290PositionRows',layer);if(rows){add(rows,'postab');if(!q('.pt-h',rows)){const h=mk('div','pt-h');['Θέση','Κωδικός συσκευής','Προσανατολισμός','Έναρξη','Παύση από'].forEach(t=>h.append(mk('span','',t)));rows.prepend(h);}qa('.scl294-screen',rows).forEach(row=>{if(row.classList.contains('pt-r'))return;add(row,'pt-r');const title=q('strong',row),code=q('[data-player-preview]',row),labels=qa('.scl290-fields>label',row),shelves=q('.scl328-shelves',row),help=q('.scl290-help',row),remove=q('[data-scl290=remove-draft]',row);row.replaceChildren(title,code,...labels);if(labels.length<3)row.append(mk('span','note','—'));if(shelves)row.append(shelves);if(help){help.hidden=true;row.append(help);}if(remove)row.append(remove);});qa('[data-pos-format]',rows).forEach(formatProxy);let help=q('.scl3253-pause',layer);const texts=[...new Set(qa('.scl290-help',rows).map(n=>n.textContent))];if(!help){help=mk('p','note scl3253-pause');q('.scl3253-copy-status',layer)?.after(help);}text(help,texts.join(' '));}}
+if(d.kind==='install'){const rows=q('#scl290PositionRows',layer);if(rows){add(rows,'postab');if(!q('.pt-h',rows)){const h=mk('div','pt-h');['Θέση','Κωδικός συσκευής','Προσανατολισμός','Έναρξη','Παύση από'].forEach(t=>h.append(mk('span','',t)));rows.prepend(h);}qa('.scl294-screen',rows).forEach(row=>{if(row.classList.contains('pt-r'))return;add(row,'pt-r');const title=q('strong',row),code=q('[data-player-preview]',row),labels=qa('.scl290-fields>label',row),shelves=q('.scl328-shelves',row),help=q('.scl290-help',row),remove=q('[data-scl290=remove-draft]',row);row.replaceChildren(title,code,...labels);if(labels.length<3)row.append(mk('span','note','—'));if(shelves)row.append(shelves);if(help){help.hidden=true;row.append(help);}if(remove)row.append(remove);});qa('[data-pos-format]',rows).forEach(formatProxy);let help=q('.scl3253-pause',layer);const texts=[...new Set(qa('.scl290-help',rows).flatMap(n=>n.textContent.split(/(?<=\.)\s+/)))].sort((a,b)=>/Product Me/.test(a)-/Product Me/.test(b));if(!help){help=mk('p','note scl3253-pause');q('.scl3253-copy-status',layer)?.after(help);}text(help,texts.join(' '));}}
 if(d.kind==='correction'){qa('.scl294-screen',layer).forEach(row=>{add(row,'crow2');add(q(':scope>div',row),'diff');formatProxy(q('select',row));const codes=qa('code',row);if(codes.length===2){const changed=codes[0].textContent!==codes[1].textContent;if(codes[1].classList.contains('chg')!==changed)codes[1].classList.toggle('chg',changed);}});}
 if(d.kind==='programme')programme(layer,body,section);
 }
@@ -48701,3 +48744,112 @@ body.scl295-pharmacy #scl331Host .scl331-bw{container-type:inline-size;min-width
 @container (max-width:600px){body.scl295-pharmacy #scl331Host .scl331-bnd.b4,body.scl295-pharmacy #scl331Host .scl331-bnd.b5{grid-template-columns:minmax(0,1fr)}body.scl295-pharmacy #scl331Host .scl331-bc+.scl331-bc{border-left:0;border-top:1px solid var(--hair)}body.scl295-pharmacy #scl331Host .scl331-cr{grid-template-columns:minmax(90px,1fr) minmax(0,1fr) 56px}}
 @container (min-width:601px){body.scl295-pharmacy #scl331Host .scl331-bnd.b1{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
+
+<style id="scl3318-style">
+/* v331.8 · ενδείξεις κατάστασης θέσης, επιλογή μήνα έναρξης/παύσης, ένδειξη αρχείων Βιβλιοθήκης */
+.scl3318-state{display:inline-flex;align-items:center;gap:6px;max-width:100%;margin:6px 0 0;padding:3px 10px 3px 8px;border-radius:999px;font:600 12px/1.35 var(--font,inherit);letter-spacing:0;text-transform:none;white-space:normal;background:var(--fill,#f2f2f4);color:var(--muted,#636366)}
+.scl3318-state i{flex:none;width:7px;height:7px;border-radius:50%;background:currentColor}
+.scl3318-state.ok{background:var(--ok-soft,#e3f6ec);color:var(--ok,#16784a)}
+.scl3318-state.soon{background:var(--accent-soft,#e8efff);color:var(--accent-ink,#1a45b0)}
+.scl3318-state.warn{background:var(--warn-soft,#fdf1e3);color:var(--warn,#b8651a)}
+.scl3318-state.off{background:var(--danger-soft,rgba(215,0,21,.08));color:var(--danger,#d70015)}
+.scl3318-srow{margin:2px 0 8px}
+@media(min-width:801px){body.scl-hq #scl290Dialog .pt-h,body.scl-hq #scl290Dialog .pt-r{grid-template-columns:140px minmax(0,1.3fr) 190px 140px 150px}}
+body.scl-hq #scl290Dialog .pt-r label select{height:36px;padding:8px 26px 8px 10px;font-size:13px;margin:0;border-radius:10px}
+body.scl-hq #scl290Dialog .pt-r strong .scl3318-state{display:flex;width:fit-content;font-size:12px}
+body.scl-hq #scl290Dialog .scl3318-fixed{display:block;height:36px;line-height:36px;padding:0 10px;border-radius:10px;background:var(--fill);color:var(--muted);font-size:13px;font-weight:500}
+body.scl-hq #scl290Dialog .scl3318-hint{display:block;margin:6px 0 0;font:400 12px/1.4 var(--font);color:var(--muted)}
+.scl3318-file{display:flex;align-items:center;gap:6px;width:fit-content;max-width:100%;margin:8px 0 0;padding:3px 10px 3px 8px;border-radius:999px;font:600 12px/1.35 var(--font,inherit);background:var(--fill,#f2f2f4);color:var(--muted,#636366)}
+.scl3318-file i{flex:none;width:7px;height:7px;border-radius:50%;background:currentColor}
+.scl3318-file.none{background:var(--danger-soft,rgba(215,0,21,.08));color:var(--danger,#d70015)}
+.scl3318-file.part{background:var(--warn-soft,#fdf1e3);color:var(--warn,#b8651a)}
+.scl3318-file.ok{background:none;padding-left:0;font-weight:500;color:var(--muted,#636366)}
+.scl3318-file.ok i{background:var(--ok,#16784a)}
+p.scl3272-file.scl3318-file{margin:8px 0 0}
+.scl3318-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0;padding:12px 16px;border-radius:14px;background:var(--warn-soft,#fdf1e3);color:var(--warn,#b8651a);font:600 14px/1.4 var(--font,inherit)}
+.scl3318-banner.ok{background:var(--ok-soft,#e3f6ec);color:var(--ok,#16784a);font-weight:500}
+.scl3318-banner button{margin-left:auto;min-height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--warn,#b8651a);color:#fff;font:600 13px var(--font,inherit);cursor:pointer}
+.scl3318-banner button[aria-pressed=true]{background:transparent;color:inherit;box-shadow:inset 0 0 0 1.5px currentColor}
+.scl3318-banner button:focus-visible{outline:2px solid var(--accent,#2459e0);outline-offset:2px}
+#scl293Editor input.scl3318-empty{box-shadow:inset 0 0 0 1.5px var(--warn,#b8651a)!important}
+.scl3318-edhint{display:block;margin:6px 0 0;font:600 12px/1.4 var(--font,inherit);color:var(--warn,#b8651a)}
+</style>
+
+<script id="scl3318-lib">
+(function(root){
+ 'use strict';
+ const q=(s,r=document)=>r.querySelector(s),qa=(s,r=document)=>[...r.querySelectorAll(s)];
+ const has=v=>!!String(v==null?'':v).trim();
+ const ui={only:{themes:false,programs:false}};
+ const hqMode=()=>document.body&&document.body.classList.contains('scl-hq');
+ const files=t=>{const f=(t&&t.files)||{};return {v:has(f.vertical),h:has(f.horizontal)};};
+ function themeState(t){const f=files(t);
+  if(f.v&&f.h)return {k:'ok',txt:'Αρχεία: portrait · landscape'};
+  if(!f.v&&!f.h)return {k:'none',txt:'Χωρίς αρχείο στο Product Me'};
+  return {k:'part',txt:'Λείπει αρχείο '+(f.v?'landscape':'portrait')};}
+ function programState(L,p){
+  if(!p||p.type==='exp')return null;
+  const ms=(p.months||[]).filter(m=>m&&m.theme),miss=ms.filter(m=>{const t=(L.data.themes||[]).find(x=>x.id===m.theme);return !t||themeState(t).k!=='ok';}).length;
+  return miss?{k:'part',txt:'Λείπει αρχείο σε '+miss+(miss===1?' μήνα':' μήνες')}:{k:'ok',txt:'Όλα τα αρχεία υπάρχουν'};}
+ const pill=(st,cls)=>{const d=document.createElement('div');d.className='scl3318-file '+st.k+(cls?' '+cls:'');d.dataset.scl3318='file';d.innerHTML='<i aria-hidden="true"></i>';d.append(document.createTextNode(st.txt));return d;};
+ function listing(L,page){
+  const list=q('.scl293-list',page);if(!list)return;
+  const kind=L.section;if(kind!=='themes'&&kind!=='programs')return;
+  const rows=qa(':scope>article',list);if(!rows.length)return;
+  let bad=0,total=0;
+  for(const a of rows){
+   const id=(q('[data-scl293=edit]',a)||{dataset:{}}).dataset.id,item=(L.data[kind]||[]).find(x=>x.id===id);if(!item)continue;
+   let st=null,host=null;
+   if(kind==='themes'){st=themeState(item);host=q('.lc-body',a)||a.firstElementChild;}
+   else{
+    const old=q('.scl3272-file',a);
+    if(old){st={k:/^Λείπει|^Δεν έχουν/.test(old.textContent)?'part':'ok'};old.classList.add('scl3318-file',st.k);if(!old.querySelector('i'))old.insertAdjacentHTML('afterbegin','<i aria-hidden="true"></i>');}
+    else{st=programState(L,item);host=q('.pc-h',a)||a.firstElementChild;}
+   }
+   if(!st)continue;
+   total++;if(st.k!=='ok')bad++;
+   a.dataset.scl3318=st.k;
+   if(host&&!q('[data-scl3318=file]',a)&&st.txt)host.append(pill(st));
+   else if(host){const cur=q('[data-scl3318=file]',a);if(cur&&cur.textContent!==st.txt){cur.replaceWith(pill(st));}}
+   a.hidden=!!ui.only[kind]&&st.k==='ok';
+  }
+  let ban=q('.scl3318-banner',page);
+  const label=kind==='themes'?'θεματικές':'προγράμματα';
+  const text=bad?bad+' από '+total+' '+label+' δεν έχουν πλήρη αρχεία στο Product Me.':'Όλες οι '+label+' έχουν αρχεία.';
+  if(!total){ban&&ban.remove();return;}
+  if(!ban){ban=document.createElement('div');ban.className='scl3318-banner';ban.setAttribute('role','status');const chips=q('.scl3272-chips',page);(chips||list).before(ban);}
+  ban.className='scl3318-banner'+(bad?'':' ok');
+  const sig=text+'|'+ui.only[kind]+'|'+kind;
+  if(ban.dataset.sig!==sig){
+   ban.dataset.sig=sig;ban.textContent='';const sp=document.createElement('span');sp.textContent=(bad?'⚠ ':'✓ ')+text;ban.append(sp);
+   if(bad){const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(!!ui.only[kind]));b.textContent=ui.only[kind]?'Δείξε όλες':'Δείξε μόνο αυτές';b.addEventListener('click',()=>{ui.only[kind]=!ui.only[kind];ban.dataset.sig='';run();});ban.append(b);}
+  }
+ }
+ function editor(L,page){
+  if(!L.editing||L.editing.kind!=='theme')return;
+  const f=q('#scl293Editor',page);if(!f)return;
+  const inputs=[['file_vertical','portrait'],['file_horizontal','landscape']];
+  const miss=[];
+  for(const [n,lab] of inputs){const i=q('[name='+n+']',f);if(!i)continue;const empty=!has(i.value);i.classList.toggle('scl3318-empty',empty);if(empty)miss.push(lab);}
+  const host=q('[name=file_vertical]',f);if(!host)return;
+  const box=host.closest('section,.panel,fieldset')||host.parentElement;
+  let h=q('.scl3318-edhint',f);
+  if(!miss.length){h&&h.remove();return;}
+  if(!h){h=document.createElement('span');h.className='scl3318-edhint';h.setAttribute('role','status');box.append(h);}
+  const t='Δεν έχει οριστεί όνομα αρχείου για '+miss.join(' και ')+'. Η θεματική δεν θα βρίσκει αρχείο στο Product Me.';
+  if(h.textContent!==t)h.textContent=t;
+ }
+ let busy=false;
+ function run(){
+  if(busy||!hqMode())return;const L=root.SCL293;if(!L||!L.data)return;
+  const page=document.getElementById('scl212Page-library');if(!page)return;
+  busy=true;try{if(L.editing)editor(L,page);else listing(L,page);}catch(e){}finally{busy=false;}
+ }
+ let queued=false;
+ function schedule(){if(queued)return;queued=true;requestAnimationFrame(()=>{requestAnimationFrame(()=>{queued=false;if(obs)obs.disconnect();try{run();}finally{watch();}});});}
+ let obs=null;
+ function watch(){if(obs)obs.observe(document.body,{childList:true,subtree:true});}
+ function start(){obs=new MutationObserver(schedule);watch();schedule();document.addEventListener('input',e=>{if(e.target&&e.target.closest&&e.target.closest('#scl293Editor'))schedule();},true);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})(window);
+</script>
