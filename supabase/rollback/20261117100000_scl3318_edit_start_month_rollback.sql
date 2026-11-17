@@ -1,5 +1,5 @@
 -- Rollback για scl3318: επαναφέρει τη λειτουργία scl290_hq_install όπως ήταν στη βάση πριν την αλλαγή (v331.7).
--- ΠΡΟΣΟΧΗ: δεν έχει εφαρμοστεί. Εφαρμόζεται μόνο αν χρειαστεί επαναφορά.
+-- Το migration scl3318 εφαρμόστηκε στις 17/11/2026. Αυτό το αρχείο το αναιρεί (md5 ορισμού πριν: 843a2cfa360227f2a5043a401b88ebe1).
 CREATE OR REPLACE FUNCTION public.scl290_hq_install(p_hq_key text, p_registry_id uuid, p_expected_version bigint, p_year integer, p_prefix text, p_service_from date, p_positions jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql

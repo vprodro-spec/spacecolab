@@ -1,5 +1,5 @@
 -- scl3318 (v331.8): αλλαγή μήνα έναρξης υπηρεσίας και θέσεων ΠΡΙΝ ξεκινήσουν.
--- ΠΡΟΣΟΧΗ: ΔΕΝ ΕΧΕΙ ΕΦΑΡΜΟΣΤΕΙ ΣΤΗ ΒΑΣΗ. Εφαρμόζεται μόνο μετά από δικό σου ρητό «ναι» και backup.
+-- ΕΦΑΡΜΟΣΤΗΚΕ στη βάση στις 17/11/2026 μετά από ρητό «ναι» (backup: το rollback αρχείο, md5 ορισμού f970e3b4ad4e05f9cc567088ed9139db).
 -- Αλλάζει ΜΟΝΟ τη λειτουργία public.scl290_hq_install. Rollback: supabase/rollback/20261117100000_scl3318_edit_start_month_rollback.sql
 CREATE OR REPLACE FUNCTION public.scl290_hq_install(p_hq_key text, p_registry_id uuid, p_expected_version bigint, p_year integer, p_prefix text, p_service_from date, p_positions jsonb)
  RETURNS jsonb
