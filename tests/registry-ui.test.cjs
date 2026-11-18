@@ -41,7 +41,7 @@ test('HQ interface: activation opens screens, progress excludes PP, selected exp
  await vm.runInContext('SCL290.refreshHQ()',x.ctx);
  const box=x.document.querySelector('[data-scl294-select="registry-a"]');box.checked=true;box.dispatchEvent(new x.ctx.Event('change',{bubbles:true}));
  let exported;x.ctx.URL.createObjectURL=b=>{exported=b;return 'blob:test'};x.ctx.URL.revokeObjectURL=()=>{};x.ctx.HTMLElement.prototype.click=function(){};
- vm.runInContext('SCL290.exportPlayers(true)',x.ctx);const csv=await exported.text();assert.match(csv,/TEST_ADV1_L/);assert.doesNotMatch(csv,/UNSELECTED_ADV0/);
+ await vm.runInContext('SCL290.exportPlayers(true)',x.ctx);const csv=await exported.text();assert.match(csv,/TEST_ADV1_L/);assert.doesNotMatch(csv,/UNSELECTED_ADV0/);
  click('[data-scl290="deactivate"][data-id="registry-a"]');assert.ok(x.document.getElementById('scl294ConfirmName'));assert.match(x.document.getElementById('scl290Dialog').textContent,/χρεώσεις/);assert.equal(calls.filter(x=>x.name==='scl294_deactivate').length,0);
 });
 test('paused position remains readable, blocks changes, and respects earlier-month orientation',async()=>{
