@@ -36825,10 +36825,12 @@ function totals(rows){const finalized=rows.filter(r=>r.status==='finalized'),pla
 function quota(rows,id){const free=root.SCLP?root.SCLP.free(root.SCLP.category(id)):3,actual=rows.filter(r=>r.position_id===id&&r.category==='custom'&&r.entry_type!=='credit'&&['finalized','cancelled'].includes(r.status)&&(r.source_status||r.original_status||r.status)==='finalized');const used=Math.min(free,Math.max(0,...actual.map(r=>Number(r.quota_index)||0)));return {used,remaining:free-used,free,paid:actual.filter(r=>Number(r.amount)>0&&r.status!=='cancelled').length};}
 function estimate(positions,price,shelfPrice,paidCustom=0,promo=0){const P=root.SCLP,g=(i,c)=>P?P.get(i,c):({extra_position:8,extra_change:15,deal:30})[i];const n=Math.max(0,Number(positions)||0),pr=Math.min(n,Math.max(0,Math.floor(Number(promo)||0))),adv=n-pr,custom=Math.max(0,Math.floor(Number(paidCustom)||0));const base=P?P.get('platform')+P.get('base_program'):485,extra=(Math.max(0,adv-2)*g('extra_position','ADV')+pr*g('extra_position','PROMO'))*12,activation=(adv*g('deal','ADV')+pr*g('deal','PROMO'))*12,customCost=custom*g('extra_change','ADV'),cost=base+extra+activation+customCost;return {positions:n,months:12,price,shelfPrice,revenue:n*12*price,base,extra,activation,custom:customCost,cost,profit:n*12*price-cost,referenceRevenue:n*12*100,referenceProfit:n*12*100-cost};}
 function variants(file){return {video:file,image:String(file).replace(/\.mp4$/i,'.jpg'),jpeg:String(file).replace(/\.mp4$/i,'.jpeg')};}
-function supplierDocument({pharmacy,address,supplier,brand,position,device,orientation,shelves,period,monthly,total,confirmed,files}){
+function supplierDocument({pharmacy,address,supplier,brand,position,device,orientation,shelves,period,monthly,total,confirmed,files,audience}){
  const title=confirmed?'Επιβεβαίωση συνεργασίας προβολής':'Πρόταση συνεργασίας προβολής';
  const intro=confirmed?'Σας ευχαριστούμε για τη συνεργασία. Επιβεβαιώνουμε τη συμφωνία μας για την προβολή της μάρκας '+brand+' στο φαρμακείο μας, σύμφωνα με τα παρακάτω στοιχεία.':'Θα χαρούμε να συνεργαστούμε για την προβολή της μάρκας '+brand+' στο φαρμακείο μας. Σας προτείνουμε μια παρουσία που συνδυάζει την οθόνη προβολής με την τοποθέτηση των προϊόντων σας στα ράφια της ίδιας θέσης.';
  const sections=[{title:'Η συνεργασία μας',paragraphs:[intro,confirmed?'Παρακαλούμε ελέγξτε τα στοιχεία και ενημερώστε μας αν χρειάζεται κάποια διόρθωση.':'Ακολουθούν τα στοιχεία της πρότασής μας. Θα χαρούμε να συζητήσουμε μαζί σας τη σειρά προϊόντων και το υλικό που ταιριάζουν καλύτερα στη συγκεκριμένη περίοδο.'],items:[['Φαρμακείο',pharmacy],...(address?[['Διεύθυνση',address]]:[]),['Προμηθευτής',supplier],['Μάρκα',brand],['Θέση προβολής',position],['Κωδικός συσκευής',device],['Περίοδος προβολής',period],['Χώρος προϊόντων',shelves],[confirmed?'Συμφωνημένο μηνιαίο ποσό':'Προτεινόμενο μηνιαίο ποσό',monthly],['Συνολική αξία περιόδου',total]]},
+ /* v332.0 · προαιρετικό «Κοινό της θέσης»: χωρίς audience το έγγραφο μένει πανομοιότυπο. */
+ ...(audience&&audience.monthly?[{title:'Το κοινό της θέσης',paragraphs:['Το φαρμακείο μας δέχεται '+audience.monthly+' επισκέψεις τον μήνα.',...(audience.total?['Σε '+audience.months+' μήνες: '+audience.total+' επισκέψεις.']:[]),'Η θέση είναι αποκλειστικά δική σας όλο τον μήνα.']}]:[]),
  {title:'Προδιαγραφές υλικού οθόνης',paragraphs:['Προσανατολισμός: '+orientation+' · '+(orientation==='portrait'?'1080 × 1920 pixels (9:16).':'1920 × 1080 pixels (16:9).'),'Υποστηρίζονται βίντεο MP4 (.mp4) και στατικές εικόνες JPEG (.jpg ή .jpeg).','Η οθόνη λειτουργεί χωρίς ήχο. Παρακαλούμε παραδώστε το βίντεο χωρίς ηχητικό κανάλι και ενσωματώστε κάθε απαραίτητο μήνυμα στην εικόνα, ώστε να γίνεται κατανοητό χωρίς αφήγηση ή μουσική.','Το δημιουργικό χρειάζεται να είναι προσαρμοσμένο στον παραπάνω προσανατολισμό και στις αντίστοιχες διαστάσεις. Για κάθε ζητούμενο υλικό μπορείτε να επιλέξετε βίντεο ή στατική εικόνα.']},
  {title:confirmed?'Αρχεία και παράδοση':'Προετοιμασία αρχείων μετά την αποδοχή',paragraphs:['Παρακαλούμε χρησιμοποιήστε ακριβώς ένα από τα παρακάτω ονόματα ανά υλικό, ανάλογα με τον τύπο αρχείου. Η κατάληξη πρέπει να αντιστοιχεί στον πραγματικό τύπο του αρχείου· η απλή μετονομασία δεν μετατρέπει βίντεο σε εικόνα.'],files},
  {title:'Αποστολή υλικού',paragraphs:[(confirmed?'Παρακαλούμε αποστείλετε':'Μετά την αποδοχή της πρότασης, παρακαλούμε αποστείλετε')+' τα τελικά αρχεία στο emitropoulou@pharmaplus.gr, για τον έλεγχο και τον προγραμματισμό τους από την ομάδα Pharmaplus.','Στο θέμα του email αναφέρετε: '+pharmacy+' | '+device+' | '+period+'. Στο μήνυμα συμπεριλάβετε τη μάρκα, την περίοδο προβολής και τα ονόματα των συνημμένων αρχείων.','Το υλικό πρέπει να έχει παραδοθεί 14 ημέρες πριν από την έναρξη της αντίστοιχης περιόδου. Αν αλλάζει ανά μήνα, ισχύει η προθεσμία κάθε αρχείου. Μπορείτε επίσης να στείλετε όλα τα αρχεία πριν από την πρώτη έναρξη.','Αν προβλέπετε καθυστέρηση, ενημερώστε έγκαιρα το φαρμακείο και την ομάδα Pharmaplus για να συνεννοηθούμε για τα επόμενα βήματα.'] }];
@@ -36877,7 +36879,7 @@ F.renderEstimate=function(n,actualRevenue,actualCost){const host=$('scl295Estima
  host.innerHTML='<p>Το αρχικό σενάριο πλήρους ετήσιας αξιοποίησης: <strong>'+n+' τοπικές οθόνες × 12 μήνες</strong>, με μία ενεργοποίηση Συμφωνίας προμηθευτή ανά οθόνη και μήνα. Η Pharmaplus εξαιρείται. Πρόκειται για ενδεικτικό σενάριο, όχι εγγυημένο αποτέλεσμα.</p><div class="scl305-rates"><div><span>Προτεινόμενη μηνιαία Συμφωνία προμηθευτή</span><strong>'+money(e.price)+'</strong></div><div><span>Προτεινόμενη μηνιαία Χορηγία ραφιών</span><strong>'+money(e.shelfPrice)+'</strong></div></div><p>Οι τιμές ακολουθούν τον υπάρχοντα υπολογισμό τζίρου και αριθμού τοπικών οθονών. Στο συγκεκριμένο σενάριο τα έσοδα προκύπτουν από Συμφωνίες προμηθευτή.</p><label class="scl300-field"><span>Επιπλέον χρεώσιμες Εξατομικεύσεις που υποθέτεις στο έτος</span><input id="scl305CustomAssumption" type="number" min="0" max="1000" step="1" value="'+F.paidCustom+'"></label><div class="scl292-grid">'+amount('Εκτιμώμενα έσοδα',e.revenue,'estimate')+amount('Εκτιμώμενο κόστος διαχείρισης',e.cost,'estimate')+amount('Εκτιμώμενο κέρδος',e.profit,'estimate')+'</div><details><summary>Παραδοχές και ανάλυση κόστους</summary><p>Πάγιο υπηρεσίας: '+money(e.base)+' / πλήρες έτος ('+SCLP.n(SCLP.get('platform'))+'€ + '+SCLP.n(SCLP.get('base_program'))+'€).</p><p>Επιπλέον οθόνες: '+Math.max(0,n-2)+' × '+SCLP.n(SCLP.get('extra_position','ADV'))+'€ × 12 μήνες = '+money(e.extra)+'.</p><p>Ενεργοποιήσεις Συμφωνιών: '+n+' × 12 × '+SCLP.n(SCLP.get('deal','ADV'))+'€ = '+money(e.activation)+'.</p><p>Χρεώσιμες Εξατομικεύσεις που δήλωσες: '+F.paidCustom+' × '+SCLP.n(SCLP.get('extra_change','ADV'))+'€ = '+money(e.custom)+'.</p></details><details><summary>Σύγκριση με τη γενική τιμή αναφοράς</summary><p>Γενική μηνιαία τιμή αναφοράς: Συμφωνία προμηθευτή 100€ · Χορηγία ραφιών 55€.</p><p>Με Συμφωνίες στα 100€: '+money(e.referenceRevenue)+' έσοδα − '+money(e.cost)+' κόστος = '+money(e.referenceProfit)+' κέρδος.</p><p>Με την προτεινόμενη τιμή του φαρμακείου σου: '+money(e.profit)+' κέρδος.</p></details><h2>Με βάση όσα έχεις ήδη καταχωρίσει · '+year()+'</h2><p>Επιβεβαιωμένες συμφωνίες και αποθηκευμένες χορηγίες. Οι προσυμφωνίες δεν υπολογίζονται. Τα κόστη ακολουθούν την πραγματική έναρξη, τις χρεώσεις και τις πιστώσεις.</p><div class="scl292-grid">'+amount('Συμφωνημένα έσοδα',actualRevenue,'revenue')+amount('Κόστος διαχείρισης έτους',actualCost,'cost')+amount('Κέρδος από καταχωρίσεις',actualRevenue-actualCost,'profit')+'</div>';F.estimateData=e;
 };
 F.document=function(id,deal,type){const c=state.cards.find(c=>c.id===id),confirmed=type==='confirmation',r=SCL290.context?.registry||{},rows=SCL297Core.files(c,deal,year());
- const model=C.supplierDocument({pharmacy:SCL_ROUTING.pharmacy?.name||SCL290.context?.pharmacy_name||'Φαρμακείο',address:[r.address,r.area].filter(Boolean).join(', '),supplier:deal.supplier||'συνεργατών',brand:deal.brand||'σας',position:position({position_id:c.id,position_name:c.title}),device:c.playerCode||'Θα επιβεβαιωθεί από το φαρμακείο',orientation:SCL303Core.format(c.screenFormat),shelves:exportShelvesLabel(c),period:contiguousLabel(SCL297Core.months(deal))+' '+year(),monthly:money(deal.soldMonthlyPrice),total:money(Number(deal.soldMonthlyPrice)*Number(deal.duration)),confirmed,files:rows.map(r=>({...C.variants(r.file),period:contiguousLabel(Array.from({length:r.end-r.month+1},(_,i)=>r.month+i))+' '+year(),content:[r.subline,r.products,r.content].filter(Boolean).join(' · '),deadline:r.deadline.split('-').reverse().join('/')}))});
+ const model=C.supplierDocument({pharmacy:SCL_ROUTING.pharmacy?.name||SCL290.context?.pharmacy_name||'Φαρμακείο',address:[r.address,r.area].filter(Boolean).join(', '),supplier:deal.supplier||'συνεργατών',brand:deal.brand||'σας',position:position({position_id:c.id,position_name:c.title}),device:c.playerCode||'Θα επιβεβαιωθεί από το φαρμακείο',orientation:SCL303Core.format(c.screenFormat),shelves:exportShelvesLabel(c),period:contiguousLabel(SCL297Core.months(deal))+' '+year(),monthly:money(deal.soldMonthlyPrice),total:money(Number(deal.soldMonthlyPrice)*Number(deal.duration)),confirmed,files:rows.map(r=>({...C.variants(r.file),period:contiguousLabel(Array.from({length:r.end-r.month+1},(_,i)=>r.month+i))+' '+year(),content:[r.subline,r.products,r.content].filter(Boolean).join(' · '),deadline:r.deadline.split('-').reverse().join('/')})),audience:(function(){try{const A=typeof window!=='undefined'&&window.SCL332;return A&&typeof A.audience==='function'?A.audience(deal.duration):null;}catch(e){return null;}})()});
  SCL297.documentText=model.text;document.querySelector('#briefModal .modal-title').textContent=model.title;
  $('briefModalBody').innerHTML='<div class="actionRow"><button type="button" class="action" data-scl297="copy-document">Αντιγραφή κειμένου</button><button type="button" class="action" data-scl297="print-document">Εκτύπωση / Αποθήκευση PDF</button></div><p class="scl305-document-help">Έτοιμο κείμενο του φαρμακείου προς τον προμηθευτή. Έλεγξε τα στοιχεία πριν το αποστείλεις.</p><article class="export-sheet scl297-document scl305-document"><header><span>'+E(model.pharmacy)+'</span><h1>'+E(model.title)+'</h1></header><p>'+E(model.greeting)+'</p>'+model.sections.map(s=>'<section><h2>'+E(s.title)+'</h2>'+(s.paragraphs||[]).map(p=>'<p>'+E(p)+'</p>').join('')+(s.items?'<dl>'+s.items.map(([k,v])=>'<div><dt>'+E(k)+'</dt><dd>'+E(v)+'</dd></div>').join('')+'</dl>':'')+(s.files||[]).map(f=>'<div class="scl305-file"><h3>'+E(f.period)+'</h3>'+(f.content?'<p>'+E(f.content)+'</p>':'')+'<p>Βίντεο MP4<br><code>'+E(f.video)+'</code></p><p>Στατική εικόνα JPEG<br><code>'+E(f.image)+'</code><br>ή <code>'+E(f.jpeg)+'</code></p><strong>Παράδοση έως '+E(f.deadline)+'</strong></div>').join('')+'</section>').join('')+'<p>'+E(model.closing)+'</p><p>Με εκτίμηση,<br>Η ομάδα του φαρμακείου '+E(model.pharmacy)+'</p></article>';openModal('briefModal');bindEvents();
 };
@@ -48882,5 +48884,189 @@ p.scl3272-file.scl3318-file{margin:8px 0 0}
  function watch(){if(obs)obs.observe(document.body,{childList:true,subtree:true});}
  function start(){obs=new MutationObserver(schedule);watch();schedule();document.addEventListener('input',e=>{if(e.target&&e.target.closest&&e.target.closest('#scl293Editor'))schedule();},true);}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})(window);
+</script>
+<style id="scl332-style">
+#scl332Profile{margin-top:18px}
+#scl332Profile h2{margin:0 0 10px}
+#scl332Profile .scl332-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#scl332Profile .scl332-row strong{display:block;font-size:22px;margin-top:4px}
+#scl332Form{display:grid;gap:10px;margin-top:10px}
+#scl332Form label{display:grid;gap:6px;font-size:13px}
+#scl332Form input{font:inherit;padding:9px 12px;border:1px solid var(--line,#ccd7e5);border-radius:10px;max-width:220px;background:var(--surface,#fff);color:inherit}
+#scl332Form .scl332-actions,#scl332Hq .scl332-actions{display:flex;gap:8px;flex-wrap:wrap}
+.scl332-how{margin-top:14px;padding:14px 18px;border-radius:14px;background:var(--surface,#fff);box-shadow:var(--sh1,none);border:1px solid var(--line,#e2e8f0)}
+.scl332-how summary{cursor:pointer;font-weight:600}
+.scl332-how p{margin:8px 0 0;font-size:13px;line-height:1.5}
+#scl332Hq{margin-top:22px;padding:16px 18px;border-radius:14px;background:var(--surface,#fff);border:1px solid var(--line,#e2e8f0)}
+#scl332Hq>summary{cursor:pointer;font-weight:700;font-size:16px}
+#scl332Hq .scl332-settings{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin:14px 0}
+#scl332Hq label{display:grid;gap:4px;font-size:12px}
+#scl332Hq input[type=number],#scl332Hq input[type=text],#scl332Hq input[type=search]{font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line,#ccd7e5);border-radius:8px;background:var(--surface,#fff);color:inherit;width:120px}
+#scl332Hq input[type=search]{width:220px}
+#scl332Hq .scl332-check{display:flex;gap:6px;align-items:center;font-size:13px}
+#scl332Hq .scl332-table{overflow:auto;max-height:70vh}
+#scl332Hq table{border-collapse:collapse;width:100%;font-size:13px}
+#scl332Hq th,#scl332Hq td{padding:8px 10px;border-bottom:1px solid var(--line,#e2e8f0);text-align:left;white-space:nowrap}
+#scl332Hq th{position:sticky;top:0;background:var(--surface,#fff);font-size:12px;font-weight:600;z-index:1}
+#scl332Hq td.n,#scl332Hq th.n{text-align:right;font-variant-numeric:tabular-nums}
+#scl332Hq .scl332-cell{display:flex;gap:6px;align-items:center}
+#scl332Hq .scl332-muted,#scl332Profile .scl332-muted{opacity:.7;font-size:12px}
+#scl332Hq .scl332-err{color:#c0392b;font-size:13px}
+</style>
+<script id="scl332-sales">
+/* v332.0 · Επισκέψεις και τζίρος BI (scl340). Μόνο προσθήκες: αν η βάση δεν απαντήσει ή λείπουν δεδομένα, οι υπάρχουσες οθόνες μένουν όπως ήταν.
+   Φαρμακείο: ο τζίρος BI μπαίνει ΜΟΝΟ ως αρχική τιμή όταν το φαρμακείο δεν έχει τζίρο (αποθήκευση από την υπάρχουσα ροή).
+   Κεντρικά: λίστα τζίρου BI / τζίρου φαρμακείου / αποδείξεων / επισκέψεων, αλλαγή αποδείξεων, ρυθμίσεις, κωδικός BI. Τα Κεντρικά δεν αλλάζουν τζίρο. */
+(function(root){
+'use strict';
+if(typeof sclMode!=='function')return;
+/* Η λειτουργία Κεντρικών ενεργοποιείται μετά την είσοδο με κωδικό (όχι στο φόρτωμα), άρα ελέγχεται σε κάθε κύκλο. */
+const mode=sclMode();
+const E=s=>(typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+const $=id=>document.getElementById(id);
+const num=v=>Math.round(Number(v)||0).toLocaleString('el-GR');
+const money=v=>num(v)+' €';
+const visits=v=>{v=Number(v)||0;if(v<=0)return 0;return v>=500?Math.round(v/500)*500:Math.max(50,Math.round(v/50)*50);};
+const client=()=>(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:null;
+async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Error(r.error.message||String(r.error));return r.data;}
+const S=root.SCL332={data:null,year:null,loading:null,error:null,editing:false,prefilled:null,busy:false,hq:null,hqYear:null,hqError:null,hqSearch:''};
+/* Κοινό της θέσης για το έγγραφο προμηθευτή. null αν δεν υπάρχουν στοιχεία (τότε το έγγραφο μένει πανομοιότυπο). */
+S.audience=function(months){
+ const d=S.data,m=d&&d.effective?visits(d.effective.visits_monthly):0;if(!m)return null;
+ const n=Math.max(1,Math.floor(Number(months)||1));
+ return {monthly:'≈ '+num(m),months:n,total:n>1?'≈ '+num(m*n):null};
+};
+
+/* ---------------- Φαρμακείο ---------------- */
+if(mode==='pharmacy'){
+ const y=()=>Number(typeof state!=='undefined'&&state.programYear)||0;
+ const V=()=>root.SCL295||null;
+ const token=()=>typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING?SCL_ROUTING.pharmacyToken:null;
+ function load(){
+  const yr=y(),t=token();if(!yr||!t||S.loading===yr)return;
+  S.loading=yr;S.error=null;
+  rpc('scl340_sales_get',{p_token:t,p_year:yr}).then(d=>{
+   if(y()!==yr)return;S.data=d;S.year=yr;S.editing=false;prefill();redraw();
+  }).catch(e=>{S.error=e.message;S.year=yr;S.data=null;}).finally(()=>{if(S.loading===yr)S.loading=null;});
+ }
+ function initialTurnover(){const b=S.data&&S.data.bi;const t=b?Number(b.turnover):0;return t>0?Math.round(t/1000)*1000:0;}
+ function prefill(){
+  const v=V(),t=initialTurnover();if(!v||!(t>0))return;
+  if(Number(state.turnover)>0||Number(v.turnoverDraft)>0)return;
+  v.turnoverDraft=t;S.prefilled=t;
+  try{if(typeof v.renderAll==='function')v.renderAll();}catch(e){}
+ }
+ function how(){
+  return '<details class="scl332-how"><summary>Πώς προκύπτει η τιμή</summary>'+
+   '<p>Η προτεινόμενη μηνιαία τιμή συμφωνίας βγαίνει από τον ετήσιο τζίρο σου: περίπου 150 € για τζίρο 1 εκατ. €, και ποτέ κάτω από 100 €. Μεγαλύτερος τζίρος δίνει μεγαλύτερη τιμή, όχι όμως αναλογικά.</p>'+
+   '<p>Με μία τοπική οθόνη η τιμή είναι 10 % υψηλότερη. Με περισσότερες οθόνες μειώνεται λίγο, έως 15 %.</p>'+
+   '<p>Η χορηγία ραφιών είναι το 55 % της τιμής συμφωνίας, με ελάχιστο 55 €. Οι αποδείξεις δεν αλλάζουν την τιμή. Τα ήδη αποθηκευμένα ποσά δεν αλλάζουν.</p></details>';
+ }
+ function block(){
+  const d=S.data;if(!d||S.year!==y())return '<div id="scl332Profile">'+how()+'</div>';
+  const e=d.effective||{},bi=d.bi,ov=d.receipts_override,vpr=Number(d.visitors_per_receipt)||1.5;
+  if(!(Number(e.receipts)>0))return '<div id="scl332Profile">'+how()+'</div>';
+  const src=e.receipts_source==='bi'?'Από τα στοιχεία πωλήσεων '+E(d.data_year)+(bi&&bi.forecast_months?' (περιλαμβάνει '+bi.forecast_months+(bi.forecast_months===1?' μήνα':' μήνες')+' πρόβλεψης)':'')+'.':e.receipts_source==='hq'?'Ορίστηκαν από τα Κεντρικά.':'Τις όρισες εσύ.';
+  const canEdit=!!d.can_edit;
+  let h='<div id="scl332Profile"><h2>Επισκέψεις</h2><div class="scl295-profile-row scl332-row"><div>Επισκέψεις τον μήνα<strong>≈ '+num(visits(e.visits_monthly))+'</strong></div>'+
+   (canEdit&&!S.editing?'<button type="button" class="scl303-btn" data-scl332="edit">Αλλαγή αποδείξεων</button>':'')+'</div>'+
+   '<p class="scl295-muted">Αποδείξεις έτους '+num(e.receipts)+' · μέσος μήνας '+num(e.receipts_monthly)+'. Επισκέψεις = αποδείξεις × '+String(vpr).replace('.',',')+'. '+src+' Οι εταιρείες βλέπουν τις επισκέψεις στην πρόταση συνεργασίας.</p>';
+  if(S.editing&&canEdit){
+   h+='<form id="scl332Form" class="scl295-profile-row"><label>Αποδείξεις έτους '+E(y())+'<input type="number" name="receipts" min="1" step="1" inputmode="numeric" value="'+Math.round(Number(e.receipts)||0)+'"></label>'+
+    '<div class="scl332-actions"><button type="submit" class="scl303-btn primary"'+(S.busy?' disabled':'')+'>Αποθήκευση</button><button type="button" class="scl303-btn" data-scl332="cancel">Ακύρωση</button>'+
+    (ov?'<button type="button" class="scl303-btn" data-scl332="reset"'+(S.busy?' disabled':'')+'>Επαναφορά στοιχείων πωλήσεων</button>':'')+'</div><p id="scl332Status" class="scl332-muted" role="status"></p></form>';
+  }
+  return h+how()+'</div>';
+ }
+ function decorate(){
+  const host=$('scl295Profile');if(!host)return;
+  if(S.year!==y()&&S.loading!==y())load();
+  const val=host.querySelector('.scl295-turnover-value'),v=V();
+  if(val&&S.prefilled&&v&&Number(v.turnoverDraft)===S.prefilled&&!$('scl332Prefill'))val.insertAdjacentHTML('afterend','<p id="scl332Prefill" class="scl295-muted">Συμπληρώθηκε από τα στοιχεία πωλήσεών σου ('+E(S.data&&S.data.data_year)+'). Μπορείς να το αλλάξεις πριν το αποθηκεύσεις.</p>');
+  if(!$('scl332Profile')&&host.querySelector('h2,.scl295-profile-row'))host.insertAdjacentHTML('beforeend',block());
+ }
+ function redraw(){const old=$('scl332Profile');if(old)old.outerHTML=block();else decorate();}
+ async function save(value){
+  if(S.busy)return;const st=()=>$('scl332Status');S.busy=true;const f=$('scl332Form');if(f)f.querySelectorAll('button').forEach(x=>x.disabled=true);
+  try{const d=await rpc('scl340_sales_save',{p_token:token(),p_year:y(),p_receipts:value});S.data=d;S.year=y();S.editing=false;S.busy=false;redraw();}
+  catch(e){S.busy=false;const x=st();if(x)x.textContent=e.message;}
+ }
+ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-scl332]');if(!b)return;e.preventDefault();const a=b.dataset.scl332;
+  if(a==='edit'){S.editing=true;redraw();const i=document.querySelector('#scl332Form input');if(i)i.focus();}
+  else if(a==='cancel'){S.editing=false;redraw();}
+  else if(a==='reset')save(null);
+ });
+ document.addEventListener('submit',e=>{if(!e.target||e.target.id!=='scl332Form')return;e.preventDefault();const v=Number(e.target.querySelector('[name=receipts]').value);
+  if(!(v>0)){const x=$('scl332Status');if(x)x.textContent='Συμπλήρωσε θετικό αριθμό αποδείξεων.';return;}save(Math.round(v));});
+ let obs=null,host=null;
+ function attach(){const h=$('scl295Profile');if(h&&h!==host){if(obs)obs.disconnect();host=h;obs=new MutationObserver(()=>{try{decorate();}catch(e){}});obs.observe(h,{childList:true});}if(host){try{decorate();}catch(e){}}}
+ function start(){attach();setInterval(attach,1500);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+}
+
+/* ---------------- Κεντρικά ---------------- */
+{
+ const isHQ=()=>{try{return sclMode()==='hq';}catch(e){return false;}};
+ const key=()=>typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING?SCL_ROUTING.hqKey:null;
+ const hqYear=()=>{const s=$('scl212Year');const v=s&&Number(s.value);return v||(Number(typeof state!=='undefined'&&state.programYear)||new Date().getFullYear());};
+ const registry=()=>(root.SCL290&&root.SCL290.hq&&Array.isArray(root.SCL290.hq.registry))?root.SCL290.hq.registry:[];
+ function load(){
+  const k=key(),yr=hqYear();if(!k)return;S.hqError=null;S.hqYear=yr;S.hq=null;render();
+  rpc('scl340_hq_sales_data',{p_hq_key:k,p_year:yr}).then(d=>{if(S.hqYear===yr){S.hq=d;render();}}).catch(e=>{S.hqError=e.message;render();});
+ }
+ function rows(){
+  const by={};((S.hq&&S.hq.pharmacies)||[]).forEach(p=>by[p.registry_id]=p);
+  const q=(S.hqSearch||'').toLocaleLowerCase('el');
+  return registry().map(r=>({r,p:by[r.id]||null})).filter(x=>!q||[x.r.name,x.r.billing_code,x.r.pharmacy_code,x.r.area].join(' ').toLocaleLowerCase('el').includes(q)).sort((a,b)=>String(a.r.name||'').localeCompare(String(b.r.name||''),'el'));
+ }
+ function table(){
+  if(S.hqError)return '<p class="scl332-err">'+E(S.hqError)+'</p><button type="button" class="scl303-btn" data-scl332h="reload">Ξανά</button>';
+  if(!S.hq)return '<p class="scl332-muted">Φόρτωση…</p>';
+  const list=rows(),withData=list.filter(x=>x.p&&x.p.bi_turnover!=null);
+  let t=0,v=0;withData.forEach(x=>{t+=Number(x.p.bi_turnover)||0;v+=Number(x.p.effective&&x.p.effective.visits_monthly)||0;});
+  return '<p class="scl332-muted">'+withData.length+(withData.length===1?' φαρμακείο':' φαρμακεία')+' με στοιχεία πωλήσεων · τζίρος BI '+money(t)+' · ≈ '+num(visits(v))+' επισκέψεις τον μήνα συνολικά. Ο τζίρος τιμολόγησης αλλάζει μόνο από το φαρμακείο.</p>'+
+  '<div class="scl332-table"><table><thead><tr><th>Φαρμακείο</th><th>Κωδικός BI</th><th class="n">Τζίρος BI</th><th class="n">Τζίρος φαρμακείου</th><th class="n">Αποδείξεις έτους</th><th class="n">Επισκέψεις / μήνα</th><th>Πηγή</th></tr></thead><tbody>'+
+  list.map(({r,p})=>{const e=(p&&p.effective)||{},src=e.receipts_source==='hq'?'Κεντρικά':e.receipts_source==='pharmacy'?'Φαρμακείο':e.receipts_source==='bi'?'BI'+(p.forecast_months?' · '+p.forecast_months+' μ. πρόβλ.':''):'—';
+   return '<tr><td>'+E(r.name||'—')+'<div class="scl332-muted">'+E(r.billing_code||'')+'</div></td>'+
+   '<td><div class="scl332-cell"><input type="text" value="'+E(r.pharmacy_code||'')+'" data-scl332-code="'+E(r.id)+'" aria-label="Κωδικός BI για '+E(r.name||'')+'"><button type="button" class="scl303-btn" data-scl332h="code" data-id="'+E(r.id)+'">Αποθήκευση</button></div></td>'+
+   '<td class="n">'+(p&&p.bi_turnover!=null?money(p.bi_turnover):'—')+(p&&p.data_year&&Number(p.data_year)!==S.hqYear?'<div class="scl332-muted">'+E(p.data_year)+'</div>':'')+'</td>'+
+   '<td class="n">'+(p&&p.program_turnover!=null?money(p.program_turnover):'—')+'</td>'+
+   '<td class="n">'+(p?'<div class="scl332-cell" style="justify-content:flex-end"><input type="number" min="1" step="1" value="'+(Number(e.receipts)>0?Math.round(e.receipts):'')+'" data-scl332-rec="'+E(r.id)+'" aria-label="Αποδείξεις για '+E(r.name||'')+'"><button type="button" class="scl303-btn" data-scl332h="rec" data-id="'+E(r.id)+'">Αποθήκευση</button>'+(p.receipts_override?'<button type="button" class="scl303-btn" data-scl332h="rec-reset" data-id="'+E(r.id)+'" title="Επαναφορά στα στοιχεία BI">BI</button>':'')+'</div>':'—')+'</td>'+
+   '<td class="n">'+(Number(e.visits_monthly)>0?'≈ '+num(visits(e.visits_monthly)):'—')+'</td><td>'+E(src)+'</td></tr>';}).join('')+'</tbody></table></div>';
+ }
+ function render(){
+  const box=$('scl332Hq');if(!box)return;const body=$('scl332HqBody');if(!body)return;
+  const st=S.hq&&S.hq.settings;
+  body.innerHTML='<div class="scl332-settings"><label>Έτος<strong>'+E(S.hqYear||hqYear())+'</strong></label>'+
+   '<label>Επισκέψεις ανά απόδειξη<input type="number" id="scl332Vpr" min="1" max="5" step="0.1" value="'+E(st?st.visitors_per_receipt:'1.5')+'"></label>'+
+   '<span class="scl332-check"><input type="checkbox" id="scl332CanEdit"'+(!st||st.pharmacy_can_edit?' checked':'')+'><label for="scl332CanEdit" style="display:inline">Το φαρμακείο αλλάζει τις αποδείξεις του</label></span>'+
+   '<button type="button" class="scl303-btn" data-scl332h="settings"'+(st?'':' disabled')+'>Αποθήκευση ρυθμίσεων</button>'+
+   '<label>Αναζήτηση<input type="search" id="scl332Search" value="'+E(S.hqSearch)+'" placeholder="Όνομα ή κωδικός"></label>'+
+   '<button type="button" class="scl303-btn" data-scl332h="reload">Ανανέωση</button></div><p id="scl332HqStatus" class="'+(S.hqMsg&&S.hqMsg.err?'scl332-err':'scl332-muted')+'" role="status">'+E(S.hqMsg?S.hqMsg.t:'')+'</p><div id="scl332HqTable">'+table()+'</div>';
+ }
+ function status(t,err){S.hqMsg={t,err:!!err};const x=$('scl332HqStatus');if(x){x.textContent=t;x.className=err?'scl332-err':'scl332-muted';}}
+ async function act(b){
+  const a=b.dataset.scl332h,id=b.dataset.id,k=key();if(!k)return;
+  if(a==='reload'){if(root.SCL290&&typeof root.SCL290.reloadHQ==='function'){try{await root.SCL290.reloadHQ();}catch(e){}}load();return;}
+  b.disabled=true;
+  try{
+   if(a==='settings'){const v=Number($('scl332Vpr').value);const d=await rpc('scl340_hq_sales_settings',{p_hq_key:k,p_visitors_per_receipt:v,p_pharmacy_can_edit:!!$('scl332CanEdit').checked});if(S.hq)S.hq.settings=d;load();status('Οι ρυθμίσεις αποθηκεύτηκαν.');}
+   else if(a==='code'){const i=document.querySelector('[data-scl332-code="'+CSS.escape(id)+'"]');const d=await rpc('scl340_hq_set_pharmacy_code',{p_hq_key:k,p_registry_id:id,p_code:i?i.value:''});const r=registry().find(x=>x.id===id);if(r)r.pharmacy_code=d.pharmacy_code;status(d.pharmacy_code?'Ο κωδικός BI αποθηκεύτηκε.':'Ο κωδικός BI καθαρίστηκε.');load();}
+   else if(a==='rec'||a==='rec-reset'){let v=null;if(a==='rec'){const i=document.querySelector('[data-scl332-rec="'+CSS.escape(id)+'"]');v=Math.round(Number(i&&i.value));if(!(v>0))throw Error('Συμπλήρωσε θετικό αριθμό αποδείξεων.');}
+    await rpc('scl340_hq_sales_set',{p_hq_key:k,p_registry_id:id,p_year:S.hqYear||hqYear(),p_receipts:v});status(v==null?'Οι αποδείξεις επανήλθαν στα στοιχεία BI.':'Οι αποδείξεις αποθηκεύτηκαν.');load();}
+  }catch(e){status(e.message,true);}finally{b.disabled=false;}
+ }
+ document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-scl332h]');if(!b||!isHQ())return;e.preventDefault();act(b);});
+ document.addEventListener('input',e=>{if(e.target&&e.target.id==='scl332Search'){S.hqSearch=e.target.value;const t=$('scl332HqTable');if(t)t.innerHTML=table();}});
+ function attach(){
+  const old=$('scl332Hq');if(!isHQ()){if(old)old.remove();S.hq=null;S.hqYear=null;return;}
+  const anchor=$('scl213CreatePharmacyCard');if(!anchor||old)return;
+  anchor.insertAdjacentHTML('afterend','<details id="scl332Hq"><summary>Πωλήσεις και επισκέψεις (BI)</summary><div id="scl332HqBody"></div></details>');
+  $('scl332Hq').addEventListener('toggle',e=>{if(e.target.open&&(!S.hq||S.hqYear!==hqYear()))load();});
+ }
+ function start(){attach();setInterval(()=>{attach();const b=$('scl332Hq');if(b&&b.open&&S.hqYear!==hqYear())load();},1500);}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+}
 })(window);
 </script>
