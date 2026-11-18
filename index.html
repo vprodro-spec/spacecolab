@@ -48895,6 +48895,11 @@ p.scl3272-file.scl3318-file{margin:8px 0 0}
 #scl332Form label{display:grid;gap:6px;font-size:13px}
 #scl332Form input{font:inherit;padding:9px 12px;border:1px solid var(--line,#ccd7e5);border-radius:10px;max-width:220px;background:var(--surface,#fff);color:inherit}
 #scl332Form .scl332-actions,#scl332Hq .scl332-actions{display:flex;gap:8px;flex-wrap:wrap}
+/* v332.0.1 · ίδια εμφάνιση με το .scl295-profile-row, χωρίς την κλάση του, ώστε το scl322 να μην ομαδοποιεί τις Επισκέψεις με τις κάρτες τιμών. */
+body.scl295-pharmacy #scl295Profile .scl332-card{position:relative;display:flex;gap:20px;justify-content:space-between;align-items:center;background:var(--fill);border-radius:var(--r3);padding:20px 22px;box-shadow:none;min-width:0;border:0}
+body.scl295-pharmacy #scl295Profile .scl332-card strong{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.034em;line-height:1.1;margin:10px 0 7px;font-variant-numeric:tabular-nums;display:block;color:var(--ink)}
+@media(max-width:900px){.scl332-card{align-items:start;flex-direction:column}}
+@media(max-width:800px){.scl304 .scl332-card{flex-direction:column;align-items:stretch}}
 .scl332-how{margin-top:14px;padding:14px 18px;border-radius:14px;background:var(--surface,#fff);box-shadow:var(--sh1,none);border:1px solid var(--line,#e2e8f0)}
 .scl332-how summary{cursor:pointer;font-weight:600}
 .scl332-how p{margin:8px 0 0;font-size:13px;line-height:1.5}
@@ -48969,11 +48974,11 @@ if(mode==='pharmacy'){
   if(!(Number(e.receipts)>0))return '<div id="scl332Profile">'+how()+'</div>';
   const src=e.receipts_source==='bi'?'Από τα στοιχεία πωλήσεων '+E(d.data_year)+(bi&&bi.forecast_months?' (περιλαμβάνει '+bi.forecast_months+(bi.forecast_months===1?' μήνα':' μήνες')+' πρόβλεψης)':'')+'.':e.receipts_source==='hq'?'Ορίστηκαν από τα Κεντρικά.':'Τις όρισες εσύ.';
   const canEdit=!!d.can_edit;
-  let h='<div id="scl332Profile"><h2>Επισκέψεις</h2><div class="scl295-profile-row scl332-row"><div>Επισκέψεις τον μήνα<strong>≈ '+num(visits(e.visits_monthly))+'</strong></div>'+
+  let h='<div id="scl332Profile"><h2>Επισκέψεις</h2><div class="scl332-card scl332-row"><div>Επισκέψεις τον μήνα<strong>≈ '+num(visits(e.visits_monthly))+'</strong></div>'+
    (canEdit&&!S.editing?'<button type="button" class="scl303-btn" data-scl332="edit">Αλλαγή αποδείξεων</button>':'')+'</div>'+
    '<p class="scl295-muted">Αποδείξεις έτους '+num(e.receipts)+' · μέσος μήνας '+num(e.receipts_monthly)+'. Επισκέψεις = αποδείξεις × '+String(vpr).replace('.',',')+'. '+src+' Οι εταιρείες βλέπουν τις επισκέψεις στην πρόταση συνεργασίας.</p>';
   if(S.editing&&canEdit){
-   h+='<form id="scl332Form" class="scl295-profile-row"><label>Αποδείξεις έτους '+E(y())+'<input type="number" name="receipts" min="1" step="1" inputmode="numeric" value="'+Math.round(Number(e.receipts)||0)+'"></label>'+
+   h+='<form id="scl332Form" class="scl332-card"><label>Αποδείξεις έτους '+E(y())+'<input type="number" name="receipts" min="1" step="1" inputmode="numeric" value="'+Math.round(Number(e.receipts)||0)+'"></label>'+
     '<div class="scl332-actions"><button type="submit" class="scl303-btn primary"'+(S.busy?' disabled':'')+'>Αποθήκευση</button><button type="button" class="scl303-btn" data-scl332="cancel">Ακύρωση</button>'+
     (ov?'<button type="button" class="scl303-btn" data-scl332="reset"'+(S.busy?' disabled':'')+'>Επαναφορά στοιχείων πωλήσεων</button>':'')+'</div><p id="scl332Status" class="scl332-muted" role="status"></p></form>';
   }
