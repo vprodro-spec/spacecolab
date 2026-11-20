@@ -51604,7 +51604,7 @@ function makeD(c){
   const h=c.hostOf(st.items,q.host),p=c.pm(q),sd=c.sdim(q),sh=c.sH(q),f=c.fp(q,st.items,st.pos);
   if(!f)return;
   const stand=q.mode==='stand-counter'||q.mode==='stand-floor';
-  let cx,cy,sx,sy,n;
+  let cx,cy,sx,sy,n,he=0,hw=0;
   if(q.mode==='stand-counter'&&h){
    const s=c.standFp(q,h);n=c.rot(c.outVec(q.edge),h.r||0);cx=s.cx;cy=s.cy;
    /* η οθόνη: 2,5 εκ. μέσα από την πίσω πλευρά του σταντ (όπως στο D του mockup) */
@@ -51613,13 +51613,16 @@ function makeD(c){
    n=c.rot({x:0,y:1},q.rot||0);cx=f.x+f.w/2;cy=f.y+f.d/2;sx=cx-n.x*(sd.D/2-2.5);sy=cy-n.y*(sd.D/2-2.5);
   }else if(h){ /* οθόνη σε έπιπλο: κοιτάει την πλευρά του χώρου που βλέπει το κέντρο του (όπως η όψη της Main), πάνω στην άκρη του επίπλου */
    const S={items:st.items,room:st.room,vw:{vd:null}},ctx=c.vctx(S,q);n={x:ctx.loc.x,y:ctx.loc.y};
-   const cc=c.ctr(h);cx=cc.x;cy=cc.y;let e=0;c.corners(h).forEach(k=>{e=Math.max(e,(k.x-cx)*n.x+(k.y-cy)*n.y);});sx=cx+n.x*e;sy=cy+n.y*e;
+   const cc=c.ctr(h);cx=cc.x;cy=cc.y;let e=0,u0=1e9,u1=-1e9;c.corners(h).forEach(k=>{e=Math.max(e,(k.x-cx)*n.x+(k.y-cy)*n.y);const u=(k.x-cx)*n.y-(k.y-cy)*n.x;u0=Math.min(u0,u);u1=Math.max(u1,u);});sx=cx+n.x*e;sy=cy+n.y*e;
+   /* ράφια που προσθέτει η θέση γύρω από το έπιπλο (όψη της Main: πλάτος στήλης ± 4, από 8 πίσω ως 10,5 μπροστά) */
+   he=e;hw=c.isCols(h)&&(h.bays||1)>1?(h.bw||90):(u1-u0);
   }else{ /* άλλη λύση στο δάπεδο: χωρίς δείγμα */
    n=c.rot({x:0,y:1},q.rot||0);cx=f.x+f.w/2;cy=f.y+f.d/2;sx=cx;sy=cy;
   }
   pos.push({id:q.id,name:q.name,tag:q.tag,code:c.code(q),pp:!!q.pp,mode:q.mode,host:q.host||null,o:q.o,
    cx:r1(cx),cy:r1(cy),sx:r1(sx),sy:r1(sy),nx:r1(n.x)||0,ny:r1(n.y)||0,w:stand?sd.W:p.W,sh:r1(sh),
-   mid:r1(stand?p.H-3-sh/2:p.mh+sh/2),H:p.H,mh:p.mh,dt:p.dt,dd:p.d,D:sd.D,inn:sd.inn,out:sd.out,nsh:p.n,gsh:p.g,fsh:p.f,fw:f.w,fd:f.d,frot:f.rot||0});
+   mid:r1(stand?p.H-3-sh/2:p.mh+sh/2),H:p.H,mh:p.mh,dt:p.dt,dd:p.d,D:sd.D,inn:sd.inn,out:sd.out,nsh:p.n,gsh:p.g,fsh:p.f,fw:f.w,fd:f.d,frot:f.rot||0,
+   cn:p.cn||0,cf:p.cf,cg:p.cg,he:r1(he),hw:r1(hw)});
  });
  return {K:K,RW:B.RW,RD:B.RD,view:view,room:room,openings:openings,ent:ent,items:items,pos:pos};
 }
@@ -52574,6 +52577,13 @@ Object.assign(R3.prototype,{
    }else if(a.mode==='stand-floor'){
     part(0,T,0,a.H,{wfo:{col:'rgba(255,255,255,.05)'}});
     for(let i=0;i<a.nsh;i++){const hk=a.fsh+i*a.gsh,dep=i===0?a.D-T:(i===a.nsh-1?a.dt:a.dd);part(T,T+dep,hk-T,hk,{rgb:i===0?base:[255,255,255]});if(i<a.nsh-1)prods(T,T+dep,hk,Math.min(16,a.gsh-7),i);}
+   }
+   /* ράφια που πρόσθεσε η θέση στο έπιπλο (κολώνα, γόνδολα, ραφιέρα): όπως στην όψη της Main, ίδιο πλάτος με τη στήλη ± 4, από 8 εκ. πίσω ως 10,5 εκ. μπροστά */
+   if(!stand&&a.cn>0&&a.host){
+    const hc=[a.cx,a.cy],dep=2*a.he+18.5,mid=1.25;
+    for(let k=0;k<a.cn;k++){const hh=a.cf+k*a.cg,lost=hh>=a.mh-2&&hh<=a.mh+a.sh,f={c:[hc[0]+n[0]*mid,hc[1]+n[1]*mid],ex:e,ey:n,w:a.hw+8,d:dep};
+     if(wf)this.wfStand(Q,f,hh,hh+2.5);else this.box(Q,f,hh,hh+2.5,{rgb:lost?[255,210,205]:[255,255,255]});
+     if(wf&&!lost)this.vq(Q,[hc[0]+n[0]*(a.he+10),hc[1]+n[1]*(a.he+10)],n,a.hw+6,hh+2.5+Math.min(16,a.cg-7),Math.min(16,a.cg-7),this.prodQ(k));}
    }
    /* οθόνη: στα σταντ μπροστά στην πίσω πλάκα (t T–T+4,5)· στις άλλες θέσεις όπως στο mockup */
    const g=this.screenGeo(a);
