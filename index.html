@@ -51169,7 +51169,7 @@ class Component extends DCLogic {
         const bwid = this.isCols(oh) && (oh.bays || 1) > 1 ? (oh.bw || 90) : (rg[1] - rg[0]);
         for (let k = 0; k < pp.cn; k++) {
           const hh = pp.cf + k * pp.cg, clash = hh >= pp.mh - 2 && hh <= pp.mh + sc2;
-          R('shelf extra' + (clash ? ' lost' : ''), c - bwid / 2 - 4, c + bwid / 2 + 4, hh, hh + 2.5, '');
+          R('shelf extra' + (clash ? ' lost' : ''), c - bwid / 2 - 10, c + bwid / 2 + 10, hh, hh + 2.5, '');
         }
         R('screen', c - W / 2, c + W / 2, pp.mh, pp.mh + sc2, W * s > 70 ? 'Οθόνη' : '');
         hrects.push({ cls: 'hit ' + cur + selc, l: X(c - W / 2), b: B(pp.mh), w: Math.max(8, W * s), h: Math.max(8, sc2 * s), down: (ev) => this.downVPos(ev, o.id), tag: o.name });
@@ -51296,7 +51296,7 @@ class Component extends DCLogic {
         k = Math.min(1.2, (CW - X0 - 64) / (cd + 14), AV / (topAll + 4));
         PR('pfloor', -(X0 - 8) / k, cd + 24, -3, 0, '');
         PR(h.kind === 'column' ? 'col' : 'rackb', 4.5, 4.5 + cd, 0, Math.min(topAll, h.kind === 'column' ? CEIL : h.h), '');
-        for (let i = 0; i < p.cn; i++) { const hh = p.cf + i * p.cg, clash = hh >= p.mh - 2 && hh <= p.mh + sh; PR('shelf extra' + (clash ? ' lost' : ''), -6, 4.5 + cd + 8, hh, hh + 2.5, ''); }
+        for (let i = 0; i < p.cn; i++) { const hh = p.cf + i * p.cg, clash = hh >= p.mh - 2 && hh <= p.mh + sh; PR('shelf extra' + (clash ? ' lost' : ''), -20.5, 4.5 + cd + 8, hh, hh + 2.5, ''); }
         PR('screen', 0, 4.5, p.mh, top, '');
         PBr('r', cd + 16, p.mh, top);
         PLb(cd + 16, (p.mh + top) / 2, f1(sh) + ' εκ.', 'tn', 11);
@@ -52546,12 +52546,20 @@ Object.assign(R3.prototype,{
   });
  },
  /* ημιδιάφανα προϊόντα (χρώματα του mockup) */
- prodQ(seed){return {col:'transparent',img:Room3DComponent.prototype.prod.call({},100,seed),size:'100% 100%',cn:'prd wf',css:'opacity:.55;'};},
+ prodQ(seed){const w=this.wf();return {col:'transparent',img:Room3DComponent.prototype.prod.call({},100,seed),size:'100% 100%',cn:w?'prd wf':'prd',css:w?'opacity:.55;':''};},
  /* SpaceCoLab στην οθόνη: λευκή, με το όνομα στη μέση */
- logo(w,h){
-  const fs=Math.max(3,Math.min(w*0.125,h*0.2)),svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'"><rect width="'+w+'" height="'+h+'" fill="#fff"/>'+
-   '<text x="'+(w/2)+'" y="'+(h/2+fs*0.35)+'" text-anchor="middle" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="'+fs.toFixed(2)+'" letter-spacing="-.02em" fill="#1d1d1f">SpaceCoLab</text>'+
-   '<rect x="'+(w/2-fs*0.9)+'" y="'+(h/2+fs*0.75)+'" width="'+(fs*1.8)+'" height="'+(fs*0.16)+'" rx="'+(fs*0.08)+'" fill="#2459e0"/></svg>';
+ /* η οθόνη: λευκή, με τον αριθμό της θέσης, «SpaceCoLab» και τον κωδικό της (αίτημα Βαγγέλη 20/11) */
+ logo(w,h,tag,code,pp){
+  const acc=pp?'#00888a':'#2459e0',land=w>h*1.2;
+  const fs=Math.max(2.6,Math.min(w*0.13,h*(land?0.17:0.11)));
+  const cs=Math.max(1.6,Math.min(fs*0.62,w*0.9/(Math.max(6,String(code||'').length)*0.62)));
+  const r=fs*(land?1.1:1.5),gap=fs*0.5,tot=r*2+gap+fs+gap*0.8+cs,y0=(h-tot)/2;
+  const tg=String(tag||''),tfs=r*(tg.length>2?0.78:tg.length>1?0.95:1.15);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+w+' '+h+'"><rect width="'+w+'" height="'+h+'" fill="#fff"/>'+
+   '<circle cx="'+(w/2)+'" cy="'+(y0+r)+'" r="'+r+'" fill="'+acc+'"/>'+
+   '<text x="'+(w/2)+'" y="'+(y0+r+tfs*0.36)+'" text-anchor="middle" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-weight="800" font-size="'+tfs.toFixed(2)+'" fill="#fff">'+esc(tg)+'</text>'+
+   '<text x="'+(w/2)+'" y="'+(y0+r*2+gap+fs*0.8)+'" text-anchor="middle" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-weight="700" font-size="'+fs.toFixed(2)+'" letter-spacing="-.02em" fill="#1d1d1f">SpaceCoLab</text>'+
+   '<text x="'+(w/2)+'" y="'+(y0+r*2+gap+fs+gap*0.8+cs*0.85)+'" text-anchor="middle" font-family="ui-monospace,SF Mono,Menlo,Consolas,monospace" font-weight="600" font-size="'+cs.toFixed(2)+'" fill="#6e6e73">'+esc(code||'')+'</text></svg>';
   return 'url(\'data:image/svg+xml,'+encodeURIComponent(svg)+'\')';
  },
  /* ---------- σταντ: όπως η τομή της θέσης στη Main (σχήμα Γ) ----------
@@ -52565,7 +52573,7 @@ Object.assign(R3.prototype,{
    const n=[a.nx,a.ny],e=[a.ny,-a.nx],E=[a.sx-n[0]*T,a.sy-n[1]*T];
    /* στο «Σχέδιο» το σταντ είναι λευκό (αίτημα Βαγγέλη 20/11), με λεπτό γκρι περίγραμμα για να διαβάζεται το σχήμα */
    const part=(t0,t1,z0,z1,o)=>{const f={c:[E[0]+n[0]*(t0+t1)/2,E[1]+n[1]*(t0+t1)/2],ex:e,ey:n,w:a.w,d:t1-t0};if(wf)this.wfStand(Q,f,z0,z1);else this.box(Q,f,z0,z1,{rgb:(o&&o.rgb)||[244,245,250]});};
-   const prods=(t0,t1,z,hh,k)=>{if(!wf||hh<6)return;this.vq(Q,[E[0]+n[0]*(t1-0.5),E[1]+n[1]*(t1-0.5)],n,a.w-2,z+hh,hh,this.prodQ(k));};
+   const prods=(t0,t1,z,hh,k)=>{if(hh<6)return;this.vq(Q,[E[0]+n[0]*(t1-0.5),E[1]+n[1]*(t1-0.5)],n,a.w-2,z+hh,hh,this.prodQ(k));};
    const base=a.pp?[220,241,240]:[232,239,255];
    const stand=a.mode==='stand-counter'||a.mode==='stand-floor';
    if(a.mode==='stand-counter'){
@@ -52580,23 +52588,25 @@ Object.assign(R3.prototype,{
    }
    /* ράφια που πρόσθεσε η θέση στο έπιπλο (κολώνα, γόνδολα, ραφιέρα): όπως στην όψη της Main, ίδιο πλάτος με τη στήλη ± 4, από 8 εκ. πίσω ως 10,5 εκ. μπροστά */
    if(!stand&&a.cn>0&&a.host){
-    const hc=[a.cx,a.cy],dep=2*a.he+18.5,mid=1.25;
-    for(let k=0;k<a.cn;k++){const hh=a.cf+k*a.cg,lost=hh>=a.mh-2&&hh<=a.mh+a.sh,f={c:[hc[0]+n[0]*mid,hc[1]+n[1]*mid],ex:e,ey:n,w:a.hw+8,d:dep};
+    /* 25 εκ. μπροστά από το έπιπλο, 8 πίσω, 10 στα πλάγια (όπως η όψη της θέσης) */
+    const hc=[a.cx,a.cy],dep=2*a.he+33,mid=8.5;
+    for(let k=0;k<a.cn;k++){const hh=a.cf+k*a.cg,lost=hh>=a.mh-2&&hh<=a.mh+a.sh,f={c:[hc[0]+n[0]*mid,hc[1]+n[1]*mid],ex:e,ey:n,w:a.hw+20,d:dep};
      if(wf)this.wfStand(Q,f,hh,hh+2.5);else this.box(Q,f,hh,hh+2.5,{rgb:lost?[255,210,205]:[255,255,255]});
-     if(wf&&!lost)this.vq(Q,[hc[0]+n[0]*(a.he+10),hc[1]+n[1]*(a.he+10)],n,a.hw+6,hh+2.5+Math.min(16,a.cg-7),Math.min(16,a.cg-7),this.prodQ(k));}
+     /* προϊόντα σε δύο σειρές στο βάθος του ραφιού, μπροστά από την κολώνα */
+     if(!lost){const ph=Math.min(18,a.cg-7);if(ph>5){[a.he+22,a.he+12].forEach((t,r)=>this.vq(Q,[hc[0]+n[0]*t,hc[1]+n[1]*t],n,a.hw+16,hh+2.5+ph-r*2,ph-r*2,this.prodQ(k+r*3)));}}}
    }
    /* οθόνη: στα σταντ μπροστά στην πίσω πλάκα (t T–T+4,5)· στις άλλες θέσεις όπως στο mockup */
    const g=this.screenGeo(a);
    /* 0,3 εκ. μπροστά από την πίσω πλάκα: δύο επίπεδα στο ίδιο σημείο τρεμοπαίζουν */
    if(stand){g.zt=a.H-3;g.zb=a.H-3-a.sh;g.c=[E[0]+n[0]*(T+1.3),E[1]+n[1]*(T+1.3)];}
    /* στα σταντ η επιφάνεια της οθόνης 0,8 εκ. μπροστά από το πλαίσιο (με 0,1 ο Chrome ζωγραφίζει κομμάτια του πλαισίου πάνω της) */
-   if(!wf){if(!stand){this.screenQuads(Q,a,g);return;}
+   const LG=this.logo(a.w,a.sh,a.tag,a.code,a.pp);
+   if(!wf){
     this.box(Q,{c:g.c,ex:g.e,ey:g.n,w:a.w+3,d:2},g.zb-1.5,g.zt+1.5,{rgb:[30,32,40]});
-    const col=a.pp?'#0b3a3d':'#0c1533',c2=a.pp?'#0f6c70':'#27428f';
-    this.vq(Q,[g.c[0]+g.n[0]*1.8,g.c[1]+g.n[1]*1.8],g.n,a.w,g.zt,a.sh,{col:col,img:'linear-gradient(155deg,'+c2+','+col+' 70%)',cn:'scr',css:'box-shadow:inset 0 0 10px '+(a.pp?'rgba(0,200,204,.6)':'rgba(80,130,255,.6)')+';'});return;}
+    this.vq(Q,[g.c[0]+g.n[0]*1.8,g.c[1]+g.n[1]*1.8],g.n,a.w,g.zt,a.sh,{col:'#fff',img:LG,size:'100% 100%',cn:'scr',hid:true,css:'box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);'});return;}
    /* η οθόνη = η μπροστινή πλευρά του πλαισίου (λευκή με SpaceCoLab)· όχι δεύτερο επίπεδο μπροστά του */
    const glow=a.pp?'rgba(0,200,204,':'rgba(120,160,255,';
-   this.wfBox(Q,{c:g.c,ex:g.e,ey:g.n,w:a.w+3,d:2},g.zb-1.5,g.zt+1.5,{col:'transparent',front:{col:'#fff',img:this.logo(a.w+3,a.sh+3),size:'100% 100%',cn:'scr wf',hid:true,css:'box-shadow:inset 0 0 0 1.8px '+glow+'1),inset 0 0 9px '+glow+'.75);'}});
+   this.wfBox(Q,{c:g.c,ex:g.e,ey:g.n,w:a.w+3,d:2},g.zb-1.5,g.zt+1.5,{col:'transparent',front:{col:'#fff',img:this.logo(a.w+3,a.sh+3,a.tag,a.code,a.pp),size:'100% 100%',cn:'scr wf',hid:true,css:'box-shadow:inset 0 0 0 1.8px '+glow+'1),inset 0 0 9px '+glow+'.75);'}});
   });
  }
 });
