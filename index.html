@@ -52635,8 +52635,8 @@ class R3 extends Room3DComponent{
   v.r3CamCls='btn sm '+(same||this._camMsg?'line':'primary');
   v.r3HasCam=!!sv&&!same;v.r3GoCam=()=>this.goCam(false);
   v.r3Free=this.state.mode==='eye'&&!!this.state.free;v.r3Route=()=>this.backToRoute();
-  if(this.state.mode==='eye')v.hint='Σύρε για να κοιτάξεις παντού. W S ή ↑ ↓ για να περπατήσεις, A D στο πλάι, ← → για να γυρίσεις, ρόδα για βήματα, διπλό κλικ στο πάτωμα για να πας εκεί.';
-  else if(this.state.mode==='model')v.hint='Σύρε για περιστροφή · δεξί κλικ ή Shift + σύρε για μετακίνηση · ρόδα για ζουμ εκεί που δείχνεις · διπλό κλικ για κέντρο · W A S D, Q E, R F από το πληκτρολόγιο · 0 για την αρχική θέα.';
+  if(this.state.mode==='eye')v.hint='Σύρε για να κοιτάξεις γύρω · διπλό κλικ στο πάτωμα για να πας εκεί · ↑ ↓ για να περπατήσεις.';
+  else if(this.state.mode==='model')v.hint='Σύρε για να γυρίσεις · δεξί κλικ και σύρε για να μετακινηθείς · ρόδα για ζουμ.';
   return v;
  }
 }
@@ -52829,15 +52829,16 @@ Object.assign(R3.prototype,{
   const wrap=e.currentTarget.closest('[data-wrap]');try{wrap.setPointerCapture(e.pointerId);}catch(_){}
   this.vpXY(e.clientX,e.clientY,e.currentTarget);this.stopAnim();
   this._pt=this._pt||{};this._pt[e.pointerId]={x:e.clientX,y:e.clientY};const n=Object.keys(this._pt).length,now=Date.now(),L=this._ld;
-  this._ld={t:now,x:e.clientX,y:e.clientY};
-  if(n===1&&L&&now-L.t<330&&Math.hypot(e.clientX-L.x,e.clientY-L.y)<10){this._ld=null;this.dblAt(e.clientX,e.clientY);return;}
+  this._ld={t:now,x:e.clientX,y:e.clientY,b:e.button||0};
+  if(n===1&&L&&!L.b&&!e.button&&now-L.t<330&&Math.hypot(e.clientX-L.x,e.clientY-L.y)<10){this._ld=null;this.dblAt(e.clientX,e.clientY);return;}
   this.grab(e);
  },
  grab(e){const s=this.state,P=Object.values(this._pt||{}),two=P.length>=2;
   this.setState({drag:{x:e?e.clientX:0,y:e?e.clientY:0,yaw:s.yaw,pitch:s.pitch,lookY:s.lookY,lookP:s.lookP,tgt:Object.assign({},this.tgtNow()),dist:s.dist,free:s.free?Object.assign({},s.free):null,
    pan:!!e&&(e.button===2||e.button===1||e.shiftKey||e.altKey||e.metaKey||e.ctrlKey),two:two?{d:Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y)||1,mx:(P[0].x+P[1].x)/2,my:(P[0].y+P[1].y)/2}:null}});},
  moveAll(e){
-  const d=this.state.drag;if(!d)return;if(this._pt&&this._pt[e.pointerId])this._pt[e.pointerId]={x:e.clientX,y:e.clientY};
+  const d=this.state.drag;if(!d)return;if(e.pointerType==='mouse'&&e.buttons===0){this.upAll();return;}
+  if(this._pt&&this._pt[e.pointerId])this._pt[e.pointerId]={x:e.clientX,y:e.clientY};
   const k=this._vp?this._vp.k:1,s=this.state;
   if(d.two){const P=Object.values(this._pt);if(P.length<2)return;const dd=Math.hypot(P[0].x-P[1].x,P[0].y-P[1].y)||1,mx=(P[0].x+P[1].x)/2,my=(P[0].y+P[1].y)/2,r=dd/d.two.d;
    if(s.mode==='eye'){this.walk(Math.log(r)*220,0,d);return;}
@@ -52845,11 +52846,12 @@ Object.assign(R3.prototype,{
   const dx=(e.clientX-d.x)/k,dy=(e.clientY-d.y)/k;
   if(s.mode==='eye'){if(s.free)this.setState({lookY:d.lookY-dx*0.25,lookP:this.clamp(d.lookP-dy*0.2,-55,55)});else this.setState({lookY:this.clamp(d.lookY-dx*0.25,-170,170),lookP:this.clamp(d.lookP-dy*0.2,-55,55)});return;}
   if(d.pan||s.mode==='heights'&&e.shiftKey){this.setState(this.panBy(dx,dy,d));return;}
-  this.setState({yaw:d.yaw+dx*0.35,pitch:this.clamp(d.pitch+dy*0.3,2,89)});
+  this.setState({yaw:d.yaw+dx*0.25,pitch:this.clamp(d.pitch+dy*0.22,2,89)});
  },
  panBy(dx,dy,d){const s=this.state,sc=s.dist/P_ORB,yw=s.yaw*DEG,sp=Math.max(Math.sin(s.pitch*DEG),0.35),R={x:Math.cos(yw),y:Math.sin(yw)},F={x:Math.sin(yw),y:-Math.cos(yw)};
   return {tgt:this.clampT({x:d.tgt.x-R.x*dx*sc+F.x*dy*sc/sp,y:d.tgt.y-R.y*dx*sc+F.y*dy*sc/sp,z:d.tgt.z})};},
- upAll(e){if(e&&this._pt)delete this._pt[e.pointerId];const n=this._pt?Object.keys(this._pt).length:0;
+ upAll(e){/* όταν αφήνεις το κουμπί, η κίνηση σταματά πάντα (και αν το γεγονός δεν φέρει pointerId) */
+  if(e&&e.pointerId!==undefined&&this._pt&&e.pointerType&&e.pointerType!=='mouse')delete this._pt[e.pointerId];else this._pt={};const n=this._pt?Object.keys(this._pt).length:0;
   if(n===0){if(this.state.drag)this.setState({drag:null});}else if(n===1&&this.state.drag&&this.state.drag.two){const p=Object.values(this._pt)[0];this.grab({clientX:p.x,clientY:p.y,button:0});}},
  dblAt(cx,cy){const p=this.vpXY(cx,cy),s=this.state;
   if(s.mode==='eye'){const q=this.rayAt(p.x,p.y,0);if(!q)return;const ps=this.eyePos(),a=this.ang(q.x-ps.x,q.y-ps.y);
@@ -52882,8 +52884,9 @@ Object.assign(R3.prototype,{
  /* πληκτρολόγιο: κινήσεις που κρατάνε όσο είναι πατημένο */
  keyOn(on){if(on&&!this._kd){this._keys={};this._kd=e=>this.keyEv(e,true);this._ku=e=>this.keyEv(e,false);this._bl=()=>{this._keys={};};
    document.addEventListener('keydown',this._kd);document.addEventListener('keyup',this._ku);window.addEventListener('blur',this._bl);
+   this._pu=()=>{if(S.r3===this&&this.state.drag)this.upAll();};document.addEventListener('pointerup',this._pu,true);
    this._cm=e=>{if(S.r3===this&&e.composedPath().some(n=>n&&n.dataset&&n.dataset.vp))e.preventDefault();};document.addEventListener('contextmenu',this._cm);}
-  if(!on&&this._kd){document.removeEventListener('keydown',this._kd);document.removeEventListener('keyup',this._ku);window.removeEventListener('blur',this._bl);document.removeEventListener('contextmenu',this._cm);this._kd=null;}},
+  if(!on&&this._kd){document.removeEventListener('keydown',this._kd);document.removeEventListener('keyup',this._ku);window.removeEventListener('blur',this._bl);document.removeEventListener('contextmenu',this._cm);document.removeEventListener('pointerup',this._pu,true);this._kd=null;}},
  keyEv(e,down){if(S.r3!==this)return;const t=e.composedPath()[0];if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable))return;
   const k=(e.key||'').toLowerCase(),map={w:1,s:1,a:1,d:1,q:1,e:1,r:1,f:1,arrowup:1,arrowdown:1,arrowleft:1,arrowright:1,'+':1,'=':1,'-':1,shift:1};
   if(down&&(k==='home'||k==='0')){e.preventDefault();if(this.camSaved())this.goCam(false);else this.view('door');return;}
