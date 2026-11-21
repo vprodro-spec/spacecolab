@@ -52680,7 +52680,7 @@ Object.assign(R3.prototype,{
  prod(w,seed){if(!this.wf())return Room3DComponent.prototype.prod.call(this,w,seed);
   const cs=[];for(let i=0;i<6;i++)cs.push(WF_PAL[(i+seed)%6]);let g='',x=0;cs.forEach((c,i)=>{g+=(i?',':'')+c+' '+x+'px '+(x+9)+'px,#e9e9eb '+(x+9)+'px '+(x+11)+'px';x+=11;});return 'repeating-linear-gradient(90deg,'+g+')';},
  /* όλα τα υπόλοιπα σε αχνό γκρι: φωτεινότητα του χρώματος, τραβηγμένη προς το ανοιχτό γκρι */
- shade(rgb,n,two){if(this.wf()){const k=WF_MAP[rgb.join(',')]||rgb,l=0.299*k[0]+0.587*k[1]+0.114*k[2],g=Math.round(0.45*l+0.55*200);rgb=[g,g,g];}return Room3DComponent.prototype.shade.call(this,rgb,n,two);},
+ shade(rgb,n,two){if(this.wf()&&!this._keepCol){const k=WF_MAP[rgb.join(',')]||rgb,l=0.299*k[0]+0.587*k[1]+0.114*k[2],g=Math.round(0.45*l+0.55*200);rgb=[g,g,g];}return Room3DComponent.prototype.shade.call(this,rgb,n,two);},
  /* κουτί με γραμμές: όλες οι πλευρές ορατές (και οι πίσω), ημιδιάφανο σκούρο γέμισμα */
  wfStand(Q,f,z0,z1){const W={col:'rgba(255,255,255,.96)',css:'box-shadow:inset 0 0 0 1.2px rgba(150,156,168,.9);',cn:'wf'};this.box(Q,f,z0,z1,{f:{top:W,front:W,back:W,right:W,left:W}});},
  wfBox(Q,f,z0,z1,o){
@@ -52739,7 +52739,7 @@ Object.assign(R3.prototype,{
    const n=[a.nx,a.ny],e=[a.ny,-a.nx],E=[a.sx-n[0]*T,a.sy-n[1]*T];
    /* στο «Σχέδιο» το σταντ είναι λευκό (αίτημα Βαγγέλη 20/11), με λεπτό γκρι περίγραμμα για να διαβάζεται το σχήμα */
    const part=(t0,t1,z0,z1,o)=>{const f={c:[E[0]+n[0]*(t0+t1)/2,E[1]+n[1]*(t0+t1)/2],ex:e,ey:n,w:a.w,d:t1-t0};if(wf)this.wfStand(Q,f,z0,z1);else this.box(Q,f,z0,z1,{rgb:(o&&o.rgb)||[244,245,250]});};
-   const prods=(t0,t1,z,hh,k)=>{if(hh<6)return;this.vq(Q,[E[0]+n[0]*(t1-0.5),E[1]+n[1]*(t1-0.5)],n,a.w-2,z+hh,hh,this.prodQ(k));};
+   const prods=(t0,t1,z,hh,k)=>{if(hh<6)return;const tm=(t0+t1)/2;this.prodBoxes(Q,[E[0]+n[0]*tm,E[1]+n[1]*tm],n,e,a.w-3,t1-t0-2,z,hh,a.pp,k);};
    const base=a.pp?[220,241,240]:[232,239,255];
    const stand=a.mode==='stand-counter'||a.mode==='stand-floor';
    if(a.mode==='stand-counter'){
@@ -52748,9 +52748,11 @@ Object.assign(R3.prototype,{
     part(0,dt,top-T,top,{rgb:base});
     part(dt,dt+T,0,top);
     for(let i=0;i<a.nsh-1;i++){const hk=a.fsh+i*a.gsh;part(dt+T,dt+T+dd,hk-T,hk,{rgb:[255,255,255]});prods(dt+T,dt+T+dd,hk,Math.min(16,a.gsh-7),i);}
+    /* v334.5: προϊόντα και στο πάνω ράφι (πάνω στον πάγκο, μπροστά από την οθόνη) — αίτημα Βαγγέλη 21/11 */
+    prods(0,dt,top,Math.min(16,a.mid-a.sh/2-top-2),a.nsh);
    }else if(a.mode==='stand-floor'){
     part(0,T,0,a.H,{wfo:{col:'rgba(255,255,255,.05)'}});
-    for(let i=0;i<a.nsh;i++){const hk=a.fsh+i*a.gsh,dep=i===0?a.D-T:(i===a.nsh-1?a.dt:a.dd);part(T,T+dep,hk-T,hk,{rgb:i===0?base:[255,255,255]});if(i<a.nsh-1)prods(T,T+dep,hk,Math.min(16,a.gsh-7),i);}
+    for(let i=0;i<a.nsh;i++){const hk=a.fsh+i*a.gsh,dep=i===0?a.D-T:(i===a.nsh-1?a.dt:a.dd);part(T,T+dep,hk-T,hk,{rgb:i===0?base:[255,255,255]});prods(T,T+dep,hk,Math.min(16,i<a.nsh-1?a.gsh-7:a.mid-a.sh/2-hk-2),i);}
    }
    /* ράφια που πρόσθεσε η θέση στο έπιπλο (κολώνα, γόνδολα, ραφιέρα): όπως στην όψη της Main, ίδιο πλάτος με τη στήλη ± 4, από 8 εκ. πίσω ως 10,5 εκ. μπροστά */
    if(!stand&&a.cn>0&&a.host){
@@ -52759,7 +52761,7 @@ Object.assign(R3.prototype,{
     for(let k=0;k<a.cn;k++){const hh=a.cf+k*a.cg,lost=hh>=a.mh-2&&hh<=a.mh+a.sh,f={c:[hc[0]+n[0]*mid,hc[1]+n[1]*mid],ex:e,ey:n,w:a.hw+20,d:dep};
      if(wf)this.wfStand(Q,f,hh,hh+2.5);else this.box(Q,f,hh,hh+2.5,{rgb:lost?[255,210,205]:[255,255,255]});
      /* προϊόντα σε δύο σειρές στο βάθος του ραφιού, μπροστά από την κολώνα */
-     if(!lost){const ph=Math.min(18,a.cg-7);if(ph>5){[a.he+22,a.he+12].forEach((t,r)=>this.vq(Q,[hc[0]+n[0]*t,hc[1]+n[1]*t],n,a.hw+16,hh+2.5+ph-r*2,ph-r*2,this.prodQ(k+r*3)));}}}
+     if(!lost){const ph=Math.min(22,a.cg-6);if(ph>5){const t=a.he+13;this.prodBoxes(Q,[hc[0]+n[0]*t,hc[1]+n[1]*t],n,e,a.hw+14,20,hh+2.5,ph,a.pp,k);}}}
    }
    /* οθόνη: στα σταντ μπροστά στην πίσω πλάκα (t T–T+4,5)· στις άλλες θέσεις όπως στο mockup */
    const g=this.screenGeo(a);
@@ -52905,6 +52907,23 @@ Object.assign(R3.prototype,{
   this.setState(o);return true;},
  componentWillUnmount(){this.stopAnim();this.keyOn(false);if(this._kl)cancelAnimationFrame(this._kl);clearTimeout(this._camT);Room3DComponent.prototype.componentWillUnmount.call(this);}
 });
+
+/* v334.5: τα προϊόντα στα ράφια του χώρου σε ουδέτερους τόνους (αίτημα Βαγγέλη 21/11: «όχι πολύχρωμα»)·
+   τα προϊόντα στα σταντ και στα ράφια των θέσεων κρατούν το χρώμα τους, για να ξεχωρίζουν οι θέσεις. */
+const PAL_N=['#e6e7eb','#d6d8de','#eef0f3','#cfd2d8','#e1e3e8','#d9dbe0'];
+R3.prototype.prod=function(w,seed){const cs=[];for(let i=0;i<6;i++)cs.push(PAL_N[(i+seed)%PAL_N.length]);let g='',x=0;cs.forEach((c,i)=>{g+=(i?',':'')+c+' '+x+'px '+(x+9)+'px,#f7f7f9 '+(x+9)+'px '+(x+11)+'px';x+=11;});return 'repeating-linear-gradient(90deg,'+g+')';};
+
+/* v334.6: τα προϊόντα στα ράφια των θέσεων ως κουτιά (τρισδιάστατα), πιο μεγάλα, μπλε όπως οι θέσεις — τιρκουάζ στη θέση Pharmaplus
+   (αίτημα Βαγγέλη 21/11). Στο «Σχέδιο» μένουν ημιδιάφανα. */
+const PRD_B=[[36,89,224],[74,120,236],[125,158,242],[31,79,201],[160,185,246]],PRD_P=[[0,136,138],[36,163,165],[92,194,195],[0,117,119],[150,214,214]];
+R3.prototype.prodBoxes=function(Q,c,n,e,W,Dp,z,Hm,pp,seed){
+ if(W<6||Dp<3||Hm<5)return;const N=Math.max(2,Math.min(7,Math.floor(W/9))),slot=W/N,pal=pp?PRD_P:PRD_B,wf=this.wf();
+ const lab='linear-gradient(transparent 52%,rgba(255,255,255,.88) 52% 70%,transparent 70%)';
+ for(let i=0;i<N;i++){const r=(i*7+seed*3)%5,h=Math.max(5,Hm*(0.72+0.07*((i+seed)%4))),d=Math.min(Dp,10)*(0.8+0.05*(r%3)),off=-W/2+slot*(i+0.5);
+  const f={c:[c[0]+e[0]*off,c[1]+e[1]*off],ex:e,ey:n,w:slot*0.78,d:d},css=wf?'opacity:.62;':'',F={};
+  ['top','back','right','left'].forEach(k=>F[k]={cn:'prd',css:css});F.front={cn:'prd',css:css,img:lab,size:'100% 100%'};
+  this._keepCol=true;try{this.box(Q,f,z,z+h,{rgb:pal[(i+seed)%pal.length],f:F});}finally{this._keepCol=false;}}
+};
 /* ---------- «Η κάτοψή μου» στο φαρμακείο (v333.6) ----------
    Η σελίδα Pharmacy.dc.html του mockup: ίδιο CSS, ίδια σήμανση, με τα στοιχεία της ενεργής κάτοψης (scl350_fp_get με το token).
    Μόνο ανάγνωση. Η κάτοψη = η Main στο βήμα 5 με το κάδρο της Print-1 (ίδιο με της σελίδας στο mockup).
@@ -53224,7 +53243,10 @@ function zoneFrame(c){
  let html=z.innerHTML.replace(/<button type="button"/g,'<div').replace(/<button\b/g,'<div').replace(/<\/button>/g,'</div>');
  hostEl.remove();
  /* περιθώρια όπως στο δείγμα της Print-1: τοίχοι 401–1089 × 257–733 και ετικέτα εισόδου ως 798 → κάδρο 384,5–1094,5 × 232,5–820,8 */
- x0-=16.5;x1+=5.5;y0-=24.5;y1+=22.8;const w=x1-x0,h=y1-y0,s=Math.min(700/w,580/h),tx=-x0,ty=-y0; /* όπως στο mockup: translate(−x0,−y0) scale(s) */
+ x0-=16.5;x1+=5.5;y0-=24.5;y1+=22.8;const w=x1-x0,h=y1-y0,s=Math.min(700/w,580/h);
+ /* v334.5: η μετατόπιση πολλαπλασιάζεται με την κλίμακα και η κάτοψη κεντράρεται στο κουτί. Στο mockup ήταν translate(−x0,−y0) scale(s),
+    που δουλεύει μόνο όταν s ≈ 1 (χώρος σαν τον Πιλότο)· σε στενόμακρο χώρο η κάτοψη έβγαινε έξω από το κουτί και κόβονταν θέσεις. */
+ const tx=(700-w*s)/2-x0*s,ty=(580-h*s)/2-y0*s;
  return {html:html,tf:'translate('+tx.toFixed(1)+'px,'+ty.toFixed(1)+'px) scale('+s.toFixed(4)+')'};
 }
 function planZone(c){
