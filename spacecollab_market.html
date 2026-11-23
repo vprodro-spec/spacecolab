@@ -2,7 +2,7 @@
 <html lang="el"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <script>/* πάντα η τελευταία έκδοση: αν ο browser κρατά παλιό αντίγραφο, ξαναφορτώνει μία φορά τη νέα */
-(function(){var B="20261123151116";try{fetch('market_version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){t=(t||'').trim();if(!/^\d{14}$/.test(t)||t<=B)return;var u=new URL(location.href);if(u.searchParams.get('v')===t)return;u.searchParams.set('v',t);location.replace(u.toString());}).catch(function(){});}catch(e){}})();</script>
+(function(){var B="20261123152956";try{fetch('market_version.txt?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.text():''}).then(function(t){t=(t||'').trim();if(!/^\d{14}$/.test(t)||t<=B)return;var u=new URL(location.href);if(u.searchParams.get('v')===t)return;u.searchParams.set('v',t);location.replace(u.toString());}).catch(function(){});}catch(e){}})();</script>
 <script>if(Math.min(screen.width,window.innerWidth||screen.width)<1100)document.querySelector('meta[name=viewport]').setAttribute('content','width=1180');</script>
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
 <title>SpaceCoLLab Market</title>
@@ -2974,12 +2974,13 @@ class Live extends Component {
    const VZ=[[1,'Τζάμι αριστερά','300 × 300 εκ.','Αυτοκόλλητο, σετ, κιτ','Μαρ, Απρ, Μάι','60 € / μήνα',58,196,150,164],[2,'Στενό τζάμι','170 × 300 εκ.','Αυτοκόλλητο, κιτ','Ιαν – Ιούν','50 € / μήνα',216,196,84,164],[3,'Αυτόματη πόρτα','2 φύλλα · 90 × 200 εκ.','Αυτοκόλλητο στα φύλλα','Όλο το 2027','50 € / μήνα',308,196,128,164],[4,'Τζάμι δεξιά','300 × 300 εκ.','Αυτοκόλλητο, σετ, κιτ','Σεπ, Οκτ','60 € / μήνα',444,196,110,164],[5,'Μεγάλο τζάμι','520 × 300 εκ.','Αυτοκόλλητο, σετ, κιτ, ειδική διάσταση','Μάι, Ιούν','95 € / μήνα',562,196,180,164]];
    const zv=VZ.find(z=>z[0]===vs)||VZ[0];
    const stars=(n,t)=>({f:'★★★★★'.slice(0,n),e:'★★★★★'.slice(n),t:t});
-   const SR={P:[['Κίνηση φαρμακείου',4,'Υψηλή'],['Θέα από την είσοδο',5,'Κορυφαία']],'1':[['Κίνηση φαρμακείου',4,'Υψηλή'],['Θέα από το ταμείο',5,'Κορυφαία']],'2':[['Κίνηση φαρμακείου',4,'Υψηλή'],['Θέα από το ταμείο',4,'Πολύ καλή']]};
+   /* οι θέσεις πάγκου δεν βαθμολογούνται μεταξύ τους: στον πάγκο καταλήγουν όλοι οι πελάτες */
+   const SR0=[['Κίνηση φαρμακείου',4,'Υψηλή'],['Στον πάγκο',0,'Εδώ καταλήγουν όλοι οι πελάτες']],SR={P:SR0,'1':SR0,'2':SR0};
    const VR={1:[4,5],2:[4,3],3:[4,5],4:[4,4],5:[4,5]},VT5=['','','','Καλή','Πολύ καλή','Κορυφαία'];
    const zs=st.hfz?Math.min(2.3,Math.max(1.5,290/zv[8])):1;
    v.mk={sign:(typeof SIGN331==='string'?SIGN331:''),code:'sample',
     vt:'transform-origin: 0 0; transition: transform 0.7s cubic-bezier(0.22, 0.8, 0.2, 1); transform: '+(st.hfz?'translate(400px, 217px) scale('+zs.toFixed(2)+') translate('+(-(zv[6]+zv[8]/2))+'px, '+(-(zv[7]+zv[9]/2-12))+'px)':'none'),
-    sr:(SR[sel]||SR['1']).map(r=>Object.assign({k:r[0]},stars(r[1],r[2]))),vr:[['Ορατότητα από τον δρόμο',VR[vs][1]],['Κίνηση στον δρόμο',VR[vs][0]]].map(r=>Object.assign({k:r[0]},stars(r[1],VT5[r[1]]))),off3:!on3,go3:()=>this.setState({h3on:true}),leave3:()=>{if(this.state.h3on)this.setState({h3on:false});},
+    sr:(SR[sel]||SR['1']).map(r=>Object.assign({k:r[0]},r[1]?stars(r[1],r[2]):{f:'',e:'',t:r[2]})),vr:[['Ορατότητα από τον δρόμο',VR[vs][1]],['Κίνηση στον δρόμο',VR[vs][0]]].map(r=>Object.assign({k:r[0]},stars(r[1],VT5[r[1]]))),off3:!on3,go3:()=>this.setState({h3on:true}),leave3:()=>{if(this.state.h3on)this.setState({h3on:false});},
     sc:['P','1','2'].map(t=>({tag:t,name:SC[t][0],on:sel===t,cls:(t==='P'?'pp ':'')+(sel===t?'on':''),pick:()=>this.setState({h3sel:t})})),
     si:(SC[sel]||SC['1'])[1].map(r=>({k:r[0],v:r[1]})),
     vz:VZ.map(z=>{const on=z[0]===vs;return {n:String(z[0]),x:z[6],y:z[7],w:z[8],h:z[9],cx:z[0]===3?z[6]+z[8]/4:z[6]+z[8]/2,cy:z[0]===3?z[7]+46:z[7]+z[9]/2,ty:(z[0]===3?z[7]+46:z[7]+z[9]/2)+5.5,aria:'Θέση βιτρίνας '+z[0]+', '+z[1],fill:on?'rgba(255,154,60,0.22)':'rgba(36,89,224,0.06)',stroke:on?'#ff9a3c':'#2459e0',sw:on?4:2.5,dash:on?'0':'9 6',dot:on?'#ff9a3c':'#2459e0',pick:()=>this.setState({hfsel:z[0],hfz:true})};}),
