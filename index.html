@@ -53435,8 +53435,13 @@ body.scl295-pharmacy .scl360-note{grid-column:1/-1;flex-basis:100%;width:100%;bo
 body.scl295-pharmacy .scl295-price-preview .scl360-price-note{display:block!important;flex-basis:100%;width:100%;margin-top:6px;font-size:12px;line-height:1.35;font-weight:500;color:var(--blue,#1f5fe0)}
 .scl360-tag{display:inline-flex;align-items:center;margin:0 0 0 8px;padding:2px 8px;border-radius:999px;font:600 11px/1.4 var(--font,inherit);letter-spacing:0;text-transform:none;vertical-align:middle;white-space:nowrap;cursor:pointer;border:1px solid var(--blue,#1f66ff);color:var(--blue,#1f66ff);background:transparent}
 .scl360-tag.grp{border-color:var(--pp,#00888a);color:var(--pp-ink,#006b6d);background:var(--pp-softer,transparent)}
-.scl296-position-label .scl360-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 0}
-.scl296-position-label .scl360-tags .scl360-tag{margin:0}
+.scl296-position-label>.scl3318-srow{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px}
+.scl296-position-label>code{grid-column:1/-1;justify-self:start;max-width:100%}
+.scl296-position-label .scl360-tags{display:inline-flex;flex-wrap:wrap;gap:4px;margin:0}
+.scl296-position-label .scl360-tags .scl360-tag{margin:0;padding:1px 7px;font-size:10.5px}
+#scl290PositionRows .scl360-hq-pos{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+#scl290PositionRows .scl360-hq-pos .scl360-tag{margin:0;cursor:default}
+#scl290PositionRows .scl360-hq-pos .scl360-tag.off{border-color:var(--line,#d2d2d7);color:var(--muted,#6e6e73)}
 body.scl295-pharmacy .scl360-sale-note{margin:6px 0 0;font-size:12.5px;line-height:1.4;color:var(--blue,#1f66ff)}
 .scl296-timeline-table .scl296-timeline-cell.scl360-open-cell{position:relative}
 .scl296-timeline-table .scl360-dot{position:absolute;top:7px;right:7px;z-index:3;width:8px;height:8px;border-radius:50%;background:var(--blue,#1f66ff);box-shadow:0 0 0 2px var(--surface,#fff);pointer-events:none}
@@ -53529,7 +53534,7 @@ function decorateProgram(){
  /* 5. Παράθυρο θέσης: ετικέτα δίπλα στον κωδικό. */
  document.querySelectorAll('.scl295-section-head.scl321c-head h2').forEach(h=>{const c=h.querySelector('code');if(!c)return;const p=has?posData(posIdByCode(c.textContent)):null;setTags(h,tagsHTML(p),'');});
  /* 6. Timeline: ετικέτα κάτω από το όνομα της θέσης. */
- document.querySelectorAll('.scl296-timeline-table .scl296-position-label').forEach(l=>{const c=l.querySelector('code');if(!c)return;const p=has?posData(posIdByCode(c.getAttribute('title')||c.textContent)):null;setTags(l,tagsHTML(p),'');});
+ document.querySelectorAll('.scl296-timeline-table .scl296-position-label').forEach(l=>{const c=l.querySelector('code');if(!c)return;const p=has?posData(posIdByCode(c.getAttribute('title')||c.textContent)):null;const old=l.querySelector(':scope>.scl360-tags');if(old)old.remove();setTags(l.querySelector(':scope>.scl3318-srow')||l,tagsHTML(p),'');});
  /* 7–8. «Προς πώληση»: σημείωση και σημάδι στους ελεύθερους μήνες που φαίνονται στις εταιρίες. */
  const table=document.querySelector('.scl296-timeline-table');const sale=!!(table&&table.classList.contains('scl312-sale'));
  const py=programYear();const open={};let any=false;
@@ -53543,7 +53548,7 @@ function decorateProgram(){
  if(bar){let n=bar.querySelector('.scl360-sale-note');if(any){if(!n){n=document.createElement('p');n.className='scl360-sale-note';n.textContent='Οι ελεύθεροι μήνες των θέσεων που είναι στο SpaceCoLLab Market φαίνονται και στις εταιρίες. Μήνας με προσυμφωνία ή χορηγία ραφιών δεν φαίνεται.';bar.appendChild(n);}}else if(n)n.remove();}
 }
 /* Κεντρικά · μητρώο φαρμακείων: μόνο ανάγνωση. */
-const H=M.hq={map:null,busy:false,failed:false,at:0};
+const H=M.hq={map:null,busy:false,failed:false,at:0,inst:{},instId:''};
 const hqKey=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.hqKey)||'';}catch(e){return '';}};
 const plural=n=>n+' '+(Number(n)===1?'θέση':'θέσεις');
 function fmtDate(v){const d=new Date(v);if(isNaN(d))return '';return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
@@ -53579,6 +53584,27 @@ function decorateHQ(){
    if(!tm){tm=document.createElement('small');tm.className='scl360-hq scl360-hq-terms';pv.insertAdjacentElement('afterend',tm);}
    if(tm.textContent!==t)tm.textContent=t;
   }
+ });
+}
+/* Κεντρικά · παράθυρο «Οθόνες»: ανά θέση, τι έχει ανοίξει το φαρμακείο. Μόνο ανάγνωση. */
+async function hqInstLoad(id){
+ if(!id||!hqKey())return;const c=H.inst[id];if(c&&(c.busy||Date.now()-c.at<30000))return;
+ H.inst[id]={busy:true,at:Date.now(),view:c?c.view:null};
+ try{H.inst[id].view=await rpc('scl360_hq_market_preview',{p_hq_key:hqKey(),p_registry_id:id});}catch(e){H.inst[id].view=null;}
+ H.inst[id].busy=false;H.inst[id].at=Date.now();decorateInst();
+}
+function decorateInst(){
+ const host=document.getElementById('scl290PositionRows');if(!host||!hqKey()||!H.instId)return;
+ const c=H.inst[H.instId];if(!c){hqInstLoad(H.instId);return;}
+ const ps=c.view&&Array.isArray(c.view.positions)?c.view.positions:null;
+ host.querySelectorAll('article.scl294-screen').forEach(row=>{
+  const st=row.querySelector(':scope>strong');if(!st)return;let el=st.querySelector('.scl360-hq-pos');
+  const title=(st.firstChild&&st.firstChild.nodeType===3?st.firstChild.textContent:'').trim();
+  const p=ps?ps.find(x=>x.title===title):null;
+  if(!p){if(el)el.remove();return;}
+  const html=(p.visible?'<span class="scl360-tag mk">Market</span>':'<span class="scl360-tag off">Εκτός Market</span>')+(p.group_offers?'<span class="scl360-tag grp">Ομαδικές</span>':'');
+  if(!el){el=document.createElement('span');el.className='scl360-hq-pos';el.title='Το ορίζει το φαρμακείο από «Το φαρμακείο μου».';st.appendChild(el);}
+  if(el.__h!==html){el.innerHTML=html;el.__h=html;}
  });
 }
 function decorate(){
@@ -53697,7 +53723,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('[data-scl312="sale"],[data-scl295="position"]')){setTimeout(decorate,0);setTimeout(decorate,350);}},true);
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target&&e.target.dataset&&e.target.dataset.scl360==='switches'){e.preventDefault();go('switches');}});
-document.addEventListener('click',()=>{if(!hqKey())return;const f=()=>{try{decorateHQ();}catch(e){}};setTimeout(f,0);setTimeout(f,400);},true);
+document.addEventListener('click',e=>{if(!hqKey())return;const b=e.target&&e.target.closest?e.target.closest('[data-scl290="install"][data-id]'):null;if(b){H.instId=b.dataset.id;hqInstLoad(H.instId);}const f=()=>{try{decorateHQ();decorateInst();}catch(e){}};setTimeout(f,0);setTimeout(f,400);setTimeout(f,1200);},true);
 try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl360-market',decorate);}catch(e){}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(decorate,0));else setTimeout(decorate,0);
 })();
