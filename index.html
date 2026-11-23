@@ -53786,6 +53786,7 @@ html[data-theme="dark"] .scl370-tagx.ok,body.dark .scl370-tagx.ok{color:#7ddba3}
 .scl370-sec{margin:6px 0 -4px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .scl370-err{font-size:13px;line-height:1.4;color:#b3261e}
 .scl370-note{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.scl370-h3{font-size:13px;font-weight:700;color:var(--muted);letter-spacing:.02em;margin:16px 0 8px}.scl370-people{display:flex;flex-direction:column}.scl370-person{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--line,rgba(0,0,0,.08))}.scl370-person>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}.scl370-person b{font-size:14px;overflow-wrap:anywhere}.scl370-person span{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}.scl370-pacts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}.scl370-pacts .scl370-b{min-height:44px}
 .scl370-b{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:0;border:0;border-radius:980px;padding:9px 18px;font:inherit;font-size:14px;font-weight:580;line-height:1.25;background:var(--fill2,#e8e8ed);color:var(--ink);cursor:pointer;white-space:nowrap;transition:transform .15s,filter .15s,opacity .15s}
 .scl370-b:active{transform:scale(.97)}.scl370-b:disabled{opacity:.4;cursor:default}
 .scl370-b.pri{background:var(--accent,#2459e0);color:#fff}.scl370-b.pri:hover{filter:brightness(1.07)}
@@ -53876,7 +53877,7 @@ function companiesHTML(){
    '<div><div class="scl370-chips">'+(bs.length?bs.slice(0,6).map(b=>'<span class="scl370-chip">'+E(b.name)+'</span>').join('')+(bs.length>6?'<span class="scl370-chip more">+'+(bs.length-6)+' ακόμα</span>':''):'<span class="scl370-tagx warn">Χωρίς Brands</span>')+'</div>'+
    '<div class="scl370-chips" style="margin-top:8px">'+(c.active?(c.link?'<span class="scl370-tagx ok">Ενεργή · έχει σύνδεσμο</span>':'<span class="scl370-tagx warn">Ενεργή · χωρίς σύνδεσμο</span>'):'<span class="scl370-tagx mute">Ανενεργή</span>')+'</div></div>'+
    '<div class="scl370-acts"><button type="button" class="btn line" data-scl370="brands" data-id="'+E(c.id)+'">Brands ('+bs.length+')</button>'+
-   (c.active?'<button type="button" class="btn '+(c.link?'line':'primary')+'" data-scl370="link" data-id="'+E(c.id)+'">Σύνδεσμος</button>':'')+
+   (c.active?'<button type="button" class="btn '+(c.link?'line':'primary')+'" data-scl370="link" data-id="'+E(c.id)+'">Πρόσβαση</button>':'')+
    '<button type="button" class="btn line" data-scl370="company-edit" data-id="'+E(c.id)+'">Στοιχεία</button></div></div>';}).join('');
 }
 function brandsHTML(){
@@ -53976,15 +53977,35 @@ async function brandChange(btn,add){
   (m._ctx.rows||[]).forEach(r=>{if(r.id===id)r.company=add?{id:c.id,name:c.name}:null;});S.b.rows=[];drawMine();render(false);}
  catch(e){err.textContent=friendly(e);btn.disabled=false;}
 }
-async function linkModal(id,renew){
+/* Κ2β: άνθρωποι της εταιρίας (είσοδος με κωδικό). Αν η βάση δεν έχει ακόμα το Κ2β, ο διάλογος μένει όπως ήταν. */
+function inviteUrl(token){const u=new URL('spacecollab_market.html',location.href);u.search='';u.hash='';return u.toString()+'?i='+token;}
+function peopleHtml(ppl){
+ const when=x=>{if(!x)return 'δεν έχει μπει ακόμα';try{return 'τελευταία είσοδος '+new Date(x).toLocaleDateString('el-GR',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '';}};
+ const st={active:['Ενεργός','ok'],invited:['Περιμένει να ορίσει κωδικό','warn'],inactive:['Ανενεργός','mute'],none:['Χωρίς είσοδο ακόμα','mute']};
+ return '<div class="scl370-people">'+ppl.map(p=>{const t=st[p.state]||st.none;
+  return '<div class="scl370-person"><div><b>'+E(p.full_name)+(p.is_primary?' · Υπεύθυνος':'')+'</b><span>'+E([p.email,p.role,p.state==='active'?when(p.last_login):''].filter(Boolean).join(' · '))+'</span></div><span class="scl370-tagx '+t[1]+'">'+t[0]+'</span>'+
+   (p.state==='none'?'':'<div class="scl370-pacts">'+(p.state==='inactive'?'<button type="button" class="scl370-b" data-scl370="person-active" data-on="1" data-id="'+E(p.id)+'">Ενεργοποίηση</button>':
+    '<button type="button" class="scl370-b" data-scl370="person-invite" data-id="'+E(p.id)+'" data-name="'+E(p.full_name)+'">'+(p.state==='invited'?'Νέα πρόσκληση':'Ξέχασε τον κωδικό · νέα πρόσκληση')+'</button><button type="button" class="scl370-b red" data-scl370="person-active" data-on="0" data-id="'+E(p.id)+'">Απενεργοποίηση</button>')+'</div>')+'</div>';}).join('')+'</div>';
+}
+async function linkModal(id,renew,invite){
  let c=company(id);if(!c)return;
- if(!c.link||renew){try{c=await rpc('scl370_hq_company_link',{p_hq_key:hqKey(),p_company_id:id,p_renew:!!renew});putCompany(c);render(false);}
+ let ppl=null;try{const d=await rpc('scl373_hq_people',{p_hq_key:hqKey(),p_company_id:id});ppl=d&&d.people||[];}catch(e){if(!/Could not find the function|PGRST202/i.test(String(e&&e.message||'')))ppl=null;}
+ const hasAdmin=!!(ppl&&ppl.some(p=>p.is_primary&&(p.state==='active'||p.state==='inactive')));
+ if((!c.link&&!hasAdmin)||renew){try{c=await rpc('scl370_hq_company_link',{p_hq_key:hqKey(),p_company_id:id,p_renew:!!renew});putCompany(c);render(false);}
   catch(e){openModal('Σύνδεσμος','','<div class="scl370-err">'+E(friendly(e))+'</div>','<button type="button" class="scl370-b pri" data-scl370="close">Κλείσιμο</button>');return;}}
- openModal('Σύνδεσμος · '+c.name,'Αντίγραψέ τον και στείλ’ τον εσύ στην εταιρία. Δεν φεύγει αυτόματο email.',
-  '<div class="scl370-link"><input id="scl370Url" readonly value="'+E(marketUrl(c.link))+'" aria-label="Σύνδεσμος εταιρίας"><button type="button" class="scl370-b pri" data-scl370="copy">Αντιγραφή</button></div>'+
-  ((c.brands||[]).length?'':'<div class="scl370-note"><span class="scl370-tagx warn">Χωρίς Brands</span> Η εταιρία θα μπει, αλλά δεν θα έχει Brand να διαλέξει.</div>')+
-  '<div class="scl370-note">Όποιος έχει τον σύνδεσμο μπαίνει ως '+E(c.name)+'. Αν χαθεί ή αλλάξει ο υπεύθυνος, βγάλε νέο: ο παλιός σταματά αμέσως.</div>',
-  '<button type="button" class="scl370-b red" data-scl370="link-renew" data-id="'+E(c.id)+'">Νέος σύνδεσμος</button><button type="button" class="scl370-b" data-scl370="close">Τέλος</button>');
+ const noBrands=((c.brands||[]).length?'':'<div class="scl370-note"><span class="scl370-tagx warn">Χωρίς Brands</span> Η εταιρία θα μπει, αλλά δεν θα έχει Brand να διαλέξει.</div>');
+ if(ppl===null){ /* βάση χωρίς Κ2β: όπως πριν */
+  openModal('Σύνδεσμος · '+c.name,'Αντίγραψέ τον και στείλ’ τον εσύ στην εταιρία. Δεν φεύγει αυτόματο email.',
+   '<div class="scl370-link"><input id="scl370Url" readonly value="'+E(marketUrl(c.link))+'" aria-label="Σύνδεσμος εταιρίας"><button type="button" class="scl370-b pri" data-scl370="copy">Αντιγραφή</button></div>'+noBrands+
+   '<div class="scl370-note">Όποιος έχει τον σύνδεσμο μπαίνει ως '+E(c.name)+'. Αν χαθεί ή αλλάξει ο υπεύθυνος, βγάλε νέο: ο παλιός σταματά αμέσως.</div>',
+   '<button type="button" class="scl370-b red" data-scl370="link-renew" data-id="'+E(c.id)+'">Νέος σύνδεσμος</button><button type="button" class="scl370-b" data-scl370="close">Τέλος</button>');return;}
+ const box=invite?'<div class="scl370-h3">Πρόσκληση για '+E(invite.name)+'</div><div class="scl370-link"><input id="scl370Url" readonly value="'+E(inviteUrl(invite.token))+'" aria-label="Σύνδεσμος πρόσκλησης"><button type="button" class="scl370-b pri" data-scl370="copy">Αντιγραφή</button></div><div class="scl370-note">Δουλεύει μία φορά, για 7 ημέρες. Με αυτόν ορίζει νέο κωδικό. Στείλ’ τον εσύ· δεν φεύγει αυτόματο email.</div>':
+  !hasAdmin?'<div class="scl370-h3">Σύνδεσμος πρώτης εισόδου</div><div class="scl370-link"><input id="scl370Url" readonly value="'+E(marketUrl(c.link))+'" aria-label="Σύνδεσμος πρώτης εισόδου"><button type="button" class="scl370-b pri" data-scl370="copy">Αντιγραφή</button></div><div class="scl370-note">Στείλ’ τον στον υπεύθυνο της εταιρίας. Τον ανοίγει μία φορά, ορίζει όνομα, email και δικό του κωδικό, και ο σύνδεσμος παύει. Μετά προσθέτει μόνος του συναδέλφους.</div>':
+  '<div class="scl370-note">Η εταιρία μπαίνει με email και κωδικό. Τους κωδικούς δεν τους βλέπει κανείς. Αν ο υπεύθυνος ξεχάσει τον δικό του, βγάλε του νέα πρόσκληση από εδώ.</div>';
+ openModal('Πρόσβαση · '+c.name,ppl.length?ppl.length+' '+(ppl.length===1?'άνθρωπος':'άνθρωποι'):'Κανένας άνθρωπος ακόμα',
+  box+noBrands+(ppl.length?'<div class="scl370-h3">Άνθρωποι</div>'+peopleHtml(ppl):'')+'<span class="scl370-err" role="alert"></span>',
+  (!hasAdmin&&!invite?'<button type="button" class="scl370-b red" data-scl370="link-renew" data-id="'+E(c.id)+'">Νέος σύνδεσμος</button>':'')+'<button type="button" class="scl370-b" data-scl370="close">Τέλος</button>',true);
+ if(modalEl)modalEl._co=id;
 }
 async function brandModal(id){
  try{const b=await rpc('scl370_hq_brand',{p_hq_key:hqKey(),p_brand_id:Number(id)});if(!b)return;
@@ -54044,6 +54065,9 @@ document.addEventListener('click',e=>{
  if(a==='brand-rm'){brandChange(t,false);return;}
  if(a==='link'){linkModal(t.dataset.id,false);return;}
  if(a==='link-renew'){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Ο παλιός σταματά';return;}linkModal(t.dataset.id,true);return;}
+ if(a==='person-invite'){t.disabled=true;const cid=modalEl&&modalEl._co;rpc('scl373_hq_person_invite',{p_hq_key:hqKey(),p_person:t.dataset.id}).then(d=>linkModal(cid,false,{name:t.dataset.name,token:d.invite})).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
+ if(a==='person-active'){const on=t.dataset.on==='1';if(!on&&t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Βγαίνει αμέσως';return;}
+  t.disabled=true;const cid=modalEl&&modalEl._co;rpc('scl373_hq_person_active',{p_hq_key:hqKey(),p_person:t.dataset.id,p_active:on}).then(()=>linkModal(cid,false)).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
  if(a==='copy'){copyLink(t);return;}
  if(a==='brand'){brandModal(t.dataset.id);return;}
  if(a==='bstate'){S.b.state=t.dataset.state;searchBrands(false);return;}
