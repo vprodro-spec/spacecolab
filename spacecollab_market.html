@@ -2864,7 +2864,7 @@ const MK_KEY=(()=>{try{return (new URLSearchParams(location.search).get('k')||''
 const MK_YEAR=2027; /* το mockup δείχνει το έτος 2027 */
 const MK_OPEN={home:1,map:1,pharm:1};
 const MK_SOON='Σύντομα: αυτό ανοίγει σε επόμενο βήμα. Προς το παρόν βλέπετε φαρμακεία, θέσεις, τιμές και ελεύθερους μήνες.';
-const LIVE={net:[],sb:null};
+const LIVE={net:[],dots:[],sb:null};
 /* Φαρμακείο-δείγμα για την Αρχική: φανταστικός χώρος μέσου φαρμακείου, όχι πραγματικό κατάστημα */
 const MK_SAMPLE={name:'Φαρμακείο-δείγμα',positions:[{id:'hq',format:'vertical'},{id:'base-1',format:'vertical'},{id:'base-2',format:'vertical'}],plan:{schema:'spacecolab.floorplan',unit:'cm',version:{id:'sample',no:1,status:'active',saved_at:'2026-11-23T00:00:00Z'},
  room:{pts:[[0,0],[900,0],[900,700],[0,700]],ceil:300,src:'e',eye:160,cam:{sty:'wf',tgt:{x:450,y:230,z:60},yaw:0,dist:620,mode:'model',pitch:24,walls:'cut'}},
@@ -2943,6 +2943,12 @@ class Live extends Component {
   v.nav=(v.nav||[]).map((n,i)=>i<2?n:Object.assign({},n,{pick:()=>this.setState({flash:MK_SOON}),badge:'Σύντομα',badgeStyle:soon,style:String(n.style).replace(/color: #3a3a3c;/,'color: #8e8e93;')}));
   v.coName='Δοκιμή';v.coInit='ΔΚ';v.goReg=()=>this.setState({flash:MK_SOON});
   v.openGuide=()=>this.setState({flash:MK_SOON});v.guideOn=false;
+  /* χάρτης: τα υπόλοιπα φαρμακεία του δικτύου (χωρίς οθόνες ακόμα) ως ανώνυμες κουκκίδες */
+  if(LIVE.dots.length){
+   if(st.view==='map'){const V=this.vw(),z=st.z;v.netDots=(v.netDots||[]).concat(LIVE.dots.map(d=>({style:'position: absolute; left: '+(V.MX+(d.x-z.cx)*z.k).toFixed(1)+'px; top: '+(V.MY+(d.y-z.cy)*z.k).toFixed(1)+'px; width: 7px; height: 7px; transform: translate(-50%, -50%); border-radius: 50%; box-sizing: border-box; pointer-events: none; transition: opacity 0.3s; opacity: '+(st.moving?0:1)+'; background: rgba(255,255,255,0.1); border: 1.5px solid rgba(255,255,255,0.5);'})));
+    v.legC='Δεν είναι ανοιχτό στο Market ή χωρίς οθόνες ακόμα';}
+   if(st.view==='home'&&Array.isArray(v.heroDots))v.heroDots=v.heroDots.concat(LIVE.dots.map(d=>({x:d.x,y:d.y,r:2.6,fill:'none',stroke:'rgba(255,255,255,0.4)'})));
+  }
   /* χάρτης */
   if(Array.isArray(v.toolOpts)&&v.toolOpts.length>1)v.toolOpts=[v.toolOpts[0],Object.assign({},v.toolOpts[1],{label:'Βιτρίνες · σύντομα',pick:()=>this.setState({flash:MK_SOON}),style:String(v.toolOpts[1].style||'')+';opacity:0.55'})];
   /* Αρχική: το παράδειγμα είναι φαρμακείο-δείγμα· ό,τι αφορά βιτρίνες είναι «Σύντομα» */
@@ -2984,6 +2990,7 @@ async function mkStart(){
  try{
   const list=await mkRpc('scl360_mk_list',{p_key:MK_KEY});
   LIVE.net=mkNet(Array.isArray(list)?list:[],Component.prototype);
+  try{const g=Component.prototype.GEO().proj,ds=await mkRpc('scl361_mk_dots',{p_key:MK_KEY});LIVE.dots=(Array.isArray(ds)?ds:[]).filter(d=>d&&d.lat!=null&&d.lng!=null).map(d=>({x:(Number(d.lng)-g.lon0)*g.c*g.S,y:(g.latTop-Number(d.lat))*g.S}));}catch(e){LIVE.dots=[];}
   if(!LIVE.net.length){mkGate('Δεν υπάρχουν ακόμα φαρμακεία','Δοκιμάστε ξανά αργότερα.');return;}
   document.getElementById('mkRoot').innerHTML='';
   mkMount(new Live({}));
