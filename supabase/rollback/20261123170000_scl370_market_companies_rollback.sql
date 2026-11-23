@@ -1,0 +1,34 @@
+-- Αναίρεση του scl370 (Market, Κ2 Εταιρίες & Brands). Βγάζει ΜΟΝΟ τα νέα αντικείμενα και γυρίζει τον mk_access όπως ήταν.
+-- Προσοχή: σβήνει εταιρίες, συνδέσμους εταιριών, αιτήματα πληροφοριών και το μητρώο Brands. Ο δοκιμαστικός σύνδεσμος μένει.
+DROP FUNCTION IF EXISTS public.scl370_hq_registry_load(text,jsonb);
+DROP FUNCTION IF EXISTS public.scl370_hq_request_set(text,uuid,text);
+DROP FUNCTION IF EXISTS public.scl370_hq_company_active(text,uuid,boolean);
+DROP FUNCTION IF EXISTS public.scl370_hq_company_link(text,uuid,boolean);
+DROP FUNCTION IF EXISTS public.scl370_hq_company_brands(text,uuid,integer[],integer[]);
+DROP FUNCTION IF EXISTS public.scl370_hq_company_save(text,jsonb);
+DROP FUNCTION IF EXISTS public.scl370_hq_brand(text,integer);
+DROP FUNCTION IF EXISTS public.scl370_hq_brands(text,text,integer,text,integer,integer);
+DROP FUNCTION IF EXISTS public.scl370_hq_overview(text);
+DROP FUNCTION IF EXISTS public.scl370_mk_info_request(jsonb);
+DROP FUNCTION IF EXISTS public.scl370_mk_me(text);
+DROP FUNCTION IF EXISTS scl_private.mk_txt(jsonb,text);
+DROP FUNCTION IF EXISTS scl_private.mk_company_hq(uuid);
+DROP FUNCTION IF EXISTS scl_private.mk_company_brands(uuid);
+DROP FUNCTION IF EXISTS scl_private.mk_brand_scopes(integer,boolean);
+DROP FUNCTION IF EXISTS scl_private.mk_registry_load(jsonb);
+DELETE FROM scl_private.mk_access WHERE kind='company';
+DROP INDEX IF EXISTS scl_private.mk_access_company;
+ALTER TABLE scl_private.mk_access DROP CONSTRAINT IF EXISTS mk_access_company_check;
+ALTER TABLE scl_private.mk_access DROP CONSTRAINT IF EXISTS mk_access_kind_check;
+ALTER TABLE scl_private.mk_access DROP COLUMN IF EXISTS person_id, DROP COLUMN IF EXISTS company_id;
+ALTER TABLE scl_private.mk_access ADD CONSTRAINT mk_access_kind_check CHECK(kind IN ('test'));
+DROP TABLE IF EXISTS scl_private.mk_company_brand;
+DROP TABLE IF EXISTS scl_private.mk_company_person;
+DROP TABLE IF EXISTS scl_private.mk_company;
+DROP TABLE IF EXISTS scl_private.mk_info_request;
+DROP TABLE IF EXISTS scl_private.mk_brand_scope;
+DROP TABLE IF EXISTS scl_private.mk_brand;
+DROP TABLE IF EXISTS scl_private.mk_subcategory;
+DROP TABLE IF EXISTS scl_private.mk_category;
+DROP TABLE IF EXISTS scl_private.backup_v370_mk_access;
+DROP TABLE IF EXISTS scl_private.backup_v370_functions;
