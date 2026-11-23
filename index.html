@@ -53883,7 +53883,7 @@ function brandsHTML(){
  const B=S.b,cats=S.ov.categories||[];
  const head='<div class="scl370-filters"><div class="seg sm">'+[['all','Όλα'],['free','Χωρίς εταιρία'],['taken','Με εταιρία']].map(o=>'<button type="button" data-scl370="bstate" data-state="'+o[0]+'" aria-pressed="'+(B.state===o[0])+'"'+(B.state===o[0]?' class="primary"':'')+'>'+o[1]+'</button>').join('')+'</div>'+
   '<select id="scl370Cat" aria-label="Κατηγορία"><option value="">Όλες οι κατηγορίες</option>'+cats.map(c=>'<option value="'+c.id+'"'+(String(B.cat)===String(c.id)?' selected':'')+'>'+E(c.name)+' ('+nf(c.brands)+')</option>').join('')+'</select>'+
-  '<span class="scl370-count">'+(B.busy&&!B.rows.length?'Αναζήτηση…':nf(B.total)+' Brands')+'</span><button type="button" class="btn line" data-scl370="reg-pick" style="padding:7px 14px;font-size:13px">Ενημέρωση μητρώου</button><input type="file" id="scl370File" accept=".json,.csv,application/json,text/csv" multiple hidden></div>';
+  '<span class="scl370-count">'+(B.busy&&!B.rows.length?'Αναζήτηση…':nf(B.total)+' Brands')+'</span><button type="button" class="btn line" data-scl370="reg-pick" style="padding:7px 14px;font-size:13px">Ενημέρωση μητρώου</button></div>';
  if(!B.err&&!Number(S.ov.counts.brands))return head+'<div class="scl370-empty"><b>Το μητρώο είναι άδειο</b>Πάτα «Ενημέρωση μητρώου» και διάλεξε το αρχείο μητρώου ή τα αρχεία πωλήσεων των φαρμακείων.</div>';
  if(B.err)return head+'<div class="scl370-empty">Δεν φορτώθηκε το μητρώο. Πάτα Ανανέωση.</div>';
  if(!B.rows.length)return head+'<div class="scl370-empty">'+(B.busy?'Αναζήτηση…':'Κανένα Brand δεν ταιριάζει.')+'</div>';
@@ -53946,6 +53946,7 @@ async function companySave(btn){
 }
 function brandsModal(id){
  const c=company(id);if(!c)return;
+ if(!Number(S.ov&&S.ov.counts&&S.ov.counts.brands)){openModal('Brands · '+c.name,'','<div class="scl370-note" style="font-size:14px;color:var(--ink)"><b>Το μητρώο Brands είναι άδειο.</b><br>Για να δώσεις Brands σε εταιρία, φόρτωσε πρώτα το μητρώο: πάτα «Ενημέρωση μητρώου» και διάλεξε το αρχείο μητρώου (mitroo-brands.json) ή τα αρχεία πωλήσεων των φαρμακείων. Γίνεται μία φορά.</div>','<button type="button" class="scl370-b" data-scl370="close">Άκυρο</button><button type="button" class="scl370-b pri" data-scl370="reg-pick">Ενημέρωση μητρώου</button>');return;}
  const m=openModal('Brands · '+c.name,'Η εταιρία βλέπει και ζητά προβολή μόνο για αυτά. Ένα Brand ανήκει σε μία εταιρία.',
   '<div class="scl370-chips" id="scl370Mine"></div><div class="scl370-find"><input id="scl370Find" type="search" autocomplete="off" aria-label="Αναζήτηση Brand" placeholder="Γράψε όνομα Brand για να το προσθέσεις"><div class="scl370-res" id="scl370Res"><span class="none">Γράψε τουλάχιστον 2 γράμματα.</span></div></div>',
   '<span class="scl370-err" role="alert"></span><button type="button" class="scl370-b '+(c.link?'':'pri')+'" data-scl370="link" data-id="'+E(c.id)+'">'+(c.link?'Σύνδεσμος':'Συνέχεια στον σύνδεσμο')+'</button><button type="button" class="scl370-b '+(c.link?'pri':'')+'" data-scl370="close">Τέλος</button>',true);
@@ -54018,7 +54019,7 @@ async function registryFiles(input){
  if(!nb){msg('<span class="scl370-err">Δεν βρέθηκε κανένα Brand. '+(r.skipped?'Τα '+r.skipped+' αρχεία δεν έχουν τις στήλες ΔΙΚΑΙΟΥΧΟΣ, ΚΑΤΗΓΟΡΙΑ, ΥΠΟΚΑΤΗΓΟΡΙΑ.':'')+'</span>');return;}
  msg('Βρέθηκαν <b>'+nf(nb)+' Brands</b> και '+nf(nc)+' συνδυασμοί σε '+r.files+' '+(r.files===1?'αρχείο':'αρχεία')+(r.skipped?' ('+r.skipped+' παραλείφθηκαν γιατί δεν είναι αρχεία πωλήσεων)':'')+'. Στέλνω μόνο ονόματα…');
  try{const d=await rpc('scl370_hq_registry_load',{p_hq_key:hqKey(),p:r.payload});
-  msg('<span class="scl370-tagx ok">Έγινε</span> Το μητρώο έχει τώρα <b>'+nf(d.brands)+' Brands</b>, '+nf(d.categories)+' κατηγορίες και '+nf(d.subcategories)+' υποκατηγορίες. Τίποτα δεν σβήστηκε.'+(r.skipped?' '+r.skipped+' παραλείφθηκαν γιατί δεν είναι αρχεία πωλήσεων.':''));S.b.rows=[];load(true);}
+  msg('<span class="scl370-tagx ok">Έγινε</span> Το μητρώο έχει τώρα <b>'+nf(d.brands)+' Brands</b>, '+nf(d.categories)+' κατηγορίες και '+nf(d.subcategories)+' υποκατηγορίες. Τίποτα δεν σβήστηκε.'+(r.skipped?' '+r.skipped+' παραλείφθηκαν γιατί δεν είναι αρχεία πωλήσεων.':''));S.ov.counts.brands=Number(d.brands)||0;S.b.rows=[];load(true);}
  catch(e){msg('<span class="scl370-err">'+(/REGISTRY_FORMAT/.test(String(e.message))?'Το αρχείο δεν έχει τη σωστή μορφή.':E(friendly(e)))+'</span>');}
 }
 async function copyLink(btn){const i=$('scl370Url');if(!i)return;let ok=false;
@@ -54045,7 +54046,7 @@ document.addEventListener('click',e=>{
  if(a==='brand'){brandModal(t.dataset.id);return;}
  if(a==='bstate'){S.b.state=t.dataset.state;searchBrands(false);return;}
  if(a==='bmore'){searchBrands(true);return;}
- if(a==='reg-pick'){const f=$('scl370File');if(f)f.click();return;}
+ if(a==='reg-pick'){let f=$('scl370File');if(!f){f=document.createElement('input');f.type='file';f.id='scl370File';f.accept='.json,.csv,application/json,text/csv';f.multiple=true;f.hidden=true;document.body.appendChild(f);}f.click();return;}
  if(a==='request-set'){t.disabled=true;const st=t.dataset.status;rpc('scl370_hq_request_set',{p_hq_key:hqKey(),p_id:t.dataset.id,p_status:st}).then(()=>{const r=(S.ov.requests||[]).find(x=>x.id===t.dataset.id);if(r){r.status=st;}S.ov.counts.requests_new=(S.ov.requests||[]).filter(x=>x.status==='new').length;mount();render(true);}).catch(()=>{t.disabled=false;});return;}
 });
 let typeT=0;
