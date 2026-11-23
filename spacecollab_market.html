@@ -2877,14 +2877,14 @@ class Live extends Component {
    const c=h.getAttribute('data-code');let f=h.firstElementChild;
    if(h.id!=='p3host'){ /* Αρχική: το φαρμακείο-δείγμα */
     if(!c){if(f)h.innerHTML='';return;}if(f&&f._c===c)return;h.innerHTML='';this.plan3d=MK_SAMPLE;
-    const fr=document.createElement('iframe');fr._c=c;fr.id=h.id.replace('host','frame');fr.title=h.getAttribute('data-title')||'';fr.style.cssText=h.getAttribute('data-css')||'';fr.src='spacecollab_market_3d.html';h.appendChild(fr);return;}
+    const fr=document.createElement('iframe');fr._c=c;fr.id=h.id.replace('host','frame');fr.title=h.getAttribute('data-title')||'';fr.style.cssText=h.getAttribute('data-css')||'';fr.src='spacecollab_market_3d.html?v=3352';h.appendChild(fr);return;}
    if(!c||!p||!p.has3d){if(f)h.innerHTML='';return;}
    if(f&&f._c===c)return;
    h.innerHTML='';
    const put=plan=>{if(!h.isConnected||h.getAttribute('data-code')!==c)return;h.innerHTML='';
     if(!plan){const m=document.createElement('div');m.style.cssText='padding:40px 24px;color:#6e6e73;font-size:14px';m.textContent='Το 3D δεν φορτώθηκε. Δοκιμάστε ξανά σε λίγο.';h.appendChild(m);return;}
     this.plan3d={name:p.full,plan:plan,positions:Object.keys(p.pos).map(n=>({id:p.pos[n].id,format:p.pos[n].format}))};
-    const fr=document.createElement('iframe');fr._c=c;fr.id=h.id.replace('host','frame');fr.title=h.getAttribute('data-title')||'';fr.style.cssText=h.getAttribute('data-css')||'';fr.src='spacecollab_market_3d.html';h.appendChild(fr);};
+    const fr=document.createElement('iframe');fr._c=c;fr.id=h.id.replace('host','frame');fr.title=h.getAttribute('data-title')||'';fr.style.cssText=h.getAttribute('data-css')||'';fr.src='spacecollab_market_3d.html?v=3352';h.appendChild(fr);};
    const w=document.createElement('div');w._c=c;w.style.cssText='padding:40px 24px;color:#6e6e73;font-size:14px';w.textContent='Φόρτωση 3D…';h.appendChild(w);
    if(p._plan)put(p._plan);else mkRpc('scl360_mk_pharmacy',{p_key:MK_KEY,p_registry_id:p.rid_db}).then(d=>{p._plan=d&&d.plan||null;put(p._plan);}).catch(()=>put(null));
   });
