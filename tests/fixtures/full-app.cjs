@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),cp=require('child_process');
 const root=require('node:path').resolve(__dirname,'../..');
 const {parseHTML}=require(root+'/node_modules/linkedom');
 async function smoke(html,mode,fixtureState=null,fixtureRpc=null,options={}){
- const {document,HTMLElement,Event}=parseHTML(html);Object.defineProperty(document,'readyState',{value:'loading',writable:true});
+ const {document,HTMLElement,Event,Node,NodeFilter}=parseHTML(html);Object.defineProperty(document,'readyState',{value:'loading',writable:true});
  const errors=[],timers=[],calls=[],map=new Map();
  // LinkeDOM does not implement capture ordering. Reproduce document capture for interaction tests.
  const captures=[],nativeAdd=document.addEventListener.bind(document);let dispatching=false;
@@ -23,7 +23,7 @@ async function smoke(html,mode,fixtureState=null,fixtureRpc=null,options={}){
  if(fixtureRpc){const response=await fixtureRpc(name,args);if(response!==undefined)return response;}
  return{data,error:null};}};
  class Clock extends Date { constructor(...args){super(...(args.length?args:[options.now||'2026-10-20T12:00:00Z']));} static now(){return new Date(options.now||'2026-10-20T12:00:00Z').valueOf();} }
- const ctx={document,HTMLElement,Event,Date:Clock,Intl,URL,URLSearchParams,Blob,Map,Set,Promise,JSON,Array,Object,Number,String,Math,RegExp,console:{log:()=>{},warn:()=>{},error:()=>{}},location:loc,localStorage:storage,sessionStorage:storage,
+ const ctx={document,HTMLElement,Event,Node,NodeFilter:NodeFilter||{SHOW_ALL:-1,SHOW_ELEMENT:1,SHOW_TEXT:4,FILTER_ACCEPT:1,FILTER_REJECT:2,FILTER_SKIP:3},matchMedia:()=>({matches:false,media:'',onchange:null,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){},dispatchEvent(){return false;}}),Date:Clock,Intl,URL,URLSearchParams,Blob,Map,Set,Promise,JSON,Array,Object,Number,String,Math,RegExp,console:{log:()=>{},warn:()=>{},error:()=>{}},location:loc,localStorage:storage,sessionStorage:storage,
  navigator:{clipboard:{writeText:async()=>{}},userAgent:'test'},supabase:{createClient:()=>client},setTimeout:(fn,ms,...args)=>{timers.push({fn,args,ms});return timers.length;},clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},requestAnimationFrame:()=>0,cancelAnimationFrame:()=>{},
  addEventListener:()=>{},removeEventListener:()=>{},innerWidth:1280,innerHeight:900,getComputedStyle:()=>({display:'block',visibility:'visible',getPropertyValue:()=>''}),MutationObserver:class{observe(){}disconnect(){}},ResizeObserver:class{observe(){}disconnect(){}},
  alert:()=>{},confirm:()=>false,prompt:()=>null,print:()=>{},history:{replaceState:()=>{}},fetch:async()=>{throw Error('Network disabled in test')},open:()=>({document:{write:()=>{},close:()=>{}}})};ctx.window=ctx;ctx.globalThis=ctx;const c=vm.createContext(ctx);
