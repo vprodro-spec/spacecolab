@@ -54837,6 +54837,8 @@ setInterval(()=>{if(!document.hidden&&document.body&&document.body.classList.con
 .scl375 .me{padding:14px 16px;font-size:14.5px;line-height:1.45}
 .scl375 .foot{margin:12px 2px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--c375-mut);font-size:13px}
 @media(max-width:640px){.scl375 .row{grid-template-columns:minmax(0,1fr)}.scl375 .acts{justify-content:flex-start}.scl375 .new{grid-template-columns:minmax(0,1fr)}.scl375 .seg button{flex:1}}
+.scl375 .role:not(.staff):not(.manager){background:rgba(178,94,0,.14);color:#b25e00}[data-scl324-theme="dark"] .scl375 .role:not(.staff):not(.manager){background:rgba(255,179,64,.16);color:#ffb340}
+.scl375-view{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.9);display:flex;flex-direction:column;padding:16px}.scl375-view div{display:flex;justify-content:space-between;align-items:center;color:#fff;font:700 15px -apple-system,"Segoe UI",Arial,sans-serif;padding:0 4px 12px}.scl375-view button{border:0;min-height:36px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font:700 14px -apple-system,"Segoe UI",Arial,sans-serif;cursor:pointer}.scl375-view img{flex:1;min-height:0;object-fit:contain;width:100%}
 </style>
 <script id="scl375-people">
 (function(){
@@ -54869,14 +54871,35 @@ function html(){
   '<p class="hint">'+(R.role==='staff'?'Υπάλληλος: βλέπει στο κινητό τι παίζει και τι στήνεται σε κάθε θέση, και δηλώνει «Στήθηκε». Δεν βλέπει ποσά και δεν ανοίγει το εργαλείο.':'Υπεύθυνος: κάνει στο εργαλείο ό,τι κι εσύ, και βλέπει ποσά. Ό,τι αλλάζει γράφεται με το όνομά του. Δεν φτιάχνει ούτε ανακαλεί συνδέσμους.')+'</p>'+(R.err?'<p class="err" role="alert">'+E(R.err)+'</p>':'')+'</div></div>'+
   (off.length?'<details><summary>Ανακλημένοι ('+off.length+')</summary><div class="box">'+off.map(rowHTML).join('')+'</div></details>':'')+
   '<div class="foot"><button type="button" data-scl375="open-staff">Δες τη σελίδα της ομάδας</button><span>Έτσι τη βλέπει ο υπάλληλος στο κινητό.</span></div>';}
+/* Στησίματα και φωτογραφίες: το φαρμακείο εγκρίνει τις δικές του θέσεις, όχι τη θέση Pharmaplus. */
+const Q=R.setups={rows:null,state:'idle',busy:false,err:''},MN=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const posName=id=>{const n=(String(id).match(/(\d+)$/)||[])[1]||'';return id==='hq'?'Pharmaplus':/^base-/.test(id)?'Θέση '+n:/^promo-/.test(id)?'Promotion '+n:/^exp-/.test(id)?'Experience '+n:id;};
+const hm=x=>{const t=new Date(x);return isNaN(t)?'':day(x)+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');};
+async function loadSetups(){const t=token();if(!t||Q.state==='loading')return;Q.state='loading';
+ try{const y=new Date().getFullYear(),d=await rpc('scl375_ph_done',{p_token:t,p_year:y});if(!Array.isArray(d))throw Error('x');Q.rows=d;Q.state='ok';}catch(e){Q.state='off';}
+ drawSetups();}
+function setupsHTML(){const now=new Date(),m=now.getMonth()+1,cur=(Q.rows||[]).filter(r=>r.month===m),old=(Q.rows||[]).filter(r=>r.month!==m).sort((a,b)=>b.month-a.month);
+ const row=r=>'<div class="row" data-y="'+r.year+'" data-m="'+r.month+'" data-pos="'+E(r.position_id)+'"><div><div class="nm">'+E(posName(r.position_id))+'<span class="role '+(r.photo?'staff':'')+'">'+(r.photo?'Στήθηκε':'Λείπει φωτογραφία')+'</span></div><div class="sub">'+E(r.name)+' · '+E(hm(r.at))+(r.month!==m?' · '+MN[r.month-1]:'')+(r.photo?(r.position_id==='hq'?(r.approved_at?' · εγκρίθηκε από την Pharmaplus':' · την εγκρίνει η Pharmaplus'):(r.approved_at?' · την ενέκρινες για την εταιρία ('+E(r.approved_by||'')+')':' · δεν την έχεις εγκρίνει ακόμα για την εταιρία')):'')+'</div></div>'+
+  (r.photo?'<div class="acts"><button type="button" data-scl375="s-photo">Φωτογραφία</button>'+(r.position_id==='hq'?'':(r.approved_at?'<button type="button" data-scl375="s-unapprove"'+(Q.busy?' disabled':'')+'>Αναίρεση έγκρισης</button>':'<button type="button" class="go" data-scl375="s-approve"'+(Q.busy?' disabled':'')+'>Έγκριση για την εταιρία</button>'))+'</div>':'')+'</div>';
+ return '<h2>Στησίματα '+['Ιανουαρίου','Φεβρουαρίου','Μαρτίου','Απριλίου','Μαΐου','Ιουνίου','Ιουλίου','Αυγούστου','Σεπτεμβρίου','Οκτωβρίου','Νοεμβρίου','Δεκεμβρίου'][m-1]+'</h2><p class="lead">Τις φωτογραφίες των συμφωνιών σου τις ελέγχεις και τις εγκρίνεις εσύ. Η εταιρία τις βλέπει μόνο μετά την έγκρισή σου. Τη θέση Pharmaplus την εγκρίνει η Pharmaplus.</p>'+(Q.err?'<p class="err" role="alert" style="margin-bottom:10px">'+E(Q.err)+'</p>':'')+
+  '<div class="box">'+(cur.length?cur.map(row).join(''):'<div class="empty">Δεν έχει δηλωθεί ακόμα στήσιμο αυτόν τον μήνα. Δηλώνεται από τη σελίδα της ομάδας, με φωτογραφία.</div>')+'</div>'+(old.length?'<details><summary>Προηγούμενοι μήνες ('+old.length+')</summary><div class="box">'+old.map(row).join('')+'</div></details>':'');}
+function drawSetups(){const h=host();let s=document.getElementById('scl375Setups');if(!h||Q.state!=='ok'){if(s&&Q.state==='off')s.remove();return;}
+ if(!s){s=document.createElement('section');s.id='scl375Setups';s.className='scl375';h.insertAdjacentElement('afterend',s);}else if(s.previousElementSibling!==h)h.insertAdjacentElement('afterend',s);
+ const open=!!(s.querySelector('details')||{}).open;s.innerHTML=setupsHTML();if(open&&s.querySelector('details'))s.querySelector('details').open=true;}
+function viewer(url,title){closeView();const v=document.createElement('div');v.className='scl375-view';v.innerHTML='<div><span>'+E(title)+'</span><button type="button">Κλείσιμο</button></div><img alt="Φωτογραφία στησίματος">';v.querySelector('img').src=url;v.addEventListener('click',e=>{if(e.target===v||e.target.tagName==='BUTTON')closeView();});document.body.appendChild(v);}
+function closeView(){const v=document.querySelector('.scl375-view');if(v)v.remove();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeView();});
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#scl375Setups [data-scl375]');if(!b)return;const row=b.closest('.row'),a=b.dataset.scl375,y=+row.dataset.y,m=+row.dataset.m,pos=row.dataset.pos,r=(Q.rows||[]).find(x=>x.year===y&&x.month===m&&x.position_id===pos);if(!r)return;
+ if(a==='s-photo'){try{Q.err='';const u=(typeof SUPABASE_URL!=='undefined'?SUPABASE_URL:'')+'/functions/v1/scl375-photo',k=typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:'';const f=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',apikey:k,Authorization:'Bearer '+k},body:JSON.stringify({action:'get',link:token(),year:y,month:m,position_id:pos})});const j=await f.json().catch(()=>null);if(!f.ok||!j||!j.url)throw Error((j&&j.message)||'Δεν άνοιξε η φωτογραφία.');viewer(j.url,posName(pos)+' · '+MN[m-1]);}catch(er){Q.err=er.message;drawSetups();}return;}
+ if((a==='s-approve'||a==='s-unapprove')&&!Q.busy){Q.busy=true;Q.err='';drawSetups();try{const d=await rpc('scl375_ph_setup_approve',{p_token:token(),p_year:y,p_month:m,p_position_id:pos,p_on:a==='s-approve'});r.approved_at=d.approved_at;r.approved_by=d.approved_by;}catch(er){Q.err=er.message||'Δεν αποθηκεύτηκε.';}Q.busy=false;drawSetups();}});
 function draw(){const h=host();let s=document.getElementById('scl375People');
  if(!h||R.state==='off'||R.state==='idle'||(R.state==='loading'&&!R.people)){if(s&&R.state==='off')s.remove();return;}
- if(!s){s=document.createElement('section');s.id='scl375People';s.className='scl375';h.insertAdjacentElement('afterend',s);}
- else if(s.previousElementSibling!==h)h.insertAdjacentElement('afterend',s);
+ if(!s){s=document.createElement('section');s.id='scl375People';s.className='scl375';(document.getElementById('scl375Setups')||h).insertAdjacentElement('afterend',s);}
+ else{const anchor=document.getElementById('scl375Setups')||h;if(s.previousElementSibling!==anchor)anchor.insertAdjacentElement('afterend',s);}
  const inp=s.querySelector('input'),foc=inp&&document.activeElement===inp,pos=foc?inp.selectionStart:0,open=!!(s.querySelector('details')||{}).open;
  s.innerHTML=html();if(open&&s.querySelector('details'))s.querySelector('details').open=true;
  if(foc){const n=s.querySelector('input');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}}}
-function decorate(){if(!document.body.classList.contains('scl295-pharmacy')||!token())return;if(R.state==='idle')load();else if(host()&&!document.getElementById('scl375People'))draw();}
+function decorate(){if(!document.body.classList.contains('scl295-pharmacy')||!token())return;if(Q.state==='idle')loadSetups();else if(host()&&Q.state==='ok'&&!document.getElementById('scl375Setups'))drawSetups();if(R.state==='idle')load();else if(host()&&!document.getElementById('scl375People'))draw();}
 async function copy(text){try{await navigator.clipboard.writeText(text);return true;}catch(e){try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return ok;}catch(_){return false;}}}
 document.addEventListener('input',e=>{const s=e.target.closest&&e.target.closest('#scl375People');if(s&&e.target.matches('input[type=text]')){R.name=e.target.value;if(R.err){R.err='';draw();}}});
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('#scl375People .new')){e.preventDefault();add();}});
@@ -54894,6 +54917,102 @@ document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.c
  if(a==='open-staff'){root.open(base()+'spacecollab_staff.html?s='+encodeURIComponent(token()),'_blank','noopener');}});
 try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl375-people',decorate);}catch(e){}
 let n=0;const iv=setInterval(()=>{decorate();if(++n>40)clearInterval(iv);},500);
-new MutationObserver(()=>{if(R.state!=='idle'&&R.state!=='off'&&host()&&!document.getElementById('scl375People'))draw();}).observe(document.documentElement,{childList:true,subtree:true});
+new MutationObserver(()=>{if(Q.state==='ok'&&host()&&!document.getElementById('scl375Setups'))drawSetups();if(R.state!=='idle'&&R.state!=='off'&&host()&&!document.getElementById('scl375People'))draw();}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
+<style id="scl377-style">
+/* v338.6 · scl377 · Κεντρικά «Στησίματα» (Κ2γ). Μόνο προσθήκες· αν η βάση δεν έχει το SCL377 δεν εμφανίζεται τίποτα. */
+.scl377{--c-ink:#101114;--c-mut:#6b6f7b;--c-line:rgba(60,60,67,.14);--c-fill:rgba(120,120,128,.1);--c-card:#fff;--c-ok:#1f9d5b;--c-wait:#b25e00;--c-pp:#00898b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--c-ink);padding:8px 4px 40px;max-width:1180px}
+[data-scl324-theme="dark"] .scl377{--c-ink:#f3f4f7;--c-mut:#a0a4b0;--c-line:rgba(160,160,170,.24);--c-fill:rgba(160,160,170,.14);--c-card:#1d1f26;--c-wait:#ffb340}
+#scl212Page-setups .scl377 h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.03em}
+#scl212Page-setups .scl377 .top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+#scl212Page-setups .scl377 .mon{display:flex;align-items:center;gap:6px}#scl212Page-setups .scl377 .mon b{min-width:170px;text-align:center;font-size:16px}
+#scl212Page-setups .scl377 button{font:inherit;cursor:pointer;border:0;min-height:36px;padding:0 13px;border-radius:10px;font-size:13.5px;font-weight:700;background:var(--c-fill);color:var(--c-ink)}
+#scl212Page-setups .scl377 button.go{background:var(--c-ink);color:var(--c-card)}#scl212Page-setups .scl377 button.lnk{background:none;padding:0 4px;color:#245ad7;font-weight:600}[data-scl324-theme="dark"] #scl212Page-setups .scl377 button.lnk{color:#8fb0ff}#scl212Page-setups .scl377 button[disabled]{opacity:.5;cursor:default}
+#scl212Page-setups .scl377 .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+#scl212Page-setups .scl377 .tile{background:var(--c-card);border:1px solid var(--c-line);border-radius:16px;padding:14px 16px}#scl212Page-setups .scl377 .tile b{display:block;font-size:26px;font-weight:800;letter-spacing:-.03em}#scl212Page-setups .scl377 .tile span{display:block;margin-top:2px;color:var(--c-mut);font-size:13px}
+#scl212Page-setups .scl377 .bar{height:6px;border-radius:3px;background:var(--c-fill);margin-top:8px;overflow:hidden}#scl212Page-setups .scl377 .bar i{display:block;height:100%;background:var(--c-ink);border-radius:3px}
+#scl212Page-setups .scl377 .filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}#scl212Page-setups .scl377 .filters button[aria-pressed=true]{background:var(--c-ink);color:var(--c-card)}
+#scl212Page-setups .scl377 .ph{background:var(--c-card);border:1px solid var(--c-line);border-radius:18px;margin-bottom:12px;overflow:hidden}
+#scl212Page-setups .scl377 .ph-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;flex-wrap:wrap}#scl212Page-setups .scl377 .ph-h b{font-size:16px}#scl212Page-setups .scl377 .ph-h span{color:var(--c-mut);font-size:13px}
+#scl212Page-setups .scl377 .row{display:grid;grid-template-columns:44px minmax(0,1.3fr) minmax(0,1.2fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--c-line)}
+#scl212Page-setups .scl377 .tag{min-width:30px;height:30px;padding:0 6px;border-radius:9px;background:var(--c-ink);color:var(--c-card);display:inline-grid;place-items:center;font-weight:800;font-size:13px}#scl212Page-setups .scl377 .tag.pp{background:var(--c-pp);color:#fff}
+#scl212Page-setups .scl377 .w b{display:block;font-size:14.5px}#scl212Page-setups .scl377 .w span,.scl377 .s span{display:block;color:var(--c-mut);font-size:12.5px;margin-top:1px}
+#scl212Page-setups .scl377 .st{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}#scl212Page-setups .scl377 .st::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}#scl212Page-setups .scl377 .st.ok{color:var(--c-ok)}#scl212Page-setups .scl377 .st.wait{color:var(--c-wait)}#scl212Page-setups .scl377 .st.none{color:var(--c-mut)}
+#scl212Page-setups .scl377 .acts{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+#scl212Page-setups .scl377 .appr{font-size:12.5px;color:var(--c-ok);font-weight:700}
+#scl212Page-setups .scl377 .people{border-top:1px solid var(--c-line);padding:10px 16px 14px;background:var(--c-fill)}#scl212Page-setups .scl377 .pe{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px}#scl212Page-setups .scl377 .pe span{color:var(--c-mut);font-size:12.5px}
+#scl212Page-setups .scl377 .empty{padding:16px;color:var(--c-mut);font-size:14px}#scl212Page-setups .scl377 .note{color:var(--c-mut);font-size:13px;margin:10px 2px}
+#scl212Page-setups .scl377 .err{color:#c62828;font-weight:600;font-size:13.5px;margin:0 0 12px}
+.scl377-view{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.9);display:flex;flex-direction:column;padding:16px}.scl377-view div{display:flex;justify-content:space-between;align-items:center;color:#fff;font:700 15px -apple-system,"Segoe UI",Arial,sans-serif;padding:0 4px 12px}.scl377-view button{border:0;min-height:36px;padding:0 14px;border-radius:999px;background:rgba(255,255,255,.18);color:#fff;font:700 14px -apple-system,"Segoe UI",Arial,sans-serif;cursor:pointer}.scl377-view img{flex:1;min-height:0;object-fit:contain;width:100%}
+@media(max-width:820px){#scl212Page-setups .scl377 .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}#scl212Page-setups .scl377 .row{grid-template-columns:44px minmax(0,1fr)}#scl212Page-setups .scl377 .row .s,.scl377 .row .acts{grid-column:2;justify-content:flex-start}}
+
+#scl212Page-setups .scl377 .tiles{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important}#scl212Page-setups .scl377 .tile{min-width:0;width:auto;margin:0}#scl212Page-setups .scl377 .tag{background:var(--c-ink)!important;color:var(--c-card)!important;border:0}#scl212Page-setups .scl377 .tag.pp{background:var(--c-pp)!important;color:#fff!important}#scl212Page-setups .scl377 button{border:0!important;box-shadow:none;text-decoration:none}#scl212Page-setups .scl377 .row{grid-template-columns:44px minmax(0,1.2fr) minmax(0,1.2fr) minmax(0,1.5fr)}
+@media(max-width:820px){#scl212Page-setups .scl377 .tiles{grid-template-columns:repeat(2,minmax(0,1fr))!important}#scl212Page-setups .scl377 .row{grid-template-columns:44px minmax(0,1fr)}}
+#scl212Page-setups .scl377 .tag{width:auto;min-width:30px;max-width:44px;justify-self:start;border-radius:9px!important;padding:0 6px}
+#scl212Page-setups .scl377 button:not(.lnk):not(.go){background:var(--c-fill)!important;color:var(--c-ink)!important}#scl212Page-setups .scl377 button.go,#scl212Page-setups .scl377 .filters button[aria-pressed=true]{background:var(--c-ink)!important;color:var(--c-card)!important}#scl212Page-setups .scl377 button.lnk{background:none!important}
+#scl212Page-setups .scl377 .acts{flex-wrap:nowrap}#scl212Page-setups .scl377 .appr{text-align:right}
+#scl212Page-setups .scl377 .appr.no{color:var(--c-mut)}
+</style>
+<script id="scl377-hq-setups">
+(function(){
+'use strict';
+const root=window,$=id=>document.getElementById(id);
+const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const client=()=>(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:null;
+async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Error(r.error.message||String(r.error));return r.data;}
+const hqKey=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.hqKey)||'';}catch(e){return '';}};
+const MN=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'],MS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const now=new Date();
+const S=root.SCL377={y:now.getFullYear(),m:now.getMonth()+1,data:null,state:'idle',filter:'all',busy:false,err:'',people:{},open:{},view:null};
+const ICON='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>';
+const when=x=>{const t=new Date(x);return isNaN(t)?'':t.getDate()+' '+MS[t.getMonth()]+' '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0');};
+const kb=n=>n==null?'':(n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' MB':Math.round(n/1024)+' KB');
+const tagOf=q=>{const n=(String(q.id).match(/(\d+)$/)||[])[1]||'';return q.type==='hq'?'PP':q.type==='promo'?'P'+n:q.type==='exp'?'E'+n:n||'•';};
+const full=q=>!!(q.done&&q.done.photo);
+async function load(){const k=hqKey();if(!k||S.state==='loading')return;const first=!S.data;S.state='loading';
+ try{const d=await rpc('scl375_hq_setups',{p_key:k,p_year:S.y,p_month:S.m});if(!d||!Array.isArray(d.pharmacies))throw Error('x');S.data=d;S.state='ok';S.err='';}
+ catch(e){S.state=first?'off':'ok';if(!first)S.err='Δεν φόρτωσε. Δοκίμασε ξανά.';}
+ if(mount())render();}
+function mount(){if(!S.data)return false;
+ const tabs=document.querySelector('.scl212-tabs'),side=document.querySelector('#scl325Layout nav.side'),main=document.querySelector('#scl325Layout main.main');if(!tabs||!side||!main)return false;
+ if(!$('scl212Page-setups')){const p=document.createElement('div');p.id='scl212Page-setups';p.className='scl212-page';main.appendChild(p);}
+ if(!tabs.querySelector('[data-tab="setups"]')){const b=document.createElement('button');b.className='scl212-tab';b.dataset.tab='setups';b.dataset.bound212='1';b.textContent='Στησίματα';
+  b.addEventListener('click',()=>{try{if(typeof scl212SetTab==='function')scl212SetTab('setups');}catch(e){}render();load();});tabs.appendChild(b);}
+ if(!side.querySelector('[data-scl325-tab="setups"]')){const nb=document.createElement('button');nb.type='button';nb.className='nav-btn';nb.title='Στησίματα';nb.setAttribute('aria-label','Στησίματα');nb.dataset.scl325Tab='setups';
+  nb.innerHTML='<span class="nav-ico">'+ICON+'</span><span class="lbl">Στησίματα</span>';nb.addEventListener('click',()=>{const t=document.querySelector('.scl212-tabs [data-tab="setups"]');if(t)t.click();});side.insertBefore(nb,side.querySelector('.side-foot'));}
+ return true;}
+function rowHTML(ph,q){const d=q.done,ok=full(q),deal=q.kind==='deal';
+ return '<div class="row" data-ph="'+E(ph.id)+'" data-pos="'+E(q.id)+'"><span class="tag'+(q.type==='hq'?' pp':'')+'">'+E(tagOf(q))+'</span><div class="w"><b>'+E(q.what||q.title)+'</b><span>'+E(q.title)+(deal&&q.supplier?' · '+E(q.supplier):'')+'</span></div>'+
+  '<div class="s"><span class="st '+(ok?'ok':d?'wait':q.need?'wait':'none')+'">'+(ok?'Στήθηκε':d?'Λείπει φωτογραφία':q.need?'Εκκρεμεί':'Δεν θέλει στήσιμο')+'</span>'+(d?'<span>'+E(d.name)+' · '+E(when(d.at))+(d.bytes?' · '+kb(d.bytes):'')+'</span>':'')+'</div>'+
+  '<div class="acts">'+(ok?'<button type="button" data-scl377="photo">Φωτογραφία</button>':'')+(ok&&q.type==='hq'?(d.approved_at?'<span class="appr">Εγκρίθηκε · '+E(d.approved_by||'')+'</span><button type="button" class="lnk" data-scl377="unapprove"'+(S.busy?' disabled':'')+'>Αναίρεση</button>':'<button type="button" class="go" data-scl377="approve"'+(S.busy?' disabled':'')+'>Έγκριση</button>'):ok&&deal?'<span class="appr'+(d.approved_at?'':' no')+'">'+(d.approved_at?'Εγκρίθηκε από το φαρμακείο':'Περιμένει έγκριση του φαρμακείου')+'</span>':'')+'</div></div>';}
+function html(){const D=S.data,all=[];D.pharmacies.forEach(ph=>(ph.positions||[]).forEach(q=>{if(q.need||q.done)all.push(q);}));
+ const need=all.length,ok=all.filter(full).length,st=D.storage||{},pct=Math.min(100,(Number(st.bytes)||0)/1073741824*100);
+ const show=q=>(q.need||q.done)&&(S.filter==='all'||(S.filter==='open'&&!full(q))||(S.filter==='ok'&&full(q)));
+ const withRows=D.pharmacies.filter(ph=>(ph.positions||[]).some(show)),none=D.pharmacies.filter(ph=>!(ph.positions||[]).some(q=>q.need||q.done));
+ return '<div class="scl377"><div class="top"><h1>Στησίματα</h1><div class="mon"><button type="button" data-scl377="prev" aria-label="Προηγούμενος μήνας">‹</button><b>'+MN[D.month-1]+' '+D.year+'</b><button type="button" data-scl377="next" aria-label="Επόμενος μήνας">›</button></div></div>'+
+  (S.err?'<p class="err" role="alert">'+E(S.err)+'</p>':'')+
+  '<div class="tiles"><div class="tile"><b>'+need+'</b><span>θέσεις θέλουν στήσιμο</span></div><div class="tile"><b>'+ok+'</b><span>στήθηκαν με φωτογραφία</span></div><div class="tile"><b>'+(need-ok)+'</b><span>εκκρεμούν</span></div><div class="tile"><b>'+kb(Number(st.bytes)||0)+'</b><span>'+(Number(st.photos)||0)+' φωτογραφίες · από 1 GB</span><div class="bar"><i style="width:'+pct.toFixed(2)+'%"></i></div></div></div>'+
+  '<div class="filters">'+[['all','Όλα'],['open','Εκκρεμούν'],['ok','Στήθηκαν']].map(f=>'<button type="button" data-scl377="filter" data-f="'+f[0]+'" aria-pressed="'+(S.filter===f[0])+'">'+f[1]+'</button>').join('')+'</div>'+
+  (withRows.length?withRows.map(ph=>{const pe=S.people[ph.id],op=S.open[ph.id];return '<div class="ph"><div class="ph-h"><div><b>'+E(ph.name)+'</b> <span>'+E([ph.code,ph.area].filter(Boolean).join(' · '))+'</span></div><button type="button" class="lnk" data-scl377="people" data-ph="'+E(ph.id)+'">Άνθρωποι ('+(ph.people||0)+')</button></div>'+(ph.positions||[]).filter(show).map(q=>rowHTML(ph,q)).join('')+
+    (op?'<div class="people">'+(!pe?'<div class="pe"><span>Φορτώνει…</span></div>':pe.length?pe.map(x=>'<div class="pe" data-ph="'+E(ph.id)+'" data-id="'+E(x.id)+'"><div>'+E(x.name)+' <span>'+(x.role==='manager'?'Υπεύθυνος':'Υπάλληλος')+(x.revoked_at?' · ανακλήθηκε'+(x.revoked_by?' ('+E(x.revoked_by)+')':''):x.last_seen_at?' · τελευταία φορά '+E(when(x.last_seen_at)):' · δεν έχει μπει ακόμα')+'</span></div>'+(x.revoked_at?'':'<button type="button" class="lnk" data-scl377="revoke"'+(S.busy?' disabled':'')+'>'+(S.confirm===x.id?'Ναι, ανάκληση':'Ανάκληση')+'</button>')+'</div>').join(''):'<div class="pe"><span>Δεν υπάρχει ακόμα κανένας σύνδεσμος.</span></div>')+'</div>':'')+'</div>';}).join(''):'<div class="ph"><div class="empty">'+(need?'Δεν υπάρχει κάτι σε αυτό το φίλτρο.':'Δεν υπάρχει ακόμα στήσιμο για αυτόν τον μήνα.')+'</div></div>')+
+  (none.length?'<p class="note">Χωρίς πρόγραμμα αυτόν τον μήνα: '+none.length+(none.length===1?' φαρμακείο':' φαρμακεία')+'.</p>':'')+'</div>';}
+function render(){const p=$('scl212Page-setups');if(!p||!S.data)return;p.innerHTML=html();}
+function viewer(url,title){close();const v=document.createElement('div');v.className='scl377-view';v.innerHTML='<div><span>'+E(title)+'</span><button type="button">Κλείσιμο</button></div><img alt="Φωτογραφία στησίματος">';v.querySelector('img').src=url;v.addEventListener('click',e=>{if(e.target===v||e.target.tagName==='BUTTON')close();});document.body.appendChild(v);}
+function close(){const v=document.querySelector('.scl377-view');if(v)v.remove();}
+async function photo(ph,q){const u=(typeof SUPABASE_URL!=='undefined'?SUPABASE_URL:'')+'/functions/v1/scl375-photo',k=typeof SUPABASE_ANON_KEY!=='undefined'?SUPABASE_ANON_KEY:'';
+ const r=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json',apikey:k,Authorization:'Bearer '+k},body:JSON.stringify({action:'hq_get',key:hqKey(),pharmacy_id:ph.id,year:S.data.year,month:S.data.month,position_id:q.id})});const j=await r.json().catch(()=>null);if(!r.ok||!j||!j.url)throw Error((j&&j.message)||'Δεν άνοιξε η φωτογραφία.');viewer(j.url,ph.name+' · '+q.title+' · '+MN[S.data.month-1]);}
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#scl212Page-setups [data-scl377]');if(!b)return;const a=b.dataset.scl377;
+ if(a==='prev'||a==='next'){const d=a==='prev'?-1:1;let m=S.m+d,y=S.y;if(m<1){m=12;y--;}if(m>12){m=1;y++;}S.m=m;S.y=y;S.open={};load();return;}
+ if(a==='filter'){S.filter=b.dataset.f;render();return;}
+ if(a==='people'){const id=b.dataset.ph;S.open[id]=!S.open[id];render();if(S.open[id]&&!S.people[id]){try{const d=await rpc('scl375_hq_people',{p_key:hqKey(),p_pharmacy_id:id});S.people[id]=(d&&d.people)||[];}catch(er){S.people[id]=[];S.err='Δεν φόρτωσαν οι άνθρωποι.';}render();}return;}
+ if(a==='revoke'){const row=b.closest('.pe'),id=row.dataset.id,ph=row.dataset.ph;if(S.confirm!==id){S.confirm=id;render();return;}S.busy=true;render();try{const r=await rpc('scl375_hq_person_revoke',{p_key:hqKey(),p_id:id});S.people[ph]=(S.people[ph]||[]).map(x=>x.id===id?r:x);}catch(er){S.err=er.message;}S.busy=false;S.confirm=null;render();return;}
+ const row=b.closest('.row');if(!row)return;const ph=S.data.pharmacies.find(x=>String(x.id)===row.dataset.ph),q=ph&&(ph.positions||[]).find(x=>x.id===row.dataset.pos);if(!q)return;
+ if(a==='photo'){try{S.err='';await photo(ph,q);}catch(er){S.err=er.message;render();}return;}
+ if((a==='approve'||a==='unapprove')&&!S.busy){S.busy=true;S.err='';render();try{const r=await rpc('scl375_hq_setup_approve',{p_key:hqKey(),p_pharmacy_id:ph.id,p_year:S.data.year,p_month:S.data.month,p_position_id:q.id,p_on:a==='approve'});q.done.approved_at=r.approved_at;q.done.approved_by=r.approved_by;}catch(er){S.err=er.message;}S.busy=false;render();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});
+function tick(){if(!hqKey())return;if(S.state==='idle')load();else if(S.data&&!$('scl212Page-setups')){if(mount())render();}}
+try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl377-setups',tick);}catch(e){}
+let n=0;const iv=setInterval(()=>{tick();if(++n>40)clearInterval(iv);},500);
 })();
 </script>
