@@ -53751,6 +53751,12 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 .scl370-chip button{border:0;background:none;padding:0 0 0 2px;margin:0;min-height:0;color:var(--muted);font-size:13px;line-height:1;cursor:pointer}
 .scl370-chip button:hover{color:#c62828}
 .scl370-tagx{display:inline-flex;align-items:center;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:650;line-height:1.5;white-space:nowrap;border:1px solid transparent}
+.scl370-tagx.red{background:rgba(198,40,40,.13);color:#b3261e}
+.scl370-kvs{display:grid;gap:6px}
+.scl370-kv{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr);gap:12px;font-size:13.5px;line-height:1.45}
+.scl370-kv span{color:var(--muted)}
+.scl370-kv b{font-weight:600;color:var(--ink);overflow-wrap:anywhere}
+html[data-theme="dark"] .scl370-tagx.red,body.dark .scl370-tagx.red{color:#ff8a80}
 .scl370-tagx.ok{background:rgba(48,176,99,.14);color:#14633b}.scl370-tagx.warn{background:rgba(245,166,35,.18);color:#7a4b00}.scl370-tagx.mute{background:var(--fill,#f2f2f5);color:var(--muted)}.scl370-tagx.blue{background:color-mix(in srgb,var(--accent,#2459e0) 12%,transparent);color:var(--accent,#2459e0)}
 html[data-theme="dark"] .scl370-tagx.ok,body.dark .scl370-tagx.ok{color:#7ddba3}html[data-theme="dark"] .scl370-tagx.warn,body.dark .scl370-tagx.warn{color:#ffcf7a}
 #scl212Page-market .scl370-empty{padding:44px 12px;text-align:center;color:var(--muted);font-size:14.5px;line-height:1.5}
@@ -53814,12 +53820,12 @@ async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπά�
 const hqKey=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.hqKey)||'';}catch(e){return '';}};
 const isHQ=()=>document.body.classList.contains('scl-hq')&&!!hqKey();
 const $=id=>document.getElementById(id);
-const S=window.SCL370={ov:null,failed:false,busy:false,at:0,tab:'requests',q:'',b:{q:'',cat:'',state:'all',rows:[],total:0,busy:false,seq:0,err:false},drawn:''};
+const S=window.SCL370={ov:null,failed:false,busy:false,at:0,tab:'requests',q:'',b:{q:'',cat:'',state:'all',rows:[],total:0,busy:false,seq:0,err:false},drawn:'',rq:null,rqFailed:false,rqAt:0,rqLogs:{}};
 const ICON='<svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5"></path><path d="M5.5 10v8.5h13V10"></path><path d="M9 18.5v-5h6v5"></path><circle cx="12" cy="8.2" r=".6"></circle></svg>';
 const SEARCH='<svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>';
 const fmtDate=v=>{try{const d=new Date(v);return d.toLocaleDateString('el-GR',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '';}};
 const nf=n=>Number(n||0).toLocaleString('el-GR');
-const ERR={'MARKET_COMPANY:name':'Γράψε το όνομα της εταιρίας (2 έως 120 χαρακτήρες).','MARKET_COMPANY:person':'Γράψε το όνομα του υπευθύνου.','MARKET_COMPANY_EXISTS':'Υπάρχει ήδη εταιρία με αυτό το όνομα.','MARKET_COMPANY_INACTIVE':'Η εταιρία είναι ανενεργή. Ενεργοποίησέ την πρώτα.','MARKET_COMPANY_NOT_FOUND':'Η εταιρία δεν βρέθηκε. Πάτα Ανανέωση.'};
+const ERR={'MARKET_COMPANY:name':'Γράψε το όνομα της εταιρίας (2 έως 120 χαρακτήρες).','MARKET_COMPANY:person':'Γράψε το όνομα του υπευθύνου.','MARKET_COMPANY_EXISTS':'Υπάρχει ήδη εταιρία με αυτό το όνομα.','MARKET_COMPANY_INACTIVE':'Η εταιρία είναι ανενεργή. Ενεργοποίησέ την πρώτα.','MARKET_COMPANY_NOT_FOUND':'Η εταιρία δεν βρέθηκε. Πάτα Ανανέωση.','MARKET_COMPANY_HAS_REQUESTS':'Η εταιρία έχει αιτήματα θέσεων, που είναι αποδεικτικά και δεν σβήνονται. Κάν’ την ανενεργή.','MARKET_COMPANY_NOT_TEST':'Η εταιρία δεν είναι δοκιμαστική.','MARKET_REQ:reason':'Γράψε τον λόγο της ακύρωσης (έως 300 χαρακτήρες).','MARKET_REQ:not_found':'Το αίτημα δεν βρέθηκε. Πάτα Ανανέωση.'};
 function friendly(e){const m=String(e&&e.message||e||'');const t=/MARKET_BRAND_TAKEN:(.*)$/.exec(m);if(t)return 'Το Brand ανήκει ήδη σε άλλη εταιρία ('+t[1].trim()+').';for(const k in ERR)if(m.indexOf(k)>=0)return ERR[k];if(/πρόσβαση HQ/.test(m))return 'Η σύνδεση Κεντρικών έληξε. Μπες ξανά.';return 'Δεν έγινε. Δοκίμασε ξανά.';}
 function marketUrl(token){const u=new URL('spacecollab_market.html',location.href);u.search='';u.hash='';return u.toString()+'?k='+token;}
 function company(id){return ((S.ov&&S.ov.companies)||[]).find(c=>c.id===id)||null;}
@@ -53831,7 +53837,49 @@ async function load(force){
  S.busy=true;
  try{S.ov=await rpc('scl370_hq_overview',{p_hq_key:hqKey()});S.failed=false;}
  catch(e){S.failed=true;}
- finally{S.busy=false;S.at=Date.now();mount();render(true);if(!S.failed)loadPeople();}
+ finally{S.busy=false;S.at=Date.now();mount();render(true);if(!S.failed){loadPeople();loadDeals();}}
+}
+/* Κ3α: αιτήματα θέσεων. Αν η βάση δεν έχει ακόμα το Κ3α, η καρτέλα δεν εμφανίζεται. */
+async function loadDeals(){
+ if(!S.ov)return;
+ try{S.rq=await rpc('scl374_hq_requests',{p_hq_key:hqKey()});S.rqFailed=false;}catch(e){S.rqFailed=true;if(/Could not find the function|PGRST202|does not exist/.test(String(e&&e.message)))S.rq=null;}
+ S.rqAt=Date.now();mount();render(true);
+}
+const MN374=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const eur374=n=>{const v=Number(n)||0;return (Math.round(v)===v?nf(v):v.toFixed(2).replace('.',','))+' €';};
+const dt374=x=>{const t=new Date(x);return isNaN(t)?'':t.toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+t.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',hour12:false});};
+const WHY374={month:'Ο μήνας δεν είναι πια διαθέσιμος',other_months:'Προτιμά άλλους μήνες',fit:'Δεν ταιριάζει με το φαρμακείο αυτή την περίοδο',other:'Άλλος λόγος',time:'Δεν απάντησε το φαρμακείο μέσα στην προθεσμία',closed:'Κάποιος μήνας κλείστηκε στο μεταξύ',unavailable:'Η θέση δεν είναι πια στο Market',company_inactive:'Η εταιρία έγινε ανενεργή',hq:'Ακύρωση από τα Κεντρικά'};
+const ST374={pending:['Περιμένει το φαρμακείο','warn'],declined:['Δεν δέχτηκε','mute'],expired:['Έληξε','mute'],withdrawn:['Το απέσυρε η εταιρία','mute'],cancelled:['Ακυρώθηκε','mute'],accepted:['Δέχτηκε','ok']};
+const ACT374={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξε το φαρμακείο',declined:'Το φαρμακείο δεν δέχτηκε',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Το φαρμακείο δέχτηκε',answer_seen:'Η εταιρία είδε την απάντηση'};
+function deal(id){const d=S.rq||{};return (d.pending||[]).concat(d.unseen||[],d.recent||[]).find(r=>r.id===id)||null;}
+function dealsHTML(){
+ const d=S.rq||{},P=d.pending||[],old=Date.now()-3*864e5,U=(d.unseen||[]).filter(r=>new Date(r.closed_at).getTime()<old),R=d.recent||[];
+ const row=(r,mode)=>{const st=ST374[r.status]||[r.status,'mute'],left=Number(r.days_left)||0,hot=r.status==='pending'&&left<=2;
+  return '<div class="scl370-row'+(r.is_test?' off':'')+'"><div><strong>'+E(r.pharmacy.name)+'</strong><small>'+E([r.pharmacy_code,r.pharmacy.area].filter(Boolean).join(' · '))+'</small><small>'+E(r.no)+' · στάλθηκε '+fmtDate(r.created_at)+'</small></div>'+
+   '<div><span class="scl370-sub" style="margin:0"><b style="color:var(--ink)">'+E(r.company)+' · '+E((r.brands||[]).join(' + '))+'</b></span><small>'+E(r.position.title)+' · '+E((r.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+' · '+E(eur374(r.total))+'</small>'+
+   '<div class="scl370-chips" style="margin-top:6px">'+(r.status==='pending'?'<span class="scl370-tagx '+(hot?'red':'warn')+'">'+(left<=0?'Λήγει σήμερα':left===1?'Μένει 1 ημέρα':'Μένουν '+left+' ημέρες')+'</span>'+(r.seen_pharmacy_at?'<span class="scl370-tagx mute">Το άνοιξε το φαρμακείο</span>':'<span class="scl370-tagx warn">Δεν το έχει ανοίξει</span>'):'<span class="scl370-tagx '+st[1]+'">'+E(st[0])+'</span>'+(mode==='unseen'?'<span class="scl370-tagx red">Η εταιρία δεν το έχει δει · '+fmtDate(r.closed_at)+'</span>':''))+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div></div>'+
+   '<div class="scl370-acts"><button type="button" class="btn line" data-scl370="deal" data-id="'+E(r.id)+'">Άνοιγμα</button></div></div>';};
+ if(!P.length&&!U.length&&!R.length)return '<div class="scl370-empty"><b>Δεν υπάρχει ακόμα αίτημα θέσης</b>Όταν μια εταιρία ζητήσει θέση από φαρμακείο, θα το δεις εδώ με την προθεσμία του.</div>';
+ return (P.length?'<div class="scl370-old" style="margin-top:0">Περιμένουν απάντηση από φαρμακείο · '+P.length+'</div>'+P.map(r=>row(r,'')).join(''):'<div class="scl370-empty"><b>Κανένα αίτημα δεν περιμένει</b></div>')+
+  (U.length?'<div class="scl370-old">Απαντήσεις που δεν είδε η εταιρία πάνω από 3 ημέρες · πάρε τηλέφωνο</div>'+U.map(r=>row(r,'unseen')).join(''):'')+
+  (R.length?'<div class="scl370-old">Έκλεισαν</div>'+R.map(r=>row(r,'')).join(''):'');
+}
+async function dealModal(id,msg){
+ const r=deal(id);if(!r)return;const st=ST374[r.status]||[r.status,'mute'],c=r.charge||{},f=r.position.format,pend=r.status==='pending';
+ if(!Array.isArray(S.rqLogs[id])){try{const x=await rpc('scl374_hq_request_log',{p_hq_key:hqKey(),p_id:id});S.rqLogs[id]=x.log||[];}catch(e){S.rqLogs[id]=[];}}
+ const L=S.rqLogs[id],kv=(k,v)=>v?'<div class="scl370-kv"><span>'+E(k)+'</span><b>'+E(v)+'</b></div>':'';
+ const plans=(window.MKPlan?(r.plans||[]).filter(g=>g[f]):[]).map(g=>'<div style="display:flex;gap:14px;align-items:flex-start;margin-top:8px"><div style="flex:none;width:'+(f==='vertical'?'96px':'150px')+';padding:6px;border-radius:10px;background:#fff">'+window.MKPlan.svg(g[f].shelves,f,{title:g[f].name,screen:true})+'</div><div><b>'+E(g[f].name)+'</b><div class="scl370-sub" style="margin:2px 0 0">'+E((g.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+'</div></div></div>').join('');
+ const m=openModal('Αίτημα '+r.no,E(r.company)+' → '+E(r.pharmacy.name),
+  (msg?'<div class="scl370-note">'+E(msg)+'</div>':'')+
+  '<div class="scl370-chips"><span class="scl370-tagx '+st[1]+'">'+E(st[0])+(r.reason&&WHY374[r.reason]?' · '+E(WHY374[r.reason]):'')+'</span>'+(pend?'<span class="scl370-tagx '+((Number(r.days_left)||0)<=2?'red':'warn')+'">Απάντηση έως '+fmtDate(r.answer_by)+'</span>':'')+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div>'+
+  '<div class="scl370-sec">Το αίτημα</div><div class="scl370-kvs">'+kv('Εταιρία',r.company)+kv('Το έστειλε',r.sender)+kv('Φαρμακείο',r.pharmacy.name+(r.pharmacy_code?' · '+r.pharmacy_code:''))+kv('Θέση',r.position.title+' · '+(f==='vertical'?'κάθετη':'οριζόντια'))+kv('Μήνες',(r.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+kv('Brand',(r.brands||[]).join(' + '))+kv('Θέμα',r.theme)+kv('Θέμα στους μήνες',(r.months||[]).length>1?(r.same_theme?'Ίδιο σε όλους':'Αλλάζει κάθε μήνα'):'')+kv('Μήνυμα',r.message)+'</div>'+
+  '<div class="scl370-sec">Χρήματα · η χρέωση φαρμακείου δεν φαίνεται στην εταιρία</div><div class="scl370-kvs">'+kv('Η εταιρία πληρώνει το φαρμακείο',eur374(r.total)+' ('+(r.months||[]).length+' × '+eur374(r.price_month)+')')+kv('Χρέωση φαρμακείου αν δεχτεί',eur374(c.total)+' (συμφωνία '+eur374(c.deal)+' + Market '+eur374(c.market)+(Number(c.themes)>1?', × '+c.themes+' θέματα':'')+')')+kv('Μένουν στο φαρμακείο',eur374(c.net))+'</div>'+
+  (plans?'<div class="scl370-sec">Πλανόγραμμα ραφιών</div>'+plans:'')+
+  (r.hq_note?'<div class="scl370-sec">Σημείωση (μόνο Κεντρικά)</div><div class="scl370-msg">'+E(r.hq_note)+'</div>':'')+
+  '<div class="scl370-sec">Ιστορικό · δεν αλλάζει και δεν σβήνεται</div><div class="scl370-kvs">'+(L.length?L.map(l=>'<div class="scl370-kv"><span>'+E(dt374(l.at))+'</span><b>'+E(ACT374[l.action]||l.action)+(l.actor?' · '+E(l.actor):'')+(l.detail&&l.detail.reason&&WHY374[l.detail.reason]?' · '+E(WHY374[l.detail.reason]):'')+(l.detail&&l.detail.note?' · «'+E(l.detail.note)+'»':'')+'</b></div>').join(''):'<div class="scl370-sub">Δεν υπάρχει ακόμα</div>')+'</div>'+
+  (pend?'<div class="scl370-sec">Ακύρωση από τα Κεντρικά</div><label class="scl370-f"><span>Λόγος (υποχρεωτικός· τον βλέπουν μόνο τα Κεντρικά. Εταιρία και φαρμακείο βλέπουν «Ακυρώθηκε από την Pharmaplus»)</span><textarea data-f="cancel" maxlength="300"></textarea></label>':''),
+  '<span class="scl370-err" role="alert"></span>'+(pend?'<button type="button" class="scl370-b red" data-scl370="deal-cancel" data-id="'+E(r.id)+'">Ακύρωση αιτήματος</button>':'')+'<button type="button" class="scl370-b pri" data-scl370="close">Κλείσιμο</button>',true);
+ m._deal=id;const fb=m.querySelector('footer .pri');if(fb)fb.focus({preventScroll:true});const mb=m.querySelector('.scl370-mbody');if(mb)mb.scrollTop=0;
 }
 function mount(){
  if(!S.ov)return false; /* η σελίδα εμφανίζεται μόνο όταν η βάση έχει το Κ2 */
@@ -53845,17 +53893,17 @@ function mount(){
   nb.innerHTML='<span class="nav-ico">'+ICON+'</span><span class="lbl">Market</span><span class="nav-badge scl370-nav-badge" id="scl370Badge" hidden></span>';
   nb.addEventListener('click',()=>{const t=document.querySelector('.scl212-tabs [data-tab="market"]');if(t)t.click();});
   side.insertBefore(nb,side.querySelector('.side-foot'));}
- const bd=$('scl370Badge'),n=Number(S.ov.counts&&S.ov.counts.requests_new||0);if(bd){bd.textContent=String(n);bd.hidden=!n;}
+ const bd=$('scl370Badge'),n=Number(S.ov.counts&&S.ov.counts.requests_new||0)+Number(S.rq&&S.rq.counts&&((S.rq.counts.urgent||0)+(S.rq.counts.unseen||0))||0);if(bd){bd.textContent=String(n);bd.hidden=!n;}
  return true;
 }
 function active(){const p=$('scl212Page-market');return !!(p&&p.classList.contains('active'));}
 
 function shellHTML(){
  const c=S.ov.counts||{},seg=(k,l,n)=>'<button type="button" data-scl370="tab" data-tab="'+k+'" aria-pressed="'+(S.tab===k)+'"'+(S.tab===k?' class="primary"':'')+'>'+l+' ('+nf(n)+')</button>';
- return '<div class="pagehead"><div><div class="eyebrow">Κεντρικά · SpaceCoLLab Market</div><h2>Market</h2><p class="lede">Αιτήματα πληροφοριών, εταιρίες και τα Brands τους.</p></div>'+
+ return '<div class="pagehead"><div><div class="eyebrow">Κεντρικά · SpaceCoLLab Market</div><h2>Market</h2><p class="lede">Εταιρίες που ζητούν πληροφορίες, αιτήματα θέσεων προς φαρμακεία, εταιρίες και τα Brands τους.</p></div>'+
   '<div class="btnrow"><button type="button" class="btn primary" data-scl370="company-new">Νέα εταιρία</button><button type="button" class="btn line" data-scl370="reload">Ανανέωση</button></div></div>'+
-  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Αιτήματα',c.requests_new)+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
-  (S.tab==='requests'?'':'<label class="search">'+SEARCH+'<input id="scl370Search" type="search" autocomplete="off" aria-label="Αναζήτηση" placeholder="'+(S.tab==='brands'?'Γράψε όνομα Brand':'Όνομα εταιρίας, ΑΦΜ ή Brand')+'" value="'+E(S.tab==='brands'?S.b.q:S.q)+'"></label>')+
+  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Ζητούν πληροφορίες',c.requests_new)+(S.rq?seg('deals','Αιτήματα θέσεων',S.rq.counts&&S.rq.counts.pending):'')+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
+  (S.tab==='requests'||S.tab==='deals'?'':'<label class="search">'+SEARCH+'<input id="scl370Search" type="search" autocomplete="off" aria-label="Αναζήτηση" placeholder="'+(S.tab==='brands'?'Γράψε όνομα Brand':'Όνομα εταιρίας, ΑΦΜ ή Brand')+'" value="'+E(S.tab==='brands'?S.b.q:S.q)+'"></label>')+
   '</div><div class="scl370-body" id="scl370Body"></div></section>';
 }
 function requestsHTML(){
@@ -53864,7 +53912,7 @@ function requestsHTML(){
   '<div>'+(r.brands_text?'<span class="scl370-sub" style="margin:0"><b style="color:var(--ink)">Brands:</b> '+E(r.brands_text)+'</span>':'')+(r.message?'<div class="scl370-msg">'+E(r.message)+'</div>':'')+(!r.brands_text&&!r.message?'<span class="scl370-sub" style="margin:0">Χωρίς μήνυμα</span>':'')+'</div>'+
   '<div class="scl370-acts">'+(r.status==='new'?'<button type="button" class="btn primary" data-scl370="company-new" data-request="'+E(r.id)+'">Δημιουργία εταιρίας</button><button type="button" class="btn line" data-scl370="request-set" data-id="'+E(r.id)+'" data-status="dismissed">Δεν ενδιαφέρει</button>'
    :'<span class="scl370-tagx '+(r.status==='done'?'ok':'mute')+'">'+(r.status==='done'?'Έγινε εταιρία':'Δεν ενδιαφέρει')+'</span>'+(r.status==='dismissed'?'<button type="button" class="btn line" data-scl370="request-set" data-id="'+E(r.id)+'" data-status="new">Επαναφορά</button>':''))+'</div></div>';
- return (nw.length?nw.map(row).join(''):'<div class="scl370-empty"><b>Κανένα αίτημα δεν περιμένει</b>Όταν μια εταιρία συμπληρώσει τη φόρμα στο Market, θα τη δεις εδώ.</div>')+
+ return (nw.length?nw.map(row).join(''):'<div class="scl370-empty"><b>Καμία εταιρία δεν περιμένει πληροφορίες</b>Όταν μια εταιρία συμπληρώσει τη φόρμα στο Market, θα τη δεις εδώ.</div>')+
   (old.length?'<div class="scl370-old">Παλαιότερα</div>'+old.map(row).join(''):'');
 }
 function companiesHTML(){
@@ -53875,7 +53923,7 @@ function companiesHTML(){
  return cs.map(c=>{const bs=c.brands||[],p=c.person||{};
   return '<div class="scl370-row'+(c.active?'':' off')+'"><div><strong>'+E(c.name)+'</strong><small>'+E([c.legal_name,c.vat?'ΑΦΜ '+c.vat:''].filter(Boolean).join(' · ')||'Χωρίς στοιχεία τιμολόγησης')+'</small><small>'+E([p.full_name,p.email,p.phone].filter(Boolean).join(' · '))+'</small></div>'+
    '<div><div class="scl370-chips">'+(bs.length?bs.slice(0,6).map(b=>'<span class="scl370-chip">'+E(b.name)+'</span>').join('')+(bs.length>6?'<span class="scl370-chip more">+'+(bs.length-6)+' ακόμα</span>':''):'<span class="scl370-tagx warn">Χωρίς Brands</span>')+'</div>'+
-   '<div class="scl370-chips" style="margin-top:8px">'+accessTag(c)+'</div></div>'+
+   '<div class="scl370-chips" style="margin-top:8px">'+accessTag(c)+(c.is_test?'<span class="scl370-tagx mute">Δοκιμαστική</span>':'')+(Number(c.requests)?'<span class="scl370-tagx mute">'+c.requests+' '+(Number(c.requests)===1?'αίτημα':'αιτήματα')+'</span>':'')+'</div></div>'+
    '<div class="scl370-acts"><button type="button" class="btn line" data-scl370="brands" data-id="'+E(c.id)+'">Brands ('+bs.length+')</button>'+
    (c.active?'<button type="button" class="btn '+(c.link?'line':'primary')+'" data-scl370="link" data-id="'+E(c.id)+'">Πρόσβαση</button>':'')+
    '<button type="button" class="btn line" data-scl370="company-edit" data-id="'+E(c.id)+'">Στοιχεία</button></div></div>';}).join('');
@@ -53899,7 +53947,7 @@ async function searchBrands(more){
  catch(e){if(seq!==B.seq)return;B.err=true;}
  finally{if(seq===B.seq){B.busy=false;drawBody();}}
 }
-function drawBody(){const b=$('scl370Body');if(!b)return;b.innerHTML=S.tab==='requests'?requestsHTML():S.tab==='companies'?companiesHTML():brandsHTML();}
+function drawBody(){const b=$('scl370Body');if(!b)return;b.innerHTML=S.tab==='requests'?requestsHTML():S.tab==='deals'&&S.rq?dealsHTML():S.tab==='companies'?companiesHTML():brandsHTML();}
 function render(shell){
  const p=$('scl212Page-market');if(!p||!S.ov)return;
  if(shell||!$('scl370Body')){const had=document.activeElement&&document.activeElement.id==='scl370Search';p.innerHTML=shellHTML();if(had){const i=$('scl370Search');if(i){i.focus();try{i.setSelectionRange(i.value.length,i.value.length);}catch(e){}}}}
@@ -53929,7 +53977,8 @@ function companyModal(c,rq){
   '<div class="scl370-sec">Υπεύθυνος επικοινωνίας</div><div class="scl370-grid2">'+fld('p.full_name','Ονοματεπώνυμο',vp.full_name)+fld('p.role','Ρόλος',vp.role,'π.χ. Trade marketing')+fld('p.email','Email',vp.email,'','email')+fld('p.phone','Τηλέφωνο',vp.phone,'','tel')+'</div>'+
   '<div class="scl370-sec">Στοιχεία τιμολόγησης · προαιρετικά τώρα</div>'+fld('legal_name','Επωνυμία',v.legal_name)+'<div class="scl370-grid2">'+fld('vat','ΑΦΜ',v.vat)+fld('tax_office','ΔΟΥ',v.tax_office)+'</div>'+fld('address','Διεύθυνση έδρας',v.address)+fld('billing_email','Email λογιστηρίου',v.billing_email,'','email')+
   '<label class="scl370-f"><span>Σημειώσεις (τις βλέπουν μόνο τα Κεντρικά)</span><textarea data-f="notes">'+E(v.notes||'')+'</textarea></label>'+
-  (isNew?'':'<div class="scl370-note">'+(c.active?'Απενεργοποίηση: ο σύνδεσμός της σταματά αμέσως, τα Brands της μένουν δικά της. Διαγραφή: σβήνει οριστικά η εταιρία και ο σύνδεσμός της, και τα Brands της ελευθερώνονται.':'Η εταιρία είναι ανενεργή. Με την ενεργοποίηση θα χρειαστεί νέος σύνδεσμος.')+'</div>'),
+  (isNew||!S.rq?'':'<div class="scl370-sec">Δοκιμές</div><div class="scl370-note"><b>'+(c.is_test?'Δοκιμαστική εταιρία.':'Κανονική εταιρία.')+'</b> '+(c.is_test?'Τα αιτήματά της δεν μετράνε στις λίστες και μπορούν να σβηστούν.':'Αν τη σημειώσεις δοκιμαστική, τα αιτήματά της δεν θα μετράνε και θα μπορούν να σβηστούν. Γίνεται μόνο πριν στείλει το πρώτο αίτημα.')+'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+(Number(c.requests)&&!c.is_test?'':'<button type="button" class="scl370-b" data-scl370="company-test" data-id="'+E(c.id)+'" data-on="'+(c.is_test?'0':'1')+'"'+(Number(c.requests)?' disabled title="Σβήσε πρώτα τα δοκιμαστικά αιτήματα"':'')+'>'+(c.is_test?'Κάν’ την κανονική':'Σημείωσε ως δοκιμαστική')+'</button>')+(c.is_test&&Number(c.requests)?'<button type="button" class="scl370-b red" data-scl370="test-purge" data-id="'+E(c.id)+'">Σβήσε τα δοκιμαστικά αιτήματα ('+c.requests+')</button>':'')+'</div></div>')+
+  (isNew?'':'<div class="scl370-note">'+(c.active?'Απενεργοποίηση: ο σύνδεσμός της σταματά αμέσως, τα Brands της μένουν δικά της. Διαγραφή: σβήνει οριστικά η εταιρία και ο σύνδεσμός της, και τα Brands της ελευθερώνονται. Εταιρία με αιτήματα θέσεων δεν σβήνεται, μόνο απενεργοποιείται.':'Η εταιρία είναι ανενεργή. Με την ενεργοποίηση θα χρειαστεί νέος σύνδεσμος.')+'</div>'),
   '<span class="scl370-err" role="alert"></span>'+(isNew?'':'<button type="button" class="scl370-b red" data-scl370="company-delete" data-id="'+E(c.id)+'">Διαγραφή</button><button type="button" class="scl370-b red" data-scl370="company-active" data-id="'+E(c.id)+'" data-on="'+(c.active?'0':'1')+'">'+(c.active?'Απενεργοποίηση':'Ενεργοποίηση')+'</button>')+
   '<button type="button" class="scl370-b" data-scl370="close">Άκυρο</button><button type="button" class="scl370-b pri" data-scl370="company-save">'+(isNew?'Αποθήκευση και Brands':'Αποθήκευση')+'</button>');
  m._ctx={id:c?c.id:null,request_id:rq?rq.id:null};
@@ -54067,7 +54116,7 @@ document.addEventListener('click',e=>{
  const a=t.dataset.scl370;
  if(a==='close'){closeModal();return;}
  if(a==='tab'){S.tab=t.dataset.tab;render(true);return;}
- if(a==='reload'){S.b.rows=[];load(true);return;}
+ if(a==='reload'){S.b.rows=[];S.rqLogs={};load(true);return;}
  if(a==='company-new'){const r=t.dataset.request?(S.ov.requests||[]).find(x=>x.id===t.dataset.request):null;companyModal(null,r);return;}
  if(a==='company-edit'){companyModal(company(t.dataset.id));return;}
  if(a==='company-save'){companySave(t);return;}
@@ -54075,6 +54124,13 @@ document.addEventListener('click',e=>{
   t.disabled=true;rpc('scl370_hq_company_active',{p_hq_key:hqKey(),p_company_id:t.dataset.id,p_active:on}).then(c=>{putCompany(c);closeModal();render(true);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
  if(a==='company-delete'){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Σβήνει οριστικά';return;}
   t.disabled=true;rpc('scl371_hq_company_delete',{p_hq_key:hqKey(),p_company_id:t.dataset.id}).then(()=>{closeModal();S.b.rows=[];load(true);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
+ if(a==='deal'){dealModal(t.dataset.id);return;}
+ if(a==='deal-cancel'){const ta=modalEl&&modalEl.querySelector('[data-f="cancel"]'),er=modalEl&&modalEl.querySelector('.scl370-err'),why=ta?ta.value.trim():'';if(!why){if(er)er.textContent='Γράψε τον λόγο της ακύρωσης.';if(ta)ta.focus();return;}
+  if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Είναι οριστικό';return;}
+  t.disabled=true;const id=t.dataset.id;rpc('scl374_hq_request_cancel',{p_hq_key:hqKey(),p_id:id,p_reason:why}).then(async x=>{delete S.rqLogs[id];await loadDeals();dealModal(id,x&&x.ok?'Το αίτημα ακυρώθηκε. Εταιρία και φαρμακείο βλέπουν «Ακυρώθηκε από την Pharmaplus».':'Το αίτημα είχε ήδη κλείσει.');}).catch(x=>{if(er)er.textContent=friendly(x);t.disabled=false;});return;}
+ if(a==='company-test'){t.disabled=true;rpc('scl374_hq_company_test',{p_hq_key:hqKey(),p_company_id:t.dataset.id,p_test:t.dataset.on==='1'}).then(c=>{putCompany(c);companyModal(c);render(true);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=/HAS_REQUESTS/.test(String(x&&x.message))?'Η εταιρία έχει ήδη αιτήματα. Δεν αλλάζει πια.':friendly(x);t.disabled=false;});return;}
+ if(a==='test-purge'){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Σβήνονται οριστικά';return;}
+  t.disabled=true;const id=t.dataset.id;rpc('scl374_hq_test_purge',{p_hq_key:hqKey(),p_company_id:id}).then(async()=>{S.rqLogs={};await load(true);const c=company(id);if(c)companyModal(c);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
  if(a==='brands'){brandsModal(t.dataset.id);return;}
  if(a==='brand-add'){brandChange(t,true);return;}
  if(a==='brand-rm'){brandChange(t,false);return;}
@@ -54223,5 +54279,466 @@ function wrap(){const S=window.SCL350;if(!S||typeof S.guideCurrent!=='function'|
  const orig=S.guideCurrent;S.guideCurrent=function(){arm();return orig.apply(this,arguments);};S.guideCurrent.__scl372=true;return true;}
 if(!wrap()){let n=0;const t=setInterval(()=>{if(wrap()||++n>120)clearInterval(t);},500);}
 window.SCL372={toPdf:toPdf,makePdf:makePdf,makeZip:makeZip};
+})();
+</script>
+<style id="scl374-style">
+/* v337.0 · scl374 · SpaceCoLLab Market, Κ3α Αίτημα (πλευρά φαρμακείου). Μόνο προσθήκες· αν η βάση δεν έχει το Κ3α δεν εμφανίζεται τίποτα. */
+body.scl295-pharmacy .scl374-navbtn{position:relative}
+body.scl295-pharmacy .scl374-n{position:absolute;top:4px;right:4px;min-width:17px;height:17px;padding:0 4px;box-sizing:border-box;border-radius:9px;background:#e8590c;color:#fff;font:800 10.5px/17px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;text-align:center;font-style:normal;pointer-events:none}
+body.scl295-pharmacy .scl311-attention.scl374-has>.scl311-clear{display:none}
+body.scl295-pharmacy .scl374-task strong i{display:inline-block;margin-right:8px;padding:2px 8px;border-radius:999px;background:rgba(232,89,12,.14);color:#b34708;font-size:11px;font-weight:800;font-style:normal;letter-spacing:.02em;vertical-align:1px}
+body.scl295-pharmacy .scl374-task.hot small b{color:#c0281c}
+body.scl295-pharmacy .scl374-task button{flex:none}
+body.scl295-pharmacy .scl3231-card .scl374-tag{background:rgba(232,89,12,.14)!important;color:#b34708!important;font-weight:700}
+body.scl295-pharmacy .scl374-banner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:10px 0 0;padding:12px 14px;border-radius:14px;border:1.5px dashed #e8590c;background:rgba(232,89,12,.07);color:var(--text,#1d1d1f);font-size:13.5px;line-height:1.4}
+body.scl295-pharmacy .scl374-banner b{font-weight:650}
+body.scl295-pharmacy .scl374-banner small{display:block;font-size:12px;color:var(--muted,#6e6e73)}
+body.scl295-pharmacy .scl296-timeline-cell>.scl374-bar{position:absolute;z-index:3;bottom:5px;height:20px;min-height:0!important;box-sizing:border-box;padding:0 6px!important;border:1.5px dashed #e8590c!important;border-radius:7px!important;background:rgba(255,244,236,.96)!important;box-shadow:none!important;color:#b34708!important;font:800 10.5px/17px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif!important;letter-spacing:.01em;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+body.scl295-pharmacy .scl296-timeline-cell>.scl374-bar:hover{background:#ffe8d9!important}
+body.scl295-pharmacy .scl296-timeline-cell>.scl374-bar:focus-visible{outline:2px solid #e8590c;outline-offset:1px}
+body.scl295-pharmacy .scl374-leg{display:inline-flex;align-items:center;gap:7px;font-size:inherit;color:inherit;white-space:nowrap}
+body.scl295-pharmacy .scl374-leg i{display:inline-block;width:18px;height:11px;box-sizing:border-box;border:1.5px dashed #e8590c;border-radius:4px;background:rgba(232,89,12,.1)}
+.scl374-btn{min-height:40px;padding:0 16px;border:0;border-radius:12px;font:650 14px/1 inherit;font-family:inherit;cursor:pointer;background:var(--blue,#1f5fe0);color:#fff}
+.scl374-btn.ghost{background:rgba(120,120,128,.14);color:var(--text,#1d1d1f)}
+.scl374-btn.line{background:transparent;color:var(--blue,#1f5fe0);box-shadow:inset 0 0 0 1.5px var(--blue,#1f5fe0)}
+.scl374-btn.no{background:transparent;color:#c0281c;box-shadow:inset 0 0 0 1.5px rgba(192,40,28,.55)}
+.scl374-btn.danger{background:#c0281c;color:#fff}
+.scl374-btn:disabled{opacity:.45;cursor:not-allowed}
+.scl374-btn:focus-visible{outline:2px solid var(--blue,#1f5fe0);outline-offset:2px}
+.scl374-back{position:fixed;inset:0;z-index:99980;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.42)}
+.scl374-sheet{width:min(720px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;border-radius:20px;background:var(--surface,#fff);color:var(--text,#1d1d1f);box-shadow:0 24px 60px rgba(0,0,0,.3);font-size:14px;line-height:1.5;overflow:hidden}
+.scl374-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px 12px}
+.scl374-head h2{margin:0;font-size:20px;letter-spacing:-.015em;line-height:1.2}
+.scl374-head p{margin:4px 0 0;font-size:12.5px;color:var(--muted,#6e6e73)}
+.scl374-x{flex:none;width:36px;height:36px;min-height:0;padding:0;border:0;border-radius:18px;background:rgba(120,120,128,.14);color:var(--text,#1d1d1f);font-size:18px;line-height:1;cursor:pointer}
+.scl374-body{padding:4px 22px 18px;overflow:auto;display:grid;gap:12px}
+.scl374-foot{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line,rgba(0,0,0,.1));background:var(--surface,#fff)}
+.scl374-foot .grow{flex:1}
+.scl374-chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:750;white-space:nowrap}
+.scl374-chip.wait{background:rgba(232,89,12,.14);color:#b34708}
+.scl374-chip.off{background:rgba(120,120,128,.16);color:var(--muted,#6e6e73)}
+.scl374-chip.ok{background:rgba(48,176,99,.18);color:#14633b}
+.scl374-chip.hot{background:rgba(192,40,28,.14);color:#c0281c}
+.scl374-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;width:100%;padding:13px 14px;border:0;border-radius:14px;background:rgba(120,120,128,.08);color:inherit;font:inherit;text-align:left;cursor:pointer}
+.scl374-row:hover{background:rgba(120,120,128,.14)}
+.scl374-row b{display:block;font-size:14px;font-weight:650}
+.scl374-row small{display:block;font-size:12px;color:var(--muted,#6e6e73)}
+.scl374-sec{margin:6px 0 -4px;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted,#6e6e73);text-transform:uppercase}
+.scl374-empty{padding:26px 10px;text-align:center;color:var(--muted,#6e6e73)}
+.scl374-card{padding:14px;border-radius:14px;background:rgba(120,120,128,.08);display:grid;gap:8px}
+.scl374-card>h3{margin:0;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--muted,#6e6e73);text-transform:uppercase}
+.scl374-what b{font-size:17px;letter-spacing:-.01em}
+.scl374-what span{color:var(--muted,#6e6e73);font-size:12.5px;margin-left:8px}
+.scl374-tags{display:flex;gap:6px;flex-wrap:wrap}
+.scl374-tags span{padding:3px 10px;border-radius:999px;background:var(--surface,#fff);box-shadow:inset 0 0 0 1px rgba(120,120,128,.3);font-size:12px;font-weight:600}
+.scl374-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.scl374-facts div{padding:10px 12px;border-radius:12px;background:rgba(120,120,128,.08)}
+.scl374-facts small{display:block;font-size:11.5px;color:var(--muted,#6e6e73)}
+.scl374-facts b{font-size:14.5px}
+.scl374-clock{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.scl374-money{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;font-size:13.5px}
+.scl374-money span small{display:block;font-size:12px;color:var(--muted,#6e6e73)}
+.scl374-money b{text-align:right;font-variant-numeric:tabular-nums}
+.scl374-money .sum{padding-top:8px;border-top:1px solid var(--line,rgba(0,0,0,.12));font-size:16px;font-weight:750}
+.scl374-note{margin:0;font-size:12px;color:var(--muted,#6e6e73)}
+.scl374-plan{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.scl374-plan>div:first-child{flex:none;padding:8px;border-radius:12px;background:#fff}
+.scl374-plan>div:last-child{flex:1;min-width:220px}
+.scl374-plan .mkp-legend{margin:8px 0 0;padding:0;list-style:none;display:grid;gap:7px;font-size:12.5px;color:inherit}
+.scl374-plan .mkp-legend ul{margin:3px 0 0;padding:0;list-style:none}
+.scl374-plan .mkp-legend li li{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px;padding:1px 0}
+.scl374-plan .mkp-legend i{width:10px;height:10px;border-radius:3px}
+.scl374-plan .mkp-legend em{font-style:normal;color:var(--muted,#6e6e73);font-size:11.5px}
+.scl374-plan .mkp-legend>li>span,.scl374-plan .mkp-legend>li>em{margin-left:8px;color:var(--muted,#6e6e73)}
+.scl374-card ol{margin:0;padding-left:18px;display:grid;gap:4px;font-size:12.5px;line-height:1.45}
+.scl374-log{display:grid;grid-template-columns:128px minmax(0,1fr);gap:4px 12px;font-size:12.5px}
+.scl374-log span:nth-child(odd){color:var(--muted,#6e6e73);font-variant-numeric:tabular-nums}
+.scl374-opts{display:grid;gap:8px}
+.scl374-opt{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 14px;border:0;border-radius:12px;background:rgba(120,120,128,.08);color:inherit;font:600 14px/1.3 inherit;font-family:inherit;text-align:left;cursor:pointer}
+.scl374-opt::before{content:"";flex:none;width:18px;height:18px;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(120,120,128,.6)}
+.scl374-opt[aria-checked="true"]{box-shadow:inset 0 0 0 2px var(--blue,#1f5fe0);background:rgba(31,95,224,.08)}
+.scl374-opt[aria-checked="true"]::before{box-shadow:inset 0 0 0 5px var(--blue,#1f5fe0)}
+.scl374-sheet textarea{width:100%;box-sizing:border-box;min-height:70px;padding:10px 12px;border:0;border-radius:12px;background:rgba(120,120,128,.1);color:inherit;font:inherit;font-size:14px;resize:vertical}
+.scl374-msg{padding:10px 12px;border-radius:12px;background:rgba(31,95,224,.1);font-size:13px}
+.scl374-msg.err{background:rgba(192,40,28,.12);color:#c0281c}
+[data-scl324-theme="dark"] .scl374-chip.wait,[data-scl324-theme="dark"] body.scl295-pharmacy .scl374-task strong i,[data-scl324-theme="dark"] body.scl295-pharmacy .scl3231-card .scl374-tag{color:#ffb27d!important}
+[data-scl324-theme="dark"] .scl374-chip.ok{color:#7ddba3}
+[data-scl324-theme="dark"] .scl374-chip.hot,[data-scl324-theme="dark"] .scl374-btn.no,[data-scl324-theme="dark"] .scl374-msg.err{color:#ff8a80}
+[data-scl324-theme="dark"] body.scl295-pharmacy .scl296-timeline-cell>.scl374-bar{background:rgba(60,34,18,.96)!important;color:#ffb27d!important}
+@media(max-width:700px){.scl374-back{padding:0;align-items:flex-end}.scl374-sheet{width:100%;max-height:94vh;border-radius:20px 20px 0 0}.scl374-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.scl374-foot{display:grid;grid-template-columns:1fr 1fr}.scl374-foot .grow{display:none}.scl374-foot .scl374-btn.ghost{order:2;min-height:36px;font-size:13px;padding:0 10px}.scl374-log{grid-template-columns:1fr}}
+</style>
+<script id="scl374-plan">
+/* MKPlan v2 — πλανόγραμμα ραφιών για το SpaceCoLLab Market (Κ3α).
+   Σχηματική όψη από μπροστά, 4 ράφια από πάνω προς τα κάτω. Προϊόν = {kind,name,w,color,n}: είδος συσκευασίας, πλάτος σε εκ., χρώμα, προσόψεις.
+   Όλα τα προϊόντα έχουν το ίδιο ύψος στο σχέδιο: ελέγχεται μόνο το πλάτος. Χωρίς κωδικούς προϊόντων και χωρίς εικόνες.
+   Το όνομα γράφεται ελεύθερα· οι «προτάσεις» (υποκατηγορίες των Brands) είναι μόνο συντόμευση.
+   MKPlan.svg(shelves,format,opts) → string SVG (προβολή, PDF). MKPlan.legend(shelves) → λίστα ανά ράφι. MKPlan.open(opts) → builder. */
+(function(root){
+'use strict';
+const SPEC={vertical:{w:35,n:4,label:'Κάθετη · 35 εκ.'},horizontal:{w:50,n:4,label:'Οριζόντια · 50 εκ.'}};
+const KINDS=[{id:'bottle',t:'Φιάλη',w:5,d:'M3.6 1h2.8v2.2l1.4 1.6V13H2.2V4.8l1.4-1.6z'},{id:'pump',t:'Αντλία',w:5,d:'M4 3.4h2v1.3l1.6 1.4V13H2.4V6.1L4 4.7z M5 3.4V1.5 M3.3 1.5h3.6'},
+ {id:'spray',t:'Σπρέι',w:4,d:'M3 4.4h4V13H3z M3.8 4.4V2h2.4v2.4 M6.2 2.7h1.5'},{id:'tube',t:'Σωληνάριο',w:4,d:'M2.5 1.5h5L6.7 10.8H3.3z M3.9 10.8h2.2V13H3.9z'},
+ {id:'jar',t:'Βαζάκι',w:7,d:'M2 5.4h6V13H2z M1.6 3.2h6.8v2.2H1.6z'},{id:'box',t:'Κουτί',w:6,d:'M2 1.6h6V13H2z M2 4.4h6'},{id:'sachet',t:'Φακελάκι',w:8,d:'M1.8 2h6.4v11H1.8z M1.8 3.7h6.4 M3.9 7.4h2.2'}];
+const KIND=Object.fromEntries(KINDS.map(k=>[k.id,k]));
+const SWATCH=['#1f3a8a','#2459e0','#0e7490','#0f766e','#4d7c0f','#b45309','#c2410c','#b91c1c','#be185d','#6d28d9','#475569','#111827'];
+const SH=9.5,GAP=6.2,LIP=.7,PAD=1.6;
+/* Η οθόνη της θέσης, πάνω από τα ράφια (σχηματικά, με τη σωστή αναλογία 9:16 ή 16:9). */
+const SCREEN={vertical:{w:13.5,h:24},horizontal:{w:32,h:18}};
+const topOf=(format,opts)=>opts&&opts.screen===false?0:(SCREEN[format]||SCREEN.vertical).h+3.2;
+const E=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hex=c=>/^#[0-9a-f]{6}$/i.test(c||'')?c.toLowerCase():'#2459e0';
+function mix(c,k){c=hex(c);return '#'+[1,3,5].map(i=>parseInt(c.slice(i,i+2),16)).map(v=>Math.round(v+(255-v)*k).toString(16).padStart(2,'0')).join('');}
+const used=sh=>(sh||[]).reduce((a,it)=>a+(Number(it.w)||0)*(Number(it.n)||1),0);
+const fmt=v=>String(Math.round(v*10)/10).replace('.',',');
+function glyph(kind,cx,cy,box,color,sw){const k=KIND[kind]||KIND.box,s=box/14;return '<path d="'+k.d+'" transform="translate('+(cx-5*s).toFixed(2)+' '+(cy-7*s).toFixed(2)+') scale('+s.toFixed(3)+')" fill="none" stroke="'+color+'" stroke-width="'+(sw/s).toFixed(2)+'" stroke-linejoin="round" stroke-linecap="round"/>';}
+/* opts: {sel:[shelf,idx], active:shelf, over:shelf, interactive:bool} */
+function svg(shelves,format,opts){
+ opts=opts||{};const S=SPEC[format]||SPEC.vertical,W=S.w,rowH=SH+LIP+GAP,TOP=topOf(format,opts),H=S.n*rowH+PAD+TOP,VW=W+PAD*2,SC=SCREEN[format]||SCREEN.vertical;
+ let o='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+VW+' '+H.toFixed(2)+'" role="img" aria-label="Πλανόγραμμα, '+(format==='horizontal'?'οριζόντια':'κάθετη')+' μονάδα, '+S.n+' ράφια" style="display:block;width:100%;height:auto;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Arial,sans-serif">';
+ if(TOP){const sx=(VW-SC.w)/2,t=String(opts.title||'').trim(),mx=Math.max(4,Math.floor(SC.w/.95)),tt=t.length>mx?t.slice(0,mx-1)+'…':t;
+  o+='<g data-screen="1"><rect x="'+sx.toFixed(2)+'" y=".4" width="'+SC.w+'" height="'+SC.h+'" rx="1" fill="#1d1d1f"/><rect x="'+(sx+.55).toFixed(2)+'" y=".95" width="'+(SC.w-1.1).toFixed(2)+'" height="'+(SC.h-1.1).toFixed(2)+'" rx=".6" fill="#2c2c2e"/>'+
+   '<text x="'+(VW/2)+'" y="'+(SC.h/2-.2).toFixed(2)+'" text-anchor="middle" font-size="1.05" font-weight="700" fill="#8e8e93" letter-spacing=".12">ΟΘΟΝΗ</text>'+
+   '<text x="'+(VW/2)+'" y="'+(SC.h/2+1.9).toFixed(2)+'" text-anchor="middle" font-size="1.35" font-weight="600" fill="#ffffff">'+E(tt||(format==='horizontal'?'οριζόντια':'κάθετη'))+'</text>'+
+   '<rect x="'+(VW/2-.9).toFixed(2)+'" y="'+(SC.h+.4).toFixed(2)+'" width="1.8" height="1.2" fill="#c7c7cc"/></g>';}
+ for(let s=0;s<S.n;s++){
+  const y0=PAD+TOP+s*rowH,base=y0+SH,items=(shelves&&shelves[s])||[],u=used(items),bad=u>W+1e-6,act=opts.interactive&&(opts.over===s||(opts.over==null&&opts.active===s));
+  o+='<g data-shelf="'+s+'">';
+  o+='<rect x="'+(PAD-.5)+'" y="'+(y0-.5).toFixed(2)+'" width="'+(W+1)+'" height="'+(SH+LIP+1).toFixed(2)+'" rx=".9" fill="'+(bad?'#fdecea':act?'#eef3ff':'#f5f5f7')+'" stroke="'+(bad?'#d92d20':act?'#2459e0':'#e5e5ea')+'" stroke-width="'+(bad||act?.22:.12)+'"/>';
+  o+='<rect x="'+PAD+'" y="'+base.toFixed(2)+'" width="'+W+'" height="'+LIP+'" rx=".2" fill="#c7c7cc"/>';
+  let x=PAD;
+  items.forEach((it,i)=>{const w=Number(it.w)||5,n=Number(it.n)||1,tw=w*n,c=hex(it.color),sel=opts.sel&&opts.sel[0]===s&&opts.sel[1]===i;
+   o+='<g data-item="'+s+':'+i+'"'+(opts.interactive?' tabindex="0" role="button" aria-label="'+E(it.name)+', '+n+' προσόψεις, '+fmt(tw)+' εκατοστά, ράφι '+(s+1)+'" style="cursor:grab;outline:none"':'')+'>';
+   for(let k=0;k<n;k++){const fx=x+k*w;
+    o+='<rect x="'+(fx+.12).toFixed(2)+'" y="'+(y0+.5).toFixed(2)+'" width="'+(w-.24).toFixed(2)+'" height="'+(SH-.5).toFixed(2)+'" rx=".45" fill="'+mix(c,.86)+'" stroke="'+mix(c,.35)+'" stroke-width=".1"/>';
+    o+='<rect x="'+(fx+.12).toFixed(2)+'" y="'+(y0+.5).toFixed(2)+'" width="'+(w-.24).toFixed(2)+'" height=".8" rx=".4" fill="'+c+'"/>';
+    if(w>=2.4)o+=glyph(it.kind,fx+w/2,y0+SH/2+.55,Math.min(SH*.62,w*1.15),c,.16);}
+   if(sel)o+='<rect x="'+(x-.05).toFixed(2)+'" y="'+(y0+.3).toFixed(2)+'" width="'+(tw+.1).toFixed(2)+'" height="'+(SH-.1).toFixed(2)+'" rx=".6" fill="none" stroke="#2459e0" stroke-width=".3"/>';
+   o+='<rect x="'+x.toFixed(2)+'" y="'+y0.toFixed(2)+'" width="'+tw.toFixed(2)+'" height="'+(SH+LIP+2.6).toFixed(2)+'" fill="transparent"/>';
+   const max=Math.max(2,Math.floor(tw/.78)),lab=String(it.name||'—'),txt=lab.length>max?lab.slice(0,Math.max(1,max-1))+'…':lab;
+   o+='<text x="'+(x+tw/2).toFixed(2)+'" y="'+(base+LIP+1.75).toFixed(2)+'" text-anchor="middle" font-size="1.28" font-weight="600" fill="#1d1d1f">'+E(txt)+'</text>';
+   if(n>1&&tw>=4)o+='<text x="'+(x+tw/2).toFixed(2)+'" y="'+(base+LIP+3.25).toFixed(2)+'" text-anchor="middle" font-size="1.08" fill="#636366">'+n+' προσόψεις</text>';
+   o+='</g>';x+=tw;});
+  const free=W-u;
+  if(free>1.2&&items.length)o+='<rect x="'+(x+.2).toFixed(2)+'" y="'+(y0+.5).toFixed(2)+'" width="'+(free-.4).toFixed(2)+'" height="'+(SH-.5).toFixed(2)+'" rx=".45" fill="none" stroke="#c7c7cc" stroke-width=".12" stroke-dasharray=".6 .5"/>'+(free>=11?'<text x="'+(x+free/2).toFixed(2)+'" y="'+(y0+SH/2+.7).toFixed(2)+'" text-anchor="middle" font-size="1.15" fill="#8e8e93">'+fmt(free)+' εκ. ελεύθερα</text>':'');
+  if(!items.length)o+='<text x="'+(PAD+W/2)+'" y="'+(y0+SH/2+.7).toFixed(2)+'" text-anchor="middle" font-size="1.3" fill="#8e8e93">'+(opts.interactive?(act?'Εδώ μπαίνει το επόμενο προϊόν':'Πατήστε για να δουλέψετε σε αυτό το ράφι'):'άδειο ράφι')+'</text>';
+  o+='<text x="'+PAD+'" y="'+(y0-1).toFixed(2)+'" font-size="1.1" font-weight="700" fill="'+(act?'#2459e0':'#636366')+'" letter-spacing=".06">ΡΑΦΙ '+(s+1)+'</text>';
+  o+='<text x="'+(PAD+W)+'" y="'+(y0-1).toFixed(2)+'" text-anchor="end" font-size="1.1" font-weight="700" fill="'+(bad?'#b42318':'#636366')+'">'+fmt(u)+' / '+W+' εκ.'+(bad?' · περισσεύουν '+fmt(u-W)+' εκ.':'')+'</text>';
+  o+='</g>';}
+ return o+'</svg>';
+}
+function legend(shelves){return '<ol class="mkp-legend">'+(shelves||[]).map((sh,s)=>'<li><b>Ράφι '+(s+1)+'</b>'+(sh.length?'<ul>'+sh.map(it=>'<li><i style="background:'+hex(it.color)+'"></i><span>'+(Number(it.n)||1)+'× '+E(it.name)+'</span><em>'+E((KIND[it.kind]||KIND.box).t)+' · '+fmt(Number(it.w)||0)+' εκ. το ένα</em></li>').join('')+'</ul>':'<em class="mkp-none">άδειο</em>')+'</li>').join('')+'</ol>';}
+const CSS='.mkp{position:fixed;inset:0;z-index:9000;background:#f2f2f7;color:#1d1d1f;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}.mkp *{box-sizing:border-box}'+
+'.mkp-top{display:flex;align-items:center;gap:10px;padding:12px 20px;background:rgba(255,255,255,.92);box-shadow:0 1px 0 rgba(0,0,0,.08)}.mkp-top .sp{flex:1}.mkp-top input{min-height:44px;width:min(320px,100%);padding:0 14px;border:0;border-radius:12px;background:#f2f2f7;font:inherit;font-size:16px;font-weight:600;color:#1d1d1f}'+
+'.mkp-b{min-height:44px;padding:0 16px;border:0;border-radius:12px;background:#f2f2f7;color:#1d1d1f;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}.mkp-b.pri{background:#2459e0;color:#fff}.mkp-b.red{background:#fdecea;color:#a3190f}.mkp-b.on{background:#1d1d1f;color:#fff}.mkp-b:disabled{opacity:.4;cursor:not-allowed}'+
+'.mkp button:focus-visible,.mkp input:focus-visible,.mkp svg [data-item]:focus-visible{outline:3px solid rgba(36,89,224,.45);outline-offset:2px}'+
+'.mkp-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;padding:20px;overflow:auto}.mkp-stage{background:#fff;border-radius:20px;padding:24px 20px 16px;box-shadow:0 0 0 1px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:12px;min-width:0}.mkp-stage .unit{margin:0 auto;width:100%;touch-action:none;user-select:none;-webkit-user-select:none}.mkp-stage .unit.vertical{max-width:330px}.mkp-stage .unit.horizontal{max-width:480px}.mkp-hint{margin:0;text-align:center;font-size:12.5px;color:#636366}'+
+'.mkp-side{display:flex;flex-direction:column;gap:14px;min-width:0}.mkp-card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 0 0 1px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:12px}.mkp-card h3{margin:0;font-size:13px;font-weight:700;color:#636366;letter-spacing:.02em}'+
+'.mkp-add{display:grid;grid-template-columns:1fr auto;gap:8px}.mkp-in{min-height:44px;width:100%;padding:0 12px;border:0;border-radius:12px;background:#f2f2f7;font:inherit;font-size:16px;color:#1d1d1f}'+
+'.mkp-chips{display:flex;flex-wrap:wrap;gap:6px;max-height:112px;overflow:auto}.mkp-chips button{min-height:36px;padding:0 12px;border:0;border-radius:999px;background:#f2f2f7;font:inherit;font-size:12.5px;font-weight:600;color:#1d1d1f;cursor:pointer}.mkp-chips button:hover{background:#e7efff}'+
+'.mkp-kinds{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}.mkp-kinds button{display:flex;align-items:center;justify-content:center;height:44px;border:0;border-radius:10px;background:#f2f2f7;cursor:pointer;color:#48484a}.mkp-kinds button[aria-pressed=true]{background:#1d1d1f;color:#fff}.mkp-kinds svg{width:20px;height:28px}.mkp-kname{font-size:12px;color:#636366;margin-top:-6px}'+
+'.mkp-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}.mkp-f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:#636366}.mkp-step{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;background:#f2f2f7;border-radius:12px}.mkp-step b{text-align:center;font-size:16px;color:#1d1d1f}.mkp-step button{height:44px;border:0;border-radius:12px;background:transparent;font:inherit;font-size:20px;cursor:pointer;color:#1d1d1f}'+
+'.mkp-sw{display:grid;grid-template-columns:repeat(12,1fr);gap:4px}.mkp-sw button{aspect-ratio:1;min-height:24px;border:0;border-radius:50%;cursor:pointer;padding:0}.mkp-sw button[aria-pressed=true]{box-shadow:0 0 0 2px #fff,0 0 0 4px #1d1d1f}'+
+'.mkp-mv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.mkp-mv button{height:44px;border:0;border-radius:12px;background:#f2f2f7;font:inherit;font-size:16px;cursor:pointer;color:#1d1d1f}'+
+'.mkp-msg{padding:10px 12px;border-radius:12px;font-size:13px;font-weight:600;line-height:1.45}.mkp-msg.err{background:#fdecea;color:#a3190f}.mkp-msg.ok{background:#e3f4ea;color:#14633b}'+
+'.mkp-ghost{position:fixed;z-index:9100;pointer-events:none;padding:6px 12px;border-radius:999px;background:#1d1d1f;color:#fff;font:600 12px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translate(-50%,-150%)}'+
+'.mkp-legend{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;font-size:13px;color:#1d1d1f}.mkp-legend ul{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}.mkp-legend li li{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px}.mkp-legend i{width:10px;height:10px;border-radius:3px}.mkp-legend em{font-style:normal;color:#636366;font-size:12px}.mkp-none{margin-left:8px}'+
+'@media(max-width:900px){.mkp-body{grid-template-columns:1fr;padding:12px;gap:12px}.mkp-top{flex-wrap:wrap;padding:10px 12px}.mkp-top input{width:100%}.mkp-top .sp{display:none}}@media(prefers-reduced-motion:no-preference){.mkp-b,.mkp-chips button,.mkp-kinds button{transition:background-color .15s ease}}';
+function css(){if(typeof document==='undefined'||document.getElementById('mkpCss'))return;const s=document.createElement('style');s.id='mkpCss';s.textContent=CSS;document.head.appendChild(s);}
+const kicon=k=>'<svg viewBox="0 0 10 14" aria-hidden="true"><path d="'+KIND[k].d+'" fill="none" stroke="currentColor" stroke-width=".9" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+/* opts: {id,name,format,shelves,lockFormat,suggest:[ονόματα],onSave:async(plan)=>void|string,onClose} */
+function open(opts){
+ css();opts=opts||{};
+ const st={id:opts.id||null,name:opts.name||'',format:opts.format==='horizontal'?'horizontal':'vertical',shelves:JSON.parse(JSON.stringify(opts.shelves||[[],[],[],[]])),sel:null,active:0,over:null,err:'',busy:false,dirty:false,kind:'bottle',color:SWATCH[1],draft:'',undo:[]};
+ while(st.shelves.length<4)st.shelves.push([]);
+ const el=document.createElement('div');el.className='mkp';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label','Πλανόγραμμα');
+ const last=document.activeElement;let ghost=null,drag=null;
+ const W=()=>SPEC[st.format].w,cur=()=>st.sel&&st.shelves[st.sel[0]]&&st.shelves[st.sel[0]][st.sel[1]]||null,free=s=>W()-used(st.shelves[s]);
+ const snap=()=>{st.undo.push(JSON.stringify(st.shelves));if(st.undo.length>40)st.undo.shift();st.dirty=true;st.err='';};
+ const problems=()=>{const out=[];if(!String(st.name).trim())out.push('Δώστε όνομα στο πλανόγραμμα.');if(!st.shelves.some(s=>s.length))out.push('Βάλτε τουλάχιστον ένα προϊόν.');st.shelves.forEach((s,i)=>{if(used(s)>W()+1e-6)out.push('Ράφι '+(i+1)+': περισσεύουν '+fmt(used(s)-W())+' εκ.');if(s.length>12)out.push('Ράφι '+(i+1)+': έως 12 προϊόντα.');if(s.some(it=>!String(it.name||'').trim()))out.push('Ράφι '+(i+1)+': ένα προϊόν δεν έχει όνομα.');});return out;};
+ function side(){const it=cur(),pr=problems(),sg=(opts.suggest||[]).filter(x=>!st.draft||x.toLowerCase().includes(st.draft.trim().toLowerCase())).slice(0,14),k=it?it.kind:st.kind,col=it?hex(it.color):st.color;
+  const kinds='<div class="mkp-kinds" role="group" aria-label="Είδος συσκευασίας">'+KINDS.map(x=>'<button type="button" data-kind="'+x.id+'" aria-pressed="'+(x.id===k)+'" aria-label="'+x.t+'" title="'+x.t+'">'+kicon(x.id)+'</button>').join('')+'</div><div class="mkp-kname">'+E(KIND[k].t)+'</div>';
+  const sw='<div class="mkp-sw" role="group" aria-label="Χρώμα">'+SWATCH.map(c=>'<button type="button" data-color="'+c+'" aria-pressed="'+(c===col)+'" aria-label="Χρώμα '+c+'" style="background:'+c+'"></button>').join('')+'</div>';
+  const add='<div class="mkp-card"><h3>ΝΕΟ ΠΡΟΪΟΝ ΣΤΟ ΡΑΦΙ '+(st.active+1)+'</h3><div class="mkp-add"><input class="mkp-in" id="mkpNew" maxlength="60" placeholder="Γράψτε όνομα και Enter" value="'+E(st.draft)+'" autocomplete="off" aria-label="Όνομα νέου προϊόντος"><button type="button" class="mkp-b pri" data-act="add">Προσθήκη</button></div>'+
+   (sg.length?'<div class="mkp-chips" aria-label="Προτάσεις">'+sg.map(x=>'<button type="button" data-sg="'+E(x)+'">'+E(x)+'</button>').join('')+'</div>':'')+(it?'':kinds+sw)+'</div>';
+  const edit=it?'<div class="mkp-card" id="mkpEdit"><h3>ΕΠΙΛΕΓΜΕΝΟ · ΡΑΦΙ '+(st.sel[0]+1)+'</h3><input class="mkp-in" id="mkpName" maxlength="60" value="'+E(it.name)+'" autocomplete="off" aria-label="Όνομα προϊόντος">'+kinds+
+    '<div class="mkp-row"><label class="mkp-f">Πλάτος, εκ.<input class="mkp-in" type="number" id="mkpW" min="1" max="50" step="0.5" value="'+E(it.w)+'" inputmode="decimal"></label><div class="mkp-f">Προσόψεις<div class="mkp-step"><button type="button" data-n="-1" aria-label="Μία λιγότερη">−</button><b>'+(it.n||1)+'</b><button type="button" data-n="1" aria-label="Μία ακόμα">+</button></div></div></div>'+
+    '<button type="button" class="mkp-b" data-act="fill"'+(Math.floor((free(st.sel[0])+1e-6)/(Number(it.w)||5))<1?' disabled':'')+'>Γέμισε το ράφι με αυτό</button>'+sw+
+    '<div class="mkp-mv" role="group" aria-label="Μετακίνηση"><button type="button" data-mv="left" aria-label="Αριστερά">←</button><button type="button" data-mv="right" aria-label="Δεξιά">→</button><button type="button" data-mv="up" aria-label="Στο πάνω ράφι">↑</button><button type="button" data-mv="down" aria-label="Στο κάτω ράφι">↓</button></div>'+
+    '<div class="mkp-row"><button type="button" class="mkp-b" data-act="dup">Αντίγραφο</button><button type="button" class="mkp-b red" data-act="del">Αφαίρεση</button></div></div>':'';
+  return add+edit+'<div class="mkp-card" id="mkpChk">'+(st.err?'<div class="mkp-msg err" role="alert">'+E(st.err)+'</div>':'')+(pr.length?pr.map(p=>'<div class="mkp-msg err">'+E(p)+'</div>').join(''):'<div class="mkp-msg ok">Όλα χωράνε.</div>')+'</div>';}
+ function paintStage(){const u=el.querySelector('.unit');u.className='unit '+st.format;u.innerHTML=svg(st.shelves,st.format,{sel:st.sel,active:st.active,interactive:true,over:st.over,title:st.name});}
+ function buttons(){const sv=el.querySelector('[data-act="save"]'),un=el.querySelector('[data-act="undo"]');if(sv){sv.disabled=st.busy||problems().length>0;sv.textContent=st.busy?'Αποθήκευση…':'Αποθήκευση';}if(un)un.disabled=!st.undo.length;}
+ function paintSide(focus){el.querySelector('.mkp-side').innerHTML=side();buttons();if(focus){const n=el.querySelector(focus);if(n){n.focus();try{if(n.type==='text'||!n.type)n.setSelectionRange(n.value.length,n.value.length);}catch(e){}}}}
+ function paint(focus){paintStage();paintSide(focus);}
+ function shell(){el.innerHTML='<div class="mkp-top"><input type="text" id="mkpPlan" maxlength="60" placeholder="Όνομα πλανογράμματος" value="'+E(st.name)+'" autocomplete="off" aria-label="Όνομα πλανογράμματος">'+
+   (opts.lockFormat||st.id?'<span style="font-size:13px;font-weight:600;color:#636366">'+SPEC[st.format].label+'</span>':'<div role="group" aria-label="Μονάδα" style="display:flex;gap:6px"><button type="button" class="mkp-b'+(st.format==='vertical'?' on':'')+'" data-fmt="vertical" aria-pressed="'+(st.format==='vertical')+'">Κάθετη · 35 εκ.</button><button type="button" class="mkp-b'+(st.format==='horizontal'?' on':'')+'" data-fmt="horizontal" aria-pressed="'+(st.format==='horizontal')+'">Οριζόντια · 50 εκ.</button></div>')+
+   '<span class="sp"></span><button type="button" class="mkp-b" data-act="undo">Αναίρεση</button><button type="button" class="mkp-b" data-act="close">Άκυρο</button><button type="button" class="mkp-b pri" data-act="save">Αποθήκευση</button></div>'+
+   '<div class="mkp-body"><div class="mkp-stage"><div class="unit '+st.format+'"></div><p class="mkp-hint">Όψη από μπροστά, σε κλίμακα πλάτους. Σύρετε ένα προϊόν για να αλλάξει θέση ή ράφι.</p></div><aside class="mkp-side"></aside></div>';paint();}
+ function addNew(name){name=String(name||'').trim().replace(/\s+/g,' ').slice(0,60);if(!name){const n=el.querySelector('#mkpNew');if(n)n.focus();return;}
+  const s=st.active,w=KIND[st.kind].w;snap();st.shelves[s].push({kind:st.kind,name:name,w:w,color:st.color,n:1});st.sel=null;st.draft='';paint('#mkpNew');}
+ function hit(x,y){const u=el.querySelector('.unit svg');if(!u)return null;const r=u.getBoundingClientRect();if(x<r.left||x>r.right||y<r.top||y>r.bottom)return null;const vb=u.viewBox.baseVal,cy=(y-r.top)/r.height*vb.height,cx=(x-r.left)/r.width*vb.width,s=Math.max(0,Math.min(3,Math.floor((cy-PAD-topOf(st.format)+2)/(SH+LIP+GAP))));
+  let acc=PAD,idx=st.shelves[s].length;for(let i=0;i<st.shelves[s].length;i++){const tw=(Number(st.shelves[s][i].w)||5)*(Number(st.shelves[s][i].n)||1);if(cx<acc+tw/2){idx=i;break;}acc+=tw;}return {s:s,idx:idx};}
+ el.addEventListener('pointerdown',e=>{const it=e.target.closest('[data-item]');
+  if(it){const [s,i]=it.dataset.item.split(':').map(Number);st.sel=[s,i];st.active=s;paint();drag={from:[s,i],x0:e.clientX,y0:e.clientY,moved:false,label:st.shelves[s][i].name||'προϊόν'};}
+  });
+ el.addEventListener('click',e=>{if(e.target.closest('[data-item]')||e.target.closest('button'))return;const sh=e.target.closest('svg [data-shelf]');if(sh){st.active=Number(sh.dataset.shelf);st.sel=null;paint('#mkpNew');}});
+ function move(e){if(!drag)return;if(!drag.moved&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)<6)return;drag.moved=true;
+  if(!ghost){ghost=document.createElement('div');ghost.className='mkp-ghost';ghost.textContent=drag.label;document.body.appendChild(ghost);}
+  ghost.style.left=e.clientX+'px';ghost.style.top=e.clientY+'px';const h=hit(e.clientX,e.clientY),o=h?h.s:null;if(o!==st.over){st.over=o;paintStage();}e.preventDefault();}
+ function up(e){if(!drag)return;const d=drag;drag=null;if(ghost){ghost.remove();ghost=null;}if(!d.moved)return;
+  const h=hit(e.clientX,e.clientY);st.over=null;if(h){snap();const it=st.shelves[d.from[0]].splice(d.from[1],1)[0];let idx=h.idx;if(d.from[0]===h.s&&d.from[1]<idx)idx--;st.shelves[h.s].splice(idx,0,it);st.sel=[h.s,idx];st.active=h.s;}paint();}
+ window.addEventListener('pointermove',move);window.addEventListener('pointerup',up);
+ el.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();close();return;}
+  if(e.key==='Enter'&&e.target.id==='mkpNew'){e.preventDefault();addNew(e.target.value);return;}
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'&&!/^(INPUT|TEXTAREA)$/.test(e.target.tagName)){e.preventDefault();undo();return;}
+  const it=e.target.closest&&e.target.closest('svg [data-item]');if(it&&(e.key==='Enter'||e.key===' ')){e.preventDefault();st.sel=it.dataset.item.split(':').map(Number);st.active=st.sel[0];paint('#mkpName');}
+  if(it&&(e.key==='Delete'||e.key==='Backspace')){e.preventDefault();const [s,i]=it.dataset.item.split(':').map(Number);snap();st.shelves[s].splice(i,1);st.sel=null;paint('#mkpNew');}});
+ function chk(){const c=el.querySelector('#mkpChk');if(c){const pr=problems();c.innerHTML=pr.length?pr.map(p=>'<div class="mkp-msg err">'+E(p)+'</div>').join(''):'<div class="mkp-msg ok">Όλα χωράνε.</div>';}buttons();}
+ el.addEventListener('input',e=>{const it=cur(),t=e.target;
+  if(t.id==='mkpPlan'){st.name=t.value;st.dirty=true;paintStage();chk();return;}
+  if(t.id==='mkpNew'){st.draft=t.value;const c=el.querySelector('.mkp-chips');if(c&&opts.suggest){const sg=opts.suggest.filter(x=>!st.draft||x.toLowerCase().includes(st.draft.trim().toLowerCase())).slice(0,14);c.innerHTML=sg.map(x=>'<button type="button" data-sg="'+E(x)+'">'+E(x)+'</button>').join('');}return;}
+  if(!it)return;
+  if(t.id==='mkpName'){if(!t._snap){snap();t._snap=1;}it.name=t.value;}
+  else if(t.id==='mkpW'){const v=Math.round(Number(String(t.value).replace(',','.'))*2)/2;if(!(v>=1&&v<=50))return;if(!t._snap){snap();t._snap=1;}it.w=v;}
+  else return;paintStage();chk();});
+ function undo(){if(!st.undo.length)return;st.shelves=JSON.parse(st.undo.pop());st.sel=null;st.err='';paint();}
+ el.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;const it=cur(),d=t.dataset;
+  if(d.fmt){st.format=d.fmt;st.dirty=true;shell();return;}
+  if(d.act==='close'){close();return;}if(d.act==='save'){save();return;}if(d.act==='undo'){undo();return;}
+  if(d.act==='add'){addNew(el.querySelector('#mkpNew').value);return;}
+  if(d.sg){addNew(d.sg);return;}
+  if(d.kind){if(it){snap();const old=KIND[it.kind].w;it.kind=d.kind;if(Number(it.w)===old)it.w=KIND[d.kind].w;}st.kind=d.kind;paint('[data-kind="'+d.kind+'"]');return;}
+  if(d.color){if(it){snap();it.color=d.color;}st.color=d.color;paint('[data-color="'+d.color+'"]');return;}
+  if(!it)return;const s=st.sel[0],i=st.sel[1];let keep=null;
+  if(d.n){const v=Math.max(1,Math.min(20,(it.n||1)+Number(d.n)));if(v===it.n)return;snap();it.n=v;keep='[data-n="'+d.n+'"]';}
+  else if(d.act==='fill'){const add=Math.floor((free(s)+1e-6)/(Number(it.w)||5));if(add<1)return;snap();it.n=Math.min(20,(it.n||1)+add);keep='[data-act="fill"]';}
+  else if(d.mv==='left'&&i>0){snap();st.shelves[s].splice(i-1,0,st.shelves[s].splice(i,1)[0]);st.sel=[s,i-1];keep='[data-mv="left"]';}
+  else if(d.mv==='right'&&i<st.shelves[s].length-1){snap();st.shelves[s].splice(i+1,0,st.shelves[s].splice(i,1)[0]);st.sel=[s,i+1];keep='[data-mv="right"]';}
+  else if(d.mv==='up'&&s>0){snap();st.shelves[s].splice(i,1);st.shelves[s-1].push(it);st.sel=[s-1,st.shelves[s-1].length-1];st.active=s-1;keep='[data-mv="up"]';}
+  else if(d.mv==='down'&&s<3){snap();st.shelves[s].splice(i,1);st.shelves[s+1].push(it);st.sel=[s+1,st.shelves[s+1].length-1];st.active=s+1;keep='[data-mv="down"]';}
+  else if(d.act==='dup'){snap();st.shelves[s].splice(i+1,0,JSON.parse(JSON.stringify(it)));st.sel=[s,i+1];keep='[data-act="dup"]';}
+  else if(d.act==='del'){snap();st.shelves[s].splice(i,1);st.sel=null;keep='#mkpNew';}
+  else return;paint(keep);});
+ async function save(){if(st.busy||problems().length)return;st.busy=true;st.err='';paintSide();
+  const plan={id:st.id,name:String(st.name).trim(),format:st.format,shelves:st.shelves.map(s=>s.map(it=>({kind:it.kind,name:String(it.name).trim().replace(/\s+/g,' '),w:Number(it.w),color:hex(it.color),n:it.n||1})))};
+  try{const r=opts.onSave?await opts.onSave(plan):null;if(typeof r==='string'&&r){st.err=r;st.busy=false;paintSide();return;}st.dirty=false;destroy();}catch(x){st.err='Δεν αποθηκεύτηκε. Δοκιμάστε ξανά.';st.busy=false;paintSide();}}
+ function close(){if(st.dirty&&!el.dataset.sure){el.dataset.sure='1';st.err='Υπάρχουν αλλαγές που δεν αποθηκεύτηκαν. Πατήστε ξανά «Άκυρο» για να κλείσει χωρίς αποθήκευση.';paintSide();return;}destroy();}
+ function destroy(){window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up);if(ghost)ghost.remove();el.remove();try{last&&last.focus();}catch(e){}if(opts.onClose)opts.onClose();}
+ document.body.appendChild(el);shell();const n=el.querySelector(st.name?'#mkpNew':'#mkpPlan');if(n)n.focus();
+ return {el:el,state:st,close:destroy};
+}
+root.MKPlan={svg:svg,legend:legend,open:open,SPEC:SPEC,KINDS:KINDS,SCREEN:SCREEN,used:used,css:css};
+})(typeof window!=='undefined'?window:globalThis);
+</script>
+<script id="scl374-market-requests">
+(function(){
+'use strict';
+const root=window;
+const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const client=()=>(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:null;
+async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Error(r.error.message||String(r.error));return r.data;}
+const token=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.pharmacyToken)||'';}catch(e){return '';}};
+const R=root.SCL374={data:null,busy:false,failed:false,at:0,logs:{},view:null,sig:''};
+const MN=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const REASONS=[['month','Ο μήνας δεν είναι πια διαθέσιμος'],['other_months','Προτιμώ άλλους μήνες'],['fit','Δεν ταιριάζει με το φαρμακείο μου αυτή την περίοδο'],['other','Άλλος λόγος']];
+const WHY={month:'Ο μήνας δεν είναι πια διαθέσιμος',other_months:'Προτιμώ άλλους μήνες',fit:'Δεν ταιριάζει με το φαρμακείο μου αυτή την περίοδο',other:'Άλλος λόγος',time:'Δεν απαντήθηκε μέσα στην προθεσμία',closed:'Κάποιος μήνας κλείστηκε στο μεταξύ',unavailable:'Η θέση δεν είναι πια στο Market',company_inactive:'Η εταιρία δεν είναι πια ενεργή',hq:'Ακυρώθηκε από τα Κεντρικά'};
+const STAT={pending:['Περιμένει απάντησή σου','wait'],declined:['Δεν δέχτηκες','off'],expired:['Έληξε','off'],withdrawn:['Το απέσυρε η εταιρία','off'],cancelled:['Ακυρώθηκε από τα Κεντρικά','off'],accepted:['Δέχτηκες','ok']};
+const ACT={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξες',declined:'Δεν δέχτηκες',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Δέχτηκες',answer_seen:'Η εταιρία είδε την απάντηση'};
+const eur=n=>{const v=Number(n)||0;return (Math.round(v)===v?String(v):v.toFixed(2).replace('.',','))+' €';};
+const priv=s=>'<span class="scl310-private-amount">'+E(s)+'</span>';
+const d=x=>{const t=new Date(x);return isNaN(t)?'':t.toLocaleDateString('el-GR',{day:'numeric',month:'short'});};
+const dt=x=>{const t=new Date(x);return isNaN(t)?'':t.toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+t.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',hour12:false});};
+const months=r=>(r.months||[]).map(m=>MN[m]).join(', ')+' '+r.year;
+const brand=r=>(r.brands||[]).join(' + ');
+const left=r=>{const n=Number(r.days_left)||0;return n<=0?'Λήγει σήμερα':n===1?'Μένει 1 ημέρα':'Μένουν '+n+' ημέρες';};
+const pending=()=>(R.data&&Array.isArray(R.data.pending))?R.data.pending:[];
+const history=()=>(R.data&&Array.isArray(R.data.history))?R.data.history:[];
+const find=id=>pending().concat(history()).find(r=>r.id===id)||null;
+function installation(){try{return (root.SCL290&&root.SCL290.context&&root.SCL290.context.installation)||null;}catch(e){return null;}}
+function posIdByCode(code){const cfg=installation();const ps=cfg&&Array.isArray(cfg.positions)?cfg.positions:[];const c=String(code||'').trim();const f=ps.find(x=>x&&(x.playerCode===c||x.contentCode===c));return f?f.id:'';}
+function programYear(){try{return Number((typeof state!=='undefined'&&state&&state.programYear)||new Date().getFullYear());}catch(e){return new Date().getFullYear();}}
+async function load(force,seen){
+ if(R.busy||!token())return;
+ if(!force&&!seen&&(R.data||R.failed)&&Date.now()-R.at<60000)return;
+ R.busy=true;
+ try{R.data=await rpc('scl374_ph_requests',{p_token:token(),p_seen:!!seen});R.failed=false;}
+ catch(e){R.failed=true;if(!R.data)R.data=null;}
+ finally{R.busy=false;R.at=Date.now();decorate();}
+}
+/* ---------- 4 σημεία στο εργαλείο ---------- */
+function decorate(){
+ if(!document.body||!document.body.classList.contains('scl295-pharmacy'))return;
+ if(!R.data){if(!R.failed||Date.now()-R.at>60000)load(false);clean();return;}
+ if(Date.now()-R.at>60000)load(false);
+ const P=pending();
+ try{decorateNav(P);}catch(e){}
+ try{decorateTasks(P);}catch(e){}
+ try{decorateCards(P);}catch(e){}
+ try{decorateWindow(P);}catch(e){}
+ try{decorateTimeline(P);}catch(e){}
+}
+function clean(){document.querySelectorAll('.scl374-navbtn,.scl374-task,.scl374-tag,.scl374-banner,.scl374-bar').forEach(e=>e.remove());document.querySelectorAll('.scl374-has').forEach(e=>e.classList.remove('scl374-has'));}
+function setHTML(el,html){if(el.__h!==html){el.innerHTML=html;el.__h=html;}}
+function decorateNav(P){
+ const nav=document.querySelector('#scl310Sidebar nav.scl295-nav,nav.scl295-nav');if(!nav)return;
+ let b=nav.querySelector('.scl374-navbtn');
+ if(!b){b=document.createElement('button');b.type='button';b.className='scl374-navbtn';b.dataset.scl374='list';const first=nav.querySelector('button[data-page-value="planner"]');if(first&&first.nextSibling)nav.insertBefore(b,first.nextSibling);else nav.appendChild(b);}
+ const n=P.length,label='Αιτήματα εταιριών'+(n?' ('+n+')':'');
+ if(b.getAttribute('aria-label')!==label){b.setAttribute('aria-label',label);b.setAttribute('title',label);}
+ setHTML(b,'<span class="scl321-nav-ico"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l2.6-7.2A2 2 0 0 1 7.5 4.5h9a2 2 0 0 1 1.9 1.3L21 13"/><path d="M3 13v4.5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V13h-5.2a3.8 3.8 0 0 1-7.6 0H3z"/></svg></span><span class="scl310-nav-label">Αιτήματα'+(n?' ('+n+')':'')+'</span>'+(n?'<i class="scl374-n" aria-hidden="true">'+n+'</i>':''));
+}
+function decorateTasks(P){
+ const box=document.querySelector('#scl295Pending .scl311-attention,#plannerPage .scl311-attention');if(!box)return;
+ const html=P.map(r=>{const hot=(Number(r.days_left)||0)<=2;
+  return '<div class="scl311-task scl374-task'+(hot?' hot':'')+'"><div><strong><i>Αίτημα</i>'+E(r.company)+' · '+E(brand(r))+'</strong><small>'+E(r.position.title)+' · '+E(months(r))+' · '+priv(eur(r.total))+' · <b>'+E(left(r))+'</b> (έως '+E(d(r.answer_by))+')</small></div><button type="button" class="action" data-scl374="open" data-id="'+E(r.id)+'">Δες το αίτημα</button></div>';}).join('');
+ let w=box.querySelector(':scope>.scl374-tasks');
+ if(!html){if(w)w.remove();box.classList.remove('scl374-has');return;}
+ if(!w){w=document.createElement('div');w.className='scl374-tasks';const h=box.querySelector(':scope>h2');if(h&&h.nextSibling)box.insertBefore(w,h.nextSibling);else box.appendChild(w);}
+ setHTML(w,html);box.classList.add('scl374-has');
+}
+function decorateCards(P){
+ document.querySelectorAll('.scl3231-card[data-card]').forEach(c=>{
+  const n=P.filter(r=>r.position.id===c.dataset.card).length;const tags=c.querySelector('.scr-tags');let t=c.querySelector('.scl374-tag');
+  if(!n||!tags){if(t)t.remove();return;}
+  if(!t){t=document.createElement('span');t.className='tag scl374-tag';tags.appendChild(t);}
+  const txt=n===1?'1 αίτημα εταιρίας':n+' αιτήματα εταιριών';if(t.textContent!==txt)t.textContent=txt;});
+}
+function decorateWindow(P){
+ const head=document.querySelector('.scl295-section-head.scl321c-head');if(!head)return;
+ const code=head.querySelector('h2 code');const pid=code?posIdByCode(code.textContent):'';
+ const mine=pid?P.filter(r=>r.position.id===pid):[];let w=head.parentElement.querySelector(':scope>.scl374-banners');
+ if(!mine.length){if(w)w.remove();return;}
+ if(!w){w=document.createElement('div');w.className='scl374-banners';head.insertAdjacentElement('afterend',w);}
+ setHTML(w,mine.map(r=>'<div class="scl374-banner"><div><b>Αίτημα από '+E(r.company)+' · '+E(brand(r))+'</b><small>'+E(months(r))+' · '+priv(eur(r.total))+' · '+E(left(r))+' (έως '+E(d(r.answer_by))+'). Ο μήνας δεν κλειδώνει μέχρι να απαντήσεις.</small></div><button type="button" class="scl374-btn" data-scl374="open" data-id="'+E(r.id)+'">Δες το αίτημα</button></div>').join(''));
+}
+function decorateTimeline(P){
+ const table=document.querySelector('.scl296-timeline-table');if(!table)return;
+ const py=programYear(),slots={};
+ P.forEach(r=>{if(Number(r.year)!==py)return;(r.months||[]).forEach(m=>{const k=r.position.id+'|'+m;(slots[k]=slots[k]||[]).push(r);});});
+ const sig=py+'#'+Object.keys(slots).sort().map(k=>k+':'+slots[k].map(r=>r.id).join(',')).join(';');
+ /* υπόμνημα: μία ένδειξη δίπλα στις υπόλοιπες, μόνο όταν υπάρχει αίτημα στο έτος που φαίνεται */
+ const grid=document.getElementById('timelineGrid');
+ if(grid){let lg=grid.querySelector('.scl374-leg');const any=Object.keys(slots).length>0;
+  if(!any){if(lg)lg.remove();}
+  else if(!lg){const it=[...grid.querySelectorAll('span,li,div')].find(e=>e.children.length<=1&&(e.textContent||'').trim()==='Προσυμφωνία');if(it&&it.parentElement){lg=document.createElement('span');lg.className='scl374-leg';lg.innerHTML='<i aria-hidden="true"></i>Αίτημα εταιρίας';it.parentElement.appendChild(lg);}}}
+ const have=table.querySelectorAll('.scl374-bar').length;
+ if(table.__scl374===sig&&have===Object.keys(slots).length)return;
+ table.querySelectorAll('.scl374-bar').forEach(e=>e.remove());table.__scl374=sig;
+ Object.keys(slots).forEach(k=>{const a=k.split('|'),rs=slots[k];
+  const zone=[...table.querySelectorAll('button[data-card][data-month]')].find(b=>b.dataset.card===a[0]&&b.dataset.month===a[1]);if(!zone)return;
+  const cell=zone.closest('.scl296-timeline-cell');if(!cell)return;
+  const s=Number(cell.dataset.blockStart),e=Number(cell.dataset.blockEnd),n=Math.max(1,e-s+1),i=Math.min(n-1,Math.max(0,Number(a[1])-s));
+  const b=document.createElement('button');b.type='button';b.className='scl374-bar';b.dataset.scl374=rs.length>1?'list':'open';if(rs.length===1)b.dataset.id=rs[0].id;
+  b.style.left='calc('+(i/n*100).toFixed(3)+'% + 4px)';b.style.width='calc('+(100/n).toFixed(3)+'% - 8px)';
+  b.textContent=rs.length>1?rs.length+' αιτήματα':rs[0].company;
+  b.setAttribute('aria-label',(rs.length>1?rs.length+' αιτήματα εταιριών':'Αίτημα από '+rs[0].company+', '+brand(rs[0]))+', '+MN[Number(a[1])]+' '+py+'. Περιμένει απάντησή σου.');b.title=b.getAttribute('aria-label');
+  cell.appendChild(b);});
+}
+/* ---------- παράθυρο ---------- */
+let back=null,lastFocus=null;
+function close(){if(back){back.remove();back=null;window.removeEventListener('keydown',onKey,true);R.view=null;if(lastFocus&&lastFocus.focus&&document.contains(lastFocus))lastFocus.focus();}}
+function onKey(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();if(R.view&&R.view.step==='decline'){R.view.step='';render();}else close();}}
+function open(view){if(!back){lastFocus=document.activeElement;back=document.createElement('div');back.className='scl374-back';back.addEventListener('mousedown',e=>{if(e.target===back)close();});document.body.appendChild(back);window.addEventListener('keydown',onKey,true);}R.view=view;render(true);}
+function render(focus){
+ if(!back||!R.view)return;const v=R.view;
+ const html=v.kind==='list'?listHTML():reqHTML(v);
+ const sc=back.querySelector('.scl374-body');const top=sc&&!focus?sc.scrollTop:0;
+ back.innerHTML=html;const nb=back.querySelector('.scl374-body');if(nb)nb.scrollTop=top;
+ if(focus){const f=back.querySelector('.scl374-x');if(f)f.focus();}
+}
+function rowHTML(r){const S=STAT[r.status]||[r.status,'off'],hot=r.status==='pending'&&(Number(r.days_left)||0)<=2;
+ return '<button type="button" class="scl374-row" data-scl374="open" data-id="'+E(r.id)+'"><span><b>'+E(r.company)+' · '+E(brand(r))+'</b><small>'+E(r.position.title)+' · '+E(months(r))+' · '+priv(eur(r.total))+'</small></span><span class="scl374-chip '+(hot?'hot':S[1])+'">'+E(r.status==='pending'?left(r):S[0])+'</span></button>';}
+function listHTML(){
+ const P=pending(),H=history();
+ let h='<div class="scl374-sheet" role="dialog" aria-modal="true" aria-label="Αιτήματα εταιριών"><div class="scl374-head"><div><h2>Αιτήματα εταιριών</h2><p>Εταιρίες που ζητούν θέση από το SpaceCoLLab Market. Απαντάς μέσα σε 7 ημέρες. Ο μήνας δεν κλειδώνει μέχρι να δεχτείς.</p></div><button type="button" class="scl374-x" data-scl374="close" aria-label="Κλείσιμο">×</button></div><div class="scl374-body">';
+ if(!P.length&&!H.length)h+='<p class="scl374-empty">Δεν υπάρχει ακόμα αίτημα.<br>Όταν μια εταιρία ζητήσει θέση σου, θα το δεις εδώ και στο πρόγραμμά σου.</p>';
+ if(P.length)h+='<p class="scl374-sec">Περιμένουν απάντησή σου · '+P.length+'</p>'+P.map(rowHTML).join('');
+ if(H.length)h+='<p class="scl374-sec">Έκλεισαν</p>'+H.map(rowHTML).join('');
+ return h+'</div></div>';
+}
+function reqHTML(v){
+ const r=find(v.id);
+ if(!r)return '<div class="scl374-sheet" role="dialog" aria-modal="true" aria-label="Αίτημα"><div class="scl374-head"><div><h2>Το αίτημα δεν βρέθηκε</h2></div><button type="button" class="scl374-x" data-scl374="close" aria-label="Κλείσιμο">×</button></div><div class="scl374-body"><p class="scl374-empty">Μπορεί να αποσύρθηκε από την εταιρία.</p></div></div>';
+ const S=STAT[r.status]||[r.status,'off'],pend=r.status==='pending',f=r.position.format,hot=pend&&(Number(r.days_left)||0)<=2,c=r.charge||{},T=r.terms||{};
+ let h='<div class="scl374-sheet" role="dialog" aria-modal="true" aria-label="Αίτημα από '+E(r.company)+'"><div class="scl374-head"><div><h2>'+(v.step==='decline'?'Δεν δέχομαι το αίτημα':'Αίτημα από '+E(r.company))+'</h2><p>'+E(r.no)+' · στάλθηκε '+E(d(r.created_at))+(r.sender?' από '+E(r.sender):'')+'</p></div><button type="button" class="scl374-x" data-scl374="close" aria-label="Κλείσιμο">×</button></div><div class="scl374-body">';
+ if(v.step==='decline'){
+  h+='<p class="scl374-note">Διάλεξε την απάντηση που θα δει η εταιρία. Μετά την αποστολή είναι οριστικό· η εταιρία μπορεί να στείλει νέο αίτημα.</p><div class="scl374-opts" role="radiogroup" aria-label="Απάντηση προς την εταιρία">'+REASONS.map(o=>'<button type="button" class="scl374-opt" role="radio" aria-checked="'+(v.reason===o[0]?'true':'false')+'" data-scl374="reason" data-v="'+o[0]+'">'+E(o[1])+'</button>').join('')+'</div>'
+   +'<div class="scl374-card"><h3>Σημείωση μόνο για τα Κεντρικά · προαιρετικό</h3><textarea maxlength="300" data-scl374-note aria-label="Σημείωση μόνο για τα Κεντρικά" placeholder="Η εταιρία δεν το βλέπει.">'+E(v.note||'')+'</textarea></div>'
+   +(v.err?'<p class="scl374-msg err" role="alert">'+E(v.err)+'</p>':'')
+   +'</div><div class="scl374-foot"><button type="button" class="scl374-btn ghost" data-scl374="back">Πίσω</button><span class="grow"></span><button type="button" class="scl374-btn danger" data-scl374="decline-send"'+(v.reason&&!v.busy?'':' disabled')+'>'+(v.busy?'Αποστολή…':'Στείλε «Δεν δέχομαι»')+'</button></div></div>';
+  return h;
+ }
+ h+='<div class="scl374-clock"><span class="scl374-chip '+(hot?'hot':S[1])+'">'+E(S[0])+(r.status!=='pending'&&r.reason&&WHY[r.reason]?' · '+E(WHY[r.reason]):'')+'</span>'+(pend?'<span class="scl374-note"><b>'+E(left(r))+'</b> · απάντηση έως '+E(d(r.answer_by))+'</span>':'')+'</div>';
+ h+='<div class="scl374-card scl374-what"><h3>Τι θέλει να προβάλει</h3><div><b>'+E(brand(r))+'</b><span>'+E((r.categories||[]).slice(0,2).join(' · '))+'</span></div><div class="scl374-tags">'+[r.theme].concat((r.subcategories||[]).filter(x=>x!==r.theme)).filter(Boolean).slice(0,6).map(t=>'<span>'+E(t)+'</span>').join('')+'</div>'+(r.message?'<p class="scl374-note">«'+E(r.message)+'»</p>':'')+'</div>';
+ h+='<div class="scl374-facts"><div><small>Θέση</small><b>'+E(r.position.title)+' · '+(f==='vertical'?'κάθετη':'οριζόντια')+'</b></div><div><small>Μήνες</small><b>'+E(months(r))+'</b></div><div><small>Θέμα στους μήνες</small><b>'+((r.months||[]).length>1?(r.same_theme?'Ίδιο σε όλους':'Αλλάζει κάθε μήνα'):'Ένας μήνας')+'</b></div></div>';
+ h+='<div class="scl374-card"><h3>Τι σου μένει</h3><div class="scl374-money"><span>Εισπράττεις από την εταιρία<small>'+(r.months||[]).length+' × '+E(eur(r.price_month))+' · σε πληρώνει απευθείας, στο τέλος κάθε μήνα</small></span><b>'+priv(eur(r.total))+'</b>'
+  +'<span>Χρέωση Pharmaplus<small>Συμφωνία '+E(eur(c.deal))+' + Market '+E(eur(c.market))+(Number(c.themes)>1?' · × '+E(c.themes)+' θέματα':'')+'</small></span><b>'+priv('− '+eur(c.total))+'</b>'
+  +'<span class="sum">Σου μένουν</span><b class="sum">'+priv(eur(c.net))+'</b></div><p class="scl374-note">Ποσά προ ΦΠΑ. Η χρέωση ισχύει μόνο αν δεχτείς. Η εταιρία δεν βλέπει τη χρέωσή σου.</p></div>';
+ const plans=(r.plans||[]).filter(g=>g[f]);
+ if(plans.length&&root.MKPlan)h+='<div class="scl374-card"><h3>Πλανόγραμμα ραφιών · μέρος της συμφωνίας</h3>'+plans.map(g=>{const q=g[f];return '<div class="scl374-plan"><div style="width:'+(f==='vertical'?'130px':'210px')+'">'+root.MKPlan.svg(q.shelves,f,{title:q.name,screen:true})+'</div><div><b>'+E(q.name)+'</b><p class="scl374-note">'+E((g.months||[]).map(m=>MN[m]).join(', ')+' '+r.year)+' · ράφια '+(f==='vertical'?'35':'50')+' εκ.</p>'+root.MKPlan.legend(q.shelves)+'</div></div>';}).join('')+'</div>';
+ if((T.pharmacy||[]).length)h+='<div class="scl374-card"><h3>Οι όροι για σένα · ισχύουν αν δεχτείς</h3><ol>'+T.pharmacy.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol></div>';
+ if((T.company||[]).length)h+='<div class="scl374-card"><h3>Οι όροι που αποδέχτηκε η εταιρία</h3><ol>'+T.company.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol></div>';
+ const L=R.logs[r.id];
+ if(Array.isArray(L)&&L.length)h+='<div class="scl374-card"><h3>Ιστορικό · δεν αλλάζει και δεν σβήνεται</h3><div class="scl374-log">'+L.map(l=>'<span>'+E(dt(l.at))+'</span><span><b>'+E(ACT[l.action]||l.action)+'</b>'+(l.detail&&l.detail.reason&&WHY[l.detail.reason]?' · '+E(WHY[l.detail.reason]):'')+'</span>').join('')+'</div></div>';
+ if(v.soon)h+='<p class="scl374-msg" role="status">Σύντομα: η αποδοχή από εδώ ανοίγει στο επόμενο βήμα. Αν θέλεις να κλείσεις τη συμφωνία τώρα, πάρε τηλέφωνο τα Κεντρικά.</p>';
+ if(v.msg)h+='<p class="scl374-msg" role="status">'+E(v.msg)+'</p>';
+ h+='</div><div class="scl374-foot">'+(R.data&&(pending().length+history().length)>1?'<button type="button" class="scl374-btn ghost" data-scl374="list">Όλα τα αιτήματα</button>':'')+'<button type="button" class="scl374-btn ghost" data-scl374="pdf" data-id="'+E(r.id)+'">Αποδεικτικό PDF</button><span class="grow"></span>'
+  +(pend?'<button type="button" class="scl374-btn no" data-scl374="decline">Δεν δέχομαι</button><button type="button" class="scl374-btn" data-scl374="accept">Δέχομαι</button>':'')+'</div></div>';
+ return h;
+}
+async function openReq(id){
+ open({kind:'req',id:id,step:''});
+ const r=find(id);
+ if(r&&r.status==='pending'&&!r.seen_pharmacy_at){await load(true,true);R.logs[id]=null;}
+ if(!Array.isArray(R.logs[id])){try{const x=await rpc('scl374_ph_request_log',{p_token:token(),p_id:id});R.logs[id]=x.log||[];}catch(e){R.logs[id]=[];}}
+ if(R.view&&R.view.kind==='req'&&R.view.id===id)render();
+}
+async function declineSend(){
+ const v=R.view;if(!v||v.busy||!v.reason)return;v.busy=true;v.err='';render();
+ try{const x=await rpc('scl374_ph_request_decline',{p_token:token(),p_id:v.id,p_reason:v.reason,p_note:(v.note||'').trim()||null});
+  delete R.logs[v.id];await load(true);
+  if(R.view){R.view={kind:'req',id:v.id,step:'',msg:x&&x.ok?'Η απάντησή σου στάλθηκε. Η εταιρία θα τη δει στο Market. Δεν χρεώνεσαι τίποτα.':'Το αίτημα είχε ήδη κλείσει. Δες τη νέα κατάσταση.'};
+   try{const y=await rpc('scl374_ph_request_log',{p_token:token(),p_id:v.id});R.logs[v.id]=y.log||[];}catch(e){}
+   render();}}
+ catch(e){v.busy=false;v.err=/note_long/.test(String(e.message))?'Η σημείωση είναι πολύ μεγάλη (έως 300 χαρακτήρες).':'Η απάντηση δεν στάλθηκε. Δοκίμασε ξανά σε λίγο.';render();}
+}
+function pdf(id){
+ const r=find(id);if(!r)return;const f=r.position.format,S=STAT[r.status]||[r.status,'off'],L=(Array.isArray(R.logs[id])?R.logs[id]:[]).filter(l=>l.action!=='seen'),T=r.terms||{};
+ const row=(k,v)=>v?'<tr><th>'+E(k)+'</th><td>'+E(v)+'</td></tr>':'';
+ const plans=root.MKPlan?(r.plans||[]).filter(g=>g[f]).map(g=>{const q=g[f];return '<div class="pl"><div class="pi">'+root.MKPlan.svg(q.shelves,f,{title:q.name,screen:true})+'</div><div><b>'+E(q.name)+'</b><br><span>'+E((g.months||[]).map(m=>MN[m]).join(', ')+' '+r.year)+' · '+(f==='vertical'?'Κάθετη μονάδα, ράφια 35 εκ.':'Οριζόντια μονάδα, ράφια 50 εκ.')+'</span>'+root.MKPlan.legend(q.shelves)+'</div></div>';}).join(''):'';
+ const name='Apodeiktiko_'+String(r.no).replace(/^[^0-9]*/,'AIT-');
+ const html='<!doctype html><html lang="el"><head><meta charset="utf-8"><title>'+E(name)+'</title><style>@page{size:A4;margin:16mm}*{box-sizing:border-box}body{font:12px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1d1d1f;margin:0}h1{font-size:20px;margin:0 0 2px}h2{font-size:11px;letter-spacing:.08em;color:#636366;margin:18px 0 6px;text-transform:uppercase}.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0f1b3d;padding-bottom:10px}.st{padding:3px 10px;border-radius:999px;font-weight:700;font-size:11px;background:#ececf0;color:#48484a}table{width:100%;border-collapse:collapse}th{text-align:left;font-weight:400;color:#636366;width:170px;padding:4px 0;vertical-align:top}td{padding:4px 0;font-weight:600}ol{margin:0;padding-left:18px}li{margin-bottom:3px}.pl{display:flex;gap:14px;align-items:flex-start;margin-bottom:10px;break-inside:avoid}.pi{flex:none;width:'+(f==='vertical'?'120px':'190px')+'}.pl span{color:#636366}.pl>div:last-child{flex:1;min-width:0}.lg td{font-weight:400}.mkp-legend{margin:8px 0 0;padding:0;list-style:none;font-size:11.5px}.mkp-legend ul{margin:3px 0 6px;padding:0;list-style:none}.mkp-legend li li{display:grid;grid-template-columns:10px 1fr auto;align-items:center;gap:8px;padding:1px 0;margin:0}.mkp-legend i{width:10px;height:10px;border-radius:3px}.mkp-legend em{font-style:normal;color:#636366;font-size:11px;margin-left:8px}.mkp-legend>li>span,.mkp-legend>li>em{margin-left:8px;color:#636366}svg,.st,.mkp-legend i{-webkit-print-color-adjust:exact;print-color-adjust:exact}.ft{margin-top:18px;padding-top:8px;border-top:1px solid #d2d2d7;color:#636366;font-size:10.5px}</style></head><body>'
+  +'<div class="top"><div><h1>Αποδεικτικό αιτήματος</h1><div>'+E(r.no)+' · SpaceCoLLab Market</div></div><span class="st">'+E({pending:'Περιμένει το φαρμακείο',declined:'Δεν δέχτηκε',expired:'Έληξε',withdrawn:'Αποσύρθηκε από την εταιρία',cancelled:'Ακυρώθηκε από την Pharmaplus',accepted:'Δέχτηκε'}[r.status]||r.status)+'</span></div>'
+  +'<h2>Το αίτημα</h2><table>'+row('Εταιρία',r.company)+row('Το έστειλε',r.sender)+row('Ημέρα και ώρα αποστολής',dt(r.created_at))+row('Φαρμακείο',r.pharmacy&&r.pharmacy.name)+row('Θέση',r.position.title+' · οθόνη και ράφια · '+(f==='vertical'?'κάθετη':'οριζόντια'))+row('Μήνες προβολής',months(r))+row('Brand',brand(r))+row('Θέμα',r.theme)+row('Μήνυμα',r.message)+row('Τιμή ανά μήνα',eur(r.price_month)+' προ ΦΠΑ')+row('Σύνολο',eur(r.total)+' προ ΦΠΑ')+row('Απάντηση έως',dt(r.answer_by).slice(0,10))+row('Λόγος',r.reason&&WHY[r.reason])+'</table>'
+  +(plans?'<h2>Πλανόγραμμα ραφιών (μέρος του αιτήματος)</h2>'+plans:'')
+  +'<h2>Όροι που αποδέχτηκε η εταιρία (έκδοση '+E(T.version)+')</h2><ol>'+(T.company||[]).map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>'
+  +((T.pharmacy_public||[]).length?'<h2>Τι αναλαμβάνει το φαρμακείο αν δεχτεί</h2><ol>'+T.pharmacy_public.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol>':'')
+  +'<h2>Ιστορικό</h2><table class="lg">'+(L.length?L.map(l=>'<tr><th>'+E(dt(l.at))+'</th><td><b>'+E({sent:'Στάλθηκε',seen:'Το είδε το φαρμακείο',declined:'Το φαρμακείο δεν δέχτηκε',expired:'Έληξε',withdrawn:'Αποσύρθηκε',cancelled:'Ακυρώθηκε από την Pharmaplus',accepted:'Το φαρμακείο δέχτηκε',answer_seen:'Η εταιρία είδε την απάντηση'}[l.action]||l.action)+'</b>'+(l.actor?' · '+E(l.actor):'')+(l.detail&&l.detail.reason&&WHY[l.detail.reason]?' · '+E(WHY[l.detail.reason]):'')+'</td></tr>').join(''):'<tr><td>Δεν υπάρχει ακόμα</td></tr>')+'</table>'
+  +'<div class="ft">Το ιστορικό κρατιέται στο SpaceCoLLab Market και δεν αλλάζει ούτε σβήνεται. Η Pharmaplus είναι ενδιάμεσος και δεν είναι μέρος της συμφωνίας. Εκτύπωση: '+E(dt(new Date()))+'</div></body></html>';
+ R.lastPdf=html;
+ const fr=document.createElement('iframe');fr.setAttribute('aria-hidden','true');fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(fr);
+ const dc=fr.contentWindow.document;dc.open();dc.write(html);dc.close();const t0=document.title;document.title=name;
+ setTimeout(()=>{try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){}setTimeout(()=>{document.title=t0;fr.remove();},1500);},250);
+}
+document.addEventListener('click',e=>{
+ const t=e.target&&e.target.closest?e.target.closest('[data-scl374]'):null;if(!t)return;
+ const a=t.dataset.scl374,v=R.view;e.preventDefault();e.stopPropagation();
+ if(a==='close'){close();return;}
+ if(a==='list'){open({kind:'list'});load(false);return;}
+ if(a==='open'){openReq(t.dataset.id);return;}
+ if(a==='pdf'){pdf(t.dataset.id);return;}
+ if(!v||v.kind!=='req')return;
+ if(a==='accept'){v.soon=true;render();const m=back&&back.querySelector('.scl374-msg');if(m&&m.scrollIntoView)m.scrollIntoView({block:'nearest'});return;}
+ if(a==='decline'){v.step='decline';v.reason='';v.err='';v.soon=false;render(true);return;}
+ if(a==='back'){v.step='';render(true);return;}
+ if(a==='reason'){const n=back.querySelector('[data-scl374-note]');if(n)v.note=n.value;v.reason=t.dataset.v;render();const b=back.querySelector('[data-v="'+v.reason+'"]');if(b)b.focus();return;}
+ if(a==='decline-send'){const n=back.querySelector('[data-scl374-note]');if(n)v.note=n.value;declineSend();return;}
+},true);
+document.addEventListener('click',e=>{if(e.target&&e.target.closest&&e.target.closest('[data-scl312],[data-scl295]')){setTimeout(decorate,0);setTimeout(decorate,350);}},true);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&R.data&&Date.now()-R.at>60000)load(true);});
+try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl374-market-requests',decorate);}catch(e){}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(decorate,0));else setTimeout(decorate,0);
+setInterval(()=>{if(!document.hidden&&document.body&&document.body.classList.contains('scl295-pharmacy'))decorate();},5000);
 })();
 </script>
