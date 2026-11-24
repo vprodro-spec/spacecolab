@@ -1,4 +1,5 @@
 // SCL375 · φωτογραφία στο «Στήθηκε». Δεν δέχεται τίποτα χωρίς έγκυρο σύνδεσμο φαρμακείου: ο έλεγχος γίνεται στη βάση (scl375_photo_*).
+// v2: γράφει και το μέγεθος· τα Κεντρικά ανοίγουν φωτογραφία με το κλειδί τους (hq_get).
 // Ο χώρος αρχείων «scl375-setup» είναι κλειστός· μόνο αυτό το πρόγραμμα γράφει, σβήνει και δίνει προσωρινό σύνδεσμο προβολής (2 λεπτά).
 const URL_ = Deno.env.get("SUPABASE_URL")!;
 const KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -40,7 +41,8 @@ Deno.serve(async (req: Request) => {
     const b = await req.json().catch(() => null);
     const link = typeof b?.link === "string" ? b.link : "";
     const pos = typeof b?.position_id === "string" ? b.position_id : "";
-    if (!link || !pos) throw new Fail(400, "Λείπουν στοιχεία.");
+    const hq = b?.action === "hq_get" && typeof b?.key === "string" && b.key;
+    if ((!link && !hq) || !pos) throw new Fail(400, "Λείπουν στοιχεία.");
 
     if (b.action === "put") {
       if (typeof b.image !== "string" || b.image.length > MAX * 1.4) throw new Fail(413, "Η φωτογραφία είναι πολύ μεγάλη.");
@@ -52,7 +54,7 @@ Deno.serve(async (req: Request) => {
       const up = await fetch(obj(path), { method: "POST", headers: { ...sh, "Content-Type": "image/jpeg", "x-upsert": "false" }, body: bytes });
       if (!up.ok) throw new Fail(502, "Δεν αποθηκεύτηκε η φωτογραφία. Δοκίμασε ξανά.");
       let res;
-      try { res = await rpc("scl375_photo_commit", { p_link: link, p_position_id: pos, p_path: path }); }
+      try { res = await rpc("scl375_photo_commit", { p_link: link, p_position_id: pos, p_path: path, p_bytes: bytes.length }); }
       catch (e) { await remove(path); throw e; }
       if (res?.old && res.old !== path) await remove(res.old);
       return out(req, 200, { photo: true, bytes: bytes.length });
@@ -62,8 +64,10 @@ Deno.serve(async (req: Request) => {
       await remove(res?.old);
       return out(req, 200, { photo: false });
     }
-    if (b.action === "get") {
-      const { path } = await rpc("scl375_photo_path", { p_link: link, p_year: b.year, p_month: b.month, p_position_id: pos });
+    if (b.action === "get" || hq) {
+      const { path } = hq
+        ? await rpc("scl375_photo_path_hq", { p_key: b.key, p_pharmacy_id: b.pharmacy_id, p_year: b.year, p_month: b.month, p_position_id: pos })
+        : await rpc("scl375_photo_path", { p_link: link, p_year: b.year, p_month: b.month, p_position_id: pos });
       if (!path) throw new Fail(404, "Δεν υπάρχει φωτογραφία.");
       const s = await fetch(`${URL_}/storage/v1/object/sign/${BUCKET}/${path.split("/").map(encodeURIComponent).join("/")}`, { method: "POST", headers: { ...sh, "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 120 }) });
       const j = await s.json().catch(() => null);
