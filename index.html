@@ -54804,3 +54804,96 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 setInterval(()=>{if(!document.hidden&&document.body&&document.body.classList.contains('scl295-pharmacy'))decorate();},5000);
 })();
 </script>
+<style id="scl375-style">
+/* v338.1 · scl375 · Κ2γ «Άνθρωποι» στο «Το φαρμακείο μου». Μόνο προσθήκες· αν η βάση δεν έχει το Κ2γ δεν εμφανίζεται τίποτα. */
+.scl375{--c375-ink:#101114;--c375-mut:#6b6f7b;--c375-line:rgba(60,60,67,.14);--c375-fill:rgba(120,120,128,.1);--c375-card:#fff;--c375-ok:#1f9d5b;--c375-bad:#c62828;margin-top:22px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--c375-ink)}
+[data-scl324-theme="dark"] .scl375{--c375-ink:#f3f4f7;--c375-mut:#a0a4b0;--c375-line:rgba(160,160,170,.24);--c375-fill:rgba(160,160,170,.14);--c375-card:#1d1f26}
+.scl375 h2{margin:0 0 4px;font-size:20px;font-weight:800;letter-spacing:-.02em}
+.scl375 .lead{margin:0 0 14px;color:var(--c375-mut);font-size:14px;line-height:1.45;max-width:640px}
+.scl375 .box{background:var(--c375-card);border:1px solid var(--c375-line);border-radius:18px;overflow:hidden}
+.scl375 .row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:center;padding:14px 16px}
+.scl375 .row+.row{border-top:1px solid var(--c375-line)}
+.scl375 .nm{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:15.5px;font-weight:700}
+.scl375 .role{padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:800;letter-spacing:.02em;background:#e6edfc;color:#1f49b8}
+.scl375 .role.staff{background:#e0f3ea;color:#14633b}
+[data-scl324-theme="dark"] .scl375 .role{background:#1c2a52;color:#9db8ff}[data-scl324-theme="dark"] .scl375 .role.staff{background:#143524;color:#7ddba3}
+.scl375 .sub{margin-top:3px;color:var(--c375-mut);font-size:13px;line-height:1.35}
+.scl375 .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.scl375 button{font:inherit;cursor:pointer;border:0;min-height:38px;padding:0 14px;border-radius:11px;font-size:13.5px;font-weight:700;background:var(--c375-fill);color:var(--c375-ink)}
+.scl375 button.go{background:var(--c375-ink);color:var(--c375-card)}
+.scl375 button.warn{background:var(--c375-bad);color:#fff}
+.scl375 button.done{background:rgba(31,157,91,.16);color:var(--c375-ok)}
+.scl375 button[disabled]{opacity:.5;cursor:default}
+.scl375 .new{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:14px 16px;border-top:1px solid var(--c375-line);background:var(--c375-fill)}
+.scl375 .box>.new:first-child{border-top:0}
+.scl375 input[type=text]{font:inherit;font-size:15px;min-height:40px;padding:0 12px;border-radius:11px;border:1px solid var(--c375-line);background:var(--c375-card);color:var(--c375-ink);width:100%;box-sizing:border-box}
+.scl375 .seg{display:flex;gap:3px;padding:3px;border-radius:12px;background:var(--c375-card);border:1px solid var(--c375-line)}
+.scl375 .seg button{min-height:32px;background:transparent;color:var(--c375-mut)}
+.scl375 .seg button[aria-pressed=true]{background:var(--c375-ink);color:var(--c375-card)}
+.scl375 .hint{grid-column:1/-1;margin:0;color:var(--c375-mut);font-size:13px;line-height:1.4}
+.scl375 .err{grid-column:1/-1;margin:0;color:var(--c375-bad);font-size:13.5px;font-weight:600}
+.scl375 .empty{padding:16px;color:var(--c375-mut);font-size:14px}
+.scl375 details{margin-top:12px}.scl375 summary{cursor:pointer;color:var(--c375-mut);font-size:13.5px;font-weight:700;padding:6px 2px}
+.scl375 .me{padding:14px 16px;font-size:14.5px;line-height:1.45}
+.scl375 .foot{margin:12px 2px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--c375-mut);font-size:13px}
+@media(max-width:640px){.scl375 .row{grid-template-columns:minmax(0,1fr)}.scl375 .acts{justify-content:flex-start}.scl375 .new{grid-template-columns:minmax(0,1fr)}.scl375 .seg button{flex:1}}
+</style>
+<script id="scl375-people">
+(function(){
+'use strict';
+const root=window;
+const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const client=()=>(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:null;
+async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Object.assign(Error(r.error.message||String(r.error)),{code:r.error.code});return r.data;}
+const token=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.pharmacyToken)||'';}catch(e){return '';}};
+const R=root.SCL375={people:null,me:null,state:'idle',role:'staff',name:'',err:'',busy:false,confirm:null,copied:null};
+const MS=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const day=x=>{const t=new Date(x);return isNaN(t)?'':t.getDate()+' '+MS[t.getMonth()]+(t.getFullYear()!==new Date().getFullYear()?' '+t.getFullYear():'');};
+const ROLE={manager:'Υπεύθυνος',staff:'Υπάλληλος'};
+const base=()=>location.origin+location.pathname.replace(/[^/]*$/,'');
+const linkOf=p=>p.role==='manager'?base()+'?pharmacy='+encodeURIComponent(p.link):base()+'spacecollab_staff.html?s='+encodeURIComponent(p.link);
+const host=()=>{const a=document.getElementById('scl295Profile');return a?(a.closest('section')||a):null;};
+async function load(){const t=token();if(!t||R.state==='loading')return;R.state='loading';
+ try{const d=await rpc('scl375_ph_people',{p_token:t});if(!d||!Array.isArray(d.people))throw Error('x');R.people=d.people;R.me={role:'owner'};R.state='ok';}
+ catch(e){if(e.code==='42501'){try{R.me=await rpc('scl375_ph_whoami',{p_token:t});}catch(_){R.me={role:'manager',name:''};}R.state='manager';}else R.state='off';}
+ draw();}
+function rowHTML(p){const off=!!p.revoked_at,c=R.confirm===p.id;
+ return '<div class="row" data-id="'+E(p.id)+'"><div><div class="nm">'+E(p.name)+'<span class="role '+E(p.role)+'">'+ROLE[p.role]+'</span></div><div class="sub">'+(off?'Ανακλήθηκε '+E(day(p.revoked_at))+(p.revoked_by?' · '+E(p.revoked_by):''):'Από '+E(day(p.created_at))+' · '+(p.last_seen_at?'τελευταία φορά '+E(day(p.last_seen_at)):'δεν έχει μπει ακόμα'))+'</div></div>'+
+  (off?'':'<div class="acts"><button type="button" data-scl375="copy" class="'+(R.copied===p.id?'done':'')+'">'+(R.copied===p.id?'Αντιγράφηκε':'Αντιγραφή συνδέσμου')+'</button>'+(c?'<button type="button" data-scl375="revoke-yes" class="warn"'+(R.busy?' disabled':'')+'>Ναι, ανάκληση</button><button type="button" data-scl375="revoke-no">Άκυρο</button>':'<button type="button" data-scl375="revoke">Ανάκληση</button>')+'</div>')+'</div>';}
+function html(){
+ if(R.state==='manager')return '<h2>Άνθρωποι</h2><div class="box"><div class="me">Έχεις μπει ως <b>Υπεύθυνος'+(R.me&&R.me.name?' · '+E(R.me.name):'')+'</b>. Ό,τι αλλάζεις γράφεται με το όνομά σου. Τους συνδέσμους τούς φτιάχνει και τους ανακαλεί μόνο ο ιδιοκτήτης.</div></div>';
+ const on=(R.people||[]).filter(p=>!p.revoked_at),off=(R.people||[]).filter(p=>p.revoked_at);
+ return '<h2>Άνθρωποι</h2><p class="lead">Δώσε στον καθένα τον δικό του σύνδεσμο. Δεν χρειάζονται κωδικοί. Τον ανακαλείς όποτε θέλεις και παύει αμέσως.</p><div class="box">'+
+  (on.length?on.map(rowHTML).join(''):'<div class="empty">Δεν υπάρχει ακόμα κανένας σύνδεσμος.</div>')+
+  '<div class="new"><input type="text" maxlength="60" placeholder="Όνομα, π.χ. Μαρία Π." aria-label="Όνομα" value="'+E(R.name)+'"><div class="seg" role="group" aria-label="Ρόλος"><button type="button" data-scl375="role" data-role="staff" aria-pressed="'+(R.role==='staff')+'">Υπάλληλος</button><button type="button" data-scl375="role" data-role="manager" aria-pressed="'+(R.role==='manager')+'">Υπεύθυνος</button></div><button type="button" data-scl375="add" class="go"'+(R.busy?' disabled':'')+'>Νέος σύνδεσμος</button>'+
+  '<p class="hint">'+(R.role==='staff'?'Υπάλληλος: βλέπει στο κινητό τι παίζει και τι στήνεται σε κάθε θέση, και δηλώνει «Στήθηκε». Δεν βλέπει ποσά και δεν ανοίγει το εργαλείο.':'Υπεύθυνος: κάνει στο εργαλείο ό,τι κι εσύ, και βλέπει ποσά. Ό,τι αλλάζει γράφεται με το όνομά του. Δεν φτιάχνει ούτε ανακαλεί συνδέσμους.')+'</p>'+(R.err?'<p class="err" role="alert">'+E(R.err)+'</p>':'')+'</div></div>'+
+  (off.length?'<details><summary>Ανακλημένοι ('+off.length+')</summary><div class="box">'+off.map(rowHTML).join('')+'</div></details>':'')+
+  '<div class="foot"><button type="button" data-scl375="open-staff">Δες τη σελίδα της ομάδας</button><span>Έτσι τη βλέπει ο υπάλληλος στο κινητό.</span></div>';}
+function draw(){const h=host();let s=document.getElementById('scl375People');
+ if(!h||R.state==='off'||R.state==='idle'||(R.state==='loading'&&!R.people)){if(s&&R.state==='off')s.remove();return;}
+ if(!s){s=document.createElement('section');s.id='scl375People';s.className='scl375';h.insertAdjacentElement('afterend',s);}
+ else if(s.previousElementSibling!==h)h.insertAdjacentElement('afterend',s);
+ const inp=s.querySelector('input'),foc=inp&&document.activeElement===inp,pos=foc?inp.selectionStart:0,open=!!(s.querySelector('details')||{}).open;
+ s.innerHTML=html();if(open&&s.querySelector('details'))s.querySelector('details').open=true;
+ if(foc){const n=s.querySelector('input');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(e){}}}}
+function decorate(){if(!document.body.classList.contains('scl295-pharmacy')||!token())return;if(R.state==='idle')load();else if(host()&&!document.getElementById('scl375People'))draw();}
+async function copy(text){try{await navigator.clipboard.writeText(text);return true;}catch(e){try{const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();return ok;}catch(_){return false;}}}
+document.addEventListener('input',e=>{const s=e.target.closest&&e.target.closest('#scl375People');if(s&&e.target.matches('input[type=text]')){R.name=e.target.value;if(R.err){R.err='';draw();}}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.closest&&e.target.closest('#scl375People .new')){e.preventDefault();add();}});
+async function add(){if(R.busy)return;const n=R.name.trim().replace(/\s+/g,' ');if(n.length<2){R.err='Γράψε όνομα.';draw();return;}R.busy=true;R.err='';draw();
+ try{const p=await rpc('scl375_ph_person_add',{p_token:token(),p_name:n,p_role:R.role});R.people=(R.people||[]).concat([p]);R.name='';const ok=await copy(linkOf(p));R.copied=ok?p.id:null;setTimeout(()=>{if(R.copied===p.id){R.copied=null;draw();}},2500);}
+ catch(e){R.err=e.message||'Δεν αποθηκεύτηκε. Δοκίμασε ξανά.';}
+ R.busy=false;draw();}
+document.addEventListener('click',async e=>{const b=e.target.closest&&e.target.closest('#scl375People [data-scl375]');if(!b)return;const a=b.dataset.scl375,row=b.closest('.row'),id=row&&row.dataset.id,p=id&&(R.people||[]).find(x=>String(x.id)===id);
+ if(a==='role'){R.role=b.dataset.role;draw();return;}
+ if(a==='add'){add();return;}
+ if(a==='copy'&&p){const ok=await copy(linkOf(p));R.copied=ok?p.id:null;if(!ok)R.err='Δεν έγινε αντιγραφή. Δοκίμασε από άλλον browser.';draw();setTimeout(()=>{if(R.copied===p.id){R.copied=null;draw();}},2500);return;}
+ if(a==='revoke'&&p){R.confirm=p.id;draw();return;}
+ if(a==='revoke-no'){R.confirm=null;draw();return;}
+ if(a==='revoke-yes'&&p&&!R.busy){R.busy=true;draw();try{const r=await rpc('scl375_ph_person_revoke',{p_token:token(),p_id:p.id});R.people=R.people.map(x=>x.id===p.id?Object.assign({},x,r,{link:undefined}):x);}catch(er){R.err=er.message||'Δεν έγινε η ανάκληση.';}R.busy=false;R.confirm=null;draw();return;}
+ if(a==='open-staff'){root.open(base()+'spacecollab_staff.html?s='+encodeURIComponent(token()),'_blank','noopener');}});
+try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl375-people',decorate);}catch(e){}
+let n=0;const iv=setInterval(()=>{decorate();if(++n>40)clearInterval(iv);},500);
+new MutationObserver(()=>{if(R.state!=='idle'&&R.state!=='off'&&host()&&!document.getElementById('scl375People'))draw();}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
