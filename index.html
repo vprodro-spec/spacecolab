@@ -53902,7 +53902,7 @@ function shellHTML(){
  const c=S.ov.counts||{},seg=(k,l,n)=>'<button type="button" data-scl370="tab" data-tab="'+k+'" aria-pressed="'+(S.tab===k)+'"'+(S.tab===k?' class="primary"':'')+'>'+l+' ('+nf(n)+')</button>';
  return '<div class="pagehead"><div><div class="eyebrow">Κεντρικά · SpaceCoLLab Market</div><h2>Market</h2><p class="lede">Εταιρίες που ζητούν πληροφορίες, αιτήματα θέσεων προς φαρμακεία, εταιρίες και τα Brands τους.</p></div>'+
   '<div class="btnrow"><button type="button" class="btn primary" data-scl370="company-new">Νέα εταιρία</button><button type="button" class="btn line" data-scl370="reload">Ανανέωση</button></div></div>'+
-  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Ζητούν πληροφορίες',c.requests_new)+(S.rq?seg('deals','Αιτήματα θέσεων',S.rq.counts&&S.rq.counts.pending):'')+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
+  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Ζητούν πληροφορίες',c.requests_new)+(S.rq?seg('deals','Αιτήματα θέσεων',(S.rq.pending||[]).length):'')+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
   (S.tab==='requests'||S.tab==='deals'?'':'<label class="search">'+SEARCH+'<input id="scl370Search" type="search" autocomplete="off" aria-label="Αναζήτηση" placeholder="'+(S.tab==='brands'?'Γράψε όνομα Brand':'Όνομα εταιρίας, ΑΦΜ ή Brand')+'" value="'+E(S.tab==='brands'?S.b.q:S.q)+'"></label>')+
   '</div><div class="scl370-body" id="scl370Body"></div></section>';
 }
