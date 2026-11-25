@@ -3568,5 +3568,24 @@ async function mkStart(){
 }
 mkStart();
 
+/* v339.1: οι εξελίξεις στα αιτήματα φτάνουν χωρίς ανανέωση σελίδας (κάθε λεπτό και όταν επιστρέφετε στην καρτέλα) */
+(function(){
+ let at=0,busy=false;
+ const sig=()=>JSON.stringify((LIVE.reqs||[]).map(r=>[r.id,r.status,r.cancel_ask?1:0,(r.cancelled_months||[]).join(','),r.closed_at]));
+ async function tick(force){
+  const c=window.SCLM;if(!c||!LIVE.auth||!LIVE.k3a||document.hidden||busy)return;
+  if(!force&&Date.now()-at<15000)return;
+  busy=true;at=Date.now();
+  const before=LIVE.unseen||0,was=sig(),onBook=c.state.view==='book';
+  try{await c.mkReqLoad(onBook);}catch(e){}finally{busy=false;}
+  if(sig()!==was)LIVE.logs={};
+  const now=LIVE.unseen||0;
+  if(!onBook&&now>before)c.setState({flash:(now===1?'Νέα εξέλιξη':'Νέες εξελίξεις')+' στα αιτήματά σας. Δείτε «Τα αιτήματά μου».'});
+ }
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)tick();});
+ window.addEventListener('focus',()=>tick());
+ setInterval(()=>tick(true),60000);
+})();
+
 })();
 </script></body></html>
