@@ -78,7 +78,7 @@ const C={
    εδώ διαβάζουμε τον τιμοκατάλογο ΜΟΝΟ για εμφάνιση, προβλέψεις και ετικέτες. Αν δεν φορτωθεί, ισχύουν οι αρχικές τιμές. */
 (function(root){
 'use strict';
-const DEF={platform:365,base_program:120,ADV:{extra_position:8,free_changes:3,extra_change:15,deal:30},PROMO:{extra_position:8,free_changes:3,extra_change:15,deal:30},EXP:{extra_position:8,free_changes:3,extra_change:15,deal:30}};
+const DEF={platform:365,base_program:120,ADV:{extra_position:8,free_changes:3,extra_change:15,deal:30,market_fee:10},PROMO:{extra_position:8,free_changes:3,extra_change:15,deal:30,market_fee:10},EXP:{extra_position:8,free_changes:3,extra_change:15,deal:30,market_fee:10}};
 const S={items:[],first:'',asOf:'',loaded:false,error:'',at:0,promise:null,key:'',pkey:''};
 const today=()=>{try{if(root.SCL292Core)return root.SCL292Core.today();}catch(e){}return new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Athens',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());};
 const isFixed=item=>item==='platform'||item==='base_program';
@@ -182,7 +182,7 @@ root.SCLP=P;if(typeof module!=='undefined'&&module.exports)module.exports=P;
     taskKey(r) { return ['v292',r.pharmacy_id,r.position_id,Core.year(r.year),Number(r.month),r.final_type||'',r.final_title||'',r.deal_id||'',r.content_change_reason||'',r.content_code||r.player_code||'',r.content_revision||'',r.final_detail||'',r.supplier||'',r.brand||'',r.products_text||r.product_codes||'',r.position_orientation||'',Core.taskFile(r)].map(x=>encodeURIComponent(String(x??''))).join('|'); },
     resetFrom(approval,year,now=new Date()) { return Array.from({length:12},(_,m)=>m).find(m=>m>=Number(approval.fromMonth)&&Core.editable(year,m,now))??-1; },
     total(rows) {return Math.round((rows||[]).reduce((s,r)=>s+Number(r.amount||0),0)*100)/100;},
-    category: {base:'Πάγιο υπηρεσίας',extra:'Επιπλέον οθόνες',custom:'Εξατομίκευση',deal:'Συμφωνία προμηθευτή',report:'Αναφορά αποτελεσμάτων — ιστορικό'},
+    category: {base:'Πάγιο υπηρεσίας',extra:'Επιπλέον οθόνες',custom:'Εξατομίκευση',deal:'Συμφωνία προμηθευτή',market:'Χρέωση Market',report:'Αναφορά αποτελεσμάτων — ιστορικό'},
     status: {planned:'Προγραμματισμένη',finalized:'Οριστικοποιημένη',cancelled:'Ακυρωμένη'},
     applyReset(card,type,program,schedule,originalLock) {
       const approval=card._scl292Reset;
@@ -32720,9 +32720,13 @@ setTimeout(scl231Boot,900);setTimeout(scl231Boot,2200);
     const y=year(),revision=R.snapshots[y]||0;let succeeded=false;applyInstallation();
     const months=scl206BuildPositionMonthsPayload(),deals=scl206BuildDealsPayload();
     const payload=sclStatePayload();const fingerprint=JSON.stringify(payload.cards)+String(payload.turnover);
-    R.saving=api('scl290_save_program',{p_token:SCL_ROUTING.pharmacyToken,p_year:y,
+    // v339 (Κ3β): το «Δέχομαι» σώζει το πρόγραμμα και σημειώνει το αίτημα «Δέχτηκε» σε μία συναλλαγή.
+    const mk=R.marketAccept,saveArgs={p_token:SCL_ROUTING.pharmacyToken,p_year:y,
       p_installation_version:R.context.installation.version,p_snapshot_revision:revision,
-      p_state:payload,p_months:months,p_deals:deals}).then(result=>{
+      p_state:payload,p_months:months,p_deals:deals};
+    if(mk){R.marketAccept=null;Object.assign(saveArgs,{p_id:mk.id,p_person:mk.person});}
+    R.saving=api(mk?'scl379_ph_request_accept':'scl290_save_program',saveArgs).then(result=>{
+      if(mk&&typeof mk.done==='function')mk.done(result);
       R.snapshots[y]=result.snapshot_revision;succeeded=true;
       state.cards.forEach(c=>{if(c._scl292ResetApplied){delete c._scl292ResetApplied;delete c._scl292Reset;}});
       if(root.SCL292){root.SCL292.invalidate();root.SCL292.loadFinance(true).catch(()=>{});}
@@ -35737,6 +35741,10 @@ function agreement(c,draft,edit,confirmed){
   out.confirmedDeals.push(d);
   if(edit?.type==='preagreement')out.preagreements=(out.preagreements||[]).filter(x=>String(x.id)!==String(edit.id));
   const prior=selected(c);out.simpleSchedule=prior;out.simpleMechanism=list(c.simpleMechanism).map(x=>x||'Χωρίς μηχανισμό');
+  // v339 (Κ3β): ό,τι έπαιζε πριν η συμφωνία (Εξατομίκευση), για να επανέλθει αν ακυρωθεί.
+  const was=edit?.type==='confirmed'?deals(c).find(x=>String(x.id)===String(edit.id)):null,keepPrior={};
+  for(const m of ms){const p=was?.prior?.[m]??was?.prior?.[String(m)];if(p)keepPrior[m]=p;else if(!at(c,m)&&prior[m]&&prior[m]!==(c.basicSchedule?.[m]||''))keepPrior[m]={basic:c.basicSchedule?.[m]||'',simple:prior[m],mechanism:out.simpleMechanism[m]||'Χωρίς μηχανισμό'};}
+  if(Object.keys(keepPrior).length)d.prior=keepPrior;else delete d.prior;
   for(const m of ms){
    const old=at(c,m);replaced.push({month:m,type:old?'Συμφωνία προμηθευτή':prior[m]!==c.basicSchedule?.[m]?'Εξατομίκευση':'Βασικό πρόγραμμα',title:old?[old.supplier,old.brand].filter(Boolean).join(' · '):prior[m]});
    out.simpleSchedule[m]=c.basicSchedule?.[m]||'';out.simpleMechanism[m]='Χωρίς μηχανισμό';
@@ -35758,14 +35766,27 @@ function shelf(c,draft,groupId,remove=false){
  if(!remove)for(const m of ms)out.sponsoredShelves.push({id:draft.id+'-'+m,groupId:draft.id,month:m,brand:draft.brand.trim(),products:draft.products.trim(),shelves:draft.shelves,price:Number(draft.price),status:'confirmed',reportMode:'none',startMonth:Number(draft.startMonth),duration:Number(draft.duration)});
  return {card:out,affected};
 }
-function deadline(year,month){const d=new Date(Date.UTC(year,month,1));d.setUTCDate(d.getUTCDate()-14);return d.toISOString().slice(0,10);}
+// v339: προθεσμία υλικού = 15 του προηγούμενου μήνα, ίδια με το κλείδωμα του μήνα (απόφαση 24/11).
+function deadline(year,month){const d=new Date(Date.UTC(year,month-1,15));return d.toISOString().slice(0,10);}
+// v339 (Κ3β): μετά από ακύρωση, οι ελεύθεροι μήνες ξαναπαίρνουν την Εξατομίκευση που είχε αντικαταστήσει η συμφωνία,
+// μόνο αν το Βασικό του μήνα δεν άλλαξε στο μεταξύ.
+function restorePrior(c,d,ms){
+ const out=clone(c);let n=0;
+ for(const m of ms){const p=d?.prior?.[m]??d?.prior?.[String(m)];if(!p||!p.simple||at(out,m))continue;if((out.basicSchedule?.[m]||'')!==(p.basic||''))continue;
+  out.simpleSchedule=list(out.simpleConfirmed?out.simpleSchedule:out.basicSchedule);out.simpleMechanism=list(out.simpleMechanism).map(x=>x||'Χωρίς μηχανισμό');
+  out.simpleSchedule[m]=p.simple;out.simpleMechanism[m]=p.mechanism||'Χωρίς μηχανισμό';out.simpleConfirmed=true;n++;}
+ if(n){out.pendingSimpleSchedule=clone(out.simpleSchedule);out.pendingSimpleMechanism=clone(out.simpleMechanism);}
+ return out;
+}
+// v339 (Κ3β): όνομα αρχείου Market: 2027_04_ΕΤΑΙΡΙΑ_BRAND_01_PORTRAIT.mp4 (μόνο λατινικά, χωρίς παύλα).
+function marketFile(d,year,m,format){const k=d.market?.codes||{},code=x=>String(x||'').toUpperCase().replace(/[^A-Z0-9]/g,'')||'X';return year+'_'+String(m+1).padStart(2,'0')+'_'+code(k.company)+'_'+code(k.brand)+'_01_'+format+'.mp4';}
 function files(c,d,year){
  const safe=s=>String(s||'').trim().replace(/\s+/g,'_').replace(/[^\wΑ-Ωα-ωΆ-ώ0-9_-]/g,'');
- const name=safe([d.supplier,d.brand,d.subline].filter(Boolean).join('_'))||'ΣΥΜΦΩΝΙΑ',format=c.screenFormat==='vertical'?'PORTRAIT':'LANDSCAPE',ms=months(d);
+ const name=safe([d.supplier,d.brand,d.subline].filter(Boolean).join('_'))||'ΣΥΜΦΩΝΙΑ',format=c.screenFormat==='vertical'?'PORTRAIT':'LANDSCAPE',ms=months(d),mk=d.market&&typeof d.market==='object';
  const groups=[];for(const m of ms){const key=dealKey(d,m),p=groups.at(-1);if(p&&p.key===key&&p.end===m-1)p.end=m;else groups.push({month:m,end:m,key});}
- return groups.map(({month:m,end})=>({month:m,end,file:name+(d.monthlyContentChanges===false?'':'_'+year+'-'+String(m+1).padStart(2,'0'))+'_'+format+'.mp4',deadline:deadline(year,m),subline:d.monthlyContentChanges===false?d.subline:d.monthlySublines?.[m]||d.subline,products:d.monthlyContentChanges===false?d.products:d.monthlyProducts?.[m]||d.products,content:d.schedule?.[m]||''}));
+ return groups.map(({month:m,end})=>({month:m,end,file:mk?marketFile(d,year,m,format):name+(d.monthlyContentChanges===false?'':'_'+year+'-'+String(m+1).padStart(2,'0'))+'_'+format+'.mp4',deadline:deadline(year,m),subline:d.monthlyContentChanges===false?d.subline:d.monthlySublines?.[m]||d.subline,products:d.monthlyContentChanges===false?d.products:d.monthlyProducts?.[m]||d.products,content:d.schedule?.[m]||''}));
 }
-const C={clone,list,deals,months,at,selected,dealKey,content,segments,operationalRows,blocks,forecast,custom,agreement,shelf,deadline,files};
+const C={clone,list,deals,months,at,selected,dealKey,content,segments,operationalRows,blocks,forecast,custom,agreement,shelf,deadline,files,restorePrior,marketFile};
 root.SCL297Core=C;if(typeof module!=='undefined')module.exports=C;
 })(typeof window!=='undefined'?window:globalThis);
 
@@ -35986,7 +36007,7 @@ async function commit(kind=F.review?.kind){
 F.document=function(id,deal,type){
  const c=card(id),rows=C.files(c,deal,year()),confirmed=type==='confirmation',heading=confirmed?'Επιβεβαίωση Συμφωνίας προμηθευτή':'Πρόταση προς προμηθευτή';
  const pharmacy=SCL_ROUTING.pharmacy?.name||SCL290.context?.pharmacy_name||'',format=exportFormatLabel(c),period=range(C.months(deal));
- const lines=[heading,pharmacy,[deal.supplier,deal.brand].filter(Boolean).join(' · '),'Θέση: '+c.title,'Κωδικός συσκευής: '+(c.playerCode||'Δεν έχει οριστεί'),'Περίοδος: '+period,'Προσανατολισμός: '+format,'Χώρος προϊόντων: '+exportShelvesLabel(c),'Συμφωνημένο ποσό: '+cash(Number(deal.soldMonthlyPrice))+' / μήνα','Συνολική αξία: '+cash(Number(deal.soldMonthlyPrice)*Number(deal.duration)),confirmed?'Παρακαλούμε αποστείλετε τα ακόλουθα αρχεία στο emitropoulou@pharmaplus.gr.':'Μετά την τελική συμφωνία, το υλικό παραδίδεται στο emitropoulou@pharmaplus.gr.','Ονομασία αρχείων: παρακαλούμε χρησιμοποιήστε ακριβώς τα παρακάτω ονόματα, μαζί με την κατάληξη .mp4. Στο email παράδοσης αναφέρετε φαρμακείο, κωδικό συσκευής και περίοδο προβολής.',...rows.map(r=>range(Array.from({length:r.end-r.month+1},(_,i)=>r.month+i))+' | '+[r.subline,r.products,r.content].filter(Boolean).join(' · ')+' | Ακριβές όνομα αρχείου: '+r.file+' | Παράδοση έως '+r.deadline.split('-').reverse().join('/')),'Η προθεσμία είναι 14 ημέρες πριν από την έναρξη του αντίστοιχου μήνα. Όλα τα αρχεία μπορούν να παραδοθούν νωρίτερα, πριν από την πρώτη έναρξη.','Το φαρμακείο αποστέλλει αυτό το έγγραφο στον προμηθευτή. Η εφαρμογή δεν στέλνει email.'];
+ const lines=[heading,pharmacy,[deal.supplier,deal.brand].filter(Boolean).join(' · '),'Θέση: '+c.title,'Κωδικός συσκευής: '+(c.playerCode||'Δεν έχει οριστεί'),'Περίοδος: '+period,'Προσανατολισμός: '+format,'Χώρος προϊόντων: '+exportShelvesLabel(c),'Συμφωνημένο ποσό: '+cash(Number(deal.soldMonthlyPrice))+' / μήνα','Συνολική αξία: '+cash(Number(deal.soldMonthlyPrice)*Number(deal.duration)),confirmed?'Παρακαλούμε αποστείλετε τα ακόλουθα αρχεία στο emitropoulou@pharmaplus.gr.':'Μετά την τελική συμφωνία, το υλικό παραδίδεται στο emitropoulou@pharmaplus.gr.','Ονομασία αρχείων: παρακαλούμε χρησιμοποιήστε ακριβώς τα παρακάτω ονόματα, μαζί με την κατάληξη .mp4. Στο email παράδοσης αναφέρετε φαρμακείο, κωδικό συσκευής και περίοδο προβολής.',...rows.map(r=>range(Array.from({length:r.end-r.month+1},(_,i)=>r.month+i))+' | '+[r.subline,r.products,r.content].filter(Boolean).join(' · ')+' | Ακριβές όνομα αρχείου: '+r.file+' | Παράδοση έως '+r.deadline.split('-').reverse().join('/')),'Η προθεσμία είναι η 15η του προηγούμενου μήνα από την έναρξη κάθε αρχείου. Όλα τα αρχεία μπορούν να παραδοθούν νωρίτερα, πριν από την πρώτη έναρξη.','Το φαρμακείο αποστέλλει αυτό το έγγραφο στον προμηθευτή. Η εφαρμογή δεν στέλνει email.'];
  F.documentText=lines.join('\n\n');
  document.querySelector('#briefModal .modal-title').textContent=heading;
  $('briefModalBody').innerHTML='<div class="actionRow">'+button('Αντιγραφή κειμένου','copy-document')+button('Εκτύπωση / Αποθήκευση PDF','print-document')+'</div><article class="export-sheet scl297-document"><h1>'+E(heading)+'</h1>'+lines.slice(1).map(s=>'<p>'+E(s)+'</p>').join('')+'</article>';openModal('briefModal');bindEvents();
@@ -36056,14 +36077,16 @@ const style=document.createElement('style');style.id='scl298-actions-style';styl
 'use strict';
 const C=root.SCL297Core,A=root.SCL292Core;
 const B=root.SCL299={};
-const labels={initial_basic_setup:'Αρχική τοποθέτηση Βασικού προγράμματος',basic_month_change:'Αλλαγή θεματικής Βασικού προγράμματος',custom_start:'Έναρξη Εξατομίκευσης',custom_theme_change:'Αλλαγή θεματικής Εξατομίκευσης',return_to_basic_from_custom:'Επιστροφή στο Βασικό πρόγραμμα από Εξατομίκευση',deal_start:'Έναρξη οριστικής Συμφωνίας προμηθευτή',deal_monthly_change:'Αλλαγή περιεχομένου Συμφωνίας προμηθευτή',deal_end_return_to_basic:'Λήξη Συμφωνίας · επιστροφή στο Βασικό πρόγραμμα',deal_end_return_to_custom:'Λήξη Συμφωνίας · επιστροφή στην Εξατομίκευση',exp_start:'Έναρξη προγράμματος Experience',exp_month_change:'Νέο βίντεο Experience · επόμενος μήνας του προγράμματος'};
+const labels={initial_basic_setup:'Αρχική τοποθέτηση Βασικού προγράμματος',basic_month_change:'Αλλαγή θεματικής Βασικού προγράμματος',custom_start:'Έναρξη Εξατομίκευσης',custom_theme_change:'Αλλαγή θεματικής Εξατομίκευσης',return_to_basic_from_custom:'Επιστροφή στο Βασικό πρόγραμμα από Εξατομίκευση',deal_start:'Έναρξη οριστικής Συμφωνίας προμηθευτή',deal_monthly_change:'Αλλαγή περιεχομένου Συμφωνίας προμηθευτή',deal_end_return_to_basic:'Λήξη Συμφωνίας · επιστροφή στο Βασικό πρόγραμμα',deal_cancel_return_to_basic:'Ακύρωση Συμφωνίας · επιστροφή στο Βασικό πρόγραμμα',deal_cancel_return_to_custom:'Ακύρωση Συμφωνίας · επιστροφή στην Εξατομίκευση',deal_end_return_to_custom:'Λήξη Συμφωνίας · επιστροφή στην Εξατομίκευση',exp_start:'Έναρξη προγράμματος Experience',exp_month_change:'Νέο βίντεο Experience · επόμενος μήνας του προγράμματος'};
 B.reason=value=>labels[value]||value;
 // v329.3 — το αρχείο βίντεο ενός μήνα Experience έρχεται από το πρόγραμμα που τοποθέτησε το φαρμακείο
 const expFile=(c,r)=>{const e=c.category==='EXP'&&r.final_type==='basic'?c.expPlan?.[r.month]:null;return e?c.expPrograms?.[e.p]?.files?.[e.k]||'':'';};
 function resolveRows(c,year,rows){
  return C.operationalRows(c,year,rows,A.active).map(r=>{
   const d=C.at(c,r.month),file=d?C.files(c,d,year).find(f=>r.month>=f.month&&r.month<=f.end):null,xf=file?'':expFile(c,r);
-  return {...r,month_label:MONTHS[r.block_start]+(r.block_end>r.block_start?'–'+MONTHS[r.block_end]:'')+' '+year,
+  // v339 (Κ3β): αν ο μήνας είχε συμφωνία που ακυρώθηκε, δεν κρατάμε το όνομα αρχείου της από την παλιά γραμμή μηνός.
+  const o=rows.find(x=>Number(x.month)===r.month),stale=!d&&o&&(o.final_type==='deal'||!!o.deal_id);
+  return {...r,...(stale?{file_name:undefined,content_filename:undefined}:{}),month_label:MONTHS[r.block_start]+(r.block_end>r.block_start?'–'+MONTHS[r.block_end]:'')+' '+year,
    ...(file?{file_name:file.file,content_filename:file.file}:xf?{file_name:xf,content_filename:xf}:{})};
  });
 }
@@ -36079,6 +36102,12 @@ B.rowsForYear=function(hq,year,old=[]){
  const snapshots=(hq.snapshots||[]).filter(s=>Number(s.year)===year),states=(hq.base?.pharmacy_state||[]).filter(s=>Number(s.year)===year);
  const byPharmacy=new Map(states.map(s=>[s.pharmacy_id,s]));snapshots.forEach(s=>byPharmacy.set(s.pharmacy_id,s));
  const result=[],covered=new Set(),all=[];
+ // v339 (Κ3β): γραμμές Συμφωνίας που σημειώθηκαν «Έγινε» στο Product Me. Αν η συμφωνία δεν παίζει πια σε αυτόν τον μήνα
+ // (ακύρωση), βγαίνει γραμμή επιστροφής ακόμα κι αν το θέμα δεν αλλάζει σε σχέση με τον προηγούμενο μήνα.
+ const doneDeals=new Map();
+ const doneMap=(typeof SCL212!=='undefined'&&SCL212&&SCL212.done)||root.SCL212?.done||{};
+ for(const [k,v] of Object.entries(doneMap)){if(!v||!k.startsWith('v292|'))continue;const p=k.split('|').map(x=>{try{return decodeURIComponent(x);}catch(e){return x;}});
+  if(p[5]!=='deal'||!p[7]||Number(p[3])!==year)continue;const key=p[1]+'|'+p[2];if(!doneDeals.has(key))doneDeals.set(key,[]);doneDeals.get(key).push({month:Number(p[4]),deal:p[7],title:p[6]});}
  for(const [pid,s] of byPharmacy){
   const cfg=(hq.installations||[]).find(x=>x.pharmacy_id===pid),reg=(hq.registry||[]).find(x=>x.pharmacy_id===pid);
   if(reg&&!reg.legacy&&!cfg)continue;
@@ -36093,6 +36122,9 @@ B.rowsForYear=function(hq,year,old=[]){
    });
    all.push(...rs);
    result.push(...rs.filter(r=>r.content_change_required));
+   for(const x of doneDeals.get(pid+'|'+c.id)||[]){const r=rs.find(q=>q.month===x.month);if(!r||String(r.deal_id||'')===x.deal||r.final_type==='deal')continue;
+    if(result.some(q=>q.pharmacy_id===pid&&q.position_id===c.id&&q.month===x.month&&q.content_change_required))continue;
+    result.push({...r,content_change_required:true,content_change_reason:r.final_type==='custom'?'deal_cancel_return_to_custom':'deal_cancel_return_to_basic',cancelled_deal_title:x.title});}
   }
  }
  result.push(...old.filter(r=>!covered.has(r.pharmacy_id+'|'+r.position_id)));
@@ -36495,7 +36527,7 @@ function filters(scope,rows){const f=U[scope],changes=scope==='changes';return '
 U.commonFilters=(scope,pharmaciesOnly=false)=>'<div class="scl303-filters"><div class="scl303-filter-main">'+(pharmaciesOnly?'':multi(scope,'months','Μήνες · '+year(),MONTHS.map((m,i)=>[i,m])))+multi(scope,'pharmacies','Φαρμακεία',options(U.rows()))+'</div><p class="scl303-filter-note">Η επιλογή φαρμακείων και περιόδου διατηρείται μεταξύ καρτελών.</p></div>';
 function copy(text,label){return text?'<div class="scl303-copy"><code>'+E(text)+'</code>'+btn('Αντιγραφή','copy','data-copy="'+E(text)+'" aria-label="Αντιγραφή '+label+'"')+'</div>':'<span class="scl303-missing">Δεν έχει καταχωριστεί</span>';}
 U.completion=function(t){const done=!!SCL212.done[t.id],date=done?when(SCL292.doneMeta?.[t.id]?.updated_at):'';return '<div class="scl303-completion"><span class="scl303-state '+(done?'done':'pending')+'">'+(done?'Έγινε η αλλαγή':'Εκκρεμεί αλλαγή')+'</span>'+(date?'<small>'+E(date)+'</small>':'')+btn(done?'Επιστροφή στις εκκρεμείς':'Έγινε η αλλαγή στο Product Me',done?'undo':'complete','data-id="'+E(t.id)+'" '+(U.pending.has(t.id)?'disabled':''),done?'secondary':'primary')+'</div>';};
-function transition(r){if(r.note)return r.note;const c=SCL302Core.snapshots(SCL290.hq||{}).get(r.pharmacy_id+'|'+r.year)?.state_json?.cards?.find(c=>c.id===r.position_id);if(!c||Number(r.month)===0||!A.active(c,r.year,Number(r.month)-1))return 'Αρχική τοποθέτηση → '+r.final_title;const p=SCL297Core.content(c,Number(r.month)-1),label=p.deal?[p.deal.brand||p.deal.supplier,p.deal.subline].filter(Boolean).join(' · '):p.theme;return (label||'Προηγούμενο περιεχόμενο')+' → '+r.final_title;}
+function transition(r){if(r.note)return r.note;if(r.cancelled_deal_title)return r.cancelled_deal_title+' (ακυρώθηκε) → '+(r.final_title||'');const c=SCL302Core.snapshots(SCL290.hq||{}).get(r.pharmacy_id+'|'+r.year)?.state_json?.cards?.find(c=>c.id===r.position_id);if(!c||Number(r.month)===0||!A.active(c,r.year,Number(r.month)-1))return 'Αρχική τοποθέτηση → '+r.final_title;const p=SCL297Core.content(c,Number(r.month)-1),label=p.deal?[p.deal.brand||p.deal.supplier,p.deal.subline].filter(Boolean).join(' · '):p.theme;return (label||'Προηγούμενο περιεχόμενο')+' → '+r.final_title;}
 function workTable(rows){return '<div class="scl303-scroll"><table class="scl303-table" aria-label="Αλλαγές στο Product Me"><thead><tr><th>Περίοδος προβολής</th><th>Φαρμακείο / θέση</th><th>Συσκευή</th><th>Αρχείο στο Product Me</th><th>Αιτία αλλαγής</th><th>Υλοποίηση στο Product Me</th></tr></thead><tbody>'+rows.map(r=>'<tr data-scl303-row="'+E(r.id)+'"><td>'+E(period(r))+'</td><td><strong>'+E(r.pharmacy_name)+'</strong><small>'+E(r.position_name)+'</small></td><td>'+copy(r.player_code,'κωδικού συσκευής')+'<small>Προσανατολισμός: '+C.format(r.position_orientation)+'</small></td><td><strong>'+E(r.final_title||'—')+'</strong><small>'+E(r.kind==='basic'&&/^exp-\d+$/.test(String(r.position_id||''))?'Experience':(C.kinds[r.kind]||''))+'</small>'+(root.SCL304?SCL304.fileControl(r):copy(r.file,'ονόματος αρχείου'))+'</td><td>'+E(r.reason)+'<details class="scl303-row-details"><summary>Προηγούμενο → νέο</summary><p>'+E(transition(r))+'</p></details>'+''+'</td><td>'+U.completion(r)+(root.SCL304?SCL304.historyControl(r):'')+'</td></tr>').join('')+'</tbody></table></div>';}
 function preserveControls(parent){const opened=[...parent.querySelectorAll('.scl303-multi')].filter(d=>d.open||d.hasAttribute('open')).map(d=>d.dataset.key),active=document.activeElement,query=parent.contains(active)?active?.dataset?.scl303Query:null,start=query?active.selectionStart:null,end=query?active.selectionEnd:null;return ()=>{opened.forEach(k=>{const d=parent.querySelector('.scl303-multi[data-key="'+k+'"]');if(d)d.open=true;});if(query){const input=parent.querySelector('[data-scl303-query="'+query+'"]');input?.focus({preventScroll:true});if(start!==null&&input?.setSelectionRange)input.setSelectionRange(start,end);}};}
 function host(id,parent){let h=$(id);if(!h){h=document.createElement('div');h.id=id;$(parent)?.prepend(h);}return h;}
@@ -36522,7 +36554,8 @@ const PRICE_ROWS=[
  ['extra_position','Επιπλέον θέση','€ / μήνα',{ADV:'Από την τρίτη θέση ADV. Οι 2 πρώτες περιλαμβάνονται στο πάγιο.',PROMO:'Κάθε θέση PROMO, από την πρώτη, όπως μια επιπλέον θέση.',EXP:'Κάθε θέση EXP, από την πρώτη, από τον μήνα έναρξής της.'}],
  ['free_changes','Δωρεάν αλλαγές εξατομίκευσης','αλλαγές / οθόνη / έτος',{},['EXP']],
  ['extra_change','Αλλαγή εξατομίκευσης μετά τις δωρεάν','€ / αλλαγή',{},['EXP']],
- ['deal','Συμφωνία προμηθευτή','€ / χρέωση',{}]
+ ['deal','Συμφωνία προμηθευτή','€ / χρέωση',{}],
+ ['market_fee','Χρέωση Market','€ / χρέωση',{ADV:'Επιπλέον της συμφωνίας, όταν η συμφωνία κλείνει μέσω SpaceCoLLab Market. Μία φορά ανά θέμα, όπως η συμφωνία.'}]
 ];
 const PRICE_CATS=[['ADV','Οθόνη πάγκου'],['PROMO','Γόνδολα ή κολώνα'],['EXP','Οθόνη Experience']];
 const priceFmt=v=>new Intl.NumberFormat('el-GR',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0);
@@ -36532,7 +36565,7 @@ function priceCell(item,cat,y,m){const v=SCLP.on(item,cat,y,m),integer=item==='f
 function priceHistory(){
  const items=SCLP.state.items,dates=[...new Set(items.map(r=>r.valid_from))].sort(),nowKey=A.today().slice(0,7),first=SCLP.state.first;
  const current=[...dates].filter(d=>d.slice(0,7)<=nowKey).pop();
- const cat=(d,c)=>{const {y,m}=ymOf(d);return SCLP.n(SCLP.on('extra_position',c,y,m))+' € / μήνα · '+(c==='EXP'?'':SCLP.on('free_changes',c,y,m)+' δωρεάν · '+SCLP.n(SCLP.on('extra_change',c,y,m))+' € αλλαγή · ')+SCLP.n(SCLP.on('deal',c,y,m))+' € συμφωνία';};
+ const cat=(d,c)=>{const {y,m}=ymOf(d);return SCLP.n(SCLP.on('extra_position',c,y,m))+' € / μήνα · '+(c==='EXP'?'':SCLP.on('free_changes',c,y,m)+' δωρεάν · '+SCLP.n(SCLP.on('extra_change',c,y,m))+' € αλλαγή · ')+SCLP.n(SCLP.on('deal',c,y,m))+' € συμφωνία · '+SCLP.n(SCLP.on('market_fee',c,y,m))+' € Market';};
  return '<div class="scl3284-hist"><table><thead><tr><th>Ισχύει από</th><th>Πάγιο / έτος</th><th>ADV</th><th>PROMO</th><th>EXP</th><th></th></tr></thead><tbody>'+dates.map(d=>{const {y,m}=ymOf(d),initial=d.slice(0,4)==='2000',future=first&&d>=first;
   return '<tr'+(d===current?' class="now"':'')+'><td><strong>'+E(initial?'Αρχικές τιμές':FULL_MONTHS[m]+' '+y)+'</strong>'+(d===current?'<small>Σε ισχύ</small>':future?'<small>Προγραμματισμένη</small>':'')+'</td><td>'+E(SCLP.n(SCLP.fixedYear(y,m)))+' €</td><td>'+E(cat(d,'ADV'))+'</td><td>'+E(cat(d,'PROMO'))+'</td><td>'+E(cat(d,'EXP'))+'</td><td>'+(future&&!initial?btn('Ακύρωση','price-delete','data-date="'+E(d)+'"'):'')+'</td></tr>';}).join('')+'</tbody></table></div>';
 }
@@ -36833,7 +36866,7 @@ function supplierDocument({pharmacy,address,supplier,brand,position,device,orien
  ...(audience&&audience.monthly?[{title:'Το κοινό της θέσης',paragraphs:['Το φαρμακείο μας δέχεται '+audience.monthly+' επισκέψεις τον μήνα.',...(audience.total?['Σε '+audience.months+' μήνες: '+audience.total+' επισκέψεις.']:[]),'Η θέση είναι αποκλειστικά δική σας όλο τον μήνα.']}]:[]),
  {title:'Προδιαγραφές υλικού οθόνης',paragraphs:['Προσανατολισμός: '+orientation+' · '+(orientation==='portrait'?'1080 × 1920 pixels (9:16).':'1920 × 1080 pixels (16:9).'),'Υποστηρίζονται βίντεο MP4 (.mp4) και στατικές εικόνες JPEG (.jpg ή .jpeg).','Η οθόνη λειτουργεί χωρίς ήχο. Παρακαλούμε παραδώστε το βίντεο χωρίς ηχητικό κανάλι και ενσωματώστε κάθε απαραίτητο μήνυμα στην εικόνα, ώστε να γίνεται κατανοητό χωρίς αφήγηση ή μουσική.','Το δημιουργικό χρειάζεται να είναι προσαρμοσμένο στον παραπάνω προσανατολισμό και στις αντίστοιχες διαστάσεις. Για κάθε ζητούμενο υλικό μπορείτε να επιλέξετε βίντεο ή στατική εικόνα.']},
  {title:confirmed?'Αρχεία και παράδοση':'Προετοιμασία αρχείων μετά την αποδοχή',paragraphs:['Παρακαλούμε χρησιμοποιήστε ακριβώς ένα από τα παρακάτω ονόματα ανά υλικό, ανάλογα με τον τύπο αρχείου. Η κατάληξη πρέπει να αντιστοιχεί στον πραγματικό τύπο του αρχείου· η απλή μετονομασία δεν μετατρέπει βίντεο σε εικόνα.'],files},
- {title:'Αποστολή υλικού',paragraphs:[(confirmed?'Παρακαλούμε αποστείλετε':'Μετά την αποδοχή της πρότασης, παρακαλούμε αποστείλετε')+' τα τελικά αρχεία στο emitropoulou@pharmaplus.gr, για τον έλεγχο και τον προγραμματισμό τους από την ομάδα Pharmaplus.','Στο θέμα του email αναφέρετε: '+pharmacy+' | '+device+' | '+period+'. Στο μήνυμα συμπεριλάβετε τη μάρκα, την περίοδο προβολής και τα ονόματα των συνημμένων αρχείων.','Το υλικό πρέπει να έχει παραδοθεί 14 ημέρες πριν από την έναρξη της αντίστοιχης περιόδου. Αν αλλάζει ανά μήνα, ισχύει η προθεσμία κάθε αρχείου. Μπορείτε επίσης να στείλετε όλα τα αρχεία πριν από την πρώτη έναρξη.','Αν προβλέπετε καθυστέρηση, ενημερώστε έγκαιρα το φαρμακείο και την ομάδα Pharmaplus για να συνεννοηθούμε για τα επόμενα βήματα.'] }];
+ {title:'Αποστολή υλικού',paragraphs:[(confirmed?'Παρακαλούμε αποστείλετε':'Μετά την αποδοχή της πρότασης, παρακαλούμε αποστείλετε')+' τα τελικά αρχεία στο emitropoulou@pharmaplus.gr, για τον έλεγχο και τον προγραμματισμό τους από την ομάδα Pharmaplus.','Στο θέμα του email αναφέρετε: '+pharmacy+' | '+device+' | '+period+'. Στο μήνυμα συμπεριλάβετε τη μάρκα, την περίοδο προβολής και τα ονόματα των συνημμένων αρχείων.','Το υλικό πρέπει να έχει παραδοθεί έως τις 15 του προηγούμενου μήνα από την έναρξη της αντίστοιχης περιόδου. Αν αλλάζει ανά μήνα, ισχύει η προθεσμία κάθε αρχείου. Μπορείτε επίσης να στείλετε όλα τα αρχεία πριν από την πρώτη έναρξη.','Αν προβλέπετε καθυστέρηση, ενημερώστε έγκαιρα το φαρμακείο και την ομάδα Pharmaplus για να συνεννοηθούμε για τα επόμενα βήματα.'] }];
  const closing=confirmed?'Σας ευχαριστούμε για την εμπιστοσύνη. Ανυπομονούμε να υλοποιήσουμε μαζί αυτή τη συνεργασία.':'Θα χαρούμε να ακούσουμε τη γνώμη σας και να συζητήσουμε τα επόμενα βήματα της συνεργασίας μας.';
  const greeting='Αγαπητή ομάδα '+(supplier||'συνεργατών')+',';
  const text=[title,pharmacy,greeting,...sections.flatMap(s=>[s.title,...(s.paragraphs||[]),...(s.items||[]).map(([k,v])=>k+': '+v),...(s.files||[]).map(f=>f.period+'\n'+(f.content?f.content+'\n':'')+'Βίντεο: '+f.video+'\nΣτατική εικόνα: '+f.image+' ή '+f.jpeg+'\nΠαράδοση έως: '+f.deadline)]),closing,'Με εκτίμηση,\nΗ ομάδα του φαρμακείου '+pharmacy].join('\n\n');
@@ -37272,7 +37305,7 @@ function controls(prefix){const s=scenario;
  return '<div class="scl318-controls">'+number('months','Μήνες συμφωνίας ανά οθόνη',s.months,'min="0" max="12" step="1"')+'<label>Διάρκεια κάθε συμφωνίας<select id="'+prefix+'-duration" data-scl318-field="duration">'+[1,2,3,6].map(n=>'<option value="'+n+'" '+(s.duration===n?'selected':'')+'>'+n+(n===1?' μήνας':' μήνες')+'</option>').join('')+'</select></label>'+price('price','Μηνιαία τιμή συμφωνίας (€)',s.price)+number('shelves','Μήνες χορηγίας ανά οθόνη',s.shelves,'min="0" max="'+(12-s.months)+'" step="1"')+price('shelfPrice','Μηνιαία τιμή χορηγίας (€)',s.shelfPrice)+number('paid','Χρεώσιμες αλλαγές στο έτος (σύνολο)',s.paid,'min="0" max="1000" step="1"')+'</div><p class="scl318-hint">Προτεινόμενες τιμές: Συμφωνία '+money(suggestedPrice())+' · Χορηγία '+money(sponsoredBasePrice())+'. Οι μήνες χορηγίας περιορίζονται στους μήνες χωρίς συμφωνία.</p><p class="scl318-hint">Με βάση ετήσιο τζίρο '+E(euro(state.turnover))+'. Αλλάζει από «Το φαρμακείο μου». <button type="button" data-scl3181-turnover '+(Number(state.programYear)<Number(SCL292Core.today().slice(0,4))?'disabled':'')+'>Αλλαγή τζίρου</button></p>';
 }
 function assumptions(e){return '<p class="scl318-hint">Εκτίμηση πλήρους έτους για '+e.positions+' τοπικές οθόνες, ανεξάρτητα από την πραγματική έναρξη/παύση. Κάθε συμφωνία έχει ίδιο περιεχόμενο στη διάρκειά της· τυχόν υπόλοιπο μηνών σχηματίζει μικρότερη περίοδο. Η Pharmaplus εξαιρείται.</p><p>'+e.periods+' περίοδοι συμφωνιών · '+money(C.sum(e.cost.filter(r=>r.category==='deal')))+' κόστος συμφωνιών. Το σενάριο δεν αποθηκεύεται και δεν προστίθεται στα καταχωρισμένα ποσά.</p>';}
-function breakdown(columns){const kinds=[['Συμφωνίες προμηθευτή','revenue','deal'],['Χορηγίες ραφιών','revenue','shelf'],['Πάγιο υπηρεσίας','cost','base'],['Επιπλέον οθόνες','cost','extra'],['Κόστος συμφωνιών','cost','deal'],['Εξατομικεύσεις','cost','custom'],['Αναφορές — ιστορικό','cost','report']];const known=new Set(kinds.filter(k=>k[1]==='cost').map(k=>k[2]));if(columns.some(c=>c.cost.some(r=>!known.has(r.category))))kinds.push(['Λοιπές εγγραφές κόστους','cost','other']);
+function breakdown(columns){const kinds=[['Συμφωνίες προμηθευτή','revenue','deal'],['Χορηγίες ραφιών','revenue','shelf'],['Πάγιο υπηρεσίας','cost','base'],['Επιπλέον οθόνες','cost','extra'],['Κόστος συμφωνιών','cost','deal'],['Χρέωση Market','cost','market'],['Εξατομικεύσεις','cost','custom'],['Αναφορές — ιστορικό','cost','report']];const known=new Set(kinds.filter(k=>k[1]==='cost').map(k=>k[2]));if(!columns.some(c=>c.cost.some(r=>r.category==='market')))kinds.splice(kinds.findIndex(k=>k[2]==='market'),1);if(columns.some(c=>c.cost.some(r=>!known.has(r.category))))kinds.push(['Λοιπές εγγραφές κόστους','cost','other']);
  return '<div class="scl318-table-wrap"><table class="scl318-table"><caption>Αναλυτικά · οι πιστώσεις περιλαμβάνονται με αρνητικό πρόσημο στην αντίστοιχη κατηγορία</caption><thead><tr><th scope="col">Είδος</th><th scope="col">Μέχρι σήμερα</th><th scope="col">Ως το τέλος του έτους</th><th scope="col">Δυνατότητα · Εκτίμηση</th></tr></thead><tbody>'+kinds.map(([label,group,cat])=>'<tr><th scope="row">'+label+'</th>'+columns.map(c=>'<td>'+money(C.sum(c[group].filter(r=>cat==='other'?!known.has(r.category):r.category===cat)))+'</td>').join('')+'</tr>').join('')+[['Σύνολο εσόδων','income'],['Σύνολο κόστους','expense'],['Αποτέλεσμα','profit']].map(([label,k])=>'<tr class="scl318-total"><th scope="row">'+label+'</th>'+columns.map(c=>'<td>'+money(c[k])+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
 }
 function rowsTable(column){const records=[...column.revenue.map(r=>({...r,group:'Έσοδο',label:r.category==='shelf'?'Χορηγία ραφιών':'Συμφωνία προμηθευτή',statusLabel:'Συμφωνημένο'})),...column.cost.map(r=>({...r,group:r.entry_type==='credit'?'Πίστωση':'Κόστος',label:A.category[r.category]||r.category,statusLabel:A.status[r.status]||'Εκτίμηση'}))];
@@ -38902,23 +38935,28 @@ function blocked(c,d,type,y=year()){
 }
 function candidate(c,d,type){const next=C.clone(c);
  if(type==='preagreement'){next.preagreements=(next.preagreements||[]).filter(x=>!(!x.confirmed&&same(x,d)));}
- else {next.confirmedDeals=(next.confirmedDeals||[]).filter(x=>!same(x,d));if(next.negotiation?.confirmed&&same(next.negotiation,d))next.negotiation=null;}
+ else {next.confirmedDeals=(next.confirmedDeals||[]).filter(x=>!same(x,d));if(next.negotiation?.confirmed&&same(next.negotiation,d))next.negotiation=null;
+  // v339 (Κ3β): επανέρχεται η Εξατομίκευση που είχε αντικαταστήσει η συμφωνία.
+  return C.restorePrior(next,d,C.months(d));}
  return next;
 }
 function metrics(c){const rows=SCL292.data?.rows,key=SCL_ROUTING.pharmacy.id+':'+year();if(!Array.isArray(rows)||SCL292.key!==key||SCL292.errorKey===key)throw Error('Τα οικονομικά δεν είναι διαθέσιμα. Κλείσε τη φόρμα και φόρτωσε την οθόνη Εσόδων πριν από την ακύρωση.');const forecast=C.forecast(c,year(),rows,A.active);return {planned:G.sum(forecast.filter(r=>r.status==='planned')),revenue:G.sum(G.revenues([c],year(),A.active))};}
 function returnText(next,d){const selected=C.selected(next),months=C.months(d);if(months.every(m=>!C.at(next,m)&&selected[m]===C.list(next.basicSchedule)[m]))return 'Οι μήνες επιστρέφουν στο βασικό πρόγραμμα.';return 'Μετά την ακύρωση θα παίζει: '+months.map(m=>{const deal=C.at(next,m);return MONTHS[m]+' · '+(deal?'Συμφωνία · '+(deal.brand||deal.supplier):root.scl293Title?.(selected[m])||selected[m]||'Χωρίς περιεχόμενο');}).join(' · ')+'.';}
 function decorateForm(){if(review||saving)return;const ctx=context(),host=$('#negotiationModalBody');if(!ctx||!removalEnabled(ctx)||!host||!$('#negotiationModal.open')||F.review||host.querySelector('.scl3235-removal'))return;let c,d;try{({c,d}=target(ctx));}catch{return;}
+ if(d&&d.market)return; // v339 (Κ3β): συμφωνία Market· ακύρωση μόνο από τα Κεντρικά
  const why=blocked(c,d,ctx.type,ctx.year),box=document.createElement('div');box.className='scl3235-removal';box.innerHTML=button(ctx.type==='preagreement'?'Διαγραφή προσυμφωνίας':'Ακύρωση συμφωνίας','review',why?'disabled aria-describedby="scl3235Locked"':'')+(why?'<p id="scl3235Locked">'+E(why)+'</p>':'');
  (host.querySelector('.scl316-scroll')||host).append(box);
 }
 const openDeal=F.openDeal;
 F.openDeal=function(id,type=null,index=0){if(!ph())return openDeal.apply(this,arguments);if(saving)return;const c=card(id),d=c&&['confirmed','preagreement'].includes(type)?list(c,type)[index]:null;
- if(d&&C.months(d).some(m=>!A.active(c,year(),m)||!A.editable(year(),m)||!operationalMonthEditable(m))){
+ if(d&&(d.market||C.months(d).some(m=>!A.active(c,year(),m)||!A.editable(year(),m)||!operationalMonthEditable(m)))){
   if(F.draft){const modal={deal:'negotiationModal',custom:'customModal',shelf:'sponsoredModal'}[F.draft.kind];closeModal(modal);if(F.draft)return;}
   review=null;view={card:id,type,index,year:year(),baseline:JSON.stringify(c),deal:C.clone(d)};
   $('#negotiationModal .modal-title').textContent=type==='preagreement'?'Προσυμφωνία':'Συμφωνία προμηθευτή';
-  $('#negotiationModalBody').innerHTML='<section class="scl3235-read"><h3>'+E(d.brand||d.supplier||'Συμφωνία')+'</h3><p>'+E(c.title+' · '+contiguousLabel(C.months(d))+' '+year())+'</p><p>'+E(cash(d.soldMonthlyPrice))+' / μήνα</p>'+button('Έγγραφο προς προμηθευτή','document')+'</section>';
-  openModal('negotiationModal');decorateForm();SCL310Privacy.refresh();return;
+  $('#negotiationModalBody').innerHTML=d.market?(root.SCL379?.marketDealHTML?.(c,d,year())||''):'<section class="scl3235-read"><h3>'+E(d.brand||d.supplier||'Συμφωνία')+'</h3><p>'+E(c.title+' · '+contiguousLabel(C.months(d))+' '+year())+'</p><p>'+E(cash(d.soldMonthlyPrice))+' / μήνα</p>'+button('Έγγραφο προς προμηθευτή','document')+'</section>';
+  openModal('negotiationModal');decorateForm();SCL310Privacy.refresh();
+  if(d.market){const sub=()=>{const x=document.querySelector('#negotiationModal .modal-head .small');if(x)x.textContent='Συμφωνία μέσω SpaceCoLLab Market · μόνο για ανάγνωση';};sub();setTimeout(sub,0);setTimeout(sub,120);}
+  return;
  }
  const previous=F.draft;const result=openDeal.apply(this,arguments);if(F.draft!==previous){view=null;review=null;}decorateForm();return result;
 };
@@ -38926,7 +38964,7 @@ const close=closeModal;
 closeModal=function(id){if(!ph())return close.apply(this,arguments);if(id==='negotiationModal'&&saving)return;const result=close.apply(this,arguments);if(id==='negotiationModal'&&!$('#negotiationModal.open')){review=null;view=null;}return result;};
 function showReview(){const ctx=context();if(!ctx||saving||!removalEnabled(ctx))return;const {c,d}=target(ctx),why=blocked(c,d,ctx.type,ctx.year);if(why)throw Error(why);if(JSON.stringify(c)!==ctx.baseline)throw Error('Τα δεδομένα της θέσης άλλαξαν. Κλείσε και άνοιξε ξανά τη φόρμα.');
  const next=candidate(c,d,ctx.type),pre=ctx.type==='preagreement';let impact='';
- if(!pre){const a=metrics(c),b=metrics(next);impact='<p>Θα αφαιρεθεί συμφωνημένο έσοδο <strong>'+E(cash(a.revenue-b.revenue))+'</strong>. Προγραμματισμένο κόστος θέσης πριν → μετά: <strong>'+E(cash(a.planned)+' → '+cash(b.planned))+'</strong>.</p><p>'+E(returnText(next,d))+'</p><p>Οι οριστικοποιημένες χρεώσεις και οι πιστώσεις διατηρούνται. Δεν επανέρχεται αυτόματα χορηγία ή παλιά εξατομίκευση που είχε αντικατασταθεί από τη συμφωνία.</p>';}
+ if(!pre){const a=metrics(c),b=metrics(next);impact='<p>Θα αφαιρεθεί συμφωνημένο έσοδο <strong>'+E(cash(a.revenue-b.revenue))+'</strong>. Προγραμματισμένο κόστος θέσης πριν → μετά: <strong>'+E(cash(a.planned)+' → '+cash(b.planned))+'</strong>.</p><p>'+E(returnText(next,d))+'</p><p>Οι οριστικοποιημένες χρεώσεις και οι πιστώσεις διατηρούνται. Αν η συμφωνία είχε αντικαταστήσει Εξατομίκευση, η Εξατομίκευση επανέρχεται. Οι Χορηγίες ραφιών δεν επανέρχονται αυτόματα.</p>';}
  const title=(pre?'Διαγραφή προσυμφωνίας':'Ακύρωση συμφωνίας')+' «'+(d.brand||d.supplier||'—')+'»';
  const node=document.createElement('section');node.className='scl3235-review';node.setAttribute('aria-label',title);
  node.innerHTML='<h3>'+E(title)+'</h3><p>'+E(c.title+' · '+contiguousLabel(C.months(d))+' '+year())+'</p><p>'+(pre?'Η προσυμφωνία θα αφαιρεθεί. Το πρόγραμμα και οι χρεώσεις δεν αλλάζουν. Δεν υπάρχει χρέωση διαγραφής.':'Οι μήνες είναι ακόμη ανοιχτοί. Η ακύρωση αφορά ολόκληρη τη συμφωνία.')+'</p>'+impact+'<p>Οι μη αποθηκευμένες αλλαγές της φόρμας δεν θα αποθηκευτούν με αυτή την ενέργεια.</p><p class="scl3235-error" role="alert" hidden></p><footer>'+button('Επιστροφή','back')+button(pre?'Διαγραφή προσυμφωνίας':'Επιβεβαίωση ακύρωσης','confirm')+'</footer>';
@@ -53850,17 +53888,17 @@ const eur374=n=>{const v=Number(n)||0;return (Math.round(v)===v?nf(v):v.toFixed(
 const dt374=x=>{const t=new Date(x);return isNaN(t)?'':t.toLocaleDateString('el-GR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+t.toLocaleTimeString('el-GR',{hour:'2-digit',minute:'2-digit',hour12:false});};
 const WHY374={month:'Ο μήνας δεν είναι πια διαθέσιμος',other_months:'Προτιμά άλλους μήνες',fit:'Δεν ταιριάζει με το φαρμακείο αυτή την περίοδο',other:'Άλλος λόγος',time:'Δεν απάντησε το φαρμακείο μέσα στην προθεσμία',closed:'Κάποιος μήνας κλείστηκε στο μεταξύ',unavailable:'Η θέση δεν είναι πια στο Market',company_inactive:'Η εταιρία έγινε ανενεργή',hq:'Ακύρωση από τα Κεντρικά'};
 const ST374={pending:['Περιμένει το φαρμακείο','warn'],declined:['Δεν δέχτηκε','mute'],expired:['Έληξε','mute'],withdrawn:['Το απέσυρε η εταιρία','mute'],cancelled:['Ακυρώθηκε','mute'],accepted:['Δέχτηκε','ok']};
-const ACT374={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξε το φαρμακείο',declined:'Το φαρμακείο δεν δέχτηκε',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Το φαρμακείο δέχτηκε',answer_seen:'Η εταιρία είδε την απάντηση'};
-function deal(id){const d=S.rq||{};return (d.pending||[]).concat(d.unseen||[],d.recent||[]).find(r=>r.id===id)||null;}
+const ACT374={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξε το φαρμακείο',declined:'Το φαρμακείο δεν δέχτηκε',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Το φαρμακείο δέχτηκε',answer_seen:'Η εταιρία είδε την απάντηση',partly_cancelled:'Τα Κεντρικά ακύρωσαν τους ανοιχτούς μήνες',cancel_asked:'Η εταιρία ζήτησε ακύρωση',cancel_ask_declined:'Τα Κεντρικά κράτησαν τη συμφωνία'};
+function deal(id){const d=S.rq||{};return (d.pending||[]).concat(d.cancel_asks||[],d.unseen||[],d.recent||[]).find(r=>r.id===id)||null;}
 function dealsHTML(){
- const d=S.rq||{},P=d.pending||[],old=Date.now()-3*864e5,U=(d.unseen||[]).filter(r=>new Date(r.closed_at).getTime()<old),R=d.recent||[];
+ const d=S.rq||{},P=d.pending||[],A=d.cancel_asks||[],aid=new Set(A.map(r=>r.id)),old=Date.now()-3*864e5,U=(d.unseen||[]).filter(r=>new Date(r.closed_at).getTime()<old&&!aid.has(r.id)),R=(d.recent||[]).filter(r=>!aid.has(r.id));
  const row=(r,mode)=>{const st=ST374[r.status]||[r.status,'mute'],left=Number(r.days_left)||0,hot=r.status==='pending'&&left<=2;
   return '<div class="scl370-row'+(r.is_test?' off':'')+'"><div><strong>'+E(r.pharmacy.name)+'</strong><small>'+E([r.pharmacy_code,r.pharmacy.area].filter(Boolean).join(' · '))+'</small><small>'+E(r.no)+' · στάλθηκε '+fmtDate(r.created_at)+'</small></div>'+
    '<div><span class="scl370-sub" style="margin:0"><b style="color:var(--ink)">'+E(r.company)+' · '+E((r.brands||[]).join(' + '))+'</b></span><small>'+E(r.position.title)+' · '+E((r.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+' · '+E(eur374(r.total))+'</small>'+
-   '<div class="scl370-chips" style="margin-top:6px">'+(r.status==='pending'?'<span class="scl370-tagx '+(hot?'red':'warn')+'">'+(left<=0?'Λήγει σήμερα':left===1?'Μένει 1 ημέρα':'Μένουν '+left+' ημέρες')+'</span>'+(r.seen_pharmacy_at?'<span class="scl370-tagx mute">Το άνοιξε το φαρμακείο</span>':'<span class="scl370-tagx warn">Δεν το έχει ανοίξει</span>'):'<span class="scl370-tagx '+st[1]+'">'+E(st[0])+'</span>'+(mode==='unseen'?'<span class="scl370-tagx red">Η εταιρία δεν το έχει δει · '+fmtDate(r.closed_at)+'</span>':''))+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div></div>'+
-   '<div class="scl370-acts"><button type="button" class="btn line" data-scl370="deal" data-id="'+E(r.id)+'">Άνοιγμα</button></div></div>';};
- if(!P.length&&!U.length&&!R.length)return '<div class="scl370-empty"><b>Δεν υπάρχει ακόμα αίτημα θέσης</b>Όταν μια εταιρία ζητήσει θέση από φαρμακείο, θα το δεις εδώ με την προθεσμία του.</div>';
- return (P.length?'<div class="scl370-old" style="margin-top:0">Περιμένουν απάντηση από φαρμακείο · '+P.length+'</div>'+P.map(r=>row(r,'')).join(''):'<div class="scl370-empty"><b>Κανένα αίτημα δεν περιμένει</b></div>')+
+   '<div class="scl370-chips" style="margin-top:6px">'+(r.status==='pending'?'<span class="scl370-tagx '+(hot?'red':'warn')+'">'+(left<=0?'Λήγει σήμερα':left===1?'Μένει 1 ημέρα':'Μένουν '+left+' ημέρες')+'</span>'+(r.seen_pharmacy_at?'<span class="scl370-tagx mute">Το άνοιξε το φαρμακείο</span>':'<span class="scl370-tagx warn">Δεν το έχει ανοίξει</span>'):'<span class="scl370-tagx '+st[1]+'">'+E(st[0])+'</span>'+(mode==='unseen'?'<span class="scl370-tagx red">Η εταιρία δεν το έχει δει · '+fmtDate(r.closed_at)+'</span>':''))+(window.SCL379?window.SCL379.hqRowChips(r,mode):'')+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div></div>'+
+   '<div class="scl370-acts"><button type="button" class="btn '+(mode==='ask'?'primary':'line')+'" data-scl370="deal" data-id="'+E(r.id)+'">Άνοιγμα</button></div></div>';};
+ if(!P.length&&!U.length&&!R.length&&!A.length)return '<div class="scl370-empty"><b>Δεν υπάρχει ακόμα αίτημα θέσης</b>Όταν μια εταιρία ζητήσει θέση από φαρμακείο, θα το δεις εδώ με την προθεσμία του.</div>';
+ return (A.length?'<div class="scl370-old" style="margin-top:0">Η εταιρία ζητά ακύρωση συμφωνίας · '+A.length+'</div>'+A.map(r=>row(r,'ask')).join(''):'')+(P.length?'<div class="scl370-old" style="margin-top:0">Περιμένουν απάντηση από φαρμακείο · '+P.length+'</div>'+P.map(r=>row(r,'')).join(''):'<div class="scl370-empty"><b>Κανένα αίτημα δεν περιμένει</b></div>')+
   (U.length?'<div class="scl370-old">Απαντήσεις που δεν είδε η εταιρία πάνω από 3 ημέρες · πάρε τηλέφωνο</div>'+U.map(r=>row(r,'unseen')).join(''):'')+
   (R.length?'<div class="scl370-old">Έκλεισαν</div>'+R.map(r=>row(r,'')).join(''):'');
 }
@@ -53871,14 +53909,15 @@ async function dealModal(id,msg){
  const plans=(window.MKPlan?(r.plans||[]).filter(g=>g[f]):[]).map(g=>'<div style="display:flex;gap:14px;align-items:flex-start;margin-top:8px"><div style="flex:none;width:'+(f==='vertical'?'96px':'150px')+';padding:6px;border-radius:10px;background:#fff">'+window.MKPlan.svg(g[f].shelves,f,{title:g[f].name,screen:true})+'</div><div><b>'+E(g[f].name)+'</b><div class="scl370-sub" style="margin:2px 0 0">'+E((g.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+'</div></div></div>').join('');
  const m=openModal('Αίτημα '+r.no,E(r.company)+' → '+E(r.pharmacy.name),
   (msg?'<div class="scl370-note">'+E(msg)+'</div>':'')+
-  '<div class="scl370-chips"><span class="scl370-tagx '+st[1]+'">'+E(st[0])+(r.reason&&WHY374[r.reason]?' · '+E(WHY374[r.reason]):'')+'</span>'+(pend?'<span class="scl370-tagx '+((Number(r.days_left)||0)<=2?'red':'warn')+'">Απάντηση έως '+fmtDate(r.answer_by)+'</span>':'')+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div>'+
+  '<div class="scl370-chips"><span class="scl370-tagx '+st[1]+'">'+E(st[0])+(r.reason&&WHY374[r.reason]?' · '+E(WHY374[r.reason]):'')+'</span>'+(pend?'<span class="scl370-tagx '+((Number(r.days_left)||0)<=2?'red':'warn')+'">Απάντηση έως '+fmtDate(r.answer_by)+'</span>':'')+(window.SCL379?window.SCL379.hqRowChips(r,'modal'):'')+(r.is_test?'<span class="scl370-tagx mute">Δοκιμαστικό</span>':'')+'</div>'+
   '<div class="scl370-sec">Το αίτημα</div><div class="scl370-kvs">'+kv('Εταιρία',r.company)+kv('Το έστειλε',r.sender)+kv('Φαρμακείο',r.pharmacy.name+(r.pharmacy_code?' · '+r.pharmacy_code:''))+kv('Θέση',r.position.title+' · '+(f==='vertical'?'κάθετη':'οριζόντια'))+kv('Μήνες',(r.months||[]).map(m=>MN374[m]).join(', ')+' '+r.year)+kv('Brand',(r.brands||[]).join(' + '))+kv('Θέμα',r.theme)+kv('Θέμα στους μήνες',(r.months||[]).length>1?(r.same_theme?'Ίδιο σε όλους':'Αλλάζει κάθε μήνα'):'')+kv('Μήνυμα',r.message)+'</div>'+
-  '<div class="scl370-sec">Χρήματα · η χρέωση φαρμακείου δεν φαίνεται στην εταιρία</div><div class="scl370-kvs">'+kv('Η εταιρία πληρώνει το φαρμακείο',eur374(r.total)+' ('+(r.months||[]).length+' × '+eur374(r.price_month)+')')+kv('Χρέωση φαρμακείου αν δεχτεί',eur374(c.total)+' (συμφωνία '+eur374(c.deal)+' + Market '+eur374(c.market)+(Number(c.themes)>1?', × '+c.themes+' θέματα':'')+')')+kv('Μένουν στο φαρμακείο',eur374(c.net))+'</div>'+
+  '<div class="scl370-sec">Χρήματα · η χρέωση φαρμακείου δεν φαίνεται στην εταιρία</div><div class="scl370-kvs">'+kv('Η εταιρία πληρώνει το φαρμακείο',eur374(r.total)+' ('+(r.months||[]).length+' × '+eur374(r.price_month)+')')+kv(r.status==='accepted'?'Χρέωση φαρμακείου':'Χρέωση φαρμακείου αν δεχτεί',eur374(c.total)+' (συμφωνία '+eur374(c.deal)+' + Market '+eur374(c.market)+(Number(c.themes)>1?', × '+c.themes+' θέματα':'')+')')+kv('Μένουν στο φαρμακείο',eur374(c.net))+'</div>'+
   (plans?'<div class="scl370-sec">Πλανόγραμμα ραφιών</div>'+plans:'')+
   (r.hq_note?'<div class="scl370-sec">Σημείωση (μόνο Κεντρικά)</div><div class="scl370-msg">'+E(r.hq_note)+'</div>':'')+
+  (window.SCL379?window.SCL379.hqCancelHTML(r):'')+
   '<div class="scl370-sec">Ιστορικό · δεν αλλάζει και δεν σβήνεται</div><div class="scl370-kvs">'+(L.length?L.map(l=>'<div class="scl370-kv"><span>'+E(dt374(l.at))+'</span><b>'+E(ACT374[l.action]||l.action)+(l.actor?' · '+E(l.actor):'')+(l.detail&&l.detail.reason&&WHY374[l.detail.reason]?' · '+E(WHY374[l.detail.reason]):'')+(l.detail&&l.detail.note?' · «'+E(l.detail.note)+'»':'')+'</b></div>').join(''):'<div class="scl370-sub">Δεν υπάρχει ακόμα</div>')+'</div>'+
   (pend?'<div class="scl370-sec">Ακύρωση από τα Κεντρικά</div><label class="scl370-f"><span>Λόγος (υποχρεωτικός· τον βλέπουν μόνο τα Κεντρικά. Εταιρία και φαρμακείο βλέπουν «Ακυρώθηκε από την Pharmaplus»)</span><textarea data-f="cancel" maxlength="300"></textarea></label>':''),
-  '<span class="scl370-err" role="alert"></span>'+(pend?'<button type="button" class="scl370-b red" data-scl370="deal-cancel" data-id="'+E(r.id)+'">Ακύρωση αιτήματος</button>':'')+'<button type="button" class="scl370-b pri" data-scl370="close">Κλείσιμο</button>',true);
+  '<span class="scl370-err" role="alert"></span>'+(pend?'<button type="button" class="scl370-b red" data-scl370="deal-cancel" data-id="'+E(r.id)+'">Ακύρωση αιτήματος</button>':(window.SCL379?window.SCL379.hqCancelButtons(r):''))+'<button type="button" class="scl370-b pri" data-scl370="close">Κλείσιμο</button>',true);
  m._deal=id;const fb=m.querySelector('footer .pri');if(fb)fb.focus({preventScroll:true});const mb=m.querySelector('.scl370-mbody');if(mb)mb.scrollTop=0;
 }
 function mount(){
@@ -53902,7 +53941,7 @@ function shellHTML(){
  const c=S.ov.counts||{},seg=(k,l,n)=>'<button type="button" data-scl370="tab" data-tab="'+k+'" aria-pressed="'+(S.tab===k)+'"'+(S.tab===k?' class="primary"':'')+'>'+l+' ('+nf(n)+')</button>';
  return '<div class="pagehead"><div><div class="eyebrow">Κεντρικά · SpaceCoLLab Market</div><h2>Market</h2><p class="lede">Εταιρίες που ζητούν πληροφορίες, αιτήματα θέσεων προς φαρμακεία, εταιρίες και τα Brands τους.</p></div>'+
   '<div class="btnrow"><button type="button" class="btn primary" data-scl370="company-new">Νέα εταιρία</button><button type="button" class="btn line" data-scl370="reload">Ανανέωση</button></div></div>'+
-  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Ζητούν πληροφορίες',c.requests_new)+(S.rq?seg('deals','Αιτήματα θέσεων',(S.rq.pending||[]).length):'')+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
+  '<section class="panel"><div class="toolbar"><div class="seg">'+seg('requests','Ζητούν πληροφορίες',c.requests_new)+(S.rq?seg('deals','Αιτήματα θέσεων',(S.rq.pending||[]).length).replace('</button>',((S.rq.cancel_asks||[]).length?' <span class="scl379-badge" title="Η εταιρία ζητά ακύρωση">'+(S.rq.cancel_asks||[]).length+'</span>':'')+'</button>'):'')+seg('companies','Εταιρίες',(S.ov.companies||[]).length)+seg('brands','Brands',c.brands)+'</div>'+
   (S.tab==='requests'||S.tab==='deals'?'':'<label class="search">'+SEARCH+'<input id="scl370Search" type="search" autocomplete="off" aria-label="Αναζήτηση" placeholder="'+(S.tab==='brands'?'Γράψε όνομα Brand':'Όνομα εταιρίας, ΑΦΜ ή Brand')+'" value="'+E(S.tab==='brands'?S.b.q:S.q)+'"></label>')+
   '</div><div class="scl370-body" id="scl370Body"></div></section>';
 }
@@ -53975,6 +54014,7 @@ function companyModal(c,rq){
  const m=openModal(isNew?'Νέα εταιρία':'Στοιχεία εταιρίας',isNew?'Μετά την αποθήκευση της δίνεις τα Brands της και παίρνεις τον σύνδεσμο.':'',
   fld('name','Όνομα εταιρίας (όπως θα φαίνεται)',v.name)+
   (isNew||!S.rq?'':'<div class="scl370-sec">Δοκιμές</div><div class="scl370-note"><b>'+(c.is_test?'Δοκιμαστική εταιρία.':'Κανονική εταιρία.')+'</b> '+(c.is_test?'Τα αιτήματά της δεν μετράνε στις λίστες και μπορούν να σβηστούν.':'Αν τη σημειώσεις δοκιμαστική, τα αιτήματά της δεν θα μετράνε και θα μπορούν να σβηστούν. Γίνεται μόνο πριν στείλει το πρώτο αίτημα.')+'<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">'+(Number(c.requests)&&!c.is_test?'':'<button type="button" class="scl370-b" data-scl370="company-test" data-id="'+E(c.id)+'" data-on="'+(c.is_test?'0':'1')+'"'+(Number(c.requests)?' disabled title="Σβήσε πρώτα τα δοκιμαστικά αιτήματα"':'')+'>'+(c.is_test?'Κάν’ την κανονική':'Σημείωσε ως δοκιμαστική')+'</button>')+(c.is_test&&Number(c.requests)?'<button type="button" class="scl370-b red" data-scl370="test-purge" data-id="'+E(c.id)+'">Σβήσε τα δοκιμαστικά αιτήματα ('+c.requests+')</button>':'')+'</div></div>')+
+  (isNew?'':'<div class="scl370-sec">Κωδικοί για τα ονόματα αρχείων</div><div data-scl379-codes="'+E(c.id)+'"><div class="scl370-sub">Φόρτωση…</div></div>')+
   '<div class="scl370-sec">Υπεύθυνος επικοινωνίας</div><div class="scl370-grid2">'+fld('p.full_name','Ονοματεπώνυμο',vp.full_name)+fld('p.role','Ρόλος',vp.role,'π.χ. Trade marketing')+fld('p.email','Email',vp.email,'','email')+fld('p.phone','Τηλέφωνο',vp.phone,'','tel')+'</div>'+
   '<div class="scl370-sec">Στοιχεία τιμολόγησης · προαιρετικά τώρα</div>'+fld('legal_name','Επωνυμία',v.legal_name)+'<div class="scl370-grid2">'+fld('vat','ΑΦΜ',v.vat)+fld('tax_office','ΔΟΥ',v.tax_office)+'</div>'+fld('address','Διεύθυνση έδρας',v.address)+fld('billing_email','Email λογιστηρίου',v.billing_email,'','email')+
   '<label class="scl370-f"><span>Σημειώσεις (τις βλέπουν μόνο τα Κεντρικά)</span><textarea data-f="notes">'+E(v.notes||'')+'</textarea></label>'+
@@ -53982,6 +54022,7 @@ function companyModal(c,rq){
   '<span class="scl370-err" role="alert"></span>'+(isNew?'':'<button type="button" class="scl370-b red" data-scl370="company-delete" data-id="'+E(c.id)+'">Διαγραφή</button><button type="button" class="scl370-b red" data-scl370="company-active" data-id="'+E(c.id)+'" data-on="'+(c.active?'0':'1')+'">'+(c.active?'Απενεργοποίηση':'Ενεργοποίηση')+'</button>')+
   '<button type="button" class="scl370-b" data-scl370="close">Άκυρο</button><button type="button" class="scl370-b pri" data-scl370="company-save">'+(isNew?'Αποθήκευση και Brands':'Αποθήκευση')+'</button>');
  m._ctx={id:c?c.id:null,request_id:rq?rq.id:null};
+ if(c&&window.SCL379)window.SCL379.loadCodes(m,c.id);
 }
 async function companySave(btn){
  const m=modalEl;if(!m)return;const g=k=>{const e=m.querySelector('[data-f="'+k+'"]');return e?e.value.trim():'';};
@@ -54127,7 +54168,12 @@ document.addEventListener('click',e=>{
  if(a==='deal'){dealModal(t.dataset.id);return;}
  if(a==='deal-cancel'){const ta=modalEl&&modalEl.querySelector('[data-f="cancel"]'),er=modalEl&&modalEl.querySelector('.scl370-err'),why=ta?ta.value.trim():'';if(!why){if(er)er.textContent='Γράψε τον λόγο της ακύρωσης.';if(ta)ta.focus();return;}
   if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Είναι οριστικό';return;}
-  t.disabled=true;const id=t.dataset.id;rpc('scl374_hq_request_cancel',{p_hq_key:hqKey(),p_id:id,p_reason:why}).then(async x=>{delete S.rqLogs[id];await loadDeals();dealModal(id,x&&x.ok?'Το αίτημα ακυρώθηκε. Εταιρία και φαρμακείο βλέπουν «Ακυρώθηκε από την Pharmaplus».':'Το αίτημα είχε ήδη κλείσει.');}).catch(x=>{if(er)er.textContent=friendly(x);t.disabled=false;});return;}
+  t.disabled=true;const id=t.dataset.id,acc=(deal(id)||{}).status==='accepted';
+  (acc?rpc('scl379_hq_deal_cancel',{p_hq_key:hqKey(),p_id:id,p_reason:why,p_person:null}):rpc('scl374_hq_request_cancel',{p_hq_key:hqKey(),p_id:id,p_reason:why})).then(async x=>{delete S.rqLogs[id];await loadDeals();if(window.SCL290&&typeof window.SCL290.invalidateHQ==='function')window.SCL290.invalidateHQ();
+   dealModal(id,acc?(x&&x.full?'Η συμφωνία ακυρώθηκε. Οι μήνες γύρισαν στο πρόγραμμα του φαρμακείου, χωρίς χρέωση.':'Ακυρώθηκαν οι ανοιχτοί μήνες. Οι κλειδωμένοι μήνες προβάλλονται και χρεώνονται κανονικά.'):(x&&x.ok?'Το αίτημα ακυρώθηκε. Εταιρία και φαρμακείο βλέπουν «Ακυρώθηκε από την Pharmaplus».':'Το αίτημα είχε ήδη κλείσει.'));})
+  .catch(x=>{if(er)er.textContent=window.SCL379?window.SCL379.friendly(x,friendly):friendly(x);t.disabled=false;});return;}
+ if(a==='ask-decline'){const ta=modalEl&&modalEl.querySelector('[data-f="cancel"]'),er=modalEl&&modalEl.querySelector('.scl370-err'),why=ta?ta.value.trim():'';if(!why){if(er)er.textContent='Γράψε τι απαντάς στην εταιρία (τον λόγο τον βλέπουν μόνο τα Κεντρικά).';if(ta)ta.focus();return;}
+  t.disabled=true;const id=t.dataset.id;rpc('scl379_hq_cancel_ask_decline',{p_hq_key:hqKey(),p_id:id,p_note:why}).then(async()=>{delete S.rqLogs[id];await loadDeals();dealModal(id,'Η συμφωνία ισχύει. Η εταιρία βλέπει ότι το αίτημα ακύρωσης δεν έγινε δεκτό.');}).catch(x=>{if(er)er.textContent=friendly(x);t.disabled=false;});return;}
  if(a==='company-test'){t.disabled=true;rpc('scl374_hq_company_test',{p_hq_key:hqKey(),p_company_id:t.dataset.id,p_test:t.dataset.on==='1'}).then(c=>{putCompany(c);companyModal(c);render(true);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=/HAS_REQUESTS/.test(String(x&&x.message))?'Η εταιρία έχει ήδη αιτήματα. Δεν αλλάζει πια.':friendly(x);t.disabled=false;});return;}
  if(a==='test-purge'){if(t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Σβήνονται οριστικά';return;}
   t.disabled=true;const id=t.dataset.id;rpc('scl374_hq_test_purge',{p_hq_key:hqKey(),p_company_id:id}).then(async()=>{S.rqLogs={};await load(true);const c=company(id);if(c)companyModal(c);}).catch(x=>{const er=modalEl&&modalEl.querySelector('.scl370-err');if(er)er.textContent=friendly(x);t.disabled=false;});return;}
@@ -54570,11 +54616,13 @@ const client=()=>(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:nu
 async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Error(r.error.message||String(r.error));return r.data;}
 const token=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.pharmacyToken)||'';}catch(e){return '';}};
 const R=root.SCL374={data:null,busy:false,failed:false,at:0,logs:{},view:null,sig:''};
+// v339 (Κ3β): το «Δέχομαι» (scl379) χρησιμοποιεί τα ίδια δεδομένα και την ίδια σελίδα.
+R.api=()=>({render,load,find,rpc,token,MN,eur,priv,d});
 const MN=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
 const REASONS=[['month','Ο μήνας δεν είναι πια διαθέσιμος'],['other_months','Προτιμώ άλλους μήνες'],['fit','Δεν ταιριάζει με το φαρμακείο μου αυτή την περίοδο'],['other','Άλλος λόγος']];
 const WHY={month:'Ο μήνας δεν είναι πια διαθέσιμος',other_months:'Προτιμώ άλλους μήνες',fit:'Δεν ταιριάζει με το φαρμακείο μου αυτή την περίοδο',other:'Άλλος λόγος',time:'Δεν απαντήθηκε μέσα στην προθεσμία',closed:'Κάποιος μήνας κλείστηκε στο μεταξύ',unavailable:'Η θέση δεν είναι πια στο Market',company_inactive:'Η εταιρία δεν είναι πια ενεργή',hq:'Ακυρώθηκε από τα Κεντρικά'};
 const STAT={pending:['Περιμένει απάντησή σου','wait'],declined:['Δεν δέχτηκες','off'],expired:['Έληξε','off'],withdrawn:['Το απέσυρε η εταιρία','off'],cancelled:['Ακυρώθηκε από τα Κεντρικά','off'],accepted:['Δέχτηκες','ok']};
-const ACT={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξες',declined:'Δεν δέχτηκες',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Δέχτηκες',answer_seen:'Η εταιρία είδε την απάντηση'};
+const ACT={sent:'Στάλθηκε από την εταιρία',seen:'Το άνοιξες',declined:'Δεν δέχτηκες',expired:'Έληξε',withdrawn:'Το απέσυρε η εταιρία',cancelled:'Ακυρώθηκε από τα Κεντρικά',accepted:'Δέχτηκες',answer_seen:'Η εταιρία είδε την απάντηση',partly_cancelled:'Τα Κεντρικά ακύρωσαν τους ανοιχτούς μήνες',cancel_asked:'Η εταιρία ζήτησε ακύρωση',cancel_ask_declined:'Τα Κεντρικά κράτησαν τη συμφωνία'};
 const eur=n=>{const v=Number(n)||0;return (Math.round(v)===v?String(v):v.toFixed(2).replace('.',','))+' €';};
 const priv=s=>'<span class="scl310-private-amount">'+E(s)+'</span>';
 const d=x=>{const t=new Date(x);return isNaN(t)?'':t.toLocaleDateString('el-GR',{day:'numeric',month:'short'});};
@@ -54623,7 +54671,7 @@ function decorateNav(P){
 function decorateTasks(P){
  const box=document.querySelector('#scl295Pending .scl311-attention,#plannerPage .scl311-attention');if(!box)return;
  const html=P.map(r=>{const hot=(Number(r.days_left)||0)<=2;
-  return '<div class="scl311-task scl374-task'+(hot?' hot':'')+'"><div><strong><i>Αίτημα</i>'+E(r.company)+' · '+E(brand(r))+'</strong><small>'+E(r.position.title)+' · '+E(months(r))+' · '+priv(eur(r.total))+' · <b>'+E(left(r))+'</b> (έως '+E(d(r.answer_by))+')</small></div><button type="button" class="action" data-scl374="open" data-id="'+E(r.id)+'">Δες το αίτημα</button></div>';}).join('');
+  return '<div class="scl311-task scl374-task'+(hot?' hot':'')+'"><div><strong><i>Αίτημα</i>'+E(r.company)+' · '+E(brand(r))+'</strong><small>'+E(r.position.title)+' · '+E(months(r))+' · '+priv(eur(r.total))+' · <b>'+E(left(r))+'</b> (έως '+E(d(r.answer_by))+')</small></div><button type="button" class="action" data-scl374="open" data-id="'+E(r.id)+'">Δες το αίτημα</button></div>';}).join('')+(root.SCL379?root.SCL379.tasksHTML():'');
  let w=box.querySelector(':scope>.scl374-tasks');
  if(!html){if(w)w.remove();box.classList.remove('scl374-has');return;}
  if(!w){w=document.createElement('div');w.className='scl374-tasks';const h=box.querySelector(':scope>h2');if(h&&h.nextSibling)box.insertBefore(w,h.nextSibling);else box.appendChild(w);}
@@ -54722,7 +54770,7 @@ function reqHTML(v){
  const r=find(v.id);
  if(!r)return '<div class="scl374-head"><div><h2>Το αίτημα δεν βρέθηκε</h2></div></div><p class="scl374-empty">Μπορεί να αποσύρθηκε από την εταιρία.</p>';
  const S=STAT[r.status]||[r.status,'off'],pend=r.status==='pending',f=r.position.format,hot=pend&&(Number(r.days_left)||0)<=2,c=r.charge||{},T=r.terms||{};
- let h='<div class="scl374-head"><div><h2>'+(v.step==='decline'?'Δεν δέχομαι το αίτημα':'Αίτημα από '+E(r.company))+'</h2><p>'+E(r.no)+' · στάλθηκε '+E(d(r.created_at))+(r.sender?' από '+E(r.sender):'')+'</p></div></div><div class="scl374-body">';
+ let h='<div class="scl374-head"><div><h2>'+(v.step==='decline'?'Δεν δέχομαι το αίτημα':v.step==='accept'?'Δέχομαι το αίτημα':'Αίτημα από '+E(r.company))+'</h2><p>'+E(r.no)+' · στάλθηκε '+E(d(r.created_at))+(r.sender?' από '+E(r.sender):'')+'</p></div></div><div class="scl374-body">';
  if(v.step==='decline'){
   h+='<p class="scl374-note">Διάλεξε την απάντηση που θα δει η εταιρία. Μετά την αποστολή είναι οριστικό· η εταιρία μπορεί να στείλει νέο αίτημα.</p><div class="scl374-opts" role="radiogroup" aria-label="Απάντηση προς την εταιρία">'+REASONS.map(o=>'<button type="button" class="scl374-opt" role="radio" aria-checked="'+(v.reason===o[0]?'true':'false')+'" data-scl374="reason" data-v="'+o[0]+'">'+E(o[1])+'</button>').join('')+'</div>'
    +'<div class="scl374-card"><h3>Σημείωση μόνο για τα Κεντρικά · προαιρετικό</h3><textarea maxlength="300" data-scl374-note aria-label="Σημείωση μόνο για τα Κεντρικά" placeholder="Η εταιρία δεν το βλέπει.">'+E(v.note||'')+'</textarea></div>'
@@ -54730,20 +54778,21 @@ function reqHTML(v){
    +'</div><div class="scl374-foot"><button type="button" class="scl374-btn ghost" data-scl374="back">Πίσω</button><span class="grow"></span><button type="button" class="scl374-btn danger" data-scl374="decline-send"'+(v.reason&&!v.busy?'':' disabled')+'>'+(v.busy?'Αποστολή…':'Στείλε «Δεν δέχομαι»')+'</button></div>';
   return h;
  }
- if(v.msg)h+='<p class="scl374-msg" role="status">'+E(v.msg)+'</p>';
- h+='<div class="scl374-clock"><span class="scl374-chip '+(hot?'hot':S[1])+'">'+E(S[0])+(r.status!=='pending'&&r.reason&&WHY[r.reason]?' · '+E(WHY[r.reason]):'')+'</span>'+(pend?'<span class="scl374-note"><b>'+E(left(r))+'</b> · απάντηση έως '+E(d(r.answer_by))+'</span>':'')+'</div>';
+ if(v.step==='accept'&&pend&&root.SCL379)return h+root.SCL379.acceptHTML(r,v);
+ if(v.msg)h+='<p class="scl374-msg'+(v.msgKind==='err'?' err':'')+'" role="status">'+E(v.msg)+'</p>';
+ h+='<div class="scl374-clock"><span class="scl374-chip '+(hot?'hot':S[1])+'">'+E(S[0])+(r.status!=='pending'&&r.reason&&r.reason!=='hq'&&WHY[r.reason]?' · '+E(WHY[r.reason]):'')+(r.status==='accepted'&&(r.cancelled_months||[]).length?' · '+E((r.cancelled_months||[]).map(m=>MN[m]).join(', '))+' ακυρώθηκε':'')+'</span>'+(pend?'<span class="scl374-note"><b>'+E(left(r))+'</b> · απάντηση έως '+E(d(r.answer_by))+'</span>':'')+'</div>';
  h+='<div class="scl374-card scl374-what"><h3>Τι θέλει να προβάλει</h3><div><b>'+E(brand(r))+'</b><span>'+E((r.categories||[]).slice(0,2).join(' · '))+'</span></div><div class="scl374-tags">'+[r.theme].concat((r.subcategories||[]).filter(x=>x!==r.theme)).filter(Boolean).slice(0,6).map(t=>'<span>'+E(t)+'</span>').join('')+'</div>'+(r.message?'<p class="scl374-note">«'+E(r.message)+'»</p>':'')+'</div>';
  h+='<div class="scl374-facts"><div><small>Θέση</small><b>'+E(r.position.title)+' · '+(f==='vertical'?'κάθετη':'οριζόντια')+'</b></div><div><small>Μήνες</small><b>'+E(months(r))+'</b></div><div><small>Θέμα στους μήνες</small><b>'+((r.months||[]).length>1?(r.same_theme?'Ίδιο σε όλους':'Αλλάζει κάθε μήνα'):'Ένας μήνας')+'</b></div></div>';
- h+='<div class="scl374-card"><h3>Τι σου μένει</h3><div class="scl374-money"><span>Εισπράττεις από την εταιρία<small>'+(r.months||[]).length+' × '+E(eur(r.price_month))+' · σε πληρώνει απευθείας, στο τέλος κάθε μήνα</small></span><b>'+priv(eur(r.total))+'</b>'
+ if(root.SCL379)h+=root.SCL379.statusHTML(r);
+ if(r.status!=='cancelled')h+='<div class="scl374-card"><h3>Τι σου μένει</h3><div class="scl374-money"><span>Εισπράττεις από την εταιρία<small>'+(r.months||[]).length+' × '+E(eur(r.price_month))+' · σε πληρώνει απευθείας, στο τέλος κάθε μήνα</small></span><b>'+priv(eur(r.total))+'</b>'
   +'<span>Χρέωση Pharmaplus<small>Συμφωνία '+E(eur(c.deal))+' + Market '+E(eur(c.market))+(Number(c.themes)>1?' · × '+E(c.themes)+' θέματα':'')+'</small></span><b>'+priv('− '+eur(c.total))+'</b>'
-  +'<span class="sum">Σου μένουν</span><b class="sum">'+priv(eur(c.net))+'</b></div><p class="scl374-note">Ποσά προ ΦΠΑ. Η χρέωση ισχύει μόνο αν δεχτείς. Η εταιρία δεν βλέπει τη χρέωσή σου.</p></div>';
+  +'<span class="sum">Σου μένουν</span><b class="sum">'+priv(eur(c.net))+'</b></div><p class="scl374-note">Ποσά προ ΦΠΑ. '+(r.status==='accepted'?'Η χρέωση γράφεται στα Οικονομικά σου στις 15 του προηγούμενου μήνα.':'Η χρέωση ισχύει μόνο αν δεχτείς.')+' Η εταιρία δεν βλέπει τη χρέωσή σου.</p></div>';
  const plans=(r.plans||[]).filter(g=>g[f]);
  if(plans.length&&root.MKPlan)h+='<div class="scl374-card"><h3>Πλανόγραμμα ραφιών · μέρος της συμφωνίας</h3>'+plans.map(g=>{const q=g[f];return '<div class="scl374-plan"><div style="width:'+(f==='vertical'?'130px':'210px')+'">'+root.MKPlan.svg(q.shelves,f,{title:q.name,screen:true})+'</div><div><b>'+E(q.name)+'</b><p class="scl374-note">'+E((g.months||[]).map(m=>MN[m]).join(', ')+' '+r.year)+' · ράφια '+(f==='vertical'?'35':'50')+' εκ.</p>'+root.MKPlan.legend(q.shelves)+'</div></div>';}).join('')+'</div>';
  if((T.pharmacy||[]).length)h+='<div class="scl374-card"><h3>Οι όροι για σένα · ισχύουν αν δεχτείς</h3><ol>'+T.pharmacy.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol></div>';
  if((T.company||[]).length)h+='<div class="scl374-card"><h3>Οι όροι που αποδέχτηκε η εταιρία</h3><ol>'+T.company.map(t=>'<li>'+E(t)+'</li>').join('')+'</ol></div>';
  const L=R.logs[r.id];
  if(Array.isArray(L)&&L.length)h+='<div class="scl374-card"><h3>Ιστορικό · δεν αλλάζει και δεν σβήνεται</h3><div class="scl374-log">'+L.map(l=>'<span>'+E(dt(l.at))+'</span><span><b>'+E(ACT[l.action]||l.action)+'</b>'+(l.detail&&l.detail.reason&&WHY[l.detail.reason]?' · '+E(WHY[l.detail.reason]):'')+'</span>').join('')+'</div></div>';
- if(v.soon)h+='<p class="scl374-msg" role="status">Σύντομα: η αποδοχή από εδώ ανοίγει στο επόμενο βήμα. Αν θέλεις να κλείσεις τη συμφωνία τώρα, πάρε τηλέφωνο τα Κεντρικά.</p>';
  h+='</div><div class="scl374-foot"><button type="button" class="scl374-btn ghost" data-scl374="pdf" data-id="'+E(r.id)+'">Αποδεικτικό PDF</button><span class="grow"></span>'
   +(pend?'<button type="button" class="scl374-btn no" data-scl374="decline">Δεν δέχομαι</button><button type="button" class="scl374-btn" data-scl374="accept">Δέχομαι</button>':'')+'</div>';
  return h;
@@ -54790,8 +54839,9 @@ document.addEventListener('click',e=>{
  if(a==='open'){openReq(t.dataset.id);return;}
  if(a==='pdf'){pdf(t.dataset.id);return;}
  if(!v||!isOn())return;
- if(a==='accept'){v.soon=true;render();const m=pageEl&&[...pageEl.querySelectorAll('.scl374-msg')].pop();if(m&&m.scrollIntoView)m.scrollIntoView({block:'nearest'});return;}
- if(a==='decline'){v.step='decline';v.reason='';v.err='';v.soon=false;render(true);return;}
+ if(a==='accept'){v.step='accept';v.err='';v.msg='';render(true);return;}
+ if(a==='accept-send'){if(root.SCL379)root.SCL379.accept(v);return;}
+ if(a==='decline'){v.step='decline';v.reason='';v.err='';v.msg='';render(true);return;}
  if(a==='back'){v.step='';render(true);return;}
  if(a==='reason'){const n=pageEl.querySelector('[data-scl374-note]');if(n)v.note=n.value;v.reason=t.dataset.v;render();const b=pageEl.querySelector('[data-v="'+v.reason+'"]');if(b)b.focus();return;}
  if(a==='decline-send'){const n=pageEl.querySelector('[data-scl374-note]');if(n)v.note=n.value;declineSend();return;}
@@ -54802,6 +54852,303 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&R.data&&D
 try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl374-market-requests',decorate);}catch(e){}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(decorate,0));else setTimeout(decorate,0);
 setInterval(()=>{if(!document.hidden&&document.body&&document.body.classList.contains('scl295-pharmacy'))decorate();},5000);
+})();
+</script>
+<style id="scl379-style">
+/* v339 · scl379 · Κ3β «Δέχομαι» και ακύρωση συμφωνίας Market. Μοβ = Market (ίδιο με scl374). */
+body.scl295-pharmacy .scl374-btn:not(.ghost):not(.no):not(.line):not(.danger):not(:disabled):hover{background:var(--accent-ink,#1a45b8);color:#fff}
+.scl379-tl{margin:4px 0 2px;overflow:hidden}
+.scl379-tl .scl379-grid{display:grid;gap:6px;align-items:stretch}
+.scl379-tl .scl379-h{font-size:11.5px;font-weight:600;color:var(--muted,#6e6e73);text-align:center;padding-bottom:2px}
+.scl379-tl .scl379-h.on{color:var(--scl374-mk,#6f4bea)}
+.scl379-tl .scl379-lab{display:flex;flex-direction:column;justify-content:center;font-size:12.5px;line-height:1.25}
+.scl379-tl .scl379-lab b{font-weight:650;color:var(--ink,#1d1d1f)}
+.scl379-tl .scl379-lab small{color:var(--muted,#6e6e73);font-size:11.5px}
+.scl379-cell{min-height:58px;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;justify-content:center;gap:2px;font-size:12px;line-height:1.25;min-width:0;overflow:hidden}
+.scl379-cell b{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scl379-cell small{font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scl379-cell.basic{background:#eef2f7;color:#24344a}
+.scl379-cell.custom{background:#e5f4ec;color:#145a37}
+.scl379-cell.deal{background:#1f5eea;color:#fff}
+.scl379-cell.none{background:transparent;border:1px dashed rgba(60,60,67,.2);color:var(--muted,#6e6e73)}
+.scl379-cell.new{background:var(--scl374-mk,#6f4bea);color:#fff;box-shadow:0 0 0 2px rgba(111,75,234,.25),0 6px 18px rgba(111,75,234,.28)}
+.scl379-cell.back{box-shadow:0 0 0 2px #1f9d5b}
+.scl379-chip,.scl379-mk{display:inline-block;align-self:flex-start;margin-top:3px;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.24);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.02em;line-height:1.5}
+.scl379-mk.on-light{background:rgba(111,75,234,.12);color:#5433c4}
+.scl379-file{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:12px;background:var(--fill,#f2f2f5);margin-top:6px}
+.scl379-file code{font:600 12.5px/1.3 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--ink,#1d1d1f);word-break:break-all}
+.scl379-file span{flex:none;font-size:12px;color:var(--muted,#6e6e73)}
+.scl379-who{align-self:center;font-size:12.5px;color:var(--muted,#6e6e73);margin-right:6px}
+.scl379-who b{color:var(--ink,#1d1d1f);font-weight:650}
+.scl379-list{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:4px;font-size:13px}
+.scl379-list li{display:flex;gap:8px;align-items:baseline}
+.scl379-list li span{color:var(--muted,#6e6e73);min-width:64px}
+.scl379-warn{padding:10px 12px;border-radius:12px;background:#fff4e5;color:#8a4b00;font-size:13px;line-height:1.45}
+.scl379-ok{padding:12px 14px;border-radius:12px;background:#e9f7ef;color:#145a37;font-size:13px;line-height:1.5}
+.scl379-ok b{color:#0d3f26}
+.scl379-mkcell{box-shadow:0 0 0 2px var(--scl374-mk,#6f4bea)!important}
+.scl379-badge{display:inline-block;min-width:18px;margin-left:4px;padding:0 5px;border-radius:999px;background:#c62828;color:#fff;font-size:11px;line-height:18px;text-align:center;vertical-align:1px}
+.scl379-cancel{margin-top:6px;padding:14px 16px 16px;border-radius:16px;background:rgba(198,40,40,.045);box-shadow:inset 0 0 0 1px rgba(198,40,40,.16)}
+.scl379-cancel .scl370-sec{margin-top:0}
+.scl379-codes{display:grid;gap:8px}
+.scl379-code{display:grid;grid-template-columns:minmax(0,1fr) 170px auto;gap:8px;align-items:center;font-size:13px}
+.scl379-code input{border:1px solid var(--line,#d9e1ea);border-radius:10px;padding:7px 10px;font:600 13px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;background:#fff;color:var(--ink)}
+.scl379-code small{color:var(--muted,#6e6e73)}
+.scl379-read{display:grid;gap:12px}
+.scl379-read .scl379-mkhead{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;background:rgba(111,75,234,.08);color:#3d2a99;font-size:13px;line-height:1.4}
+.scl379-read .scl379-mkhead b{font-weight:700}
+.scl379-read dl{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px 14px;margin:0;font-size:13.5px}
+.scl379-read dt{color:var(--muted,#6e6e73)}
+.scl379-read dd{margin:0;font-weight:600}
+.scl379-read .scl379-lock{font-size:12.5px;color:var(--muted,#6e6e73)}
+.scl379-acts{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;padding-top:4px}
+@media (max-width:640px){.scl379-read dl{grid-template-columns:1fr}.scl379-code{grid-template-columns:1fr}}
+</style>
+<script id="scl379-market-deals">
+/* v339 · scl379 · Κ3β: «Δέχομαι» = οριστική συμφωνία μέσω της κανονικής αποθήκευσης (scl379_ph_request_accept),
+   κλείδωμα συμφωνιών Market στο φαρμακείο, ακύρωση από τα Κεντρικά, κωδικοί εταιρίας/Brand για τα ονόματα αρχείων. */
+(function(){
+'use strict';
+const root=window,C=()=>root.SCL297Core;
+const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MN=['Ιαν','Φεβ','Μαρ','Απρ','Μάι','Ιουν','Ιουλ','Αυγ','Σεπ','Οκτ','Νοε','Δεκ'];
+const MNF=['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const eur=n=>{const v=Number(n)||0;return (Math.round(v)===v?String(v):v.toFixed(2).replace('.',','))+' €';};
+const priv=s=>'<span class="scl310-private-amount">'+E(s)+'</span>';
+const title=k=>(root.scl293Title&&root.scl293Title(k))||k||'—';
+const day=iso=>{const t=new Date(iso+'T12:00:00');return isNaN(t)?'':t.getDate()+' '+MN[t.getMonth()];};
+const span=ms=>{if(!ms.length)return '';const a=[...ms].sort((x,y)=>x-y);return a.length===1?MNF[a[0]]:MN[a[0]]+'–'+MN[a[a.length-1]];};
+const spanS=ms=>{if(!ms.length)return '';const a=[...ms].sort((x,y)=>x-y);return a.length===1?MN[a[0]]:MN[a[0]]+'–'+MN[a[a.length-1]];};
+const ART=['Ο','Ο','Ο','Ο','Ο','Ο','Ο','Ο','Ο','Ο','Ο','Ο'];
+const subj=ms=>ms.length===1?ART[ms[0]]+' '+MNF[ms[0]]:span(ms);
+const list12=v=>Array.from({length:12},(_,i)=>v&&v[i]!=null?v[i]:'');
+const ERR={'MARKET_REQ:answered':'Το αίτημα έχει ήδη απαντηθεί. Ανανέωσε τη λίστα.','MARKET_REQ:month_closed':'Κάποιος μήνας έκλεισε (προθεσμία 15 του προηγούμενου μήνα). Το αίτημα δεν δέχεται πια απάντηση.','MARKET_REQ:month_taken':'Κάποιος μήνας δεν είναι πια ελεύθερος στη θέση.','MARKET_REQ:format_changed':'Η θέση άλλαξε προσανατολισμό από τότε που στάλθηκε το αίτημα. Πάρε τηλέφωνο τα Κεντρικά.','MARKET_REQ:deal_mismatch':'Τα στοιχεία δεν ταιριάζουν με το αίτημα. Ανανέωσε τη σελίδα και ξαναδοκίμασε.','MARKET_REQ:months_gap':'Το αίτημα έχει μήνες που δεν είναι συνεχόμενοι. Πάρε τηλέφωνο τα Κεντρικά.','MARKET_REQ:person':'Δεν βρέθηκε το όνομά σου. Ανανέωσε τη σελίδα.','PROGRAM_CHANGED':'Το πρόγραμμα άλλαξε σε άλλη καρτέλα. Ανανέωσε τη σελίδα και ξαναδοκίμασε.','INSTALLATION_CHANGED':'Τα Κεντρικά άλλαξαν τις θέσεις. Ανανέωσε τη σελίδα.','HISTORY_LOCKED':'Κάποιος μήνας έχει κλειδώσει.','MARKET_REQ:all_locked':'Όλοι οι μήνες έχουν κλειδώσει. Η συμφωνία δεν ακυρώνεται· για διόρθωση, πίστωση από τις Χρεώσεις.','MARKET_REQ:not_accepted':'Το αίτημα δεν είναι πια «Δέχτηκε». Πάτα Ανανέωση.','MARKET_REQ:deal_missing':'Η συμφωνία δεν βρέθηκε στο πρόγραμμα του φαρμακείου. Πάτα Ανανέωση.','MARKET_CODE:format':'Ο κωδικός θέλει 2 έως 20 λατινικούς κεφαλαίους χαρακτήρες ή αριθμούς, χωρίς κενά.','MARKET_CODE:taken':'Ο κωδικός χρησιμοποιείται ήδη.'};
+const msg=(e,fallback)=>{const m=String(e&&e.message||e||'');for(const k in ERR)if(m.indexOf(k)>=0)return ERR[k];return fallback?fallback(e):'Δεν έγινε. Δοκίμασε ξανά.';};
+const S=root.SCL379={msg};
+S.friendly=(e,f)=>msg(e,f);
+const ph=()=>document.body&&document.body.classList.contains('scl295-pharmacy');
+const RT=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING)||null;}catch(e){return null;}};
+const me=()=>{try{return (root.SCL375&&root.SCL375.me)||null;}catch(e){return null;}};
+const person=()=>{const m=me();if(m&&m.name)return m.name;return (RT()&&RT().pharmacy&&RT().pharmacy.name)||(root.SCL290&&root.SCL290.context&&root.SCL290.context.pharmacy_name)||'Φαρμακείο';};
+const roleLabel=()=>{const m=me();return !m?'':m.role==='owner'?'Ιδιοκτήτης':m.role==='manager'?'Υπεύθυνος':'';};
+
+/* ---------- Φαρμακείο: το «Δέχομαι» ---------- */
+function draft(r){
+ const ms=[...(r.months||[])].sort((a,b)=>a-b),start=ms[0],plans=r.plans||[];
+ const idx=m=>Math.max(0,plans.findIndex(g=>(g.months||[]).includes(m)));
+ const sched=list12(null);if(!r.same_theme)ms.forEach(m=>{sched[m]='Πλανόγραμμα '+(idx(m)+1);});
+ return {id:'mk-'+String(r.id).slice(0,8)+'-'+Date.now().toString(36),supplier:r.company,brand:(r.brands||[]).join(' + '),subline:r.theme||'',products:'',
+  startMonth:start,duration:ms.length,soldMonthlyPrice:Number(r.price_month),suggestedMonthlyPrice:0,monthlyContentChanges:!r.same_theme,
+  schedule:sched,monthlySublines:list12(null),monthlyProducts:list12(null),mechanisms:list12(null).map(()=>'Χωρίς μηχανισμό'),
+  market:{request_id:r.id,no:r.no,codes:r.codes||{},terms_version:(r.terms||{}).pharmacy_version||null,plans:plans}};
+}
+function check(r){
+ const out={ok:false,why:''};
+ if(!r||r.status!=='pending'){out.why='Το αίτημα δεν περιμένει πια απάντηση.';return out;}
+ const m=me();if(m&&m.role==='staff'){out.why='Μόνο ο ιδιοκτήτης ή ο Υπεύθυνος του φαρμακείου δέχεται αιτήματα.';return out;}
+ if(typeof state==='undefined'||!Array.isArray(state.cards)){out.why='Το πρόγραμμα δεν έχει φορτώσει ακόμα.';return out;}
+ if(Number(state.programYear)!==Number(r.year)){out.why='Για να δεχτείς, άνοιξε το πρόγραμμα του '+r.year+' (επιλογή έτους πάνω δεξιά) και γύρνα εδώ.';out.year=true;return out;}
+ const c=state.cards.find(x=>x.id===r.position.id);if(!c){out.why='Η θέση δεν βρέθηκε στο πρόγραμμά σου.';return out;}
+ if(c.screenFormat&&r.position.format&&c.screenFormat!==r.position.format){out.why=ERR['MARKET_REQ:format_changed'];return out;}
+ const ms=r.months||[],free=(root.SCL297&&typeof root.SCL297.availableDealMonths==='function')?root.SCL297.availableDealMonths(c.id):null;
+ if(Math.max(...ms)-Math.min(...ms)+1!==ms.length){out.why=ERR['MARKET_REQ:months_gap'];return out;}
+ if(Array.isArray(free)){const bad=ms.filter(x=>!free.includes(x));if(bad.length){out.why=bad.map(x=>MNF[x]).join(', ')+': '+(C().at(c,bad[0])?'υπάρχει ήδη συμφωνία':'ο μήνας δεν είναι ανοιχτός (προθεσμία 15 του προηγούμενου μήνα ή η θέση δεν λειτουργεί)')+'.';return out;}}
+ const d=draft(r),res=C().agreement(c,d,null,true),files=C().files(c,res.deal,Number(r.year));
+ res.deal.materialRequests=files.map(f=>({...f,status:'awaiting',destination:'emitropoulou@pharmaplus.gr'}));
+ return Object.assign(out,{ok:true,card:c,result:res,files});
+}
+function cellInfo(c,m,newId){
+ const x=C().content(c,m);
+ if(x.kind==='deal'){const d=x.deal,isNew=newId&&String(d.id)===String(newId);return {key:x.key,cls:isNew?'deal new':'deal',main:d.brand||d.supplier||'Συμφωνία',sub:isNew?'':(d.market?'Market':'Συμφωνία'),chip:isNew||!!d.market};}
+ if(x.kind==='custom')return {key:x.key,cls:'custom',main:title(x.theme),sub:'Εξατομίκευση'};
+ if(x.kind==='basic')return {key:x.key,cls:'basic',main:title(x.theme),sub:'Βασικό'};
+ return {key:x.key||'none',cls:'none',main:'—',sub:''};
+}
+function timeline(before,after,ms,newId,labels){
+ const lo=Math.max(0,Math.min(...ms)-2),hi=Math.min(11,Math.max(...ms)+2),cols=hi-lo+1,A=root.SCL292Core,y=Number(state.programYear);
+ const row=(c,lab,sub,mark)=>{let h='<div class="scl379-lab"><b>'+E(lab)+'</b><small>'+E(sub)+'</small></div>';
+  for(let m=lo;m<=hi;m++){const act=!A||!A.active||A.active(c,y,m),i=act?cellInfo(c,m,newId):{key:'off',cls:'none',main:'Δεν λειτουργεί',sub:''};let e=m;
+   while(e<hi&&(!A||!A.active||A.active(c,y,e+1))&&act&&cellInfo(c,e+1,newId).key===i.key)e++;
+   const back=mark&&ms.some(x=>x>=m&&x<=e);
+   h+='<div class="scl379-cell '+i.cls+(back?' back':'')+'" style="grid-column:'+(m-lo+2)+' / span '+(e-m+1)+'"><b>'+E(i.main)+'</b>'+(i.sub?'<small>'+E(i.sub)+'</small>':'')+(i.chip?'<span class="scl379-chip">Market</span>':'')+'</div>';m=e;}
+  return h;};
+ let h='<div class="scl379-tl"><div class="scl379-grid" style="grid-template-columns:112px repeat('+cols+',minmax(0,1fr))"><div></div>';
+ for(let m=lo;m<=hi;m++)h+='<div class="scl379-h'+(ms.includes(m)?' on':'')+'">'+MN[m]+'</div>';
+ h+=row(before,labels[0],labels[1],false)+row(after,labels[2],labels[3],!!labels[4])+'</div></div>';
+ return h;
+}
+S.acceptHTML=function(r,v){
+ const ck=check(r),c=r.charge||{},pos=r.position.title,per=span(r.months||[])+' '+r.year;
+ let h='<p class="scl374-note">Με το «Δέχομαι» γίνεται <b>οριστική συμφωνία</b> με τους όρους του αιτήματος και μπαίνει αμέσως στο πρόγραμμά σου.</p>';
+ if(v.err)h+='<p class="scl374-msg err" role="alert">'+E(v.err)+'</p>';
+ if(!ck.ok)h+='<p class="scl374-msg err" role="alert">'+E(ck.why)+'</p>';
+ else{
+  const res=ck.result,rep=res.replaced||[];
+  h+='<div class="scl374-card"><h3>Τι αλλάζει στη '+E(pos)+'</h3>'+timeline(ck.card,res.card,r.months,res.deal.id,['Σήμερα',pos,'Μετά','με το «Δέχομαι»'])
+   +'<ul class="scl379-list">'+rep.map(x=>'<li><span>'+E(MNF[x.month])+'</span><b>'+E(title(x.title))+'</b>&nbsp;('+E(x.type)+') → '+E(r.company+' · '+(r.brands||[]).join(' + '))+'</li>').join('')+'</ul>'
+   +'<p class="scl374-note">'+(rep.some(x=>x.type==='Εξατομίκευση')?'Η Εξατομίκευση των μηνών αυτών σταματά. ':'')+'Αν η συμφωνία ακυρωθεί από τα Κεντρικά, οι ανοιχτοί μήνες γυρίζουν ακριβώς όπως είναι σήμερα.</p>'
+   +((res.lost||[]).length?'<p class="scl379-warn">Θα αφαιρεθούν οι Χορηγίες ραφιών: '+res.lost.map(s=>E(MNF[Number(s.month)]+' · '+s.brand)).join(', ')+'.</p>':'')+'</div>';
+ }
+ h+='<div class="scl374-card"><h3>Τι σου μένει</h3><div class="scl374-money"><span>Εισπράττεις από '+E(r.company)+'<small>'+(r.months||[]).length+' × '+E(eur(r.price_month))+' · σε πληρώνει απευθείας, στο τέλος κάθε μήνα</small></span><b>'+priv(eur(r.total))+'</b>'
+  +'<span>Χρέωση Pharmaplus<small>Συμφωνία '+E(eur(c.deal))+' + Market '+E(eur(c.market))+(Number(c.themes)>1?' · × '+E(c.themes)+' θέματα':'')+'</small></span><b>'+priv('− '+eur(c.total))+'</b>'
+  +'<span class="sum">Σου μένουν</span><b class="sum">'+priv(eur(c.net))+'</b></div><p class="scl374-note">Ποσά προ ΦΠΑ. Η χρέωση γράφεται στις 15 του προηγούμενου μήνα. Η εταιρία δεν βλέπει τη χρέωσή σου.</p></div>';
+ if(ck.ok)h+='<div class="scl374-card"><h3>Υλικό · το στέλνει η εταιρία</h3>'+ck.files.map(f=>'<div class="scl379-file"><code>'+E(f.file)+'</code><span>έως '+E(day(f.deadline))+'</span></div>').join('')
+  +'<p class="scl374-note">Αν δεν έρθει μέχρι τότε, παίζει το πρόγραμμά σου και η εταιρία πληρώνει κανονικά.</p></div>';
+ const who=roleLabel();
+ return h+'</div><div class="scl374-foot"><button type="button" class="scl374-btn ghost" data-scl374="back">Πίσω</button><span class="grow"></span>'
+  +(ck.ok?'<span class="scl379-who">Ως <b>'+E(person())+'</b>'+(who?' · '+E(who):'')+'</span>':'')
+  +'<button type="button" class="scl374-btn" data-scl374="accept-send"'+(ck.ok&&!v.busy?'':' disabled')+'>'+(v.busy?'Καταχώριση…':'Δέχομαι · οριστική συμφωνία')+'</button></div>';
+};
+S.accept=async function(v){
+ const A=root.SCL374&&root.SCL374.api&&root.SCL374.api();if(!A||!v||v.busy)return;
+ let r=A.find(v.id),ck=check(r);if(!ck.ok){v.err=ck.why;A.render();return;}
+ v.busy=true;v.err='';A.render();
+ const R=root.SCL290;let previous=null,dirty=false;
+ try{
+  if(!RT()||!RT().ready||!R||!R.context||!R.context.installation||R.loading)throw Error('Η σύνδεση του φαρμακείου δεν είναι έτοιμη. Δοκίμασε ξανά.');
+  if(R.saving)await R.saving;
+  if(R.dirty){await sclSaveNow();if(R.saving)await R.saving;}
+  r=A.find(v.id);ck=check(r);if(!ck.ok)throw Error(ck.why);
+  previous=C().clone(state.cards);dirty=R.dirty;clearTimeout(RT().saveTimer);
+  state.cards=state.cards.map(x=>x.id===ck.card.id?ck.result.card:x);R.dirty=true;
+  R.marketAccept={id:r.id,person:person()};
+  await sclSaveNow();
+  if(R.marketAccept){R.marketAccept=null;throw Error('Η αποθήκευση δεν έγινε. Δοκίμασε ξανά.');}
+ }catch(e){
+  if(previous){state.cards=previous;R.dirty=dirty;}R.marketAccept=null;v.busy=false;v.err=msg(e,x=>String(x&&x.message||x||'Δεν έγινε.'));
+  try{if(previous&&typeof refresh==='function')refresh(false);}catch(x){}
+  A.render();return;
+ }
+ v.busy=false;
+ const pos=r.position.title,per=span(r.months)+' '+r.year;
+ try{if(root.SCL374)root.SCL374.logs[v.id]=null;await A.load(true);}catch(e){}
+ try{const x=await A.rpc('scl374_ph_request_log',{p_token:A.token(),p_id:v.id});root.SCL374.logs[v.id]=x.log||[];}catch(e){}
+ try{if(typeof refresh==='function')refresh(false);}catch(e){}
+ try{if(root.SCL292&&root.SCL292.loadFinance)root.SCL292.loadFinance(true).catch(()=>{});}catch(e){}
+ if(root.SCL374.view&&root.SCL374.view.id===v.id){Object.assign(root.SCL374.view,{step:'',msg:'Δέχτηκες. Η συμφωνία με '+r.company+' μπήκε στο πρόγραμμά σου ('+pos+' · '+per+').',msgKind:''});}
+ A.render(true);
+};
+/* κατάσταση μετά το «Δέχτηκες» ή την ακύρωση, στη σελίδα του αιτήματος */
+S.statusHTML=function(r){
+ const cm=r.cancelled_months||[],when=r.closed_at?new Date(r.closed_at).toLocaleDateString('el-GR',{day:'numeric',month:'short'}):'';
+ if(r.status==='accepted'){
+  const kept=(r.months||[]).filter(m=>!cm.includes(m));
+  let h='<div class="scl374-card"><h3>Η συμφωνία</h3><p class="scl379-ok">Δέχτηκες στις <b>'+E(when)+'</b>'+(r.accepted_by?' · '+E(r.accepted_by):'')+'. Είναι στο πρόγραμμά σου: <b>'+E(r.position.title+' · '+span(kept)+' '+r.year)+'</b>.</p>';
+  if(cm.length)h+='<p class="scl374-note" style="margin-top:8px">Τα Κεντρικά ακύρωσαν '+E(span(cm))+'. Οι μήνες αυτοί γύρισαν σε ό,τι έπαιζε πριν, χωρίς χρέωση. '+E(span(kept))+' προβάλλεται και χρεώνεται κανονικά.'+(r.hq_note?' Λόγος: «'+E(r.hq_note)+'».':'')+'</p>';
+  return h+'</div>';
+ }
+ if(r.status==='cancelled'&&cm.length){
+  return '<div class="scl374-card"><h3>Τι έγινε στο πρόγραμμά σου</h3><p class="scl379-ok">Τα Κεντρικά ακύρωσαν τη συμφωνία. <b>'+E(r.position.title+' · '+span(cm)+' '+r.year)+'</b> γύρισε σε ό,τι έπαιζε πριν το «Δέχομαι». <b>Καμία χρέωση.</b></p>'+(r.hq_note?'<p class="scl374-note" style="margin-top:8px">Λόγος: «'+E(r.hq_note)+'»</p>':'')+'</div>';
+ }
+ return '';
+};
+/* Αρχική: ειδοποίηση όταν τα Κεντρικά ακυρώνουν συμφωνία που είχες δεχτεί */
+const seenKey=id=>'scl379-seen-'+id;
+const seen=id=>{try{return localStorage.getItem(seenKey(id))==='1';}catch(e){return false;}};
+S.markSeen=id=>{try{localStorage.setItem(seenKey(id),'1');}catch(e){}};
+S.tasksHTML=function(){
+ const H=(root.SCL374&&root.SCL374.data&&root.SCL374.data.history)||[];
+ return H.filter(r=>(r.cancelled_months||[]).length&&!seen(r.id)&&Date.now()-new Date(r.closed_at||0).getTime()<60*864e5).map(r=>{
+  const full=r.status==='cancelled',cm=r.cancelled_months||[];
+  return '<div class="scl311-task scl374-task"><div><strong><i>Market</i>Τα Κεντρικά ακύρωσαν '+(full?'τη συμφωνία':'μήνες της συμφωνίας')+' με '+E(r.company)+'</strong><small>'+E(r.position.title+' · '+span(cm)+' '+r.year)+' · ο μήνας γύρισε σε ό,τι έπαιζε πριν · καμία χρέωση</small></div><button type="button" class="action" data-scl374="open" data-id="'+E(r.id)+'">Δες τι έγινε</button></div>';}).join('');
+};
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest?e.target.closest('[data-scl374="open"]'):null;if(t&&t.dataset.id)S.markSeen(t.dataset.id);},true);
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest?e.target.closest('[data-scl379-close]'):null;if(!t)return;e.preventDefault();if(typeof closeModal==='function')closeModal(t.dataset.scl379Close);},true);
+
+/* Φαρμακείο: η συμφωνία Market ανοίγει μόνο για ανάγνωση */
+S.marketDealHTML=function(c,d,y){
+ const ms=C().months(d),files=C().files(c,d,y),mk=d.market||{},rows=(root.SCL292&&root.SCL292.data&&root.SCL292.data.rows)||[];
+ const cost=rows.filter(x=>x.position_id===c.id&&['deal','market'].includes(x.category)&&ms.includes(Number(x.month??x.start_month))&&x.entry_type!=='credit'&&x.status!=='cancelled').reduce((n,x)=>n+(Number(x.amount)||0),0);
+ const rev=Number(d.soldMonthlyPrice||0)*ms.length;
+ return '<section class="scl379-read"><div class="scl379-mkhead"><span class="scl379-mk on-light">Market</span><span><b>Συμφωνία μέσω SpaceCoLLab Market</b> · '+E(mk.no||'')+'. Τα στοιχεία ήρθαν από το αίτημα και δεν αλλάζουν εδώ.</span></div>'
+  +'<dl><dt>Εταιρία</dt><dd>'+E(d.supplier)+'</dd><dt>Brand</dt><dd>'+E(d.brand)+'</dd>'+(d.subline?'<dt>Θέμα</dt><dd>'+E(d.subline)+'</dd>':'')+'<dt>Θέση</dt><dd>'+E(c.title+' · '+span(ms)+' '+y)+'</dd>'
+  +'<dt>Έσοδο</dt><dd>'+priv(eur(rev))+' ('+ms.length+' × '+priv(eur(d.soldMonthlyPrice))+')</dd><dt>Κόστος</dt><dd>'+priv(eur(cost))+' (Συμφωνία + Market)</dd><dt>Κέρδος</dt><dd>'+priv(eur(rev-cost))+'</dd>'
+  +'<dt>Υλικό</dt><dd>'+files.map(f=>'<code>'+E(f.file)+'</code> · έως '+E(day(f.deadline))).join('<br>')+'</dd></dl>'
+  +'<p class="scl379-lock">Η ακύρωση γίνεται μόνο από τα Κεντρικά. Αν χρειάζεται αλλαγή, πάρε τηλέφωνο τα Κεντρικά.</p>'
+  +'<div class="scl379-acts"><button type="button" class="scl374-btn ghost" data-scl3235="document">Επιβεβαίωση προς προμηθευτή</button><button type="button" class="scl374-btn" data-scl379-close="negotiationModal">Κλείσιμο</button></div></section>';
+};
+/* Φαρμακείο: ένδειξη Market στις συμφωνίες του χρονοδιαγράμματος */
+function decorateTimeline(){
+ if(!ph()||typeof state==='undefined'||!Array.isArray(state.cards))return;
+ const table=document.querySelector('.scl296-timeline-table');if(!table)return;
+ for(const c of state.cards){for(const d of (C().deals(c)||[]).filter(x=>x&&x.market)){const m=Number(d.startMonth);
+  let cell=null;const zone=[...table.querySelectorAll('button[data-card][data-month]')].find(b=>b.dataset.card===c.id&&Number(b.dataset.month)===m);
+  if(zone)cell=zone.closest('.scl296-timeline-cell');
+  if(!cell){const row=[...table.querySelectorAll('.scl296-timeline-row[data-scl330-id]')].find(x=>x.dataset.scl330Id===c.id);cell=row?[...row.querySelectorAll('.scl296-timeline-cell')].find(x=>Number(x.dataset.blockStart)<=m&&Number(x.dataset.blockEnd)>=m):null;}
+  if(!cell||cell.querySelector('.scl379-mk'))continue;
+  const host=cell.querySelector('.scl312-content,.scl3231-caption');if(!host)continue;
+  const s=document.createElement('span');s.className='scl379-mk';s.textContent='Market';s.title='Συμφωνία μέσω SpaceCoLLab Market · '+(d.market.no||'');host.appendChild(s);cell.classList.add('scl379-mkcell');}}
+}
+try{if(root.SCL3234Presentation&&typeof root.SCL3234Presentation.register==='function')root.SCL3234Presentation.register('scl379-market-deals',decorateTimeline);}catch(e){}
+setInterval(()=>{if(!document.hidden)try{decorateTimeline();}catch(e){}},2500);
+
+/* ---------- Κεντρικά ---------- */
+const hqKey=()=>{const r=RT();return (r&&r.hqKey)||'';};
+async function rpc(name,args){const c=(typeof sb!=='undefined'&&sb&&typeof sb.rpc==='function')?sb:null;if(!c)throw Error('Δεν υπάρχει σύνδεση με τη βάση');const r=await c.rpc(name,args);if(r.error)throw Error(r.error.message||String(r.error));return r.data;}
+function hqCard(r){
+ try{const H=root.SCL290&&root.SCL290.hq;if(!H)return null;const reg=(H.registry||[]).find(x=>String(x.id)===String(r.pharmacy.id)||String(x.pharmacy_id)===String(r.pharmacy.id));if(!reg)return null;
+  const all=(H.snapshots||[]).concat((H.base&&H.base.pharmacy_state)||[]);
+  const snap=all.find(s=>String(s.pharmacy_id)===String(reg.pharmacy_id)&&Number(s.year)===Number(r.year));
+  return ((snap&&snap.state_json&&snap.state_json.cards)||[]).find(c=>c.id===r.position.id)||null;}catch(e){return null;}
+}
+function parts(r){const cm=r.cancelled_months||[],lk=r.locked_months||[],ms=(r.months||[]).filter(m=>!cm.includes(m));return {open:ms.filter(m=>!lk.includes(m)),locked:ms.filter(m=>lk.includes(m)),cm};}
+S.hqRowChips=function(r,mode){
+ let h='';
+ if(r.cancel_ask)h+='<span class="scl370-tagx red">Ζητά ακύρωση · '+E(new Date(r.cancel_ask.at).toLocaleDateString('el-GR',{day:'numeric',month:'short'}))+'</span>';
+ if(r.status==='accepted'){const p=parts(r);
+  if(p.cm.length)h+='<span class="scl370-tagx mute">Ακυρώθηκε '+E(span(p.cm))+'</span>';
+  if(mode!=='modal')h+='<span class="scl370-tagx" style="background:rgba(111,75,234,.12);color:#5433c4">Συμφωνία στο πρόγραμμα</span>';
+  if(r.cancel_ask&&p.open.length){const f=Math.min(...p.open);h+='<span class="scl370-tagx warn">'+E(MNF[f])+' κλειδώνει '+E(day(new Date(Date.UTC(r.year,f-1,15)).toISOString().slice(0,10)))+'</span>';}}
+ return h;
+};
+S.hqCancelHTML=function(r){
+ if(r.status!=='accepted')return '';
+ const p=parts(r),c=r.charge||{},card=hqCard(r),fee=(Number(c.deal)||0)+(Number(c.market)||0);
+ const ask=r.cancel_ask?'<div class="scl370-note" style="margin:0 0 10px"><b>Η εταιρία ζητά ακύρωση</b> από '+E(new Date(r.cancel_ask.at).toLocaleDateString('el-GR',{day:'numeric',month:'short'}))+(r.cancel_ask.by?' · '+E(r.cancel_ask.by):'')+(r.cancel_ask.note?' · «'+E(r.cancel_ask.note)+'»':'')+'</div>':'';
+ if(!p.open.length)return '<div class="scl379-cancel"><div class="scl370-sec">Ακύρωση συμφωνίας</div>'+ask+'<div class="scl370-note">Όλοι οι μήνες έχουν κλειδώσει. Η συμφωνία δεν ακυρώνεται· για διόρθωση χρέωσης, πίστωση από τις Χρεώσεις.</div></div>';
+ const kv=(k,v)=>'<div class="scl370-kv"><span>'+E(k)+'</span><b>'+v+'</b></div>';
+ const back=!card?'Οι μήνες '+spanS(p.open)+' γυρίζουν σε ό,τι έπαιζε πριν το «Δέχομαι»':p.open.map(m=>{const pr=card.confirmedDeals&&(card.confirmedDeals.find(d=>d.id===r.deal_id)||{}).prior,x=pr&&(pr[m]||pr[String(m)]),basic=(card.basicSchedule||[])[m]||'';
+  return MN[m]+': '+title(x&&x.simple&&(x.basic||'')===basic?x.simple:basic)+(x&&x.simple&&(x.basic||'')===basic?' (Εξατομίκευση)':'');}).join(' · ')+', όπως ήταν';
+ const lockedCost=r.same_theme?fee:p.locked.length*fee;
+ const td=new Date();const today=td.getDate()+' '+MN[td.getMonth()];
+ const note=p.locked.length?'Σήμερα '+E(today)+'. <b>'+E(subj(p.locked))+(p.locked.length>1?' κλείδωσαν':' κλείδωσε')+'</b>: '+(p.locked.length>1?'προβάλλονται και χρεώνονται':'προβάλλεται και χρεώνεται')+' κανονικά. Ακυρώνονται <b>'+E(span(p.open))+'</b>.':'Όλοι οι μήνες είναι ακόμα ανοιχτοί. Ακυρώνεται <b>όλη η συμφωνία</b> ('+E(span(p.open))+').';
+ return '<div class="scl379-cancel"><div class="scl370-sec">Ακύρωση συμφωνίας</div>'+ask+'<div class="scl370-note" style="margin:6px 0 10px">'+note+'</div><div class="scl370-kvs">'
+  +kv('Πρόγραμμα φαρμακείου',E(back))
+  +kv('Χρέωση φαρμακείου',p.locked.length?'Μένουν τα '+E(eur(lockedCost))+' ('+E(spanS(p.locked))+') · καμία νέα χρέωση':'Καμία χρέωση · τα '+E(eur(c.total))+' δεν γράφονται')
+  +kv('Αλλαγές · Product Me','Αν η συμφωνία έχει σημειωθεί «Έγινε», βγαίνει γραμμή «Ακύρωση Συμφωνίας · επιστροφή …» με το σωστό αρχείο')
+  +kv('Η εταιρία βλέπει',p.locked.length?'«'+E(subj(p.locked))+(p.locked.length>1?' προβλήθηκαν και πληρώνονται':' προβλήθηκε και πληρώνεται')+' στο φαρμακείο. '+E(p.open.length>1?span(p.open)+' ακυρώθηκαν':subj(p.open)+' ακυρώθηκε')+' χωρίς χρέωση.»':'«Ακυρώθηκε από την Pharmaplus. Δεν υπάρχει χρέωση.»')
+  +'</div><label class="scl370-f" style="margin-top:12px"><span>'+(r.cancel_ask?'Λόγος ή απάντηση · τον βλέπουν τα Κεντρικά και το φαρμακείο, όχι η εταιρία':'Λόγος · τον βλέπουν τα Κεντρικά και το φαρμακείο, όχι η εταιρία')+'</span><textarea data-f="cancel" maxlength="300"></textarea></label></div>';
+};
+S.hqCancelButtons=function(r){
+ if(r.status!=='accepted')return '';const p=parts(r);if(!p.open.length)return '';
+ return (r.cancel_ask?'<button type="button" class="scl370-b" data-scl370="ask-decline" data-id="'+E(r.id)+'">Κράτα τη συμφωνία</button>':'')+'<button type="button" class="scl370-b red" data-scl370="deal-cancel" data-id="'+E(r.id)+'">Ακύρωση '+E(span(p.open))+'</button>';
+};
+/* Κεντρικά: κωδικοί εταιρίας και Brands στο παράθυρο εταιρίας */
+S.loadCodes=async function(m,id){
+ const box=m&&m.querySelector('[data-scl379-codes]');if(!box)return;
+ try{const x=await rpc('scl379_hq_codes',{p_hq_key:hqKey(),p_company_id:id});
+  const row=(kind,o)=>'<div class="scl379-code"><span>'+E(o.name)+'<br><small>'+(kind==='company'?'Εταιρία':'Brand')+'</small></span><input data-scl379-code="'+kind+'" data-id="'+E(o.id)+'" value="'+E(o.code)+'" maxlength="20" aria-label="Κωδικός '+E(o.name)+'"><button type="button" class="scl370-b" data-scl379="code-save" data-kind="'+kind+'" data-id="'+E(o.id)+'">Αποθήκευση</button></div>';
+  box.innerHTML='<div class="scl370-sub" style="margin:0 0 8px">Μπαίνουν στο όνομα αρχείου της συμφωνίας, π.χ. <code>'+E(new Date().getFullYear()+1)+'_04_'+E(x.company.code)+'_'+E(((x.brands||[])[0]||{}).code||'BRAND')+'_01_PORTRAIT.mp4</code>. Μόνο λατινικά κεφαλαία και αριθμοί.</div><div class="scl379-codes">'+row('company',x.company)+(x.brands||[]).map(b=>row('brand',b)).join('')+'</div><span class="scl370-err" data-scl379-codes-err role="alert"></span>';
+ }catch(e){box.innerHTML='<div class="scl370-sub">Οι κωδικοί δεν φορτώθηκαν.</div>';}
+};
+document.addEventListener('click',e=>{const t=e.target&&e.target.closest?e.target.closest('[data-scl379="code-save"]'):null;if(!t)return;e.preventDefault();e.stopPropagation();
+ const box=t.closest('[data-scl379-codes]'),inp=box&&box.querySelector('input[data-scl379-code="'+t.dataset.kind+'"][data-id="'+t.dataset.id+'"]'),er=box&&box.querySelector('[data-scl379-codes-err]');if(!inp)return;
+ const v=inp.value.trim().toUpperCase();if(!/^[A-Z0-9]{2,20}$/.test(v)){if(er)er.textContent=ERR['MARKET_CODE:format'];inp.focus();return;}
+ t.disabled=true;if(er)er.textContent='';
+ rpc('scl379_hq_set_code',{p_hq_key:hqKey(),p_kind:t.dataset.kind,p_id:String(t.dataset.id),p_code:v}).then(x=>{inp.value=x.code;t.textContent='Αποθηκεύτηκε';setTimeout(()=>{t.textContent='Αποθήκευση';t.disabled=false;},1400);}).catch(x=>{if(er)er.textContent=msg(x);t.disabled=false;});
+},true);
+/* Κεντρικά → Αλλαγές: ένδειξη Market δίπλα στη συμφωνία (μόνο στην οθόνη· το CSV μένει ίδιο) */
+function marketOf(row){
+ try{if(!row||row.final_type!=='deal'&&row.kind!=='deal')return null;const H=root.SCL290&&root.SCL290.hq;if(!H)return null;
+  const snap=(H.snapshots||[]).find(s=>s.pharmacy_id===row.pharmacy_id&&Number(s.year)===Number(row.year));
+  const card=((snap&&snap.state_json&&snap.state_json.cards)||[]).find(c=>c.id===row.position_id);if(!card)return null;
+  const d=C().at(card,Number(row.month));return d&&d.market?d.market:null;}catch(e){return null;}
+}
+function wrapFile(){
+ const W=root.SCL304;if(!W||typeof W.fileControl!=='function'||W.fileControl.__scl379)return;
+ const old=W.fileControl;W.fileControl=function(row){const h=old.apply(this,arguments),mk=marketOf(row);return mk?'<span class="scl379-mk on-light" style="margin:0 0 6px">Market · '+E(mk.no||'')+'</span><br>'+h:h;};W.fileControl.__scl379=true;
+}
+wrapFile();if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wrapFile);setTimeout(wrapFile,1500);
 })();
 </script>
 <style id="scl375-style">

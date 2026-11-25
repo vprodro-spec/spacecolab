@@ -18,7 +18,7 @@ test('one-month agreement hides monthly-content choice and preserves fields when
 test('supplier proposal and confirmation are pharmacy letters with JPEG, mute video and orientation-specific filenames',async()=>{
  const x=await smoke(html,'pharmacy',{turnover:1000000,cards:[card]});const d={supplier:'Supplier',brand:'Brand',startMonth:10,duration:2,monthlyContentChanges:true,schedule:{10:'First',11:'Second'},soldMonthlyPrice:150};
  x.ctx.SCL297.document('base-1',d,'proposal');const p=x.ctx.SCL297.documentText;assert.match(p,/Αγαπητή ομάδα Supplier/);assert.match(p,/Προτεινόμενο μηνιαίο ποσό/);assert.match(p,/JPEG \(\.jpg ή \.jpeg\)/);assert.match(p,/χωρίς ήχο/);assert.match(p,/1080 × 1920/);assert.match(p,/2026-11_PORTRAIT\.jpg/);assert.match(p,/2026-12_PORTRAIT\.mp4/);assert.doesNotMatch(p,/Κόστος διαχείρισης|Η εφαρμογή δεν στέλνει|Αναφορά Αποτελεσμάτων/);
- x.ctx.SCL297.document('base-1',d,'confirmation');assert.match(x.ctx.SCL297.documentText,/Επιβεβαιώνουμε τη συμφωνία/);assert.match(x.ctx.SCL297.documentText,/Συμφωνημένο μηνιαίο ποσό/);assert.match(x.ctx.SCL297.documentText,/17\/11\/2026/);
+ x.ctx.SCL297.document('base-1',d,'confirmation');assert.match(x.ctx.SCL297.documentText,/Επιβεβαιώνουμε τη συμφωνία/);assert.match(x.ctx.SCL297.documentText,/Συμφωνημένο μηνιαίο ποσό/);assert.match(x.ctx.SCL297.documentText,/15\/11\/2026/);
  vm.runInContext("state.cards.find(c=>c.id==='base-1').screenFormat='horizontal'",x.ctx);x.ctx.SCL297.document('base-1',d,'proposal');assert.match(x.ctx.SCL297.documentText,/1920 × 1080/);assert.match(x.ctx.SCL297.documentText,/_LANDSCAPE\.jpeg/);
 });
 test('economics totals open their underlying rows and exclude cancelled charges',async()=>{

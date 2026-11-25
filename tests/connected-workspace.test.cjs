@@ -45,7 +45,7 @@ test('return without saving clears the routed library editor and preserves the o
 test('supplier confirmation gives exact filenames per changed content, destination and deadline',async()=>{
  const st={turnover:500000,cards:[{...card,confirmedDeals:[{id:'d',confirmed:true,supplier:'SUPPLIER',brand:'BRAND',startMonth:10,duration:2,monthlyContentChanges:true,schedule:{10:'First',11:'Second'},soldMonthlyPrice:100}]}]};
  const x=await smoke(html,'pharmacy',st);vm.runInContext("SCL297.document('base-1',state.cards.find(c=>c.id==='base-1').confirmedDeals[0],'confirmation')",x.ctx);
- const text=x.ctx.SCL297.documentText;assert.match(text,/ακριβώς/);assert.match(text,/2026-11_PORTRAIT\.mp4/);assert.match(text,/2026-12_PORTRAIT\.mp4/);assert.match(text,/emitropoulou@pharmaplus.gr/);assert.match(text,/18\/10\/2026/);assert.match(text,/17\/11\/2026/);
+ const text=x.ctx.SCL297.documentText;assert.match(text,/ακριβώς/);assert.match(text,/2026-11_PORTRAIT\.mp4/);assert.match(text,/2026-12_PORTRAIT\.mp4/);assert.match(text,/emitropoulou@pharmaplus.gr/);assert.match(text,/15\/10\/2026/);assert.match(text,/15\/11\/2026/);
  assert.doesNotMatch(x.document.querySelector('#briefModal .modal-head').textContent,/Supplier brief|format|blocks/);
 });
 test('overview keeps multiple month selection open and registry exposes the shared pharmacy restriction',async()=>{

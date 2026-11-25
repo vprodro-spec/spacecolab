@@ -91,7 +91,7 @@ test('preagreement save stays preagreement; final confirmation replaces customiz
  await x.click('[data-scl297="commit"]');const s=x.state();assert.equal(x.writes.length,3);assert.equal(s.preagreements.length,0);assert.equal(s.confirmedDeals.length,1);assert.equal(s.sponsoredShelves.length,0);assert.equal(s.simpleSchedule[9],theme);assert.equal(s.confirmedDeals[0].soldMonthlyPrice,175);
  assert.equal(x.document.querySelector('.modal.open'),null);assert.match(x.text('scl295Notice'),/Η οριστική συμφωνία καταχωρίστηκε/);
  await x.click('[data-scl297="document"][data-pre="false"]');
- assert.match(x.text('briefModalBody'),/emitropoulou@pharmaplus.gr/);assert.match(x.text('briefModalBody'),/17\/09\/2026/);assert.doesNotMatch(x.text('briefModalBody'),/Αναφορά Αποτελεσμάτων|5 εργάσιμες/);
+ assert.match(x.text('briefModalBody'),/emitropoulou@pharmaplus.gr/);assert.match(x.text('briefModalBody'),/15\/09\/2026/);assert.doesNotMatch(x.text('briefModalBody'),/Αναφορά Αποτελεσμάτων|5 εργάσιμες/);
  assert.equal(s.confirmedDeals[0].materialRequests[0].status,'awaiting');
 });
 
