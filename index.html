@@ -53880,7 +53880,7 @@ async function rpc(name,args){const c=client();if(!c)throw Error('Δεν υπά�
 const hqKey=()=>{try{return (typeof SCL_ROUTING!=='undefined'&&SCL_ROUTING&&SCL_ROUTING.hqKey)||'';}catch(e){return '';}};
 const isHQ=()=>document.body.classList.contains('scl-hq')&&!!hqKey();
 const $=id=>document.getElementById(id);
-const S=window.SCL370={ov:null,failed:false,busy:false,at:0,tab:'requests',q:'',b:{q:'',cat:'',state:'all',rows:[],total:0,busy:false,seq:0,err:false},drawn:'',rq:null,rqFailed:false,rqAt:0,rqLogs:{},k3:{pend:null,files:null,err:'',busy:''}};
+const S=window.SCL370={ov:null,failed:false,busy:false,at:0,tab:'requests',q:'',b:{q:'',cat:'',state:'all',rows:[],total:0,busy:false,seq:0,err:false},drawn:'',rq:null,rqFailed:false,rqAt:0,rqLogs:{},k3:{pend:null,files:null,err:'',busy:''},cat:{q:'',rows:[],busy:false,seq:0,msg:''}};
 const ICON='<svg class="i " viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5"></path><path d="M5.5 10v8.5h13V10"></path><path d="M9 18.5v-5h6v5"></path><circle cx="12" cy="8.2" r=".6"></circle></svg>';
 const SEARCH='<svg class="i " viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>';
 const fmtDate=v=>{try{const d=new Date(v);return d.toLocaleDateString('el-GR',{day:'numeric',month:'short',year:'numeric'});}catch(e){return '';}};
@@ -54014,12 +54014,48 @@ function requestsHTML(){
  return (nw.length?nw.map(row).join(''):'<div class="scl370-empty"><b>Κανένας προμηθευτής δεν περιμένει πληροφορίες</b>Όταν ένας προμηθευτής συμπληρώσει τη φόρμα στο Market, θα τη δεις εδώ.</div>')+
   (old.length?'<div class="scl370-old">Παλαιότερα</div>'+old.map(row).join(''):'');
 }
+/* v341 · Κατάλογος προμηθευτών από το αρχείο κωδικών: χωρίς πρόσβαση στο Market μέχρι το «Δώσε πρόσβαση». */
+function catalogHTML(){
+ const n=Number(S.ov.counts&&S.ov.counts.catalog||0);if(!n)return '';
+ const q=S.q.trim(),C=S.cat;
+ let h='<div class="scl370-old" style="margin-top:14px">Από το αρχείο κωδικών · χωρίς πρόσβαση στο Market · '+nf(n)+'</div>';
+ if(C.msg)h+='<p class="scl370-sub">'+C.msg+'</p>';
+ if(q.length<2)return h+'<p class="scl370-sub">Γράψε όνομα προμηθευτή ή Brand στην αναζήτηση για να τον βρεις και να του δώσεις πρόσβαση. Μέχρι τότε δεν βλέπει το Market.</p>';
+ if(C.q!==q){catalogSearch(q);return h+'<p class="scl370-sub">Αναζήτηση…</p>';}
+ if(C.busy)return h+'<p class="scl370-sub">Αναζήτηση…</p>';
+ if(!C.rows.length)return h+'<p class="scl370-sub">Κανένας στο αρχείο με «'+E(q)+'».</p>';
+ return h+C.rows.map(c=>'<div class="scl370-row off"><div><strong>'+E(c.name)+'</strong><small>Κωδικός αρχείου '+E(c.code)+'</small></div><div><small>'+(c.brand_count?nf(c.brand_count)+' Brands: '+E((c.brands||[]).join(', '))+(c.brand_count>(c.brands||[]).length?' …':''):'Χωρίς Brands στο μητρώο')+'</small><div class="scl370-acts"><button type="button" class="btn primary" data-scl370="cat-grant" data-id="'+E(c.id)+'">Δώσε πρόσβαση</button></div></div></div>').join('');
+}
+async function catalogSearch(q){const C=S.cat,seq=++C.seq;C.q=q;C.busy=true;try{const d=await rpc('scl382_hq_catalog_search',{p_hq_key:hqKey(),p_q:q});if(seq!==C.seq)return;C.rows=(d&&d.rows)||[];}catch(e){if(seq!==C.seq)return;C.rows=[];}C.busy=false;if(S.tab==='companies')drawBody();}
+async function catalogGrant(id,requestId){
+ try{const d=await rpc('scl382_hq_supplier_grant',{p_hq_key:hqKey(),p_company_id:id,p_request_id:requestId||null});const c=d.company,tk=d.taken||[];
+  S.cat.rows=S.cat.rows.filter(x=>x.id!==id);S.cat.msg='<span class="scl370-tagx ok">Έγινε</span> Ο <b>'+E(c.name)+'</b> πέρασε στους προμηθευτές με '+nf((c.brands||[]).length)+' Brands.'+(tk.length?' Δεν μπήκαν γιατί τα έχει άλλος: '+E(tk.map(x=>x.brand+' ('+x.owner+')').join(', '))+'.':'')+' Συμπλήρωσε υπεύθυνο για να πάρεις τον σύνδεσμο.';
+  putCompany(c);if(S.ov.counts)S.ov.counts.catalog=Math.max(0,Number(S.ov.counts.catalog||0)-1);S.tab='companies';render(true);closeModal();companyModal(c);load(true);}
+ catch(e){S.cat.msg='<span class="scl370-err">'+E(friendly(e))+'</span>';drawBody();}
+}
+/* «Δημιουργία προμηθευτή» από αίτημα πληροφοριών: πρώτα κοιτάμε αν υπάρχει ήδη στο αρχείο. */
+async function companyFromRequest(r){
+ let rows=[];try{const words=String(r.company||'').trim().split(/\s+/).filter(w=>w.length>=3);if(words.length&&Number(S.ov.counts&&S.ov.counts.catalog||0)){const d=await rpc('scl382_hq_catalog_search',{p_hq_key:hqKey(),p_q:words[0]});rows=(d&&d.rows)||[];}}catch(e){}
+ if(!rows.length){companyModal(null,r);return;}
+ openModal('Υπάρχει ήδη στο αρχείο;','«'+E(r.company)+'» ζητά πληροφορίες. Αν είναι ένας από τους παρακάτω, δώσε του πρόσβαση: κρατά τον κωδικό και τα Brands του.',
+  rows.slice(0,6).map(c=>'<div class="scl370-row"><div><strong>'+E(c.name)+'</strong><small>Κωδικός αρχείου '+E(c.code)+(c.brand_count?' · '+nf(c.brand_count)+' Brands':'')+'</small></div><div class="scl370-acts"><button type="button" class="btn primary" data-scl370="cat-grant" data-id="'+E(c.id)+'" data-request="'+E(r.id)+'">Είναι αυτός · δώσε πρόσβαση</button></div></div>').join(''),
+  '<button type="button" class="scl370-b" data-scl370="close">Άκυρο</button><button type="button" class="scl370-b pri" data-scl370="company-new-plain" data-request="'+E(r.id)+'">Κανένας · νέος προμηθευτής</button>');
+}
+/* Αρχείο κωδικών (στήλες Προμηθευτής, Δικαιούχος): στέλνονται μόνο ονόματα προμηθευτών και ποια Brands έχει ο καθένας. */
+function readSuppliers(text){
+ const ws=x=>String(x==null?'':x).replace(/\s+/g,' ').trim(),rows=csvRows(text),h=(rows[0]||[]).map(x=>ws(x).toLocaleUpperCase('el').normalize('NFD').replace(/[̀-ͯ]/g,''));
+ const is=h.indexOf('ΠΡΟΜΗΘΕΥΤΗΣ'),ib=h.indexOf('ΔΙΚΑΙΟΥΧΟΣ'),ik=h.indexOf('ΚΩΔΙΚΟΣ ΕΙΔΟΥΣ'),id=h.indexOf('ΠΕΡΙΓΡΑΦΗ');if(is<0||ib<0||ik<0)return null;
+ const m=new Map();for(let i=1;i<rows.length;i++){const r=rows[i],s2=ws(r[is]),b=ws(r[ib]);if(!s2||!b||(id>=0&&!ws(r[id])))continue;const k=b+'\u0001'+s2;m.set(k,(m.get(k)||0)+1);}
+ const sup=[...new Set([...m.keys()].map(k=>k.split('\u0001')[1]))].sort(),ix=new Map(sup.map((x,i)=>[x,i]));
+ return {suppliers:sup,links:[...m].map(([k,n])=>{const a=k.split('\u0001');return [a[0],ix.get(a[1]),n];})};
+}
 function companiesHTML(){
  const q=S.q.trim().toLocaleUpperCase('el');
  const cs=(S.ov.companies||[]).filter(c=>!q||[c.name,c.legal_name,c.vat].concat((c.brands||[]).map(b=>b.name)).some(v=>String(v||'').toLocaleUpperCase('el').indexOf(q)>=0));
- if(!(S.ov.companies||[]).length)return '<div class="scl370-empty"><b>Δεν υπάρχει ακόμα προμηθευτής</b>Πάτα «Νέος προμηθευτής» για να φτιάξεις τον πρώτο και να του δώσεις τα Brands και τον σύνδεσμό του.</div>';
- if(!cs.length)return '<div class="scl370-empty">Κανένας προμηθευτής δεν ταιριάζει με «'+E(S.q)+'».</div>';
- return cs.map(c=>{const bs=c.brands||[],p=c.person||{};
+ const cat=catalogHTML();
+ if(!(S.ov.companies||[]).length)return cat||'<div class="scl370-empty"><b>Δεν υπάρχει ακόμα προμηθευτής</b>Πάτα «Νέος προμηθευτής» για να φτιάξεις τον πρώτο και να του δώσεις τα Brands και τον σύνδεσμό του.</div>';
+ if(!cs.length)return cat||'<div class="scl370-empty">Κανένας προμηθευτής δεν ταιριάζει με «'+E(S.q)+'».</div>';
+ return cat+'\u0001'+cs.map(c=>{const bs=c.brands||[],p=c.person||{};
   return '<div class="scl370-row'+(c.active?'':' off')+'"><div><strong>'+E(c.name)+'</strong><small>'+E([c.legal_name,c.vat?'ΑΦΜ '+c.vat:''].filter(Boolean).join(' · ')||'Χωρίς στοιχεία τιμολόγησης')+'</small><small>'+E([p.full_name,p.email,p.phone].filter(Boolean).join(' · '))+'</small></div>'+
    '<div><div class="scl370-chips">'+(bs.length?bs.slice(0,6).map(b=>'<span class="scl370-chip">'+E(b.name)+'</span>').join('')+(bs.length>6?'<span class="scl370-chip more">+'+(bs.length-6)+' ακόμα</span>':''):'<span class="scl370-tagx warn">Χωρίς Brands</span>')+'</div>'+
    '<div class="scl370-chips" style="margin-top:8px">'+accessTag(c)+(c.is_test?'<span class="scl370-tagx mute">Δοκιμαστική</span>':'')+(Number(c.requests)?'<span class="scl370-tagx mute">'+c.requests+' '+(Number(c.requests)===1?'αίτημα':'αιτήματα')+'</span>':'')+'</div></div>'+
@@ -54046,7 +54082,7 @@ async function searchBrands(more){
  catch(e){if(seq!==B.seq)return;B.err=true;}
  finally{if(seq===B.seq){B.busy=false;drawBody();}}
 }
-function drawBody(){const b=$('scl370Body');if(!b)return;if(S.tab==='deals'&&S.rq&&active()&&!document.hidden)rqMarkSeen();b.innerHTML=S.tab==='requests'?requestsHTML():S.tab==='pharm'?pharmHTML():S.tab==='files'?filesHTML():S.tab==='deals'&&S.rq?dealsHTML():S.tab==='companies'?companiesHTML():brandsHTML();}
+function drawBody(){const b=$('scl370Body');if(!b)return;if(S.tab==='deals'&&S.rq&&active()&&!document.hidden)rqMarkSeen();b.innerHTML=S.tab==='requests'?requestsHTML():S.tab==='pharm'?pharmHTML():S.tab==='files'?filesHTML():S.tab==='deals'&&S.rq?dealsHTML():S.tab==='companies'?(x=>{const p=x.indexOf('\u0001');return p<0?x:x.slice(p+1)+x.slice(0,p);})(companiesHTML()):brandsHTML();}
 function render(shell){
  const p=$('scl212Page-market');if(!p||!S.ov)return;
  if(shell||!$('scl370Body')){const had=document.activeElement&&document.activeElement.id==='scl370Search';p.innerHTML=shellHTML();if(had){const i=$('scl370Search');if(i){i.focus();try{i.setSelectionRange(i.value.length,i.value.length);}catch(e){}}}}
@@ -54197,7 +54233,17 @@ async function readRegistry(files){
   seenB.forEach(b=>{brands[b]=(brands[b]||0)+1;});seenC.forEach(k=>{combos[k]=(combos[k]||0)+1;});sales++;}
  return {payload:{brands:brands,combos:Object.keys(combos).map(k=>{const a=k.split('\u0001');return [a[0],a[1],a[2],combos[k]];})},files:sales,skipped:skipped};}
 async function registryFiles(input){
- const files=[...(input.files||[])];input.value='';if(!files.length)return;
+ let files=[...(input.files||[])];input.value='';if(!files.length)return;
+ // v341: αρχείο κωδικών → κατάλογος προμηθευτών
+ const rest=[];let supMsg='';
+ for(const f of files){if(!/\.csv$/i.test(f.name)){rest.push(f);continue;}let p=null;try{p=readSuppliers((await f.text()).replace(/^\uFEFF/,''));}catch(e){}
+  if(!p){rest.push(f);continue;}
+  openModal('Ενημέρωση προμηθευτών','','<div class="scl370-note" id="scl370RegMsg">Βρέθηκαν <b>'+nf(p.suppliers.length)+' προμηθευτές</b> και '+nf(p.links.length)+' συνδέσεις με Brands. Στέλνω μόνο ονόματα…</div>','<button type="button" class="scl370-b" data-scl370="close">Κλείσιμο</button>');
+  try{const d=await rpc('scl382_hq_suppliers_load',{p_hq_key:hqKey(),p:p});
+   supMsg='<span class="scl370-tagx ok">Έγινε</span> Προστέθηκαν <b>'+nf(d.added)+' προμηθευτές</b> (σύνολο από αρχείο: '+nf(d.catalog)+'). '+nf(d.links)+' συνδέσεις Brand–προμηθευτή· '+nf(d.multi)+' Brands έχουν 2 ή περισσότερους προμηθευτές.'+(Number(d.unknown_brands)?' '+nf(d.unknown_brands)+' συνδέσεις παραλείφθηκαν γιατί το Brand δεν είναι στο μητρώο.':'')+' Κανείς δεν πήρε πρόσβαση στο Market. Τίποτα δεν σβήστηκε.';}
+  catch(e){supMsg='<span class="scl370-err">'+(/REGISTRY_FORMAT/.test(String(e.message))?'Το αρχείο δεν έχει τη σωστή μορφή.':/Could not find the function|PGRST202/.test(String(e.message))?'Η βάση δεν έχει ακόμα τον κατάλογο προμηθευτών.':E(friendly(e)))+'</span>';}
+  const el=$('scl370RegMsg');if(el)el.innerHTML=supMsg;load(true);}
+ files=rest;if(!files.length)return;
  openModal('Ενημέρωση μητρώου','','<div class="scl370-note" id="scl370RegMsg">Διαβάζω '+files.length+' '+(files.length===1?'αρχείο':'αρχεία')+'…</div>','<button type="button" class="scl370-b" data-scl370="close">Κλείσιμο</button>');
  const msg=t=>{const e=$('scl370RegMsg');if(e)e.innerHTML=t;};
  let r;try{r=await readRegistry(files);}catch(e){msg('<span class="scl370-err">Δεν διαβάστηκαν τα αρχεία. Διάλεξε το αρχείο μητρώου (.json) ή τα αρχεία πωλήσεων (.csv).</span>');return;}
@@ -54221,7 +54267,9 @@ document.addEventListener('click',e=>{
  if(a==='k3-res'){const id=t.dataset.id,inp=document.querySelector('[data-k3code="'+id+'"]');S.k3.busy=id;S.k3.err='';drawBody();
   rpc('scl380_hq_pending_resolve',{p_hq_key:hqKey(),p_id:id,p_action:t.dataset.act,p_target:t.dataset.target||null,p_code:inp?inp.value.trim().toUpperCase():null}).then(r=>{S.k3.pend=r;S.k3.busy='';if(t.dataset.act==='add')load(true);else render(true);navBadge();})
   .catch(err=>{S.k3.busy='';const m=String(err&&err.message||'');S.k3.err=/taken/.test(m)?'Ο κωδικός υπάρχει ήδη. Γράψε άλλον ή διάλεξε «Είναι το …».':/format/.test(m)?'Ο κωδικός θέλει 2–20 λατινικά γράμματα ή αριθμούς.':'Δεν έγινε. Δοκίμασε ξανά.';drawBody();});return;}
- if(a==='company-new'){const r=t.dataset.request?(S.ov.requests||[]).find(x=>x.id===t.dataset.request):null;companyModal(null,r);return;}
+ if(a==='company-new'){const r=t.dataset.request?(S.ov.requests||[]).find(x=>x.id===t.dataset.request):null;if(r)companyFromRequest(r);else companyModal(null,r);return;}
+ if(a==='company-new-plain'){const r=(S.ov.requests||[]).find(x=>x.id===t.dataset.request)||null;closeModal();companyModal(null,r);return;}
+ if(a==='cat-grant'){t.disabled=true;catalogGrant(t.dataset.id,t.dataset.request);return;}
  if(a==='company-edit'){companyModal(company(t.dataset.id));return;}
  if(a==='company-save'){companySave(t);return;}
  if(a==='company-active'){const on=t.dataset.on==='1';if(!on&&t.dataset.sure!=='1'){t.dataset.sure='1';t.textContent='Σίγουρα; Ο σύνδεσμος σταματά';return;}
@@ -55236,6 +55284,7 @@ wrapFile();if(document.readyState==='loading')document.addEventListener('DOMCont
 .k3c-chips{display:flex;flex-wrap:wrap;gap:8px}
 .k3c-chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 13px;border-radius:999px;border:0;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14);font:inherit;font-size:13px;color:#1d1d1f;cursor:pointer}
 .k3c-chip.on{background:#2459e0;color:#fff;box-shadow:none}
+body.scl295-pharmacy #negotiationModal .k3c-chip.on,body.scl295-pharmacy #negotiationModal .k3c-chip.on:hover,body.scl295-pharmacy #negotiationModal .k3c-chip.on:focus{background:#2459e0!important;color:#fff!important;box-shadow:none!important;opacity:1!important}
 .k3c-chip.soft{background:#f2f2f5;box-shadow:none;color:#3a3a3c}
 .k3c-chip .x{opacity:.75;font-size:12px}
 .k3c-sel{display:flex;align-items:center;gap:12px;min-height:54px;padding:8px 14px;border-radius:12px;background:#f2f2f5}
@@ -55369,7 +55418,7 @@ function scopesOf(k){const map=new Map();for(const b of k.brands||[])for(const s
 function identityHTML(d){
  const k=d.data.k3,b=k.brands||[],sup=k.supplier,adding=UI.adding||!b.length;
  let h='<div class="k3c-block" id="k3cIdentity"><span class="k3c-lbl" style="margin-top:0">Brand *</span>';
- if(b.length)h+='<div class="k3c-chips">'+b.map((x,i)=>'<button type="button" class="k3c-chip on" data-k3c="brand-del" data-i="'+i+'" aria-label="Αφαίρεση '+E(x.name)+'">'+E(x.name)+(x.free?' · με το χέρι':'')+' <span class="x" aria-hidden="true">✕</span></button>').join('')+(!adding?'<button type="button" class="k3c-chip" data-k3c="brand-add">+ Brand'+(sup&&sup.id?' της '+E(sup.name):' του ίδιου προμηθευτή')+'</button>':'')+'</div>';
+ if(b.length)h+='<div class="k3c-chips">'+b.map((x,i)=>'<button type="button" class="k3c-chip on" data-k3c="brand-del" data-i="'+i+'" aria-label="Αφαίρεση '+E(x.name)+'">'+E(x.name)+(x.free?' · με το χέρι':'')+' <span class="x" aria-hidden="true">✕</span></button>').join('')+(!adding&&!(k.options&&!(sup&&(sup.id||String(sup.name||'').trim())))?'<button type="button" class="k3c-chip" data-k3c="brand-add">+ Brand'+(sup&&sup.id?' της '+E(sup.name):' του ίδιου προμηθευτή')+'</button>':'')+'</div>';
  if(b.length>1)h+='<div class="k3c-note">Δύο ή περισσότερα Brands του ίδιου προμηθευτή → στο όνομα αρχείου μπαίνει <b>MIX</b>, όπως και στο Market.</div>';
  if(adding){
   h+='<div class="k3c-field" style="margin-top:'+(b.length?'10px':'0')+'"><input class="k3c-search" id="k3cBrandQ" type="search" autocomplete="off" placeholder="'+(b.length?'Άλλο Brand του ίδιου προμηθευτή…':'Γράψε το Brand, π.χ. AVENE')+'" value="'+E(UI.q)+'" aria-label="Αναζήτηση Brand">';
@@ -55383,7 +55432,12 @@ function identityHTML(d){
  }
  if(UI.err)h+='<p class="k3c-err" role="alert">'+E(UI.err)+'</p>';
  h+='<span class="k3c-lbl">Προμηθευτής '+(sup&&sup.id?'<small>· αυτός που πληρώνει την προβολή</small>':'*')+'</span>';
- if(sup&&sup.id)h+='<div class="k3c-sel"><span class="k3c-mono">'+E(sup.name.slice(0,2))+'</span><span><b>'+E(sup.name)+'</b><small>Από το μητρώο των Κεντρικών · κωδικός αρχείου '+E(sup.code)+'</small></span><span class="k3c-tag '+(sup.test?'mute':'ok')+'" style="margin-left:auto">'+(sup.test?'Δοκιμαστικός':'Στο μητρώο')+'</span></div>';
+ if(k.options&&k.options.length>1){
+  h+='<div class="k3c-chips" role="radiogroup" aria-label="Προμηθευτής">'+k.options.map((o,i)=>'<button type="button" class="k3c-chip'+(sup&&sup.id===o.id?' on':'')+'" role="radio" aria-checked="'+!!(sup&&sup.id===o.id)+'" data-k3c="sup-pick" data-i="'+i+'">'+E(o.name)+'</button>').join('')+'<button type="button" class="k3c-chip'+(k.other?' on':'')+'" role="radio" aria-checked="'+!!k.other+'" data-k3c="sup-other">Άλλος προμηθευτής</button></div>';
+  if(k.other){const v=sup&&!sup.id?sup.name:'';h+='<input class="k3c-search" id="k3cSupplier" type="text" style="margin-top:8px" placeholder="Όνομα προμηθευτή" value="'+E(v)+'" aria-label="Προμηθευτής"><div class="k3c-note">'+(v.trim()?'<span class="k3c-tag warn">Νέος προμηθευτής</span>&nbsp; Τα Κεντρικά τον ελέγχουν όταν γίνει οριστική. Κωδικός αρχείου: <b>'+E(firstCode(v)||'—')+'</b>.':'Γράψε τον προμηθευτή που πληρώνει την προβολή.')+'</div>';}
+  else h+='<div class="k3c-note">'+(sup&&sup.id?'Κωδικός αρχείου <b>'+E(sup.code)+'</b>. ':'')+'Το '+E(b[0]?b[0].name:'Brand')+' το έχουν '+k.options.length+' προμηθευτές. Διάλεξε αυτόν με τον οποίο έκανες τη συμφωνία.</div>';
+ }
+ else if(sup&&sup.id)h+='<div class="k3c-sel"><span class="k3c-mono">'+E(sup.name.slice(0,2))+'</span><span><b>'+E(sup.name)+'</b><small>Από το μητρώο των Κεντρικών · κωδικός αρχείου '+E(sup.code)+'</small></span><span class="k3c-tag '+(sup.test?'mute':'ok')+'" style="margin-left:auto">'+(sup.test?'Δοκιμαστικός':'Στο μητρώο')+'</span></div>';
  else if(b.length){const v=sup?sup.name:'';h+='<input class="k3c-search" id="k3cSupplier" type="text" autocomplete="organization" placeholder="Όνομα προμηθευτή, π.χ. Korres Natural Products" value="'+E(v)+'" aria-label="Προμηθευτής">'+(v.trim()?'<div class="k3c-note"><span class="k3c-tag warn">Νέος προμηθευτής</span>&nbsp; Δεν είναι στο μητρώο. Η συμφωνία καταχωρίζεται κανονικά· τα Κεντρικά τον ελέγχουν όταν γίνει οριστική. Κωδικός αρχείου: <b>'+E(firstCode(v)||'—')+'</b>.</div>':'<div class="k3c-note">Γράψε τον προμηθευτή που πληρώνει την προβολή.</div>');}
  else h+='<div class="k3c-sel" style="color:#8e8e93">Συμπληρώνεται από το Brand</div>';
  return h+'</div>';
@@ -55472,26 +55526,33 @@ async function searchBrands(q){
  try{const res=await rpc('scl380_ph_brand_search',{p_token:token(),p_q:q});if(UI.q===q){UI.results=Array.isArray(res)?res:[];}}catch(e){UI.results=[];UI.err='Η αναζήτηση δεν έγινε. Δοκίμασε ξανά.';}
  UI.busy=false;UI.focus='k3cBrandQ';refreshParts();
 }
+// Ο προμηθευτής που διάλεξε το φαρμακείο την προηγούμενη φορά για το ίδιο Brand.
+function lastSupplier(brandId){let hit=null;try{for(const c of state.cards)for(const d of [...(c.confirmedDeals||[]),...(c.preagreements||[])]){const k=d&&d.k3;if(k&&k.supplier&&k.supplier.id&&(k.brands||[]).some(b=>b.id===brandId))hit=k.supplier.id;}}catch(e){}return hit;}
 function pick(x,src){
  const d=draft();if(!isV3(d))return;const k=d.data.k3;UI.err='';
  if(src==='sib')x={...x,supplier:k.supplier};
  if((k.brands||[]).some(b=>!b.free&&b.id===x.id))return;
- const xs=x.supplier;
+ const opts=(x.suppliers&&x.suppliers.length?x.suppliers:(x.supplier?[x.supplier]:[])).map(o=>({id:o.id,name:o.name,code:o.code,test:!!o.test}));
+ let xs=opts.length===1?opts[0]:null;
+ if(k.brands.length&&k.supplier&&k.supplier.id&&opts.some(o=>o.id===k.supplier.id))xs=k.supplier;
  if(k.brands.length){
   if(k.supplier&&k.supplier.id&&(!xs||xs.id!==k.supplier.id)){UI.err='Το '+x.name+' δεν ανήκει στον '+k.supplier.name+'. Ένα υλικό μπορεί να έχει Brands μόνο ενός προμηθευτή.';UI.focus='k3cBrandQ';refreshParts();return;}
   if((!k.supplier||!k.supplier.id)&&xs){UI.err='Το '+x.name+' ανήκει στον '+xs.name+', ενώ η συμφωνία έχει άλλον προμηθευτή.';UI.focus='k3cBrandQ';refreshParts();return;}
  }
  k.brands.push({id:x.id,name:x.name,code:x.code,scopes:x.scopes||[]});
- if(!k.brands.slice(0,-1).length)k.supplier=xs?{id:xs.id,name:xs.name,code:xs.code,test:!!xs.test}:(k.supplier&&!k.supplier.id?k.supplier:null);
+ if(!k.brands.slice(0,-1).length){k.supplier=xs?{id:xs.id,name:xs.name,code:xs.code,test:!!xs.test}:(k.supplier&&!k.supplier.id?k.supplier:null);k.options=opts.length>1?opts:null;k.other=false;
+  if(k.options&&!k.supplier){const prev=lastSupplier(x.id);const o=prev&&k.options.find(z=>z.id===prev);if(o)k.supplier={...o};}}
  UI.q='';UI.open=false;UI.adding=false;UI.results=[];sync(d);refreshParts();
 }
 window.addEventListener('click',e=>{
  const b=e.target.closest?.('[data-k3c]');if(!b||!PH())return;const d=draft();if(!isV3(d))return;const k=d.data.k3,a=b.dataset.k3c;
  e.preventDefault();e.stopImmediatePropagation();
- if(a==='brand-del'){k.brands.splice(Number(b.dataset.i),1);if(!k.brands.length){k.supplier=null;k.categories=[];k.subcategories=[];}else if(k.brands.every(x=>x.free)&&k.supplier&&k.supplier.id){/* κρατά τον προμηθευτή */}UI.err='';sync(d);refreshParts();return;}
+ if(a==='brand-del'){k.brands.splice(Number(b.dataset.i),1);if(!k.brands.length){k.supplier=null;k.options=null;k.other=false;k.categories=[];k.subcategories=[];}else if(k.brands.every(x=>x.free)&&k.supplier&&k.supplier.id){/* κρατά τον προμηθευτή */}UI.err='';sync(d);refreshParts();return;}
  if(a==='brand-add'){UI.adding=true;UI.q='';UI.open=false;UI.focus='k3cBrandQ';refreshParts();return;}
  if(a==='brand-pick'){const list=b.dataset.src==='sib'?(UI.siblings||[]).filter(x=>!k.brands.some(y=>y.id===x.id)&&x.name.toUpperCase().includes(UI.q.trim().toUpperCase())):UI.results;const x=list[Number(b.dataset.i)];if(x)pick(x,b.dataset.src);return;}
  if(a==='brand-free'){const name=UI.q.trim().replace(/\s+/g,' ');if(name.length<2)return;if(k.brands.some(x=>x.name.toUpperCase()===name.toUpperCase()))return;k.brands.push({name:name.slice(0,60),code:codeFrom(name),free:true,scopes:[]});UI.q='';UI.open=false;UI.adding=false;UI.err='';sync(d);refreshParts();if(!k.supplier){UI.focus='k3cSupplier';refreshParts();}return;}
+ if(a==='sup-pick'){const o=(k.options||[])[Number(b.dataset.i)];if(!o)return;if(k.brands.length>1&&k.supplier&&k.supplier.id!==o.id){k.brands=k.brands.slice(0,1);UI.err='Άλλαξες προμηθευτή: έμεινε μόνο το πρώτο Brand.';}k.supplier={...o};k.other=false;UI.siblings=null;UI.sibFor=null;sync(d);refreshParts();return;}
+ if(a==='sup-other'){k.other=true;k.supplier=null;if(k.brands.length>1)k.brands=k.brands.slice(0,1);UI.focus='k3cSupplier';sync(d);refreshParts();return;}
  if(a==='cat'){const v=b.dataset.v,l=k.categories||(k.categories=[]),i=l.indexOf(v);if(i>=0)l.splice(i,1);else l.push(v);refreshParts();return;}
  if(a==='sub'){const v=b.dataset.v,l=k.subcategories||(k.subcategories=[]),i=l.indexOf(v);if(i>=0)l.splice(i,1);else l.push(v);refreshParts();return;}
  if(a==='more'){UI.more=true;refreshParts();return;}
@@ -55529,7 +55590,7 @@ window.addEventListener('click',async e=>{
  const n=d.data,k=n.k3;sync(d);
  if(!k.brands.length){e.preventDefault();e.stopImmediatePropagation();fail('Διάλεξε Brand.','#k3cBrandQ');return;}
  {const hit=shelfHit(cardOf(d.card),n);if(hit.length){e.preventDefault();e.stopImmediatePropagation();const s0=hit[0];fail(MNF[Number(s0.month)]+': υπάρχει χορηγία ραφιών ('+(s0.brand||'χορηγία')+'). Η συμφωνία παίρνει την οθόνη και όλα τα ράφια, οπότε δεν γίνεται τον ίδιο μήνα. Διάλεξε άλλον μήνα ή ακύρωσε πρώτα τη χορηγία.');return;}}
- if(!k.supplier||!String(k.supplier.name||'').trim()){e.preventDefault();e.stopImmediatePropagation();fail('Συμπλήρωσε τον προμηθευτή.','#k3cSupplier');return;}
+ if(!k.supplier||!String(k.supplier.name||'').trim()){e.preventDefault();e.stopImmediatePropagation();fail(k.options&&!k.other?'Διάλεξε προμηθευτή: το Brand το έχουν περισσότεροι από ένας.':'Συμπλήρωσε τον προμηθευτή.','#k3cSupplier');return;}
  if(!supplierCode(k)||supplierCode(k).length<2){e.preventDefault();e.stopImmediatePropagation();fail('Το όνομα του προμηθευτή χρειάζεται γράμματα (για τον κωδικό του αρχείου).');return;}
  if(a==='review-deal'||a==='commit'){const m=themeMissing(n);if(m!==undefined){e.preventDefault();e.stopImmediatePropagation();fail('Συμπλήρωσε το Θέμα'+(n.monthlyContentChanges!==false&&C0.months(n).length>1?' για '+MNF[m]:'')+'.',n.monthlyContentChanges!==false&&C0.months(n).length>1?'[data-scl297-field="monthlySublines.'+m+'"]':'[data-scl297-field="subline"]');return;}}
  if(a!=='commit'||F().review?.kind!=='deal')return;
