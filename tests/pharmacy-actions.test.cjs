@@ -97,7 +97,7 @@ test('preagreement save stays preagreement; final confirmation replaces customiz
 
 test('mandatory supplier and brand, agreement overlap and deadline errors never save',async()=>{
  const c=base();c.confirmedDeals=[{id:'d',confirmed:true,supplier:'S',brand:'B',startMonth:10,duration:1,soldMonthlyPrice:100,monthlyContentChanges:false}];
- const x=await app(c);x.run("SCL297.openDeal('base-1')");await x.field('brand','Brand');await x.click('[data-scl297="review-deal"]');assert.match(x.text('scl297Error'),/και Προμηθευτή και Μάρκα/);
+ const x=await app(c);x.run("SCL297.openDeal('base-1')");await x.field('brand','Brand');await x.click('[data-scl297="review-deal"]');assert.match(x.text('scl297Error'),/και Προμηθευτή και Brand/);
  await x.field('supplier','Supplier');await x.field('duration',2);await x.click('[data-scl297="review-deal"]');assert.match(x.text('scl297Error'),/υπάρχει Συμφωνία/);assert.equal(x.writes.length,0);
  x.run('window.confirm=()=>true');x.run("closeModal('negotiationModal')");x.run("SCL297.openShelf('base-1',10)");assert.match(x.text('scl295Notice'),/Συμφωνία/);assert.equal(x.run('SCL297.draft'),null);
  const late=await app(base(),{now:'2026-10-20T12:00:00Z'});late.run("SCL297.openDeal('base-1')");await late.field('startMonth',10);await late.field('supplier','Supplier');await late.field('brand','Brand');await late.click('[data-scl297="review-deal"]');assert.match(late.text('scl297Error'),/15\/10\/2026/);assert.equal(late.writes.length,0);
