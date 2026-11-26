@@ -36727,12 +36727,13 @@ W.load=async function(year=y(),force=false){
  if(!hq())return;if(W.loading.has(year))return W.loading.get(year);if(W.materials.has(year)&&!force)return W.materials.get(year);
  const request=api('scl304_materials',{p_year:year}).then(d=>{if(!d||!Array.isArray(d.items))throw Error('Δεν φορτώθηκαν τα στοιχεία υλικού. Πατήστε Ανανέωση.');W.materials.set(year,d.items);W.error='';return d.items;}).catch(e=>{W.error=e.message;throw e;}).finally(()=>W.loading.delete(year));W.loading.set(year,request);return request;
 };
-function expected(row){const card=SCL302Core.snapshots(SCL290.hq||{}).get(row.pharmacy_id+'|'+row.year)?.state_json?.cards?.find(c=>c.id===row.position_id),deal=card&&SCL297Core.at(card,Number(row.month));return deal?SCL297Core.files({...card,screenFormat:row.position_orientation},deal,row.year).find(f=>row.month>=f.month&&row.month<=f.end):null;}
-const oldRows=SCL303.rows;SCL303.rows=function(){return oldRows().map(r=>{const material=C.material(W.materials.get(Number(r.year)),r);return {...r,expected_file:r.final_type==='deal'?expected(r)?.file||r.file:'',materialRecord:material,file:r.final_type==='deal'?material?.filename||'':r.file};});};
+function expected(row){const card=SCL302Core.snapshots(SCL290.hq||{}).get(row.pharmacy_id+'|'+row.year)?.state_json?.cards?.find(c=>c.id===row.position_id),deal=card&&SCL297Core.at(card,Number(row.month));const f=deal?SCL297Core.files({...card,screenFormat:row.position_orientation},deal,row.year).find(f=>row.month>=f.month&&row.month<=f.end):null;return f?{...f,k3:!!(deal.k3&&!f.pending)}:null;}
+const oldRows=SCL303.rows;SCL303.rows=function(){return oldRows().map(r=>{const material=C.material(W.materials.get(Number(r.year)),r);const ex=r.final_type==='deal'?expected(r):null;return {...r,expected_file:r.final_type==='deal'?ex?.file||r.file:'',materialRecord:material,file:r.final_type==='deal'?(material?.filename||(ex&&ex.k3?ex.file:'')):r.file};});};
 W.fileControl=function(row){
  const r=row.materialRecord?row:SCL303.rows().find(r=>r.id===row.id)||row,file=r.file!==undefined?r.file:SCL303Core.filename(r,SCL293.data);
  const source=C.source(r,SCL300.data,SCL293.data),attrs='data-id="'+E(r.id||SCL292Core.taskKey(r))+'"';
- return (file?'<div class="scl303-copy"><code>'+E(file)+'</code>'+button('Αντιγραφή ονόματος αρχείου','copy','data-copy="'+E(file)+'"')+'</div>':'')+(source?button(file?(source.kind==='agreement'?'Στοιχεία υλικού':'Επεξεργασία αρχείου'):'Δεν έχει καταχωριστεί · Καταχώριση','file',attrs,file?'':'scl304-missing'):!file?'<small>Η θεματική δεν αντιστοιχεί σε καταχώριση βιβλιοθήκης.</small>':'');
+ const waiting=r.final_type==='deal'&&file&&!r.materialRecord;
+ return (file?'<div class="scl303-copy"><code>'+E(file)+'</code>'+button('Αντιγραφή ονόματος αρχείου','copy','data-copy="'+E(file)+'"')+'</div>':'')+(source?button(waiting?'Το υλικό δεν έχει έρθει · Καταχώριση':file?(source.kind==='agreement'?'Στοιχεία υλικού':'Επεξεργασία αρχείου'):'Δεν έχει καταχωριστεί · Καταχώριση','file',attrs,file&&!waiting?'':'scl304-missing'):!file?'<small>Η θεματική δεν αντιστοιχεί σε καταχώριση βιβλιοθήκης.</small>':'');
 };
 W.historyControl=t=>button('Ιστορικό','task-history','data-id="'+E(t.id)+'"','scl304-history-link');
 function row(id){return SCL303.rows().find(r=>r.id===id)||SCL302.model?.all.find(t=>t.id===id)?.row;}
